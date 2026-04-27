@@ -2,36 +2,76 @@
 
 ## Working Pitch
 
-ProjectRun is a side-scrolling action platformer built around short, readable combat encounters, precise jumps, and fast iteration across Web, desktop, and mobile.
+ProjectRun is a side-scrolling action platformer about a knight ordered by the princess to recover a stolen treasure. Across six worlds, the knight discovers that the treasure is actually a demon seal and that the thief is a hero trying to prevent disaster. The final act ends in a battle against the released demon.
 
-## MVP Scope
+## Story Outline
 
-- One controllable player character.
-- One prototype level with platforms, hazards, and one enemy type.
-- Core actions: move, jump, fall, attack, take damage, die, respawn.
-- One melee attack with a short active window.
-- Camera follows the player through a horizontal stage.
-- Placeholder visuals first, generated sprites second.
+- The princess sends the knight to retrieve a treasure stolen by a thief.
+- The knight crosses six major regions while pursuing the thief.
+- The treasure is revealed to be a seal that contains a demon.
+- The thief is revealed to be a hero, not a villain.
+- The final confrontation is against the demon.
 
-## Control Targets
+## World Structure
 
-- Keyboard: Arrow keys or WASD for movement, Space or W for jump, Z or J for attack.
-- Gamepad: left stick or d-pad for movement, south face button for jump, west face button for attack.
-- Touch: virtual left/right/jump/attack buttons after the Web loop is stable.
+| World | Scene | Stages | Boss |
+| --- | --- | ---: | --- |
+| 1 | White Palace | 3 | Yes |
+| 2 | Forest | 3 | Yes |
+| 3 | Ocean | 3 | Yes |
+| 4 | Snow Mountain | 3 | Yes |
+| 5 | Volcano | 3 | Yes |
+| 6 | Demon Stronghold | 3 | Final Boss |
+
+Each stage contains 5 collectible coins.
+
+## Playable Characters
+
+- Knight.
+- Princess.
+
+Both playable characters share the same controls and gameplay abilities. Their differences are visual presentation, animation identity, and possibly story framing.
+
+## Core Mechanics
+
+### Movement
+
+- Move left and right.
+- Run by holding a dedicated input to increase speed.
+
+### Jumping
+
+- Basic jump.
+
+### Attacking
+
+- Melee attack.
+- Homing Attack: while airborne, lock onto an enemy within range and dash into it.
+
+### Collection
+
+- Each stage has 5 collectible coins.
+
+## Input Support
+
+- Keyboard for PC.
+- Touch virtual buttons for mobile.
+- Gamepad controller.
 
 ## First Vertical Slice
 
-- Player can run and jump across a 2-screen level.
-- Player can defeat one basic enemy.
-- Enemy patrols a fixed platform.
-- Player respawns after falling below the level.
-- HUD shows current objective and debug control hints.
+- One playable knight scene using final-reference sprites.
+- One 2-screen prototype level.
+- Left/right movement, run modifier, jump, melee attack.
+- One enemy target for melee and homing attack tests.
+- Five collectible coins in the prototype stage.
+- Respawn after falling below the level.
+- HUD shows current stage objective and collected coin count.
 
 ## Non-Goals For The First Slice
 
-- Tauri packaging.
-- Mobile touch controls.
-- Final art.
+- Full six-world campaign.
+- Final boss implementation.
+- Complete mobile UI polish.
 - Save data.
-- Procedural generation.
-- Complex enemy AI.
+- Final music and sound effects.

@@ -12,17 +12,22 @@
 - `src/App.svelte` owns page layout and mounts the game.
 - `src/game/createGame.ts` creates and destroys the Phaser instance.
 - `src/game/scenes/PrototypeScene.ts` contains the first playable scene.
+- Character control logic should be shared between knight and princess skins.
+- Character art should be selected through asset keys, not duplicated controller code.
+- Stage data should eventually become data-driven so each world can define scene theme, stage layout, coin placement, enemies, and boss entry.
 - Future game systems should move into `src/game/systems`.
 - Future shared constants should move into `src/game/config`.
 
 ## Sequencing
 
 1. Build Web prototype with placeholder geometry.
-2. Add generated sprite sheets and animation metadata.
-3. Add Playwright smoke tests for startup and basic UI shell.
-4. Add Tauri v2 desktop wrapper.
-5. Add mobile-specific input and safe-area handling.
-6. Add Android and iOS packaging once gameplay performance is acceptable.
+2. Replace placeholder player art with reference-based knight sprites.
+3. Add run modifier, melee attack state, homing attack targeting, and coin collection.
+4. Add generated princess sprite set using the same controller.
+5. Add Playwright smoke tests for startup and basic UI shell.
+6. Add Tauri v2 desktop wrapper.
+7. Add mobile-specific input and safe-area handling.
+8. Add Android and iOS packaging once gameplay performance is acceptable.
 
 ## Phaser Boundary
 
