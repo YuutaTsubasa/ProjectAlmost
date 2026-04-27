@@ -15,8 +15,8 @@ Use `generate2dsprite` for first-pass assets. Keep the background `#FF00FF` duri
 
 ## First Asset List
 
-- `player_idle`: 4 frames. Placeholder generated and integrated; replace after player reference is provided.
-- `player_run`: 4 frames. Placeholder generated and integrated; replace after player reference is provided.
+- `player_idle`: 4 frames. Reference-based knight asset generated and integrated.
+- `player_run`: 4 frames. Reference-based knight asset generated and integrated.
 - `player_jump`: 1-2 frames.
 - `player_attack`: 4 frames.
 - `player_hurt`: 2 frames.
@@ -65,7 +65,7 @@ Do not wire generated art directly into gameplay until the movement, collision, 
 - Runtime sheet: `public/assets/sprites/player_idle/sheet-transparent.png`.
 - Phaser frame size: `128x128`.
 - QC: no edge-touch frames reported by `assets/source/generated/player_idle/processed/pipeline-meta.json`.
-- Status: placeholder. Replace after knight reference is provided.
+- Status: reference-based knight asset.
 
 ### `player_run`
 
@@ -74,4 +74,4 @@ Do not wire generated art directly into gameplay until the movement, collision, 
 - Runtime sheet: `public/assets/sprites/player_run/sheet-transparent.png`.
 - Phaser frame size: `128x128`.
 - QC: no edge-touch frames reported by `assets/source/generated/player_run/processed/pipeline-meta.json`.
-- Status: placeholder. Replace after knight reference is provided.
+- Status: reference-based knight asset.

@@ -1,7 +1,7 @@
 {
   "target": "player",
   "mode": "run",
-  "prompt": "2D pixel-art side-view player run 1x4 sheet for ProjectRun",
+  "prompt": "Reference-based silver armor knight player run 1x4 sheet for ProjectRun",
   "role": "",
   "input": "assets/source/generated/player_run/raw-sheet.png",
   "threshold": 100,
@@ -39,27 +39,27 @@
       ],
       "component_mode": "largest",
       "component_count": 1,
-      "selected_component_area": 66430,
+      "selected_component_area": 85936,
       "selected_component_bbox": [
-        116,
-        171,
-        451,
-        560
+        63,
+        71,
+        457,
+        586
       ],
       "crop_bbox": [
-        110,
-        165,
-        457,
-        566
+        57,
+        65,
+        463,
+        592
       ],
       "edge_touch": false,
       "output_size": [
-        94,
-        108
+        82,
+        107
       ],
       "paste_position": [
-        17,
-        11
+        23,
+        12
       ]
     },
     {
@@ -75,27 +75,27 @@
       ],
       "component_mode": "largest",
       "component_count": 1,
-      "selected_component_area": 70295,
+      "selected_component_area": 78612,
       "selected_component_bbox": [
-        77,
-        155,
-        458,
-        536
+        72,
+        71,
+        465,
+        592
       ],
       "crop_bbox": [
-        71,
-        149,
-        464,
-        542
+        66,
+        65,
+        471,
+        598
       ],
       "edge_touch": false,
       "output_size": [
-        106,
-        106
+        82,
+        108
       ],
       "paste_position": [
-        11,
-        13
+        23,
+        11
       ]
     },
     {
@@ -110,27 +110,27 @@
         724
       ],
       "component_mode": "largest",
-      "component_count": 2,
-      "selected_component_area": 65596,
+      "component_count": 1,
+      "selected_component_area": 76546,
       "selected_component_bbox": [
-        105,
-        172,
-        450,
-        560
+        141,
+        76,
+        448,
+        596
       ],
       "crop_bbox": [
-        99,
-        166,
-        456,
-        566
+        135,
+        70,
+        454,
+        602
       ],
       "edge_touch": false,
       "output_size": [
-        96,
+        65,
         108
       ],
       "paste_position": [
-        16,
+        31,
         11
       ]
     },
@@ -146,27 +146,27 @@
         724
       ],
       "component_mode": "largest",
-      "component_count": 2,
-      "selected_component_area": 63900,
+      "component_count": 1,
+      "selected_component_area": 82005,
       "selected_component_bbox": [
-        74,
-        177,
-        415,
-        560
+        73,
+        87,
+        450,
+        602
       ],
       "crop_bbox": [
-        68,
-        171,
-        421,
-        566
+        67,
+        81,
+        456,
+        608
       ],
       "edge_touch": false,
       "output_size": [
-        95,
+        79,
         107
       ],
       "paste_position": [
-        16,
+        24,
         12
       ]
     }

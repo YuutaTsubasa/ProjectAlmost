@@ -1,1 +1,1 @@
-2D pixel-art side-view player run 1x4 sheet for ProjectRun
+Reference-based silver armor knight player run 1x4 sheet for ProjectRun
