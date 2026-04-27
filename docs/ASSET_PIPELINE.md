@@ -37,7 +37,7 @@ When character reference art is provided, replace placeholder player assets inst
 
 Reference folders:
 
-- Knight reference: `assets/reference/knight/`.
+- Knight reference: `assets/reference/knight/player.jpeg`.
 - Princess reference: `assets/reference/princess/`.
 
 Runtime folders should keep stable names:
