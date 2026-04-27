@@ -10,6 +10,7 @@ export class PrototypeScene extends Phaser.Scene {
   private enemy!: ArcadeSprite
   private platforms!: StaticGroup
   private attackReady = true
+  private isAttacking = false
   private enemyDirection = -1
   private objectiveText!: Phaser.GameObjects.Text
 
@@ -23,6 +24,10 @@ export class PrototypeScene extends Phaser.Scene {
       frameHeight: 128,
     })
     this.load.spritesheet('player-run', '/assets/sprites/player_run/sheet-transparent.png', {
+      frameWidth: 128,
+      frameHeight: 128,
+    })
+    this.load.spritesheet('player-attack', '/assets/sprites/player_attack/sheet-transparent.png', {
       frameWidth: 128,
       frameHeight: 128,
     })
@@ -97,14 +102,14 @@ export class PrototypeScene extends Phaser.Scene {
     if (left) {
       this.player.setAccelerationX(-1800)
       this.player.setFlipX(true)
-      this.playPlayerAnimation('player-run')
+      this.playPlayerAnimation('player-run', true)
     } else if (right) {
       this.player.setAccelerationX(1800)
       this.player.setFlipX(false)
-      this.playPlayerAnimation('player-run')
+      this.playPlayerAnimation('player-run', true)
     } else {
       this.player.setAccelerationX(0)
-      this.playPlayerAnimation('player-idle')
+      this.playPlayerAnimation('player-idle', true)
     }
 
     if (jumpPressed && this.player.body.blocked.down) {
@@ -142,9 +147,20 @@ export class PrototypeScene extends Phaser.Scene {
       frameRate: 9,
       repeat: -1,
     })
+
+    this.anims.create({
+      key: 'player-attack',
+      frames: this.anims.generateFrameNumbers('player-attack', { start: 0, end: 3 }),
+      frameRate: 12,
+      repeat: 0,
+    })
   }
 
-  private playPlayerAnimation(key: string): void {
+  private playPlayerAnimation(key: string, respectAttackLock = false): void {
+    if (respectAttackLock && this.isAttacking) {
+      return
+    }
+
     if (this.player.anims.currentAnim?.key !== key) {
       this.player.play(key)
     }
@@ -173,19 +189,25 @@ export class PrototypeScene extends Phaser.Scene {
     }
 
     this.attackReady = false
+    this.isAttacking = true
+    this.playPlayerAnimation('player-attack')
 
     const direction = this.player.flipX ? -1 : 1
     const hitbox = this.add.image(this.player.x + direction * 48, this.player.y - 4, 'attack')
     hitbox.setFlipX(direction < 0)
-    hitbox.setAlpha(0.85)
+    hitbox.setAlpha(0.35)
 
     if (this.enemy.active && Phaser.Geom.Intersects.RectangleToRectangle(hitbox.getBounds(), this.enemy.getBounds())) {
       this.enemy.disableBody(true, true)
-      this.objectiveText.setText('Enemy defeated. Next: replace placeholders with generated sprites.')
+      this.objectiveText.setText('Enemy defeated. Next: replace enemy and coin placeholders.')
     }
 
     this.time.delayedCall(120, () => {
       hitbox.destroy()
+    })
+
+    this.time.delayedCall(340, () => {
+      this.isAttacking = false
     })
 
     this.time.delayedCall(360, () => {

@@ -1,0 +1,155 @@
+{
+  "target": "player",
+  "mode": "attack",
+  "prompt": "Reference-based silver armor knight compact sword attack 2x2 sheet for ProjectRun",
+  "role": "",
+  "input": "assets/source/generated/player_attack/raw-sheet.png",
+  "threshold": 100,
+  "edge_threshold": 150,
+  "duration": 200,
+  "rows": 2,
+  "cols": 2,
+  "cell_size": 128,
+  "fit_scale": 0.85,
+  "trim_border": 4,
+  "edge_clean_depth": 3,
+  "align": "feet",
+  "shared_scale": true,
+  "component_mode": "all",
+  "component_padding": 6,
+  "min_component_area": 1,
+  "edge_touch_margin": 0,
+  "frame_labels": [
+    "player_attack-1",
+    "player_attack-2",
+    "player_attack-3",
+    "player_attack-4"
+  ],
+  "frames": [
+    {
+      "grid": [
+        0,
+        0
+      ],
+      "source_box": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "component_mode": "all",
+      "component_count": 1,
+      "selected_component_area": null,
+      "selected_component_bbox": null,
+      "crop_bbox": [
+        218,
+        186,
+        460,
+        517
+      ],
+      "edge_touch": false,
+      "output_size": [
+        62,
+        84
+      ],
+      "paste_position": [
+        33,
+        35
+      ]
+    },
+    {
+      "grid": [
+        0,
+        1
+      ],
+      "source_box": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "component_mode": "all",
+      "component_count": 2,
+      "selected_component_area": null,
+      "selected_component_bbox": null,
+      "crop_bbox": [
+        82,
+        197,
+        447,
+        516
+      ],
+      "edge_touch": false,
+      "output_size": [
+        93,
+        81
+      ],
+      "paste_position": [
+        17,
+        38
+      ]
+    },
+    {
+      "grid": [
+        1,
+        0
+      ],
+      "source_box": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "component_mode": "all",
+      "component_count": 2,
+      "selected_component_area": null,
+      "selected_component_bbox": null,
+      "crop_bbox": [
+        178,
+        93,
+        602,
+        414
+      ],
+      "edge_touch": false,
+      "output_size": [
+        108,
+        82
+      ],
+      "paste_position": [
+        10,
+        37
+      ]
+    },
+    {
+      "grid": [
+        1,
+        1
+      ],
+      "source_box": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "component_mode": "all",
+      "component_count": 1,
+      "selected_component_area": null,
+      "selected_component_bbox": null,
+      "crop_bbox": [
+        127,
+        93,
+        405,
+        415
+      ],
+      "edge_touch": false,
+      "output_size": [
+        71,
+        82
+      ],
+      "paste_position": [
+        28,
+        37
+      ]
+    }
+  ],
+  "edge_touch_frames": []
+}

@@ -18,7 +18,7 @@ Use `generate2dsprite` for first-pass assets. Keep the background `#FF00FF` duri
 - `player_idle`: 4 frames. Reference-based knight asset generated and integrated.
 - `player_run`: 4 frames. Reference-based knight asset generated and integrated.
 - `player_jump`: 1-2 frames.
-- `player_attack`: 4 frames.
+- `player_attack`: 4 frames. Reference-based knight asset generated and integrated.
 - `player_hurt`: 2 frames.
 - `player_homing_attack`: 4 frames.
 - `princess_idle`: 4 frames.
@@ -74,4 +74,13 @@ Do not wire generated art directly into gameplay until the movement, collision, 
 - Runtime sheet: `public/assets/sprites/player_run/sheet-transparent.png`.
 - Phaser frame size: `128x128`.
 - QC: no edge-touch frames reported by `assets/source/generated/player_run/processed/pipeline-meta.json`.
+- Status: reference-based knight asset.
+
+### `player_attack`
+
+- Source raw sheet: `assets/source/generated/player_attack/raw-sheet.png`.
+- Full processed output: `assets/source/generated/player_attack/processed/`.
+- Runtime sheet: `public/assets/sprites/player_attack/sheet-transparent.png`.
+- Phaser frame size: `128x128`.
+- QC: no edge-touch frames reported by `assets/source/generated/player_attack/processed/pipeline-meta.json`.
 - Status: reference-based knight asset.
