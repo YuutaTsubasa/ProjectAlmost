@@ -25,8 +25,8 @@ Use `generate2dsprite` for first-pass assets. Keep the background `#FF00FF` duri
 - `princess_run`: 4 frames.
 - `princess_jump`: 1-2 frames.
 - `princess_attack`: 4 frames.
-- `enemy_slime_idle`: 4 frames.
-- `enemy_slime_move`: 4 frames.
+- `enemy_guard_walk`: 4 frames. White palace guard asset generated and integrated.
+- `enemy_guard_death`: 4 frames. White palace guard asset generated and integrated.
 - `coin`: 4 frames.
 - `slash_fx`: 4 frames.
 - `platform_tiles_basic`: simple grass/stone tile set.
@@ -102,3 +102,21 @@ Do not wire generated art directly into gameplay until the movement, collision, 
 - Phaser frame size: `128x128`.
 - QC: no edge-touch frames reported by `assets/source/generated/player_hurt/processed/pipeline-meta.json`.
 - Status: reference-based knight asset.
+
+### `enemy_guard_walk`
+
+- Source raw sheet: `assets/source/generated/enemy_guard_walk/raw-sheet.png`.
+- Full processed output: `assets/source/generated/enemy_guard_walk/processed/`.
+- Runtime sheet: `public/assets/sprites/enemy_guard_walk/sheet-transparent.png`.
+- Phaser frame size: `128x128`.
+- QC: no edge-touch frames reported by `assets/source/generated/enemy_guard_walk/processed/pipeline-meta.json`.
+- Status: white palace basic enemy asset.
+
+### `enemy_guard_death`
+
+- Source raw sheet: `assets/source/generated/enemy_guard_death/raw-sheet.png`.
+- Full processed output: `assets/source/generated/enemy_guard_death/processed/`.
+- Runtime sheet: `public/assets/sprites/enemy_guard_death/sheet-transparent.png`.
+- Phaser frame size: `128x128`.
+- QC: no edge-touch frames reported by `assets/source/generated/enemy_guard_death/processed/pipeline-meta.json`.
+- Status: white palace basic enemy asset.

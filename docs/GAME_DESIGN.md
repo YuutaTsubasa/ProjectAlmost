@@ -65,6 +65,7 @@ Both playable characters share the same controls and gameplay abilities. Their d
 - Left/right movement, run modifier, jump, melee attack.
 - Player hurt reaction with knockback and brief invulnerability.
 - One enemy target for melee and homing attack tests.
+- First enemy type: white palace guard with patrol and defeat animation.
 - Five collectible coins in the prototype stage.
 - Respawn after falling below the level.
 - HUD shows current stage objective and collected coin count.

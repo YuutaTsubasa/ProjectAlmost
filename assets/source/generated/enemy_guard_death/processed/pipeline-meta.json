@@ -1,0 +1,155 @@
+{
+  "target": "creature",
+  "mode": "death",
+  "prompt": "White palace guard enemy compact death 2x2 sheet for ProjectRun",
+  "role": "",
+  "input": "assets/source/generated/enemy_guard_death/raw-sheet.png",
+  "threshold": 100,
+  "edge_threshold": 150,
+  "duration": 200,
+  "rows": 2,
+  "cols": 2,
+  "cell_size": 128,
+  "fit_scale": 0.85,
+  "trim_border": 4,
+  "edge_clean_depth": 3,
+  "align": "feet",
+  "shared_scale": true,
+  "component_mode": "all",
+  "component_padding": 6,
+  "min_component_area": 1,
+  "edge_touch_margin": 0,
+  "frame_labels": [
+    "enemy_guard_death-1",
+    "enemy_guard_death-2",
+    "enemy_guard_death-3",
+    "enemy_guard_death-4"
+  ],
+  "frames": [
+    {
+      "grid": [
+        0,
+        0
+      ],
+      "source_box": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "component_mode": "all",
+      "component_count": 2,
+      "selected_component_area": null,
+      "selected_component_bbox": null,
+      "crop_bbox": [
+        193,
+        178,
+        463,
+        489
+      ],
+      "edge_touch": false,
+      "output_size": [
+        85,
+        98
+      ],
+      "paste_position": [
+        21,
+        21
+      ]
+    },
+    {
+      "grid": [
+        0,
+        1
+      ],
+      "source_box": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "component_mode": "all",
+      "component_count": 4,
+      "selected_component_area": null,
+      "selected_component_bbox": null,
+      "crop_bbox": [
+        126,
+        209,
+        416,
+        502
+      ],
+      "edge_touch": false,
+      "output_size": [
+        92,
+        93
+      ],
+      "paste_position": [
+        18,
+        26
+      ]
+    },
+    {
+      "grid": [
+        1,
+        0
+      ],
+      "source_box": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "component_mode": "all",
+      "component_count": 1,
+      "selected_component_area": null,
+      "selected_component_bbox": null,
+      "crop_bbox": [
+        205,
+        146,
+        488,
+        383
+      ],
+      "edge_touch": false,
+      "output_size": [
+        90,
+        75
+      ],
+      "paste_position": [
+        19,
+        44
+      ]
+    },
+    {
+      "grid": [
+        1,
+        1
+      ],
+      "source_box": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "component_mode": "all",
+      "component_count": 1,
+      "selected_component_area": null,
+      "selected_component_bbox": null,
+      "crop_bbox": [
+        87,
+        238,
+        429,
+        383
+      ],
+      "edge_touch": false,
+      "output_size": [
+        108,
+        46
+      ],
+      "paste_position": [
+        10,
+        73
+      ]
+    }
+  ],
+  "edge_touch_frames": []
+}

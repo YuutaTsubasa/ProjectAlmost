@@ -13,6 +13,7 @@ export class PrototypeScene extends Phaser.Scene {
   private isAttacking = false
   private isHurting = false
   private isInvulnerable = false
+  private enemyDefeated = false
   private enemyDirection = -1
   private objectiveText!: Phaser.GameObjects.Text
 
@@ -38,6 +39,14 @@ export class PrototypeScene extends Phaser.Scene {
       frameHeight: 128,
     })
     this.load.spritesheet('player-hurt', '/assets/sprites/player_hurt/sheet-transparent.png', {
+      frameWidth: 128,
+      frameHeight: 128,
+    })
+    this.load.spritesheet('enemy-guard-walk', '/assets/sprites/enemy_guard_walk/sheet-transparent.png', {
+      frameWidth: 128,
+      frameHeight: 128,
+    })
+    this.load.spritesheet('enemy-guard-death', '/assets/sprites/enemy_guard_death/sheet-transparent.png', {
       frameWidth: 128,
       frameHeight: 128,
     })
@@ -67,10 +76,13 @@ export class PrototypeScene extends Phaser.Scene {
     this.player.body.setOffset(47, 42)
     this.player.play('player-idle')
 
-    this.enemy = this.physics.add.sprite(1260, 470, 'enemy')
+    this.enemy = this.physics.add.sprite(1260, 470, 'enemy-guard-walk')
     this.enemy.setCollideWorldBounds(true)
+    this.enemy.setScale(0.82)
     this.enemy.setVelocityX(-80)
-    this.enemy.body.setSize(38, 30)
+    this.enemy.body.setSize(46, 54)
+    this.enemy.body.setOffset(41, 54)
+    this.enemy.play('enemy-guard-walk')
 
     this.physics.add.collider(this.player, this.platforms)
     this.physics.add.collider(this.enemy, this.platforms)
@@ -143,7 +155,6 @@ export class PrototypeScene extends Phaser.Scene {
   }
 
   private createTextures(): void {
-    this.makeRectTexture('enemy', 48, 34, 0xf97316, 0x9a3412)
     this.makeRectTexture('platform', 64, 32, 0x4d7c0f, 0x1f2937)
     this.makeRectTexture('attack', 56, 36, 0xfacc15, 0xf97316)
   }
@@ -181,6 +192,20 @@ export class PrototypeScene extends Phaser.Scene {
       key: 'player-hurt',
       frames: this.anims.generateFrameNumbers('player-hurt', { start: 0, end: 3 }),
       frameRate: 10,
+      repeat: 0,
+    })
+
+    this.anims.create({
+      key: 'enemy-guard-walk',
+      frames: this.anims.generateFrameNumbers('enemy-guard-walk', { start: 0, end: 3 }),
+      frameRate: 7,
+      repeat: -1,
+    })
+
+    this.anims.create({
+      key: 'enemy-guard-death',
+      frames: this.anims.generateFrameNumbers('enemy-guard-death', { start: 0, end: 3 }),
+      frameRate: 8,
       repeat: 0,
     })
   }
@@ -235,9 +260,8 @@ export class PrototypeScene extends Phaser.Scene {
     hitbox.setFlipX(direction < 0)
     hitbox.setAlpha(0.35)
 
-    if (this.enemy.active && Phaser.Geom.Intersects.RectangleToRectangle(hitbox.getBounds(), this.enemy.getBounds())) {
-      this.enemy.disableBody(true, true)
-      this.objectiveText.setText('Enemy defeated. Next: replace enemy and coin placeholders.')
+    if (!this.enemyDefeated && Phaser.Geom.Intersects.RectangleToRectangle(hitbox.getBounds(), this.enemy.getBounds())) {
+      this.defeatEnemy()
     }
 
     this.time.delayedCall(120, () => {
@@ -254,7 +278,7 @@ export class PrototypeScene extends Phaser.Scene {
   }
 
   private hurtPlayer(): void {
-    if (this.isInvulnerable || this.isHurting || !this.enemy.active) {
+    if (this.isInvulnerable || this.isHurting || this.enemyDefeated) {
       return
     }
 
@@ -288,8 +312,20 @@ export class PrototypeScene extends Phaser.Scene {
     })
   }
 
+  private defeatEnemy(): void {
+    this.enemyDefeated = true
+    this.enemy.setVelocity(0, 0)
+    this.enemy.body.enable = false
+    this.enemy.play('enemy-guard-death')
+    this.objectiveText.setText('Enemy defeated. Next: add a stage goal.')
+
+    this.time.delayedCall(520, () => {
+      this.enemy.setVisible(false)
+    })
+  }
+
   private updateEnemyPatrol(): void {
-    if (!this.enemy.active) {
+    if (this.enemyDefeated) {
       return
     }
 
