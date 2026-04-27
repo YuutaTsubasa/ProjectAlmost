@@ -16,7 +16,7 @@ Use `generate2dsprite` for first-pass assets. Keep the background `#FF00FF` duri
 ## First Asset List
 
 - `player_idle`: 4 frames. Generated and integrated.
-- `player_run`: 4 frames.
+- `player_run`: 4 frames. Generated and integrated.
 - `player_jump`: 1-2 frames.
 - `player_attack`: 4 frames.
 - `player_hurt`: 2 frames.
@@ -45,3 +45,11 @@ Do not wire generated art directly into gameplay until the movement, collision, 
 - Runtime sheet: `public/assets/sprites/player_idle/sheet-transparent.png`.
 - Phaser frame size: `128x128`.
 - QC: no edge-touch frames reported by `assets/source/generated/player_idle/processed/pipeline-meta.json`.
+
+### `player_run`
+
+- Source raw sheet: `assets/source/generated/player_run/raw-sheet.png`.
+- Full processed output: `assets/source/generated/player_run/processed/`.
+- Runtime sheet: `public/assets/sprites/player_run/sheet-transparent.png`.
+- Phaser frame size: `128x128`.
+- QC: no edge-touch frames reported by `assets/source/generated/player_run/processed/pipeline-meta.json`.

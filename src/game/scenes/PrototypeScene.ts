@@ -22,6 +22,10 @@ export class PrototypeScene extends Phaser.Scene {
       frameWidth: 128,
       frameHeight: 128,
     })
+    this.load.spritesheet('player-run', '/assets/sprites/player_run/sheet-transparent.png', {
+      frameWidth: 128,
+      frameHeight: 128,
+    })
   }
 
   create(): void {
@@ -93,11 +97,14 @@ export class PrototypeScene extends Phaser.Scene {
     if (left) {
       this.player.setAccelerationX(-1800)
       this.player.setFlipX(true)
+      this.playPlayerAnimation('player-run')
     } else if (right) {
       this.player.setAccelerationX(1800)
       this.player.setFlipX(false)
+      this.playPlayerAnimation('player-run')
     } else {
       this.player.setAccelerationX(0)
+      this.playPlayerAnimation('player-idle')
     }
 
     if (jumpPressed && this.player.body.blocked.down) {
@@ -128,6 +135,19 @@ export class PrototypeScene extends Phaser.Scene {
       frameRate: 5,
       repeat: -1,
     })
+
+    this.anims.create({
+      key: 'player-run',
+      frames: this.anims.generateFrameNumbers('player-run', { start: 0, end: 3 }),
+      frameRate: 9,
+      repeat: -1,
+    })
+  }
+
+  private playPlayerAnimation(key: string): void {
+    if (this.player.anims.currentAnim?.key !== key) {
+      this.player.play(key)
+    }
   }
 
   private makeRectTexture(key: string, width: number, height: number, fill: number, stroke: number): void {
