@@ -17,8 +17,16 @@ export class PrototypeScene extends Phaser.Scene {
     super('PrototypeScene')
   }
 
+  preload(): void {
+    this.load.spritesheet('player-idle', '/assets/sprites/player_idle/sheet-transparent.png', {
+      frameWidth: 128,
+      frameHeight: 128,
+    })
+  }
+
   create(): void {
     this.createTextures()
+    this.createAnimations()
 
     this.physics.world.setBounds(0, 0, 1920, 720)
     this.cameras.main.setBounds(0, 0, 1920, 720)
@@ -31,11 +39,14 @@ export class PrototypeScene extends Phaser.Scene {
     this.addPlatform(1230, 530, 280, 28)
     this.addPlatform(1600, 430, 260, 28)
 
-    this.player = this.physics.add.sprite(140, 560, 'player')
+    this.player = this.physics.add.sprite(140, 560, 'player-idle')
     this.player.setCollideWorldBounds(true)
     this.player.setDragX(1500)
     this.player.setMaxVelocity(420, 900)
-    this.player.body.setSize(34, 54)
+    this.player.setScale(0.78)
+    this.player.body.setSize(34, 72)
+    this.player.body.setOffset(47, 42)
+    this.player.play('player-idle')
 
     this.enemy = this.physics.add.sprite(1260, 470, 'enemy')
     this.enemy.setCollideWorldBounds(true)
@@ -105,10 +116,18 @@ export class PrototypeScene extends Phaser.Scene {
   }
 
   private createTextures(): void {
-    this.makeRectTexture('player', 44, 60, 0x67e8f9, 0x0e7490)
     this.makeRectTexture('enemy', 48, 34, 0xf97316, 0x9a3412)
     this.makeRectTexture('platform', 64, 32, 0x4d7c0f, 0x1f2937)
     this.makeRectTexture('attack', 56, 36, 0xfacc15, 0xf97316)
+  }
+
+  private createAnimations(): void {
+    this.anims.create({
+      key: 'player-idle',
+      frames: this.anims.generateFrameNumbers('player-idle', { start: 0, end: 3 }),
+      frameRate: 5,
+      repeat: -1,
+    })
   }
 
   private makeRectTexture(key: string, width: number, height: number, fill: number, stroke: number): void {
