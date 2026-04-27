@@ -31,6 +31,10 @@ export class PrototypeScene extends Phaser.Scene {
       frameWidth: 128,
       frameHeight: 128,
     })
+    this.load.spritesheet('player-jump', '/assets/sprites/player_jump/sheet-transparent.png', {
+      frameWidth: 128,
+      frameHeight: 128,
+    })
   }
 
   create(): void {
@@ -99,22 +103,23 @@ export class PrototypeScene extends Phaser.Scene {
     const jumpPressed = Phaser.Input.Keyboard.JustDown(this.cursors.space) || Phaser.Input.Keyboard.JustDown(this.keys.jump)
     const attackPressed = Phaser.Input.Keyboard.JustDown(this.keys.attack) || Phaser.Input.Keyboard.JustDown(this.keys.attackAlt)
 
+    const grounded = this.player.body.blocked.down
+
     if (left) {
       this.player.setAccelerationX(-1800)
       this.player.setFlipX(true)
-      this.playPlayerAnimation('player-run', true)
     } else if (right) {
       this.player.setAccelerationX(1800)
       this.player.setFlipX(false)
-      this.playPlayerAnimation('player-run', true)
     } else {
       this.player.setAccelerationX(0)
-      this.playPlayerAnimation('player-idle', true)
     }
 
-    if (jumpPressed && this.player.body.blocked.down) {
+    if (jumpPressed && grounded) {
       this.player.setVelocityY(-640)
     }
+
+    this.updatePlayerAnimation(left || right, grounded)
 
     if (attackPressed) {
       this.tryAttack()
@@ -154,6 +159,22 @@ export class PrototypeScene extends Phaser.Scene {
       frameRate: 12,
       repeat: 0,
     })
+
+    this.anims.create({
+      key: 'player-jump',
+      frames: this.anims.generateFrameNumbers('player-jump', { start: 0, end: 3 }),
+      frameRate: 8,
+      repeat: -1,
+    })
+  }
+
+  private updatePlayerAnimation(isMoving: boolean, grounded: boolean): void {
+    if (!grounded) {
+      this.playPlayerAnimation('player-jump', true)
+      return
+    }
+
+    this.playPlayerAnimation(isMoving ? 'player-run' : 'player-idle', true)
   }
 
   private playPlayerAnimation(key: string, respectAttackLock = false): void {
