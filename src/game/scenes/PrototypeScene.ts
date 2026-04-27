@@ -11,6 +11,8 @@ export class PrototypeScene extends Phaser.Scene {
   private platforms!: StaticGroup
   private attackReady = true
   private isAttacking = false
+  private isHurting = false
+  private isInvulnerable = false
   private enemyDirection = -1
   private objectiveText!: Phaser.GameObjects.Text
 
@@ -32,6 +34,10 @@ export class PrototypeScene extends Phaser.Scene {
       frameHeight: 128,
     })
     this.load.spritesheet('player-jump', '/assets/sprites/player_jump/sheet-transparent.png', {
+      frameWidth: 128,
+      frameHeight: 128,
+    })
+    this.load.spritesheet('player-hurt', '/assets/sprites/player_hurt/sheet-transparent.png', {
       frameWidth: 128,
       frameHeight: 128,
     })
@@ -68,7 +74,7 @@ export class PrototypeScene extends Phaser.Scene {
 
     this.physics.add.collider(this.player, this.platforms)
     this.physics.add.collider(this.enemy, this.platforms)
-    this.physics.add.collider(this.player, this.enemy, () => this.respawnPlayer())
+    this.physics.add.collider(this.player, this.enemy, () => this.hurtPlayer())
 
     this.cursors = this.input.keyboard!.createCursorKeys()
     this.keys = this.input.keyboard!.addKeys({
@@ -107,10 +113,14 @@ export class PrototypeScene extends Phaser.Scene {
 
     if (left) {
       this.player.setAccelerationX(-1800)
-      this.player.setFlipX(true)
+      if (!this.isHurting) {
+        this.player.setFlipX(true)
+      }
     } else if (right) {
       this.player.setAccelerationX(1800)
-      this.player.setFlipX(false)
+      if (!this.isHurting) {
+        this.player.setFlipX(false)
+      }
     } else {
       this.player.setAccelerationX(0)
     }
@@ -166,6 +176,13 @@ export class PrototypeScene extends Phaser.Scene {
       frameRate: 8,
       repeat: -1,
     })
+
+    this.anims.create({
+      key: 'player-hurt',
+      frames: this.anims.generateFrameNumbers('player-hurt', { start: 0, end: 3 }),
+      frameRate: 10,
+      repeat: 0,
+    })
   }
 
   private updatePlayerAnimation(isMoving: boolean, grounded: boolean): void {
@@ -178,7 +195,7 @@ export class PrototypeScene extends Phaser.Scene {
   }
 
   private playPlayerAnimation(key: string, respectAttackLock = false): void {
-    if (respectAttackLock && this.isAttacking) {
+    if (respectAttackLock && (this.isAttacking || this.isHurting)) {
       return
     }
 
@@ -205,7 +222,7 @@ export class PrototypeScene extends Phaser.Scene {
   }
 
   private tryAttack(): void {
-    if (!this.attackReady) {
+    if (!this.attackReady || this.isHurting) {
       return
     }
 
@@ -236,6 +253,41 @@ export class PrototypeScene extends Phaser.Scene {
     })
   }
 
+  private hurtPlayer(): void {
+    if (this.isInvulnerable || this.isHurting || !this.enemy.active) {
+      return
+    }
+
+    this.isHurting = true
+    this.isInvulnerable = true
+    this.isAttacking = false
+    this.attackReady = false
+
+    const knockbackDirection = this.player.x < this.enemy.x ? -1 : 1
+    this.player.setVelocity(knockbackDirection * 360, -360)
+    this.playPlayerAnimation('player-hurt')
+    this.objectiveText.setText('Hit taken. Invulnerable briefly after knockback.')
+
+    this.tweens.add({
+      targets: this.player,
+      alpha: 0.35,
+      duration: 80,
+      yoyo: true,
+      repeat: 7,
+    })
+
+    this.time.delayedCall(420, () => {
+      this.isHurting = false
+      this.attackReady = true
+    })
+
+    this.time.delayedCall(900, () => {
+      this.isInvulnerable = false
+      this.player.setAlpha(1)
+      this.objectiveText.setText('Move: A/D or arrows  Jump: W/Space  Attack: J/Z')
+    })
+  }
+
   private updateEnemyPatrol(): void {
     if (!this.enemy.active) {
       return
@@ -252,6 +304,11 @@ export class PrototypeScene extends Phaser.Scene {
   }
 
   private respawnPlayer(): void {
+    this.isHurting = false
+    this.isInvulnerable = false
+    this.isAttacking = false
+    this.attackReady = true
+    this.player.setAlpha(1)
     this.player.setPosition(140, 560)
     this.player.setVelocity(0, 0)
   }

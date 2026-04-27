@@ -63,6 +63,7 @@ Both playable characters share the same controls and gameplay abilities. Their d
 - One playable knight scene using final-reference sprites.
 - One 2-screen prototype level.
 - Left/right movement, run modifier, jump, melee attack.
+- Player hurt reaction with knockback and brief invulnerability.
 - One enemy target for melee and homing attack tests.
 - Five collectible coins in the prototype stage.
 - Respawn after falling below the level.
