@@ -3,6 +3,18 @@ import * as Phaser from 'phaser'
 type ArcadeSprite = Phaser.Types.Physics.Arcade.SpriteWithDynamicBody
 type StaticGroup = Phaser.Physics.Arcade.StaticGroup
 
+const PLAYER_SCALE = 0.78
+const PLAYER_ATTACK_SCALE = 0.98
+const PLAYER_BODY_SIZE = { width: 34, height: 72 }
+const PLAYER_BODY_OFFSET = { x: 47, y: 42 }
+const PLAYER_ATTACK_VISUAL_Y_OFFSET = -10
+const HOMING_ATTACK_RANGE = 360
+const HOMING_ATTACK_RECOVERY_MS = 220
+const HOMING_ATTACK_BOUNCE_Y = -420
+const HOMING_RETICLE_Y_OFFSET = -8
+const HOMING_ATTACK_CONTACT_DISTANCE = 34
+const HOMING_TRAIL_GHOSTS = 5
+
 export class PrototypeScene extends Phaser.Scene {
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys
   private keys!: Record<'left' | 'right' | 'jump' | 'attack' | 'attackAlt', Phaser.Input.Keyboard.Key>
@@ -13,8 +25,12 @@ export class PrototypeScene extends Phaser.Scene {
   private isAttacking = false
   private isHurting = false
   private isInvulnerable = false
+  private isHomingAttacking = false
+  private homingTarget?: ArcadeSprite
+  private homingReticle?: Phaser.GameObjects.Image
   private enemyDefeated = false
   private enemyDirection = -1
+  private playerVisualYOffset = 0
   private objectiveText!: Phaser.GameObjects.Text
 
   constructor() {
@@ -71,9 +87,7 @@ export class PrototypeScene extends Phaser.Scene {
     this.player.setCollideWorldBounds(true)
     this.player.setDragX(1500)
     this.player.setMaxVelocity(420, 900)
-    this.player.setScale(0.78)
-    this.player.body.setSize(34, 72)
-    this.player.body.setOffset(47, 42)
+    this.setPlayerVisualState('normal')
     this.player.play('player-idle')
 
     this.enemy = this.physics.add.sprite(1260, 470, 'enemy-guard-walk')
@@ -144,9 +158,15 @@ export class PrototypeScene extends Phaser.Scene {
     this.updatePlayerAnimation(left || right, grounded)
 
     if (attackPressed) {
+      if (!grounded && this.tryHomingAttack()) {
+        return
+      }
+
       this.tryAttack()
     }
 
+    this.updateHomingReticle(grounded)
+    this.updateHomingAttack()
     this.updateEnemyPatrol()
 
     if (this.player.y > 760) {
@@ -157,6 +177,7 @@ export class PrototypeScene extends Phaser.Scene {
   private createTextures(): void {
     this.makeRectTexture('platform', 64, 32, 0x4d7c0f, 0x1f2937)
     this.makeRectTexture('attack', 56, 36, 0xfacc15, 0xf97316)
+    this.makeHomingReticleTexture()
   }
 
   private createAnimations(): void {
@@ -183,9 +204,9 @@ export class PrototypeScene extends Phaser.Scene {
 
     this.anims.create({
       key: 'player-jump',
-      frames: this.anims.generateFrameNumbers('player-jump', { start: 0, end: 3 }),
-      frameRate: 8,
-      repeat: -1,
+      frames: [{ key: 'player-jump', frame: 1 }],
+      frameRate: 1,
+      repeat: 0,
     })
 
     this.anims.create({
@@ -211,11 +232,17 @@ export class PrototypeScene extends Phaser.Scene {
   }
 
   private updatePlayerAnimation(isMoving: boolean, grounded: boolean): void {
+    if (this.isAttacking || this.isHurting || this.isHomingAttacking) {
+      return
+    }
+
     if (!grounded) {
+      this.setPlayerVisualState('normal')
       this.playPlayerAnimation('player-jump', true)
       return
     }
 
+    this.setPlayerVisualState('normal')
     this.playPlayerAnimation(isMoving ? 'player-run' : 'player-idle', true)
   }
 
@@ -239,6 +266,20 @@ export class PrototypeScene extends Phaser.Scene {
     graphics.destroy()
   }
 
+  private makeHomingReticleTexture(): void {
+    const graphics = this.make.graphics()
+    graphics.lineStyle(3, 0x67e8f9, 1)
+    graphics.strokeCircle(24, 24, 14)
+    graphics.lineBetween(24, 3, 24, 13)
+    graphics.lineBetween(24, 35, 24, 45)
+    graphics.lineBetween(3, 24, 13, 24)
+    graphics.lineBetween(35, 24, 45, 24)
+    graphics.lineStyle(1, 0xf8fafc, 0.9)
+    graphics.strokeCircle(24, 24, 8)
+    graphics.generateTexture('homing-reticle', 48, 48)
+    graphics.destroy()
+  }
+
   private addPlatform(x: number, y: number, width: number, height: number): void {
     const platform = this.physics.add.staticImage(x, y, 'platform')
     platform.setDisplaySize(width, height)
@@ -247,12 +288,13 @@ export class PrototypeScene extends Phaser.Scene {
   }
 
   private tryAttack(): void {
-    if (!this.attackReady || this.isHurting) {
+    if (!this.attackReady || this.isHurting || this.isHomingAttacking) {
       return
     }
 
     this.attackReady = false
     this.isAttacking = true
+    this.setPlayerVisualState('attack')
     this.playPlayerAnimation('player-attack')
 
     const direction = this.player.flipX ? -1 : 1
@@ -270,6 +312,7 @@ export class PrototypeScene extends Phaser.Scene {
 
     this.time.delayedCall(340, () => {
       this.isAttacking = false
+      this.setPlayerVisualState('normal')
     })
 
     this.time.delayedCall(360, () => {
@@ -278,13 +321,17 @@ export class PrototypeScene extends Phaser.Scene {
   }
 
   private hurtPlayer(): void {
-    if (this.isInvulnerable || this.isHurting || this.enemyDefeated) {
+    if (this.isInvulnerable || this.isHurting || this.enemyDefeated || this.isHomingAttacking) {
       return
     }
 
     this.isHurting = true
     this.isInvulnerable = true
     this.isAttacking = false
+    this.isHomingAttacking = false
+    this.homingTarget = undefined
+    this.setPlayerHomingCollision(true)
+    this.setPlayerVisualState('normal')
     this.attackReady = false
 
     const knockbackDirection = this.player.x < this.enemy.x ? -1 : 1
@@ -343,9 +390,175 @@ export class PrototypeScene extends Phaser.Scene {
     this.isHurting = false
     this.isInvulnerable = false
     this.isAttacking = false
+    this.isHomingAttacking = false
+    this.homingTarget = undefined
     this.attackReady = true
     this.player.setAlpha(1)
+    this.setPlayerHomingCollision(true)
+    this.setPlayerVisualState('normal')
     this.player.setPosition(140, 560)
     this.player.setVelocity(0, 0)
+  }
+
+  private setPlayerVisualState(state: 'normal' | 'attack'): void {
+    const scale = state === 'attack' ? PLAYER_ATTACK_SCALE : PLAYER_SCALE
+    const offsetY = state === 'attack' ? PLAYER_ATTACK_VISUAL_Y_OFFSET : 0
+
+    if (this.player.scaleX !== scale || this.player.scaleY !== scale) {
+      this.player.setScale(scale)
+    }
+
+    if (this.playerVisualYOffset !== offsetY) {
+      this.player.y += offsetY - this.playerVisualYOffset
+      this.playerVisualYOffset = offsetY
+    }
+
+    this.player.body.setSize(PLAYER_BODY_SIZE.width, PLAYER_BODY_SIZE.height)
+    this.player.body.setOffset(PLAYER_BODY_OFFSET.x, PLAYER_BODY_OFFSET.y)
+  }
+
+  private tryHomingAttack(): boolean {
+    if (!this.attackReady || this.isHurting || this.isHomingAttacking || this.enemyDefeated) {
+      return false
+    }
+
+    const target = this.findHomingTarget()
+
+    if (!target) {
+      return false
+    }
+
+    this.attackReady = false
+    this.isHomingAttacking = true
+    this.homingTarget = target
+    this.homingReticle?.setVisible(false)
+    this.setPlayerVisualState('normal')
+    this.playPlayerAnimation('player-attack')
+    this.resolveHomingAttack(target)
+
+    return true
+  }
+
+  private findHomingTarget(): ArcadeSprite | undefined {
+    if (this.enemyDefeated || !this.enemy.active || !this.enemy.visible) {
+      return undefined
+    }
+
+    const distance = Phaser.Math.Distance.Between(this.player.x, this.player.y, this.enemy.x, this.enemy.y)
+
+    if (distance > HOMING_ATTACK_RANGE) {
+      return undefined
+    }
+
+    const facing = this.player.flipX ? -1 : 1
+    const targetDirection = Math.sign(this.enemy.x - this.player.x) || facing
+
+    if (targetDirection !== facing && Math.abs(this.enemy.x - this.player.x) > 48) {
+      return undefined
+    }
+
+    return this.enemy
+  }
+
+  private updateHomingReticle(grounded: boolean): void {
+    if (grounded || this.isAttacking || this.isHurting || this.isHomingAttacking) {
+      this.homingReticle?.setVisible(false)
+      return
+    }
+
+    const target = this.findHomingTarget()
+
+    if (!target) {
+      this.homingReticle?.setVisible(false)
+      return
+    }
+
+    if (!this.homingReticle) {
+      this.homingReticle = this.add.image(target.x, target.y + HOMING_RETICLE_Y_OFFSET, 'homing-reticle')
+      this.homingReticle.setDepth(20)
+      this.homingReticle.setBlendMode(Phaser.BlendModes.ADD)
+    }
+
+    this.homingReticle.setPosition(target.x, target.y + HOMING_RETICLE_Y_OFFSET)
+    this.homingReticle.setVisible(true)
+    this.homingReticle.setAngle(this.homingReticle.angle + 3)
+  }
+
+  private updateHomingAttack(): void {
+    if (!this.isHomingAttacking || !this.homingTarget) {
+      return
+    }
+
+    if (this.enemyDefeated || !this.homingTarget.active || !this.homingTarget.visible) {
+      this.finishHomingAttack(false)
+      return
+    }
+  }
+
+  private resolveHomingAttack(target: ArcadeSprite): void {
+    const startX = this.player.x
+    const startY = this.player.y
+    const angle = Phaser.Math.Angle.Between(startX, startY, target.x, target.y)
+    const contactX = target.x - Math.cos(angle) * HOMING_ATTACK_CONTACT_DISTANCE
+    const contactY = target.y - Math.sin(angle) * HOMING_ATTACK_CONTACT_DISTANCE
+
+    this.emitHomingTrail(startX, startY, contactX, contactY)
+    this.player.setPosition(contactX, contactY)
+    this.player.setVelocity(0, 0)
+    this.player.setFlipX(target.x < startX)
+    this.defeatEnemy()
+    this.finishHomingAttack(true)
+  }
+
+  private finishHomingAttack(hit: boolean): void {
+    this.isHomingAttacking = false
+    this.homingTarget = undefined
+    this.setPlayerHomingCollision(true)
+
+    if (hit) {
+      this.player.setVelocity(0, HOMING_ATTACK_BOUNCE_Y)
+      this.objectiveText.setText('Homing Attack hit. Next: add a stage goal.')
+    } else {
+      this.player.setVelocity(0, 0)
+      this.objectiveText.setText('Move: A/D or arrows  Jump: W/Space  Attack: J/Z')
+    }
+
+    this.time.delayedCall(HOMING_ATTACK_RECOVERY_MS, () => {
+      if (!this.isHurting) {
+        this.attackReady = true
+      }
+    })
+  }
+
+  private emitHomingTrail(startX: number, startY: number, endX: number, endY: number): void {
+    for (let index = 1; index <= HOMING_TRAIL_GHOSTS; index += 1) {
+      const progress = index / (HOMING_TRAIL_GHOSTS + 1)
+      const trail = this.add.sprite(
+        Phaser.Math.Linear(startX, endX, progress),
+        Phaser.Math.Linear(startY, endY, progress),
+        this.player.texture.key,
+        this.player.frame.name,
+      )
+
+      trail.setDepth(this.player.depth - 1)
+      trail.setScale(Math.abs(this.player.scaleX), Math.abs(this.player.scaleY))
+      trail.setFlipX(this.player.flipX)
+      trail.setTint(0x67e8f9)
+      trail.setAlpha(0.3 * (1 - progress * 0.45))
+      trail.setBlendMode(Phaser.BlendModes.ADD)
+
+      this.tweens.add({
+        targets: trail,
+        alpha: 0,
+        duration: 180,
+        delay: index * 12,
+        onComplete: () => trail.destroy(),
+      })
+    }
+  }
+
+  private setPlayerHomingCollision(enabled: boolean): void {
+    this.player.body.allowGravity = enabled
+    this.player.body.checkCollision.none = !enabled
   }
 }
