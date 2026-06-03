@@ -1,8 +1,14 @@
 import * as Phaser from 'phaser'
+import { type PlatformRect, prototypeStage } from '../stages/prototypeStage'
 
 type ArcadeSprite = Phaser.Types.Physics.Arcade.SpriteWithDynamicBody
-type StaticGroup = Phaser.Physics.Arcade.StaticGroup
+type TilemapLayer = Phaser.Tilemaps.TilemapLayer | Phaser.Tilemaps.TilemapGPULayer
 
+const { width: WORLD_WIDTH, height: WORLD_HEIGHT, tileSize: TILE_SIZE } = prototypeStage.world
+const TILE_COLUMNS = WORLD_WIDTH / TILE_SIZE
+const TILE_ROWS = Math.ceil(WORLD_HEIGHT / TILE_SIZE)
+const SOLID_TILE_INDEXES = [1, 2, 3]
+const PLAYER_MAX_HEALTH = 3
 const PLAYER_SCALE = 0.78
 const PLAYER_ATTACK_SCALE = 0.98
 const PLAYER_BODY_SIZE = { width: 34, height: 72 }
@@ -14,23 +20,42 @@ const HOMING_ATTACK_BOUNCE_Y = -420
 const HOMING_RETICLE_Y_OFFSET = -8
 const HOMING_ATTACK_CONTACT_DISTANCE = 34
 const HOMING_TRAIL_GHOSTS = 5
+const THEME = {
+  deepBlue: 0x17324f,
+  royalBlue: 0x2f6fb4,
+  skyBlue: 0x86cdf8,
+  paleBlue: 0xdaf3ff,
+  cyan: 0x33b5ff,
+  marble: 0xf7fbff,
+  marbleShade: 0xd7e8f4,
+  marbleLine: 0x8ebbd8,
+  gold: 0xd7a84f,
+  white: 0xf8fdff,
+}
 
 export class PrototypeScene extends Phaser.Scene {
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys
   private keys!: Record<'left' | 'right' | 'jump' | 'attack' | 'attackAlt', Phaser.Input.Keyboard.Key>
   private player!: ArcadeSprite
   private enemy!: ArcadeSprite
-  private platforms!: StaticGroup
+  private goal!: Phaser.Types.Physics.Arcade.ImageWithStaticBody
+  private goalLabel!: Phaser.GameObjects.Text
+  private terrainLayer!: TilemapLayer
   private attackReady = true
+  private playerHealth = PLAYER_MAX_HEALTH
+  private stageCleared = false
   private isAttacking = false
   private isHurting = false
   private isInvulnerable = false
   private isHomingAttacking = false
+  private isDead = false
   private homingTarget?: ArcadeSprite
   private homingReticle?: Phaser.GameObjects.Image
+  private hurtTween?: Phaser.Tweens.Tween
   private enemyDefeated = false
   private enemyDirection = -1
   private playerVisualYOffset = 0
+  private healthText!: Phaser.GameObjects.Text
   private objectiveText!: Phaser.GameObjects.Text
 
   constructor() {
@@ -58,6 +83,10 @@ export class PrototypeScene extends Phaser.Scene {
       frameWidth: 128,
       frameHeight: 128,
     })
+    this.load.spritesheet('player-death', '/assets/sprites/player_death/sheet-transparent.png', {
+      frameWidth: 128,
+      frameHeight: 128,
+    })
     this.load.spritesheet('enemy-guard-walk', '/assets/sprites/enemy_guard_walk/sheet-transparent.png', {
       frameWidth: 128,
       frameHeight: 128,
@@ -72,25 +101,20 @@ export class PrototypeScene extends Phaser.Scene {
     this.createTextures()
     this.createAnimations()
 
-    this.physics.world.setBounds(0, 0, 1920, 720)
-    this.cameras.main.setBounds(0, 0, 1920, 720)
+    this.physics.world.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT)
+    this.cameras.main.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT)
 
-    this.platforms = this.physics.add.staticGroup()
-    this.addPlatform(480, 670, 960, 48)
-    this.addPlatform(1180, 670, 640, 48)
-    this.addPlatform(470, 510, 220, 28)
-    this.addPlatform(820, 420, 240, 28)
-    this.addPlatform(1230, 530, 280, 28)
-    this.addPlatform(1600, 430, 260, 28)
+    this.createParallaxBackground()
+    this.terrainLayer = this.createTerrainLayer()
 
-    this.player = this.physics.add.sprite(140, 560, 'player-idle')
+    this.player = this.physics.add.sprite(prototypeStage.playerSpawn.x, prototypeStage.playerSpawn.y, 'player-idle')
     this.player.setCollideWorldBounds(true)
     this.player.setDragX(1500)
     this.player.setMaxVelocity(420, 900)
     this.setPlayerVisualState('normal')
     this.player.play('player-idle')
 
-    this.enemy = this.physics.add.sprite(1260, 470, 'enemy-guard-walk')
+    this.enemy = this.physics.add.sprite(prototypeStage.enemy.x, prototypeStage.enemy.y, 'enemy-guard-walk')
     this.enemy.setCollideWorldBounds(true)
     this.enemy.setScale(0.82)
     this.enemy.setVelocityX(-80)
@@ -98,9 +122,23 @@ export class PrototypeScene extends Phaser.Scene {
     this.enemy.body.setOffset(41, 54)
     this.enemy.play('enemy-guard-walk')
 
-    this.physics.add.collider(this.player, this.platforms)
-    this.physics.add.collider(this.enemy, this.platforms)
+    this.goal = this.physics.add.staticImage(prototypeStage.goal.x, prototypeStage.goal.y, 'stage-goal')
+    this.goal.setSize(42, 88)
+    this.goal.setOffset(11, 8)
+    this.goal.setDepth(8)
+    this.goalLabel = this.add.text(prototypeStage.goal.x + 17, prototypeStage.goal.y - 27, 'GOAL', {
+      fontFamily: 'Verdana, Geneva, sans-serif',
+      fontSize: '11px',
+      fontStyle: '700',
+      color: '#17324f',
+    })
+    this.goalLabel.setOrigin(0.5)
+    this.goalLabel.setDepth(9)
+
+    this.physics.add.collider(this.player, this.terrainLayer)
+    this.physics.add.collider(this.enemy, this.terrainLayer)
     this.physics.add.collider(this.player, this.enemy, () => this.hurtPlayer())
+    this.physics.add.overlap(this.player, this.goal, () => this.completeStage())
 
     this.cursors = this.input.keyboard!.createCursorKeys()
     this.keys = this.input.keyboard!.addKeys({
@@ -114,19 +152,15 @@ export class PrototypeScene extends Phaser.Scene {
     this.cameras.main.startFollow(this.player, true, 0.12, 0.12)
     this.cameras.main.setDeadzone(180, 120)
 
-    this.add.text(36, 28, 'ProjectRun Prototype', {
-      fontFamily: 'Georgia, serif',
-      fontSize: '28px',
-      color: '#f5d78e',
-    }).setScrollFactor(0)
+    this.createHud()
 
-    this.objectiveText = this.add.text(36, 66, 'Move: A/D or arrows  Jump: W/Space  Attack: J/Z', {
+    this.objectiveText = this.add.text(36, 86, 'Move: A/D or arrows  Jump: W/Space  Attack: J/Z', {
       fontFamily: 'Verdana, sans-serif',
       fontSize: '16px',
-      color: '#c8d3dc',
+      color: '#2f6fb4',
     }).setScrollFactor(0)
 
-    this.add.rectangle(960, 706, 1920, 28, 0x0b1017)
+    this.add.rectangle(WORLD_WIDTH / 2, 706, WORLD_WIDTH, 28, THEME.deepBlue, 0.9)
   }
 
   update(): void {
@@ -136,6 +170,18 @@ export class PrototypeScene extends Phaser.Scene {
     const attackPressed = Phaser.Input.Keyboard.JustDown(this.keys.attack) || Phaser.Input.Keyboard.JustDown(this.keys.attackAlt)
 
     const grounded = this.player.body.blocked.down
+
+    if (this.isDead) {
+      this.player.setAccelerationX(0)
+      return
+    }
+
+    if (this.stageCleared) {
+      this.player.setAccelerationX(0)
+      this.player.setVelocityX(0)
+      this.updatePlayerAnimation(false, grounded)
+      return
+    }
 
     if (left) {
       this.player.setAccelerationX(-1800)
@@ -170,14 +216,43 @@ export class PrototypeScene extends Phaser.Scene {
     this.updateEnemyPatrol()
 
     if (this.player.y > 760) {
-      this.respawnPlayer()
+      this.defeatPlayer('fall')
     }
   }
 
   private createTextures(): void {
-    this.makeRectTexture('platform', 64, 32, 0x4d7c0f, 0x1f2937)
-    this.makeRectTexture('attack', 56, 36, 0xfacc15, 0xf97316)
+    this.makeRectTexture('attack', 56, 36, THEME.cyan, THEME.royalBlue)
+    this.makePalaceTilesTexture()
     this.makeHomingReticleTexture()
+    this.makeStageGoalTexture()
+  }
+
+  private createHud(): void {
+    this.add.rectangle(156, 42, 244, 48, THEME.white, 0.76)
+      .setStrokeStyle(1, THEME.skyBlue, 0.8)
+      .setScrollFactor(0)
+      .setDepth(30)
+
+    this.add.text(36, 24, 'WHITE PALACE 1-1', {
+      fontFamily: 'Verdana, Geneva, sans-serif',
+      fontSize: '13px',
+      fontStyle: '700',
+      color: '#2f6fb4',
+    }).setScrollFactor(0).setDepth(31)
+
+    this.healthText = this.add.text(36, 44, this.getHealthLabel(), {
+      fontFamily: 'Verdana, Geneva, sans-serif',
+      fontSize: '15px',
+      fontStyle: '700',
+      color: '#17324f',
+    }).setScrollFactor(0).setDepth(31)
+
+    this.add.text(800, 28, 'SIGNAL 92%', {
+      fontFamily: 'Verdana, Geneva, sans-serif',
+      fontSize: '13px',
+      fontStyle: '700',
+      color: '#159ce6',
+    }).setScrollFactor(0).setDepth(31)
   }
 
   private createAnimations(): void {
@@ -217,6 +292,13 @@ export class PrototypeScene extends Phaser.Scene {
     })
 
     this.anims.create({
+      key: 'player-death',
+      frames: this.anims.generateFrameNumbers('player-death', { start: 0, end: 3 }),
+      frameRate: 7,
+      repeat: 0,
+    })
+
+    this.anims.create({
       key: 'enemy-guard-walk',
       frames: this.anims.generateFrameNumbers('enemy-guard-walk', { start: 0, end: 3 }),
       frameRate: 7,
@@ -232,7 +314,7 @@ export class PrototypeScene extends Phaser.Scene {
   }
 
   private updatePlayerAnimation(isMoving: boolean, grounded: boolean): void {
-    if (this.isAttacking || this.isHurting || this.isHomingAttacking) {
+    if (this.isAttacking || this.isHurting || this.isHomingAttacking || this.isDead) {
       return
     }
 
@@ -266,25 +348,130 @@ export class PrototypeScene extends Phaser.Scene {
     graphics.destroy()
   }
 
+  private makePalaceTilesTexture(): void {
+    const graphics = this.make.graphics()
+
+    for (let index = 0; index < 3; index += 1) {
+      const x = index * TILE_SIZE
+      graphics.fillStyle(THEME.marble)
+      graphics.fillRect(x, 0, TILE_SIZE, TILE_SIZE)
+      graphics.fillStyle(THEME.white)
+      graphics.fillRect(x, 0, TILE_SIZE, 6)
+      graphics.lineStyle(1, THEME.marbleLine, 0.9)
+      graphics.strokeRect(x + 0.5, 0.5, TILE_SIZE - 1, TILE_SIZE - 1)
+      graphics.lineStyle(1, THEME.skyBlue, 0.48)
+      graphics.lineBetween(x + 4, 18, x + 28, 18)
+      graphics.lineBetween(x + 16, 8, x + 16, 28)
+    }
+
+    graphics.fillStyle(THEME.royalBlue)
+    graphics.fillRect(0, 0, 4, TILE_SIZE)
+    graphics.fillRect(TILE_SIZE * 3 - 4, 0, 4, TILE_SIZE)
+    graphics.generateTexture('palace-tiles', TILE_SIZE * 3, TILE_SIZE)
+    graphics.destroy()
+  }
+
   private makeHomingReticleTexture(): void {
     const graphics = this.make.graphics()
-    graphics.lineStyle(3, 0x67e8f9, 1)
+    graphics.lineStyle(3, THEME.cyan, 1)
     graphics.strokeCircle(24, 24, 14)
     graphics.lineBetween(24, 3, 24, 13)
     graphics.lineBetween(24, 35, 24, 45)
     graphics.lineBetween(3, 24, 13, 24)
     graphics.lineBetween(35, 24, 45, 24)
-    graphics.lineStyle(1, 0xf8fafc, 0.9)
+    graphics.lineStyle(1, THEME.white, 0.9)
     graphics.strokeCircle(24, 24, 8)
     graphics.generateTexture('homing-reticle', 48, 48)
     graphics.destroy()
   }
 
-  private addPlatform(x: number, y: number, width: number, height: number): void {
-    const platform = this.physics.add.staticImage(x, y, 'platform')
-    platform.setDisplaySize(width, height)
-    platform.refreshBody()
-    this.platforms.add(platform)
+  private makeStageGoalTexture(): void {
+    const graphics = this.make.graphics()
+    graphics.fillStyle(THEME.deepBlue)
+    graphics.fillRoundedRect(18, 10, 10, 82, 4)
+    graphics.fillStyle(THEME.white)
+    graphics.fillTriangle(28, 12, 28, 52, 66, 32)
+    graphics.fillStyle(THEME.skyBlue)
+    graphics.fillTriangle(28, 52, 28, 72, 54, 58)
+    graphics.lineStyle(2, THEME.royalBlue, 0.9)
+    graphics.strokeTriangle(28, 12, 28, 52, 66, 32)
+    graphics.strokeTriangle(28, 52, 28, 72, 54, 58)
+    graphics.fillStyle(THEME.marbleShade)
+    graphics.fillRoundedRect(9, 86, 28, 8, 3)
+    graphics.fillStyle(THEME.gold)
+    graphics.fillCircle(23, 10, 5)
+    graphics.generateTexture('stage-goal', 72, 96)
+    graphics.destroy()
+  }
+
+  private createParallaxBackground(): void {
+    this.add.rectangle(WORLD_WIDTH / 2, WORLD_HEIGHT / 2, WORLD_WIDTH, WORLD_HEIGHT, THEME.paleBlue).setScrollFactor(0)
+
+    this.add.rectangle(WORLD_WIDTH / 2, 154, WORLD_WIDTH, 240, THEME.white, 0.58).setScrollFactor(0.08)
+    this.add.rectangle(WORLD_WIDTH / 2, 258, WORLD_WIDTH, 210, THEME.skyBlue, 0.26).setScrollFactor(0.18)
+    this.add.rectangle(WORLD_WIDTH / 2, 328, WORLD_WIDTH, 160, THEME.royalBlue, 0.12).setScrollFactor(0.24)
+
+    for (let index = 0; index < 12; index += 1) {
+      const x = index * 190 + 38
+      this.add.rectangle(x, 378, 44, 280, THEME.white, 0.46).setScrollFactor(0.32)
+      this.add.rectangle(x, 236, 72, 30, THEME.marbleShade, 0.4).setScrollFactor(0.32)
+      this.add.rectangle(x, 514, 80, 22, THEME.royalBlue, 0.16).setScrollFactor(0.32)
+    }
+
+    this.add.rectangle(WORLD_WIDTH / 2, 620, WORLD_WIDTH, 110, THEME.deepBlue, 0.18).setScrollFactor(0.72)
+  }
+
+  private createTerrainLayer(): TilemapLayer {
+    const map = this.make.tilemap({
+      data: this.buildTerrainData(),
+      tileWidth: TILE_SIZE,
+      tileHeight: TILE_SIZE,
+    })
+    const tileset = map.addTilesetImage('palace-tiles', undefined, TILE_SIZE, TILE_SIZE, 0, 0)
+    const layer = map.createLayer(0, tileset!, 0, 0)
+
+    if (!layer) {
+      throw new Error('Unable to create terrain tilemap layer.')
+    }
+
+    layer.setCollision(SOLID_TILE_INDEXES)
+    layer.setDepth(5)
+
+    return layer
+  }
+
+  private buildTerrainData(): number[][] {
+    const data = Array.from({ length: TILE_ROWS }, () => Array.from({ length: TILE_COLUMNS }, () => -1))
+
+    for (const rect of prototypeStage.platforms) {
+      this.writePlatformTiles(data, rect.col, rect.row, rect.width, rect.height)
+    }
+
+    return data
+  }
+
+  private writePlatformTiles(data: number[][], col: PlatformRect['col'], row: PlatformRect['row'], width: PlatformRect['width'], height: PlatformRect['height']): void {
+    for (let y = 0; y < height; y += 1) {
+      for (let x = 0; x < width; x += 1) {
+        data[row + y][col + x] = this.getPlatformTileIndex(x, width)
+      }
+    }
+  }
+
+  private getPlatformTileIndex(index: number, width: number): number {
+    if (width === 1) {
+      return 2
+    }
+
+    if (index === 0) {
+      return 1
+    }
+
+    if (index === width - 1) {
+      return 3
+    }
+
+    return 2
   }
 
   private tryAttack(): void {
@@ -321,7 +508,15 @@ export class PrototypeScene extends Phaser.Scene {
   }
 
   private hurtPlayer(): void {
-    if (this.isInvulnerable || this.isHurting || this.enemyDefeated || this.isHomingAttacking) {
+    if (this.isInvulnerable || this.isHurting || this.enemyDefeated || this.isHomingAttacking || this.isDead) {
+      return
+    }
+
+    this.playerHealth -= 1
+    this.updateHealthText()
+
+    if (this.playerHealth <= 0) {
+      this.defeatPlayer('damage')
       return
     }
 
@@ -332,19 +527,20 @@ export class PrototypeScene extends Phaser.Scene {
     this.homingTarget = undefined
     this.setPlayerHomingCollision(true)
     this.setPlayerVisualState('normal')
+    this.stopPlayerHurtBlink()
     this.attackReady = false
 
     const knockbackDirection = this.player.x < this.enemy.x ? -1 : 1
     this.player.setVelocity(knockbackDirection * 360, -360)
     this.playPlayerAnimation('player-hurt')
-    this.objectiveText.setText('Hit taken. Invulnerable briefly after knockback.')
+    this.objectiveText.setText(`Hit taken. Health: ${this.playerHealth}/${PLAYER_MAX_HEALTH}.`)
 
-    this.tweens.add({
+    this.hurtTween = this.tweens.add({
       targets: this.player,
       alpha: 0.35,
       duration: 80,
       yoyo: true,
-      repeat: 7,
+      repeat: 4,
     })
 
     this.time.delayedCall(420, () => {
@@ -354,13 +550,14 @@ export class PrototypeScene extends Phaser.Scene {
 
     this.time.delayedCall(900, () => {
       this.isInvulnerable = false
-      this.player.setAlpha(1)
+      this.stopPlayerHurtBlink()
       this.objectiveText.setText('Move: A/D or arrows  Jump: W/Space  Attack: J/Z')
     })
   }
 
   private defeatEnemy(): void {
     this.enemyDefeated = true
+    this.homingReticle?.setVisible(false)
     this.enemy.setVelocity(0, 0)
     this.enemy.body.enable = false
     this.enemy.play('enemy-guard-death')
@@ -376,9 +573,9 @@ export class PrototypeScene extends Phaser.Scene {
       return
     }
 
-    if (this.enemy.x < 1140) {
+    if (this.enemy.x < prototypeStage.enemy.patrolMinX) {
       this.enemyDirection = 1
-    } else if (this.enemy.x > 1360) {
+    } else if (this.enemy.x > prototypeStage.enemy.patrolMaxX) {
       this.enemyDirection = -1
     }
 
@@ -391,13 +588,67 @@ export class PrototypeScene extends Phaser.Scene {
     this.isInvulnerable = false
     this.isAttacking = false
     this.isHomingAttacking = false
+    this.isDead = false
     this.homingTarget = undefined
     this.attackReady = true
-    this.player.setAlpha(1)
+    this.playerHealth = PLAYER_MAX_HEALTH
+    this.updateHealthText()
+    this.stopPlayerHurtBlink()
     this.setPlayerHomingCollision(true)
     this.setPlayerVisualState('normal')
-    this.player.setPosition(140, 560)
+    this.player.setPosition(prototypeStage.playerSpawn.x, prototypeStage.playerSpawn.y)
     this.player.setVelocity(0, 0)
+    this.player.body.enable = true
+    this.playPlayerAnimation('player-idle')
+    this.objectiveText.setText('Move: A/D or arrows  Jump: W/Space  Attack: J/Z')
+  }
+
+  private defeatPlayer(reason: 'damage' | 'fall'): void {
+    if (this.isDead || this.stageCleared) {
+      return
+    }
+
+    this.isDead = true
+    this.isHurting = false
+    this.isInvulnerable = true
+    this.isAttacking = false
+    this.isHomingAttacking = false
+    this.attackReady = false
+    this.homingTarget = undefined
+    this.homingReticle?.setVisible(false)
+    this.stopPlayerHurtBlink()
+    this.setPlayerHomingCollision(true)
+    this.setPlayerVisualState('normal')
+    this.player.setAccelerationX(0)
+    this.player.setVelocity(0, reason === 'fall' ? 0 : -160)
+    this.playPlayerAnimation('player-death')
+    this.objectiveText.setText(reason === 'fall' ? 'Fell out. Respawning.' : 'Player defeated. Respawning.')
+
+    this.time.delayedCall(1100, () => {
+      this.respawnPlayer()
+    })
+  }
+
+  private completeStage(): void {
+    if (this.stageCleared) {
+      return
+    }
+
+    this.stageCleared = true
+    this.isAttacking = false
+    this.isHomingAttacking = false
+    this.attackReady = false
+    this.homingTarget = undefined
+    this.homingReticle?.setVisible(false)
+    this.stopPlayerHurtBlink()
+    this.player.setVelocity(0, 0)
+    this.player.setAccelerationX(0)
+    this.enemy.setVelocityX(0)
+    this.goal.setTint(THEME.cyan)
+    this.goalLabel.setColor('#f8fafc')
+    this.objectiveText.setText('Stage Clear. Next: load the next map.')
+    this.setPlayerVisualState('normal')
+    this.playPlayerAnimation('player-idle')
   }
 
   private setPlayerVisualState(state: 'normal' | 'attack'): void {
@@ -418,7 +669,7 @@ export class PrototypeScene extends Phaser.Scene {
   }
 
   private tryHomingAttack(): boolean {
-    if (!this.attackReady || this.isHurting || this.isHomingAttacking || this.enemyDefeated) {
+    if (!this.attackReady || this.isHurting || this.isHomingAttacking || this.enemyDefeated || this.isDead) {
       return false
     }
 
@@ -461,7 +712,7 @@ export class PrototypeScene extends Phaser.Scene {
   }
 
   private updateHomingReticle(grounded: boolean): void {
-    if (grounded || this.isAttacking || this.isHurting || this.isHomingAttacking) {
+    if (grounded || this.stageCleared || this.isDead || this.isAttacking || this.isHurting || this.isHomingAttacking || this.enemyDefeated) {
       this.homingReticle?.setVisible(false)
       return
     }
@@ -543,7 +794,7 @@ export class PrototypeScene extends Phaser.Scene {
       trail.setDepth(this.player.depth - 1)
       trail.setScale(Math.abs(this.player.scaleX), Math.abs(this.player.scaleY))
       trail.setFlipX(this.player.flipX)
-      trail.setTint(0x67e8f9)
+      trail.setTint(THEME.cyan)
       trail.setAlpha(0.3 * (1 - progress * 0.45))
       trail.setBlendMode(Phaser.BlendModes.ADD)
 
@@ -560,5 +811,19 @@ export class PrototypeScene extends Phaser.Scene {
   private setPlayerHomingCollision(enabled: boolean): void {
     this.player.body.allowGravity = enabled
     this.player.body.checkCollision.none = !enabled
+  }
+
+  private stopPlayerHurtBlink(): void {
+    this.hurtTween?.stop()
+    this.hurtTween = undefined
+    this.player.setAlpha(1)
+  }
+
+  private updateHealthText(): void {
+    this.healthText?.setText(this.getHealthLabel())
+  }
+
+  private getHealthLabel(): string {
+    return `HP ${this.playerHealth}/${PLAYER_MAX_HEALTH}`
   }
 }

@@ -1,0 +1,155 @@
+{
+  "target": "player",
+  "mode": "death",
+  "prompt": "2x2 side-view chibi blond knight death animation matching the existing player sprite style, flat #FF00FF chroma-key background, no blood, no gore.",
+  "role": "",
+  "input": "assets/source/generated/player_death/raw-sheet.png",
+  "threshold": 20,
+  "edge_threshold": 28,
+  "duration": 140,
+  "rows": 2,
+  "cols": 2,
+  "cell_size": 128,
+  "fit_scale": 0.85,
+  "trim_border": 0,
+  "edge_clean_depth": 3,
+  "align": "feet",
+  "shared_scale": true,
+  "component_mode": "all",
+  "component_padding": 0,
+  "min_component_area": 1,
+  "edge_touch_margin": 0,
+  "frame_labels": [
+    "player_death-1",
+    "player_death-2",
+    "player_death-3",
+    "player_death-4"
+  ],
+  "frames": [
+    {
+      "grid": [
+        0,
+        0
+      ],
+      "source_box": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "component_mode": "all",
+      "component_count": 24,
+      "selected_component_area": null,
+      "selected_component_bbox": null,
+      "crop_bbox": [
+        118,
+        107,
+        532,
+        570
+      ],
+      "edge_touch": false,
+      "output_size": [
+        93,
+        104
+      ],
+      "paste_position": [
+        17,
+        15
+      ]
+    },
+    {
+      "grid": [
+        0,
+        1
+      ],
+      "source_box": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "component_mode": "all",
+      "component_count": 16,
+      "selected_component_area": null,
+      "selected_component_bbox": null,
+      "crop_bbox": [
+        64,
+        179,
+        493,
+        570
+      ],
+      "edge_touch": false,
+      "output_size": [
+        97,
+        88
+      ],
+      "paste_position": [
+        15,
+        31
+      ]
+    },
+    {
+      "grid": [
+        1,
+        0
+      ],
+      "source_box": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "component_mode": "all",
+      "component_count": 6,
+      "selected_component_area": null,
+      "selected_component_bbox": null,
+      "crop_bbox": [
+        94,
+        218,
+        545,
+        456
+      ],
+      "edge_touch": false,
+      "output_size": [
+        102,
+        53
+      ],
+      "paste_position": [
+        13,
+        66
+      ]
+    },
+    {
+      "grid": [
+        1,
+        1
+      ],
+      "source_box": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "component_mode": "all",
+      "component_count": 9,
+      "selected_component_area": null,
+      "selected_component_bbox": null,
+      "crop_bbox": [
+        52,
+        280,
+        532,
+        466
+      ],
+      "edge_touch": false,
+      "output_size": [
+        108,
+        42
+      ],
+      "paste_position": [
+        10,
+        77
+      ]
+    }
+  ],
+  "edge_touch_frames": []
+}

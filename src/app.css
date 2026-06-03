@@ -1,12 +1,12 @@
 :root {
-  --ink: #f2efe4;
-  --muted: #b8b0a1;
-  --panel: rgba(16, 24, 32, 0.78);
-  --line: rgba(245, 215, 142, 0.24);
-  --gold: #f5d78e;
-  --cyan: #67e8f9;
-  --rust: #c75c2c;
-  --bg: #071015;
+  --ink: #17324f;
+  --muted: #5c7592;
+  --panel: rgba(247, 252, 255, 0.78);
+  --line: rgba(72, 157, 214, 0.28);
+  --gold: #d7a84f;
+  --cyan: #159ce6;
+  --blue: #2f6fb4;
+  --bg: #eaf7ff;
   --heading: Georgia, 'Times New Roman', serif;
   --body: Verdana, Geneva, sans-serif;
 
@@ -24,9 +24,9 @@ body {
   min-height: 100svh;
   margin: 0;
   background:
-    radial-gradient(circle at 20% 15%, rgba(103, 232, 249, 0.18), transparent 32rem),
-    radial-gradient(circle at 80% 20%, rgba(199, 92, 44, 0.22), transparent 28rem),
-    linear-gradient(180deg, #101820 0%, #071015 72%);
+    radial-gradient(circle at 20% 12%, rgba(255, 255, 255, 0.95), transparent 22rem),
+    radial-gradient(circle at 78% 18%, rgba(89, 190, 255, 0.26), transparent 30rem),
+    linear-gradient(180deg, #f8fdff 0%, #d8f0ff 46%, #b9ddf5 100%);
 }
 
 button,
@@ -82,7 +82,7 @@ h1 {
 .game-panel {
   border: 1px solid var(--line);
   background: var(--panel);
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.34);
+  box-shadow: 0 24px 80px rgba(47, 111, 180, 0.18);
   backdrop-filter: blur(12px);
 }
 
@@ -112,9 +112,9 @@ h1 {
 .game-frame {
   padding: 14px;
   background:
-    linear-gradient(90deg, rgba(245, 215, 142, 0.08) 1px, transparent 1px),
-    linear-gradient(0deg, rgba(245, 215, 142, 0.08) 1px, transparent 1px),
-    #0b1017;
+    linear-gradient(90deg, rgba(47, 111, 180, 0.1) 1px, transparent 1px),
+    linear-gradient(0deg, rgba(47, 111, 180, 0.1) 1px, transparent 1px),
+    #f8fdff;
   background-size: 32px 32px;
 }
 
@@ -122,8 +122,8 @@ h1 {
   aspect-ratio: 16 / 9;
   width: 100%;
   overflow: hidden;
-  border: 1px solid rgba(103, 232, 249, 0.22);
-  background: #101820;
+  border: 1px solid rgba(21, 156, 230, 0.34);
+  background: #cfeeff;
 }
 
 .game-host canvas {
