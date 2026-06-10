@@ -5,8 +5,8 @@ export function createPlatformerGame(parent: HTMLElement): Phaser.Game {
   return new Phaser.Game({
     type: Phaser.AUTO,
     parent,
-    width: 960,
-    height: 540,
+    width: 1920,
+    height: 1080,
     backgroundColor: '#101820',
     physics: {
       default: 'arcade',

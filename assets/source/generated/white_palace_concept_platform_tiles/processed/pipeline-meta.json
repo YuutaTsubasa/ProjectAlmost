@@ -1,0 +1,46 @@
+{
+  "source": "/Users/maplewing/.codex/generated_images/019e8470-49f5-72c0-996d-87d956fb3c7a/ig_0f1afde494b5e72b016a1fa48ab8b081918be320165cd3423c.png",
+  "source_size": [
+    1672,
+    941
+  ],
+  "runtime": "public/assets/tiles/white_palace_platform_tiles.png",
+  "tile_size": 64,
+  "runtime_size": [
+    192,
+    64
+  ],
+  "selection_note": "Concept-derived contiguous platform crops from the white-blue visual concept right GOAL platform.",
+  "tiles": [
+    {
+      "label": "left",
+      "source_crop": [
+        1272,
+        502,
+        1336,
+        566
+      ],
+      "runtime_tile_index": 1
+    },
+    {
+      "label": "middle",
+      "source_crop": [
+        1336,
+        502,
+        1400,
+        566
+      ],
+      "runtime_tile_index": 2
+    },
+    {
+      "label": "right",
+      "source_crop": [
+        1400,
+        502,
+        1464,
+        566
+      ],
+      "runtime_tile_index": 3
+    }
+  ]
+}

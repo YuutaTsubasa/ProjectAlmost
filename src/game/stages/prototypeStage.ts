@@ -5,6 +5,11 @@ export type PlatformRect = {
   height: number
 }
 
+export type CoinPoint = {
+  x: number
+  y: number
+}
+
 export type PrototypeStageData = {
   world: {
     width: number
@@ -16,6 +21,7 @@ export type PrototypeStageData = {
     y: number
   }
   platforms: PlatformRect[]
+  coins: CoinPoint[]
   enemy: {
     x: number
     y: number
@@ -31,29 +37,41 @@ export type PrototypeStageData = {
 export const prototypeStage: PrototypeStageData = {
   world: {
     width: 1920,
-    height: 720,
-    tileSize: 32,
+    height: 1080,
+    tileSize: 64,
   },
   playerSpawn: {
-    x: 140,
-    y: 560,
+    x: 360,
+    y: 372,
   },
   platforms: [
-    { col: 0, row: 20, width: 30, height: 2 },
-    { col: 28, row: 20, width: 21, height: 2 },
-    { col: 11, row: 15, width: 7, height: 1 },
-    { col: 22, row: 13, width: 8, height: 1 },
-    { col: 35, row: 16, width: 9, height: 1 },
-    { col: 47, row: 13, width: 9, height: 1 },
+    { col: 3, row: 7, width: 8, height: 1 },
+    { col: 13, row: 8, width: 5, height: 1 },
+    { col: 19, row: 6, width: 4, height: 1 },
+    { col: 23, row: 5, width: 7, height: 1 },
+  ],
+  coins: [
+    { x: 470, y: 362 },
+    { x: 600, y: 362 },
+    { x: 745, y: 292 },
+    { x: 940, y: 452 },
+    { x: 1060, y: 452 },
+    { x: 1210, y: 312 },
+    { x: 1300, y: 327 },
+    { x: 1410, y: 312 },
+    { x: 1490, y: 252 },
+    { x: 1560, y: 242 },
+    { x: 1650, y: 227 },
+    { x: 1740, y: 267 },
   ],
   enemy: {
-    x: 1260,
-    y: 470,
-    patrolMinX: 1140,
-    patrolMaxX: 1360,
+    x: 1010,
+    y: 442,
+    patrolMinX: 900,
+    patrolMaxX: 1120,
   },
   goal: {
-    x: 1660,
-    y: 356,
+    x: 1772,
+    y: 272,
   },
 }

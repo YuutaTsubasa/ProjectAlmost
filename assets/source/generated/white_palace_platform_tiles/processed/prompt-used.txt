@@ -1,0 +1,1 @@
+Create exactly one 1x3 platform strip asset sheet for a side-view 2D action platformer. Theme: bright white-and-blue royal palace / White Palace stage. Cells, left to right: left end cap, seamless middle repeat segment, right end cap. Solid #FF00FF chroma-key background.

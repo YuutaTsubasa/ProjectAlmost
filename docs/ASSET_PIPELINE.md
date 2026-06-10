@@ -30,7 +30,8 @@ Use `generate2dsprite` for first-pass assets. Keep the background `#FF00FF` duri
 - `enemy_guard_death`: 4 frames. White palace guard asset generated and integrated.
 - `coin`: 4 frames.
 - `slash_fx`: 4 frames.
-- `platform_tiles_basic`: simple grass/stone tile set.
+- `white_palace_platform_tiles`: 3-tile concept-derived platform strip integrated.
+- `white_palace_parallax`: 3-layer scenery-only sky, far palace, and mid palace set integrated.
 
 ## Reference Policy
 
@@ -130,3 +131,22 @@ Do not wire generated art directly into gameplay until the movement, collision, 
 - Phaser frame size: `128x128`.
 - QC: no edge-touch frames reported by `assets/source/generated/enemy_guard_death/processed/pipeline-meta.json`.
 - Status: white palace basic enemy asset.
+
+### `white_palace_platform_tiles`
+
+- Concept source: `assets/source/generated/white_palace_concept_platform_tiles/raw-concept.png`.
+- Full processed output: `assets/source/generated/white_palace_concept_platform_tiles/processed/`.
+- Runtime tileset: `public/assets/tiles/white_palace_platform_tiles.png`.
+- Phaser tile size: `64x64`.
+- Runtime layout: 3 columns by 1 row, contiguous left/middle/right crops from the visual concept's GOAL platform.
+- Status: first-pass concept-derived White Palace platform tiles.
+
+### `white_palace_parallax`
+
+- Source and prompts: `assets/source/generated/white_palace_parallax/<layer>/`.
+- Runtime sky: `public/assets/maps/white_palace_sky.png`.
+- Runtime far palace: `public/assets/maps/white_palace_far_bg.png`.
+- Runtime mid palace: `public/assets/maps/white_palace_mid_bg.png`.
+- Canvas contract: all layers are `1920x1080`; far and mid layers use alpha transparency.
+- Runtime contract: scenery only. Platforms, collisions, actors, pickups, goal, and HUD remain separate.
+- Status: first-pass White Palace parallax background integrated.

@@ -1,14 +1,22 @@
 import * as Phaser from 'phaser'
-import { type PlatformRect, prototypeStage } from '../stages/prototypeStage'
+import { type CoinPoint, type PlatformRect, prototypeStage } from '../stages/prototypeStage'
 
 type ArcadeSprite = Phaser.Types.Physics.Arcade.SpriteWithDynamicBody
 type TilemapLayer = Phaser.Tilemaps.TilemapLayer | Phaser.Tilemaps.TilemapGPULayer
+type CoinRuntime = {
+  sprite: Phaser.GameObjects.Image
+  point: CoinPoint
+  collected: boolean
+}
 
 const { width: WORLD_WIDTH, height: WORLD_HEIGHT, tileSize: TILE_SIZE } = prototypeStage.world
 const TILE_COLUMNS = WORLD_WIDTH / TILE_SIZE
 const TILE_ROWS = Math.ceil(WORLD_HEIGHT / TILE_SIZE)
-const SOLID_TILE_INDEXES = [1, 2, 3]
+const SOLID_TILE_INDEXES = [0, 1, 2]
 const PLAYER_MAX_HEALTH = 3
+const COIN_TARGET_COUNT = 100
+const FALL_DEFEAT_Y = WORLD_HEIGHT + 80
+const CAMERA_ZOOM = 1.25
 const PLAYER_SCALE = 0.78
 const PLAYER_ATTACK_SCALE = 0.98
 const PLAYER_BODY_SIZE = { width: 34, height: 72 }
@@ -19,16 +27,17 @@ const HOMING_ATTACK_RECOVERY_MS = 220
 const HOMING_ATTACK_BOUNCE_Y = -420
 const HOMING_RETICLE_Y_OFFSET = -8
 const HOMING_ATTACK_CONTACT_DISTANCE = 34
-const HOMING_TRAIL_GHOSTS = 5
+const HOMING_ATTACK_FRAME = 2
+const HOMING_TRAIL_SPACING = 28
+const HOMING_TRAIL_HOLD_MS = 70
+const HOMING_TRAIL_FADE_MS = 260
 const THEME = {
   deepBlue: 0x17324f,
   royalBlue: 0x2f6fb4,
   skyBlue: 0x86cdf8,
   paleBlue: 0xdaf3ff,
   cyan: 0x33b5ff,
-  marble: 0xf7fbff,
   marbleShade: 0xd7e8f4,
-  marbleLine: 0x8ebbd8,
   gold: 0xd7a84f,
   white: 0xf8fdff,
 }
@@ -55,14 +64,21 @@ export class PrototypeScene extends Phaser.Scene {
   private enemyDefeated = false
   private enemyDirection = -1
   private playerVisualYOffset = 0
-  private healthText!: Phaser.GameObjects.Text
-  private objectiveText!: Phaser.GameObjects.Text
+  private coins: CoinRuntime[] = []
+  private collectedCoins = 0
+  private stageTimeMs = 0
+  private timerStarted = false
+  private objectiveMessage = 'Move: A/D or arrows  Jump: W/Space  Attack: J/Z  Homing: jump + attack'
 
   constructor() {
     super('PrototypeScene')
   }
 
   preload(): void {
+    this.load.image('white-palace-sky', '/assets/maps/white_palace_sky.png')
+    this.load.image('white-palace-far-bg', '/assets/maps/white_palace_far_bg.png')
+    this.load.image('white-palace-mid-bg', '/assets/maps/white_palace_mid_bg.png')
+    this.load.image('palace-tiles', '/assets/tiles/white_palace_platform_tiles.png')
     this.load.spritesheet('player-idle', '/assets/sprites/player_idle/sheet-transparent.png', {
       frameWidth: 128,
       frameHeight: 128,
@@ -102,10 +118,12 @@ export class PrototypeScene extends Phaser.Scene {
     this.createAnimations()
 
     this.physics.world.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT)
+    this.physics.world.setBoundsCollision(true, true, true, false)
     this.cameras.main.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT)
 
     this.createParallaxBackground()
     this.terrainLayer = this.createTerrainLayer()
+    this.createCoins()
 
     this.player = this.physics.add.sprite(prototypeStage.playerSpawn.x, prototypeStage.playerSpawn.y, 'player-idle')
     this.player.setCollideWorldBounds(true)
@@ -150,17 +168,10 @@ export class PrototypeScene extends Phaser.Scene {
     }) as Record<'left' | 'right' | 'jump' | 'attack' | 'attackAlt', Phaser.Input.Keyboard.Key>
 
     this.cameras.main.startFollow(this.player, true, 0.12, 0.12)
-    this.cameras.main.setDeadzone(180, 120)
+    this.cameras.main.setZoom(CAMERA_ZOOM)
+    this.cameras.main.setDeadzone(360, 240)
 
-    this.createHud()
-
-    this.objectiveText = this.add.text(36, 86, 'Move: A/D or arrows  Jump: W/Space  Attack: J/Z', {
-      fontFamily: 'Verdana, sans-serif',
-      fontSize: '16px',
-      color: '#2f6fb4',
-    }).setScrollFactor(0)
-
-    this.add.rectangle(WORLD_WIDTH / 2, 706, WORLD_WIDTH, 28, THEME.deepBlue, 0.9)
+    this.dispatchHudState()
   }
 
   update(): void {
@@ -184,11 +195,13 @@ export class PrototypeScene extends Phaser.Scene {
     }
 
     if (left) {
+      this.timerStarted = true
       this.player.setAccelerationX(-1800)
       if (!this.isHurting) {
         this.player.setFlipX(true)
       }
     } else if (right) {
+      this.timerStarted = true
       this.player.setAccelerationX(1800)
       if (!this.isHurting) {
         this.player.setFlipX(false)
@@ -198,12 +211,14 @@ export class PrototypeScene extends Phaser.Scene {
     }
 
     if (jumpPressed && grounded) {
+      this.timerStarted = true
       this.player.setVelocityY(-640)
     }
 
     this.updatePlayerAnimation(left || right, grounded)
 
     if (attackPressed) {
+      this.timerStarted = true
       if (!grounded && this.tryHomingAttack()) {
         return
       }
@@ -214,45 +229,19 @@ export class PrototypeScene extends Phaser.Scene {
     this.updateHomingReticle(grounded)
     this.updateHomingAttack()
     this.updateEnemyPatrol()
+    this.updateCoins()
+    this.updateTimer()
 
-    if (this.player.y > 760) {
+    if (this.player.y > FALL_DEFEAT_Y) {
       this.defeatPlayer('fall')
     }
   }
 
   private createTextures(): void {
     this.makeRectTexture('attack', 56, 36, THEME.cyan, THEME.royalBlue)
-    this.makePalaceTilesTexture()
     this.makeHomingReticleTexture()
     this.makeStageGoalTexture()
-  }
-
-  private createHud(): void {
-    this.add.rectangle(156, 42, 244, 48, THEME.white, 0.76)
-      .setStrokeStyle(1, THEME.skyBlue, 0.8)
-      .setScrollFactor(0)
-      .setDepth(30)
-
-    this.add.text(36, 24, 'WHITE PALACE 1-1', {
-      fontFamily: 'Verdana, Geneva, sans-serif',
-      fontSize: '13px',
-      fontStyle: '700',
-      color: '#2f6fb4',
-    }).setScrollFactor(0).setDepth(31)
-
-    this.healthText = this.add.text(36, 44, this.getHealthLabel(), {
-      fontFamily: 'Verdana, Geneva, sans-serif',
-      fontSize: '15px',
-      fontStyle: '700',
-      color: '#17324f',
-    }).setScrollFactor(0).setDepth(31)
-
-    this.add.text(800, 28, 'SIGNAL 92%', {
-      fontFamily: 'Verdana, Geneva, sans-serif',
-      fontSize: '13px',
-      fontStyle: '700',
-      color: '#159ce6',
-    }).setScrollFactor(0).setDepth(31)
+    this.makeCoinTexture()
   }
 
   private createAnimations(): void {
@@ -348,29 +337,6 @@ export class PrototypeScene extends Phaser.Scene {
     graphics.destroy()
   }
 
-  private makePalaceTilesTexture(): void {
-    const graphics = this.make.graphics()
-
-    for (let index = 0; index < 3; index += 1) {
-      const x = index * TILE_SIZE
-      graphics.fillStyle(THEME.marble)
-      graphics.fillRect(x, 0, TILE_SIZE, TILE_SIZE)
-      graphics.fillStyle(THEME.white)
-      graphics.fillRect(x, 0, TILE_SIZE, 6)
-      graphics.lineStyle(1, THEME.marbleLine, 0.9)
-      graphics.strokeRect(x + 0.5, 0.5, TILE_SIZE - 1, TILE_SIZE - 1)
-      graphics.lineStyle(1, THEME.skyBlue, 0.48)
-      graphics.lineBetween(x + 4, 18, x + 28, 18)
-      graphics.lineBetween(x + 16, 8, x + 16, 28)
-    }
-
-    graphics.fillStyle(THEME.royalBlue)
-    graphics.fillRect(0, 0, 4, TILE_SIZE)
-    graphics.fillRect(TILE_SIZE * 3 - 4, 0, 4, TILE_SIZE)
-    graphics.generateTexture('palace-tiles', TILE_SIZE * 3, TILE_SIZE)
-    graphics.destroy()
-  }
-
   private makeHomingReticleTexture(): void {
     const graphics = this.make.graphics()
     graphics.lineStyle(3, THEME.cyan, 1)
@@ -404,21 +370,39 @@ export class PrototypeScene extends Phaser.Scene {
     graphics.destroy()
   }
 
+  private makeCoinTexture(): void {
+    const graphics = this.make.graphics()
+    graphics.fillStyle(THEME.gold)
+    graphics.fillCircle(22, 22, 18)
+    graphics.lineStyle(3, 0xfff3cf, 1)
+    graphics.strokeCircle(22, 22, 18)
+    graphics.lineStyle(2, THEME.gold, 0.85)
+    graphics.fillStyle(THEME.white, 0.34)
+    graphics.fillEllipse(17, 15, 12, 8)
+    graphics.fillStyle(0xc5891f, 0.9)
+    graphics.fillRoundedRect(18, 11, 8, 22, 3)
+    graphics.generateTexture('coin', 44, 44)
+    graphics.destroy()
+  }
+
   private createParallaxBackground(): void {
-    this.add.rectangle(WORLD_WIDTH / 2, WORLD_HEIGHT / 2, WORLD_WIDTH, WORLD_HEIGHT, THEME.paleBlue).setScrollFactor(0)
+    this.add
+      .image(WORLD_WIDTH / 2, WORLD_HEIGHT / 2, 'white-palace-sky')
+      .setDisplaySize(WORLD_WIDTH, WORLD_HEIGHT)
+      .setScrollFactor(0)
+      .setDepth(-30)
 
-    this.add.rectangle(WORLD_WIDTH / 2, 154, WORLD_WIDTH, 240, THEME.white, 0.58).setScrollFactor(0.08)
-    this.add.rectangle(WORLD_WIDTH / 2, 258, WORLD_WIDTH, 210, THEME.skyBlue, 0.26).setScrollFactor(0.18)
-    this.add.rectangle(WORLD_WIDTH / 2, 328, WORLD_WIDTH, 160, THEME.royalBlue, 0.12).setScrollFactor(0.24)
+    this.add
+      .image(WORLD_WIDTH / 2, WORLD_HEIGHT / 2, 'white-palace-far-bg')
+      .setDisplaySize(WORLD_WIDTH, WORLD_HEIGHT)
+      .setScrollFactor(0.08)
+      .setDepth(-20)
 
-    for (let index = 0; index < 12; index += 1) {
-      const x = index * 190 + 38
-      this.add.rectangle(x, 378, 44, 280, THEME.white, 0.46).setScrollFactor(0.32)
-      this.add.rectangle(x, 236, 72, 30, THEME.marbleShade, 0.4).setScrollFactor(0.32)
-      this.add.rectangle(x, 514, 80, 22, THEME.royalBlue, 0.16).setScrollFactor(0.32)
-    }
-
-    this.add.rectangle(WORLD_WIDTH / 2, 620, WORLD_WIDTH, 110, THEME.deepBlue, 0.18).setScrollFactor(0.72)
+    this.add
+      .image(WORLD_WIDTH / 2, WORLD_HEIGHT / 2, 'white-palace-mid-bg')
+      .setDisplaySize(WORLD_WIDTH, WORLD_HEIGHT)
+      .setScrollFactor(0.18)
+      .setDepth(-10)
   }
 
   private createTerrainLayer(): TilemapLayer {
@@ -438,6 +422,29 @@ export class PrototypeScene extends Phaser.Scene {
     layer.setDepth(5)
 
     return layer
+  }
+
+  private createCoins(): void {
+    this.coins = prototypeStage.coins.map((point, index) => {
+      const sprite = this.add.image(point.x, point.y, 'coin')
+      sprite.setDepth(12)
+      sprite.setData('baseY', point.y)
+
+      this.tweens.add({
+        targets: sprite,
+        y: point.y - 8,
+        duration: 900 + index * 35,
+        ease: 'Sine.easeInOut',
+        yoyo: true,
+        repeat: -1,
+      })
+
+      return {
+        sprite,
+        point,
+        collected: false,
+      }
+    })
   }
 
   private buildTerrainData(): number[][] {
@@ -460,18 +467,18 @@ export class PrototypeScene extends Phaser.Scene {
 
   private getPlatformTileIndex(index: number, width: number): number {
     if (width === 1) {
-      return 2
-    }
-
-    if (index === 0) {
       return 1
     }
 
-    if (index === width - 1) {
-      return 3
+    if (index === 0) {
+      return 0
     }
 
-    return 2
+    if (index === width - 1) {
+      return 2
+    }
+
+    return 1
   }
 
   private tryAttack(): void {
@@ -533,7 +540,7 @@ export class PrototypeScene extends Phaser.Scene {
     const knockbackDirection = this.player.x < this.enemy.x ? -1 : 1
     this.player.setVelocity(knockbackDirection * 360, -360)
     this.playPlayerAnimation('player-hurt')
-    this.objectiveText.setText(`Hit taken. Health: ${this.playerHealth}/${PLAYER_MAX_HEALTH}.`)
+    this.setObjectiveText(`Hit taken. Health: ${this.playerHealth}/${PLAYER_MAX_HEALTH}.`)
 
     this.hurtTween = this.tweens.add({
       targets: this.player,
@@ -551,7 +558,7 @@ export class PrototypeScene extends Phaser.Scene {
     this.time.delayedCall(900, () => {
       this.isInvulnerable = false
       this.stopPlayerHurtBlink()
-      this.objectiveText.setText('Move: A/D or arrows  Jump: W/Space  Attack: J/Z')
+      this.setObjectiveText('Move: A/D or arrows  Jump: W/Space  Attack: J/Z  Homing: jump + attack')
     })
   }
 
@@ -561,7 +568,7 @@ export class PrototypeScene extends Phaser.Scene {
     this.enemy.setVelocity(0, 0)
     this.enemy.body.enable = false
     this.enemy.play('enemy-guard-death')
-    this.objectiveText.setText('Enemy defeated. Next: add a stage goal.')
+    this.setObjectiveText('Enemy defeated. Reach the GOAL flag.')
 
     this.time.delayedCall(520, () => {
       this.enemy.setVisible(false)
@@ -600,7 +607,7 @@ export class PrototypeScene extends Phaser.Scene {
     this.player.setVelocity(0, 0)
     this.player.body.enable = true
     this.playPlayerAnimation('player-idle')
-    this.objectiveText.setText('Move: A/D or arrows  Jump: W/Space  Attack: J/Z')
+    this.setObjectiveText('Move: A/D or arrows  Jump: W/Space  Attack: J/Z  Homing: jump + attack')
   }
 
   private defeatPlayer(reason: 'damage' | 'fall'): void {
@@ -622,7 +629,7 @@ export class PrototypeScene extends Phaser.Scene {
     this.player.setAccelerationX(0)
     this.player.setVelocity(0, reason === 'fall' ? 0 : -160)
     this.playPlayerAnimation('player-death')
-    this.objectiveText.setText(reason === 'fall' ? 'Fell out. Respawning.' : 'Player defeated. Respawning.')
+    this.setObjectiveText(reason === 'fall' ? 'Fell out. Respawning.' : 'Player defeated. Respawning.')
 
     this.time.delayedCall(1100, () => {
       this.respawnPlayer()
@@ -646,7 +653,8 @@ export class PrototypeScene extends Phaser.Scene {
     this.enemy.setVelocityX(0)
     this.goal.setTint(THEME.cyan)
     this.goalLabel.setColor('#f8fafc')
-    this.objectiveText.setText('Stage Clear. Next: load the next map.')
+    this.setObjectiveText(`Stage Clear. ${this.getCoinLabel()}  ${this.getTimerLabel()}`)
+    this.dispatchHudState({ cleared: true })
     this.setPlayerVisualState('normal')
     this.playPlayerAnimation('player-idle')
   }
@@ -680,11 +688,13 @@ export class PrototypeScene extends Phaser.Scene {
     }
 
     this.attackReady = false
+    this.isAttacking = true
     this.isHomingAttacking = true
     this.homingTarget = target
     this.homingReticle?.setVisible(false)
     this.setPlayerVisualState('normal')
-    this.playPlayerAnimation('player-attack')
+    this.player.anims.stop()
+    this.player.setTexture('player-attack', HOMING_ATTACK_FRAME)
     this.resolveHomingAttack(target)
 
     return true
@@ -753,10 +763,10 @@ export class PrototypeScene extends Phaser.Scene {
     const contactX = target.x - Math.cos(angle) * HOMING_ATTACK_CONTACT_DISTANCE
     const contactY = target.y - Math.sin(angle) * HOMING_ATTACK_CONTACT_DISTANCE
 
+    this.player.setFlipX(target.x < startX)
     this.emitHomingTrail(startX, startY, contactX, contactY)
     this.player.setPosition(contactX, contactY)
     this.player.setVelocity(0, 0)
-    this.player.setFlipX(target.x < startX)
     this.defeatEnemy()
     this.finishHomingAttack(true)
   }
@@ -768,13 +778,14 @@ export class PrototypeScene extends Phaser.Scene {
 
     if (hit) {
       this.player.setVelocity(0, HOMING_ATTACK_BOUNCE_Y)
-      this.objectiveText.setText('Homing Attack hit. Next: add a stage goal.')
+      this.setObjectiveText('Homing Attack hit. Reach the GOAL flag.')
     } else {
       this.player.setVelocity(0, 0)
-      this.objectiveText.setText('Move: A/D or arrows  Jump: W/Space  Attack: J/Z')
+      this.setObjectiveText('Move: A/D or arrows  Jump: W/Space  Attack: J/Z  Homing: jump + attack')
     }
 
     this.time.delayedCall(HOMING_ATTACK_RECOVERY_MS, () => {
+      this.isAttacking = false
       if (!this.isHurting) {
         this.attackReady = true
       }
@@ -782,27 +793,30 @@ export class PrototypeScene extends Phaser.Scene {
   }
 
   private emitHomingTrail(startX: number, startY: number, endX: number, endY: number): void {
-    for (let index = 1; index <= HOMING_TRAIL_GHOSTS; index += 1) {
-      const progress = index / (HOMING_TRAIL_GHOSTS + 1)
+    const distance = Phaser.Math.Distance.Between(startX, startY, endX, endY)
+    const trailCount = Math.max(2, Math.ceil(distance / HOMING_TRAIL_SPACING))
+
+    for (let index = 0; index < trailCount; index += 1) {
+      const progress = index / trailCount
       const trail = this.add.sprite(
         Phaser.Math.Linear(startX, endX, progress),
         Phaser.Math.Linear(startY, endY, progress),
-        this.player.texture.key,
-        this.player.frame.name,
+        'player-attack',
+        HOMING_ATTACK_FRAME,
       )
 
       trail.setDepth(this.player.depth - 1)
       trail.setScale(Math.abs(this.player.scaleX), Math.abs(this.player.scaleY))
       trail.setFlipX(this.player.flipX)
       trail.setTint(THEME.cyan)
-      trail.setAlpha(0.3 * (1 - progress * 0.45))
+      trail.setAlpha(0.42 * (1 - progress * 0.35))
       trail.setBlendMode(Phaser.BlendModes.ADD)
 
       this.tweens.add({
         targets: trail,
         alpha: 0,
-        duration: 180,
-        delay: index * 12,
+        duration: HOMING_TRAIL_FADE_MS,
+        delay: HOMING_TRAIL_HOLD_MS,
         onComplete: () => trail.destroy(),
       })
     }
@@ -820,10 +834,117 @@ export class PrototypeScene extends Phaser.Scene {
   }
 
   private updateHealthText(): void {
-    this.healthText?.setText(this.getHealthLabel())
+    this.dispatchHudState()
   }
 
   private getHealthLabel(): string {
     return `HP ${this.playerHealth}/${PLAYER_MAX_HEALTH}`
+  }
+
+  private updateCoins(): void {
+    if (this.stageCleared || this.isDead) {
+      return
+    }
+
+    const playerCenter = this.player.getCenter()
+
+    for (const coin of this.coins) {
+      if (coin.collected) {
+        continue
+      }
+
+      const distance = Phaser.Math.Distance.Between(playerCenter.x, playerCenter.y, coin.sprite.x, coin.sprite.y)
+
+      if (distance < 52) {
+        this.collectCoin(coin)
+      }
+    }
+  }
+
+  private collectCoin(coin: CoinRuntime): void {
+    coin.collected = true
+    this.collectedCoins += 1
+    this.updateCoinText()
+
+    this.tweens.killTweensOf(coin.sprite)
+    this.tweens.add({
+      targets: coin.sprite,
+      y: coin.sprite.y - 34,
+      scale: 1.8,
+      alpha: 0,
+      duration: 260,
+      ease: 'Quad.easeOut',
+      onComplete: () => {
+        coin.sprite.setVisible(false)
+      },
+    })
+
+    const pip = this.add.text(coin.point.x, coin.point.y - 22, '+1', {
+      fontFamily: 'Verdana, Geneva, sans-serif',
+      fontSize: '18px',
+      fontStyle: '700',
+      color: '#ffe6a0',
+      stroke: '#17324f',
+      strokeThickness: 3,
+    }).setOrigin(0.5).setDepth(18)
+
+    this.tweens.add({
+      targets: pip,
+      y: pip.y - 34,
+      alpha: 0,
+      duration: 520,
+      ease: 'Quad.easeOut',
+      onComplete: () => pip.destroy(),
+    })
+  }
+
+  private updateCoinText(): void {
+    this.dispatchHudState()
+  }
+
+  private getCoinLabel(): string {
+    return `COIN ${String(this.collectedCoins).padStart(3, '0')} / ${COIN_TARGET_COUNT}`
+  }
+
+  private updateTimer(): void {
+    if (!this.timerStarted || this.stageCleared || this.isDead) {
+      return
+    }
+
+    this.stageTimeMs += this.game.loop.delta
+    this.dispatchHudState()
+  }
+
+  private getTimerLabel(): string {
+    const totalCentiseconds = Math.floor(this.stageTimeMs / 10)
+    const minutes = Math.floor(totalCentiseconds / 6000)
+    const seconds = Math.floor((totalCentiseconds % 6000) / 100)
+    const centiseconds = totalCentiseconds % 100
+
+    return `TIME ${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${String(centiseconds).padStart(2, '0')}`
+  }
+
+  private setObjectiveText(message: string): void {
+    this.objectiveMessage = message
+    this.dispatchHudState()
+  }
+
+  private dispatchHudState(overrides: Record<string, unknown> = {}): void {
+    window.dispatchEvent(new CustomEvent('projectrun:hud', {
+      detail: {
+        hp: this.playerHealth,
+        hpMax: PLAYER_MAX_HEALTH,
+        coins: this.collectedCoins,
+        coinTarget: COIN_TARGET_COUNT,
+        time: this.getTimerValue(),
+        objective: this.objectiveMessage,
+        cleared: this.stageCleared,
+        ...overrides,
+      },
+    }))
+  }
+
+  private getTimerValue(): string {
+    return this.getTimerLabel().replace('TIME ', '')
   }
 }

@@ -1,0 +1,1 @@
+Tiles cropped directly from the white-blue visual concept image to preserve platform style and test adjacency.
