@@ -135,11 +135,13 @@ Do not wire generated art directly into gameplay until the movement, collision, 
 ### `white_palace_platform_tiles`
 
 - Concept source: `assets/source/generated/white_palace_concept_platform_tiles/raw-concept.png`.
-- Full processed output: `assets/source/generated/white_palace_concept_platform_tiles/processed/`.
+- Generated v2 source and prompt: `assets/source/generated/white_palace_platform_tiles_v2/`.
+- Full processed output: `assets/source/generated/white_palace_platform_tiles_v2/processed/`.
 - Runtime tileset: `public/assets/tiles/white_palace_platform_tiles.png`.
 - Phaser tile size: `64x64`.
-- Runtime layout: 3 columns by 1 row, contiguous left/middle/right crops from the visual concept's GOAL platform.
-- Status: first-pass concept-derived White Palace platform tiles.
+- Runtime layout: 3 columns by 1 row: left cap, seamless middle repeat, mirrored right cap.
+- Collision contract: the visible walkable top edge aligns with the tile's top edge.
+- Status: second-pass generated White Palace platform tiles integrated.
 
 ### `white_palace_parallax`
 
