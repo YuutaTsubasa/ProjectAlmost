@@ -34,6 +34,8 @@
 
   let gameHost: HTMLDivElement
   let game: Phaser.Game | undefined
+  let bootReady = false
+  let bootProgress = 0
   let screen: 'select' | 'game' = 'select'
   let transitionPhase: 'idle' | 'cover' | 'reveal' = 'idle'
   let paused = false
@@ -50,6 +52,26 @@
   const musicFadeFrames = new Map<HTMLAudioElement, number>()
   const BASE_MUSIC_VOLUME = 0.42
   const SETTINGS_KEY = 'project-almost:settings'
+  const PRELOAD_IMAGES = [
+    '/assets/hud/ai-navigator.png',
+    '/assets/hud/player-portrait.png',
+    '/assets/maps/white_palace_far_bg.png',
+    '/assets/maps/white_palace_mid_bg_loop.png',
+    '/assets/maps/white_palace_sky.png',
+    '/assets/maps/white_palace_stage_select.png',
+    '/assets/props/white_palace_checkpoint.png',
+    '/assets/props/white_palace_goal_idle.png',
+    '/assets/results/yuuta-stage-result-standee.png',
+    '/assets/sprites/enemy_guard_death/sheet-transparent.png',
+    '/assets/sprites/enemy_guard_walk/sheet-transparent.png',
+    '/assets/sprites/player_attack/sheet-transparent.png',
+    '/assets/sprites/player_death/sheet-transparent.png',
+    '/assets/sprites/player_hurt/sheet-transparent.png',
+    '/assets/sprites/player_idle/sheet-transparent.png',
+    '/assets/sprites/player_jump/sheet-transparent.png',
+    '/assets/sprites/player_run/sheet-transparent.png',
+    '/assets/tiles/white_palace_platform_tiles.png',
+  ]
   const DEFAULT_SETTINGS: GameSettings = {
     masterVolume: 100,
     musicVolume: 80,
@@ -184,6 +206,36 @@
     if (musicUnlocked) return
     musicUnlocked = true
     syncMusic()
+  }
+
+  async function preloadGameAssets() {
+    let completed = 0
+    const reportComplete = () => {
+      completed += 1
+      bootProgress = Math.round((completed / (PRELOAD_IMAGES.length + 1)) * 100)
+    }
+
+    const imageLoads = PRELOAD_IMAGES.map(async (source) => {
+      const image = new Image()
+      image.src = source
+      try {
+        await image.decode()
+      } catch {
+        await new Promise<void>((resolve) => {
+          image.onload = () => resolve()
+          image.onerror = () => resolve()
+        })
+      }
+      reportComplete()
+    })
+
+    await Promise.all([
+      ...imageLoads,
+      document.fonts.ready.then(reportComplete),
+    ])
+    bootProgress = 100
+    await new Promise((resolve) => window.setTimeout(resolve, 180))
+    bootReady = true
   }
 
   async function enterStage() {
@@ -390,6 +442,8 @@
     stageMusic.loop = true
     mapMusic.preload = 'auto'
     stageMusic.preload = 'auto'
+    mapMusic.load()
+    stageMusic.load()
     window.addEventListener('projectrun:hud', handleHudEvent)
     window.addEventListener('keydown', handleGlobalKeydown)
     window.addEventListener('keydown', unlockMusic, { once: true })
@@ -399,6 +453,7 @@
     }
     document.addEventListener('fullscreenchange', handleFullscreenChange)
     gamepadFrame = window.requestAnimationFrame(pollGamepad)
+    void preloadGameAssets()
 
     return () => {
       window.removeEventListener('projectrun:hud', handleHudEvent)
@@ -417,7 +472,15 @@
 </script>
 
 <main class="shell">
-  {#if screen === 'select'}
+  {#if !bootReady}
+    <section class="game-panel boot-screen" aria-label="Loading game">
+      <div class="boot-emblem">✦</div>
+      <strong>Project Almost</strong>
+      <span>Initializing White Palace</span>
+      <div class="boot-meter"><i style={`width:${bootProgress}%`}></i></div>
+      <b>{String(bootProgress).padStart(3, '0')}%</b>
+    </section>
+  {:else if screen === 'select'}
     <section class="game-panel" aria-label="White Palace stage select">
       <StageSelect onEnter={enterStage} />
     </section>
