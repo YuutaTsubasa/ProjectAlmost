@@ -1,5 +1,5 @@
 import * as Phaser from 'phaser'
-import { type CoinPoint, type PlatformRect, prototypeStage } from '../stages/prototypeStage'
+import { type CoinPoint, type EnemyPoint, type PlatformRect, prototypeStage } from '../stages/prototypeStage'
 
 type ArcadeSprite = Phaser.Types.Physics.Arcade.SpriteWithDynamicBody
 type TilemapLayer = Phaser.Tilemaps.TilemapLayer | Phaser.Tilemaps.TilemapGPULayer
@@ -8,13 +8,19 @@ type CoinRuntime = {
   point: CoinPoint
   collected: boolean
 }
+type EnemyRuntime = {
+  sprite: ArcadeSprite
+  point: EnemyPoint
+  defeated: boolean
+  direction: number
+}
 
 const { width: WORLD_WIDTH, height: WORLD_HEIGHT, tileSize: TILE_SIZE } = prototypeStage.world
 const TILE_COLUMNS = WORLD_WIDTH / TILE_SIZE
 const TILE_ROWS = Math.ceil(WORLD_HEIGHT / TILE_SIZE)
 const SOLID_TILE_INDEXES = [0, 1, 2]
 const PLAYER_MAX_HEALTH = 3
-const COIN_TARGET_COUNT = 100
+const COIN_TARGET_COUNT = prototypeStage.coins.length
 const FALL_DEFEAT_Y = WORLD_HEIGHT + 80
 const CAMERA_ZOOM = 1.25
 const PLAYER_SCALE = 0.78
@@ -32,12 +38,8 @@ const HOMING_TRAIL_SPACING = 28
 const HOMING_TRAIL_HOLD_MS = 70
 const HOMING_TRAIL_FADE_MS = 260
 const THEME = {
-  deepBlue: 0x17324f,
   royalBlue: 0x2f6fb4,
-  skyBlue: 0x86cdf8,
-  paleBlue: 0xdaf3ff,
   cyan: 0x33b5ff,
-  marbleShade: 0xd7e8f4,
   gold: 0xd7a84f,
   white: 0xf8fdff,
 }
@@ -46,10 +48,14 @@ export class PrototypeScene extends Phaser.Scene {
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys
   private keys!: Record<'left' | 'right' | 'jump' | 'attack' | 'attackAlt', Phaser.Input.Keyboard.Key>
   private player!: ArcadeSprite
-  private enemy!: ArcadeSprite
-  private goal!: Phaser.Types.Physics.Arcade.ImageWithStaticBody
-  private goalLabel!: Phaser.GameObjects.Text
+  private enemies: EnemyRuntime[] = []
+  private goal!: Phaser.Types.Physics.Arcade.SpriteWithStaticBody
   private terrainLayer!: TilemapLayer
+  private farBackground!: Phaser.GameObjects.TileSprite
+  private midBackground!: Phaser.GameObjects.TileSprite
+  private checkpointSprites: Phaser.GameObjects.Image[] = []
+  private checkpointGlows: Phaser.GameObjects.Ellipse[] = []
+  private checkpointRings: Phaser.GameObjects.Ellipse[] = []
   private attackReady = true
   private playerHealth = PLAYER_MAX_HEALTH
   private stageCleared = false
@@ -61,14 +67,19 @@ export class PrototypeScene extends Phaser.Scene {
   private homingTarget?: ArcadeSprite
   private homingReticle?: Phaser.GameObjects.Image
   private hurtTween?: Phaser.Tweens.Tween
-  private enemyDefeated = false
-  private enemyDirection = -1
   private playerVisualYOffset = 0
   private coins: CoinRuntime[] = []
   private collectedCoins = 0
+  private damageTaken = 0
+  private falls = 0
+  private enemiesDefeated = 0
   private stageTimeMs = 0
   private timerStarted = false
-  private objectiveMessage = 'Move: A/D or arrows  Jump: W/Space  Attack: J/Z  Homing: jump + attack'
+  private gamepadJumpDown = false
+  private gamepadAttackDown = false
+  private statusMessage = 'Path confirmed. Proceed to the first gate.'
+  private activeCheckpointIndex = -1
+  private respawnPoint = { ...prototypeStage.playerSpawn }
 
   constructor() {
     super('PrototypeScene')
@@ -77,8 +88,13 @@ export class PrototypeScene extends Phaser.Scene {
   preload(): void {
     this.load.image('white-palace-sky', '/assets/maps/white_palace_sky.png')
     this.load.image('white-palace-far-bg', '/assets/maps/white_palace_far_bg.png')
-    this.load.image('white-palace-mid-bg', '/assets/maps/white_palace_mid_bg.png')
+    this.load.image('white-palace-mid-bg', '/assets/maps/white_palace_mid_bg_loop.png')
     this.load.image('palace-tiles', '/assets/tiles/white_palace_platform_tiles.png')
+    this.load.image('checkpoint-beacon', '/assets/props/white_palace_checkpoint.png')
+    this.load.spritesheet('stage-goal', '/assets/props/white_palace_goal_idle.png', {
+      frameWidth: 256,
+      frameHeight: 256,
+    })
     this.load.spritesheet('player-idle', '/assets/sprites/player_idle/sheet-transparent.png', {
       frameWidth: 128,
       frameHeight: 128,
@@ -114,6 +130,7 @@ export class PrototypeScene extends Phaser.Scene {
   }
 
   create(): void {
+    this.resetRuntimeState()
     this.createTextures()
     this.createAnimations()
 
@@ -124,6 +141,8 @@ export class PrototypeScene extends Phaser.Scene {
     this.createParallaxBackground()
     this.terrainLayer = this.createTerrainLayer()
     this.createCoins()
+    this.createEnemies()
+    this.createCheckpoints()
 
     this.player = this.physics.add.sprite(prototypeStage.playerSpawn.x, prototypeStage.playerSpawn.y, 'player-idle')
     this.player.setCollideWorldBounds(true)
@@ -132,30 +151,20 @@ export class PrototypeScene extends Phaser.Scene {
     this.setPlayerVisualState('normal')
     this.player.play('player-idle')
 
-    this.enemy = this.physics.add.sprite(prototypeStage.enemy.x, prototypeStage.enemy.y, 'enemy-guard-walk')
-    this.enemy.setCollideWorldBounds(true)
-    this.enemy.setScale(0.82)
-    this.enemy.setVelocityX(-80)
-    this.enemy.body.setSize(46, 54)
-    this.enemy.body.setOffset(41, 54)
-    this.enemy.play('enemy-guard-walk')
-
-    this.goal = this.physics.add.staticImage(prototypeStage.goal.x, prototypeStage.goal.y, 'stage-goal')
-    this.goal.setSize(42, 88)
-    this.goal.setOffset(11, 8)
+    this.goal = this.physics.add.staticSprite(prototypeStage.goal.x, prototypeStage.goal.y + 48, 'stage-goal')
+    this.goal.setOrigin(0.5, 1)
+    this.goal.setDisplaySize(96, 128)
+    this.goal.refreshBody()
+    this.goal.setSize(52, 112)
+    this.goal.setOffset(22, 16)
     this.goal.setDepth(8)
-    this.goalLabel = this.add.text(prototypeStage.goal.x + 17, prototypeStage.goal.y - 27, 'GOAL', {
-      fontFamily: 'Verdana, Geneva, sans-serif',
-      fontSize: '11px',
-      fontStyle: '700',
-      color: '#17324f',
-    })
-    this.goalLabel.setOrigin(0.5)
-    this.goalLabel.setDepth(9)
+    this.goal.play('stage-goal-idle')
 
     this.physics.add.collider(this.player, this.terrainLayer)
-    this.physics.add.collider(this.enemy, this.terrainLayer)
-    this.physics.add.collider(this.player, this.enemy, () => this.hurtPlayer())
+    for (const enemy of this.enemies) {
+      this.physics.add.collider(enemy.sprite, this.terrainLayer)
+      this.physics.add.collider(this.player, enemy.sprite, () => this.hurtPlayer(enemy.sprite))
+    }
     this.physics.add.overlap(this.player, this.goal, () => this.completeStage())
 
     this.cursors = this.input.keyboard!.createCursorKeys()
@@ -174,11 +183,52 @@ export class PrototypeScene extends Phaser.Scene {
     this.dispatchHudState()
   }
 
+  private resetRuntimeState(): void {
+    this.enemies = []
+    this.checkpointSprites = []
+    this.checkpointGlows = []
+    this.checkpointRings = []
+    this.attackReady = true
+    this.playerHealth = PLAYER_MAX_HEALTH
+    this.stageCleared = false
+    this.isAttacking = false
+    this.isHurting = false
+    this.isInvulnerable = false
+    this.isHomingAttacking = false
+    this.isDead = false
+    this.homingTarget = undefined
+    this.homingReticle = undefined
+    this.hurtTween = undefined
+    this.playerVisualYOffset = 0
+    this.coins = []
+    this.collectedCoins = 0
+    this.damageTaken = 0
+    this.falls = 0
+    this.enemiesDefeated = 0
+    this.stageTimeMs = 0
+    this.timerStarted = false
+    this.gamepadJumpDown = false
+    this.gamepadAttackDown = false
+    this.statusMessage = 'Path confirmed. Proceed to the first gate.'
+    this.activeCheckpointIndex = -1
+    this.respawnPoint = { ...prototypeStage.playerSpawn }
+  }
+
   update(): void {
-    const left = this.cursors.left.isDown || this.keys.left.isDown
-    const right = this.cursors.right.isDown || this.keys.right.isDown
-    const jumpPressed = Phaser.Input.Keyboard.JustDown(this.cursors.space) || Phaser.Input.Keyboard.JustDown(this.keys.jump)
-    const attackPressed = Phaser.Input.Keyboard.JustDown(this.keys.attack) || Phaser.Input.Keyboard.JustDown(this.keys.attackAlt)
+    const pad = Array.from(navigator.getGamepads?.() ?? []).find((candidate): candidate is Gamepad => candidate !== null)
+    const padLeft = Boolean(pad && (pad.axes[0] < -0.35 || pad.buttons[14]?.pressed))
+    const padRight = Boolean(pad && (pad.axes[0] > 0.35 || pad.buttons[15]?.pressed))
+    const padJumpDown = Boolean(pad?.buttons[0]?.pressed)
+    const padAttackDown = Boolean(pad?.buttons[2]?.pressed)
+    const padJumpPressed = padJumpDown && !this.gamepadJumpDown
+    const padAttackPressed = padAttackDown && !this.gamepadAttackDown
+    this.gamepadJumpDown = padJumpDown
+    this.gamepadAttackDown = padAttackDown
+
+    const left = this.cursors.left.isDown || this.keys.left.isDown || padLeft
+    const right = this.cursors.right.isDown || this.keys.right.isDown || padRight
+    const jumpPressed = Phaser.Input.Keyboard.JustDown(this.cursors.space) || Phaser.Input.Keyboard.JustDown(this.keys.jump) || padJumpPressed
+    const attackPressed = Phaser.Input.Keyboard.JustDown(this.keys.attack) || Phaser.Input.Keyboard.JustDown(this.keys.attackAlt) || padAttackPressed
 
     const grounded = this.player.body.blocked.down
 
@@ -229,8 +279,10 @@ export class PrototypeScene extends Phaser.Scene {
     this.updateHomingReticle(grounded)
     this.updateHomingAttack()
     this.updateEnemyPatrol()
+    this.updateCheckpoint()
     this.updateCoins()
     this.updateTimer()
+    this.updateParallaxBackground()
 
     if (this.player.y > FALL_DEFEAT_Y) {
       this.defeatPlayer('fall')
@@ -240,7 +292,6 @@ export class PrototypeScene extends Phaser.Scene {
   private createTextures(): void {
     this.makeRectTexture('attack', 56, 36, THEME.cyan, THEME.royalBlue)
     this.makeHomingReticleTexture()
-    this.makeStageGoalTexture()
     this.makeCoinTexture()
   }
 
@@ -300,6 +351,14 @@ export class PrototypeScene extends Phaser.Scene {
       frameRate: 8,
       repeat: 0,
     })
+
+    this.anims.create({
+      key: 'stage-goal-idle',
+      frames: this.anims.generateFrameNumbers('stage-goal', { start: 0, end: 3 }),
+      frameRate: 5,
+      repeat: -1,
+      yoyo: true,
+    })
   }
 
   private updatePlayerAnimation(isMoving: boolean, grounded: boolean): void {
@@ -351,25 +410,6 @@ export class PrototypeScene extends Phaser.Scene {
     graphics.destroy()
   }
 
-  private makeStageGoalTexture(): void {
-    const graphics = this.make.graphics()
-    graphics.fillStyle(THEME.deepBlue)
-    graphics.fillRoundedRect(18, 10, 10, 82, 4)
-    graphics.fillStyle(THEME.white)
-    graphics.fillTriangle(28, 12, 28, 52, 66, 32)
-    graphics.fillStyle(THEME.skyBlue)
-    graphics.fillTriangle(28, 52, 28, 72, 54, 58)
-    graphics.lineStyle(2, THEME.royalBlue, 0.9)
-    graphics.strokeTriangle(28, 12, 28, 52, 66, 32)
-    graphics.strokeTriangle(28, 52, 28, 72, 54, 58)
-    graphics.fillStyle(THEME.marbleShade)
-    graphics.fillRoundedRect(9, 86, 28, 8, 3)
-    graphics.fillStyle(THEME.gold)
-    graphics.fillCircle(23, 10, 5)
-    graphics.generateTexture('stage-goal', 72, 96)
-    graphics.destroy()
-  }
-
   private makeCoinTexture(): void {
     const graphics = this.make.graphics()
     graphics.fillStyle(THEME.gold)
@@ -387,22 +427,27 @@ export class PrototypeScene extends Phaser.Scene {
 
   private createParallaxBackground(): void {
     this.add
-      .image(WORLD_WIDTH / 2, WORLD_HEIGHT / 2, 'white-palace-sky')
-      .setDisplaySize(WORLD_WIDTH, WORLD_HEIGHT)
+      .tileSprite(0, 0, 1920, WORLD_HEIGHT, 'white-palace-sky')
+      .setOrigin(0)
       .setScrollFactor(0)
       .setDepth(-30)
 
-    this.add
-      .image(WORLD_WIDTH / 2, WORLD_HEIGHT / 2, 'white-palace-far-bg')
-      .setDisplaySize(WORLD_WIDTH, WORLD_HEIGHT)
-      .setScrollFactor(0.08)
+    this.farBackground = this.add
+      .tileSprite(0, 0, 1920, WORLD_HEIGHT, 'white-palace-far-bg')
+      .setOrigin(0)
+      .setScrollFactor(0)
       .setDepth(-20)
 
-    this.add
-      .image(WORLD_WIDTH / 2, WORLD_HEIGHT / 2, 'white-palace-mid-bg')
-      .setDisplaySize(WORLD_WIDTH, WORLD_HEIGHT)
-      .setScrollFactor(0.18)
+    this.midBackground = this.add
+      .tileSprite(0, 0, 1920, WORLD_HEIGHT, 'white-palace-mid-bg')
+      .setOrigin(0)
+      .setScrollFactor(0)
       .setDepth(-10)
+  }
+
+  private updateParallaxBackground(): void {
+    this.farBackground.setTilePosition(this.cameras.main.scrollX * 0.08, 0)
+    this.midBackground.setTilePosition(this.cameras.main.scrollX * 0.18, 0)
   }
 
   private createTerrainLayer(): TilemapLayer {
@@ -444,6 +489,61 @@ export class PrototypeScene extends Phaser.Scene {
         point,
         collected: false,
       }
+    })
+  }
+
+  private createEnemies(): void {
+    this.enemies = prototypeStage.enemies.map((point) => {
+      const sprite = this.physics.add.sprite(point.x, point.y, 'enemy-guard-walk')
+      sprite.setCollideWorldBounds(true)
+      sprite.setScale(0.82)
+      sprite.setVelocityX(-80)
+      sprite.body.setSize(46, 54)
+      sprite.body.setOffset(41, 54)
+      sprite.play('enemy-guard-walk')
+
+      return {
+        sprite,
+        point,
+        defeated: false,
+        direction: -1,
+      }
+    })
+  }
+
+  private createCheckpoints(): void {
+    this.checkpointGlows = []
+    this.checkpointRings = []
+    this.checkpointSprites = prototypeStage.checkpoints.map((checkpoint, index) => {
+      const glow = this.add.ellipse(checkpoint.x, checkpoint.y - 3, 92, 20, THEME.cyan, 0.24)
+      glow.setDepth(6)
+      glow.setBlendMode(Phaser.BlendModes.ADD)
+      this.checkpointGlows[index] = glow
+
+      const ring = this.add.ellipse(checkpoint.x, checkpoint.y - 52, 74, 74)
+      ring.setStrokeStyle(3, THEME.cyan, 0.7)
+      ring.setDepth(8)
+      ring.setBlendMode(Phaser.BlendModes.ADD)
+      this.checkpointRings[index] = ring
+
+      const sprite = this.add.image(checkpoint.x, checkpoint.y, 'checkpoint-beacon')
+      sprite.setOrigin(0.5, 1)
+      sprite.setDisplaySize(76, 114)
+      sprite.setAlpha(0.82)
+      sprite.setDepth(7)
+
+      this.tweens.add({
+        targets: [glow, ring],
+        alpha: { from: 0.24, to: 0.68 },
+        scaleX: { from: 0.92, to: 1.14 },
+        scaleY: { from: 0.92, to: 1.14 },
+        duration: 920 + index * 130,
+        ease: 'Sine.easeInOut',
+        yoyo: true,
+        repeat: -1,
+      })
+
+      return sprite
     })
   }
 
@@ -496,8 +596,10 @@ export class PrototypeScene extends Phaser.Scene {
     hitbox.setFlipX(direction < 0)
     hitbox.setAlpha(0.35)
 
-    if (!this.enemyDefeated && Phaser.Geom.Intersects.RectangleToRectangle(hitbox.getBounds(), this.enemy.getBounds())) {
-      this.defeatEnemy()
+    const hitEnemy = this.enemies.find((enemy) => !enemy.defeated && Phaser.Geom.Intersects.RectangleToRectangle(hitbox.getBounds(), enemy.sprite.getBounds()))
+
+    if (hitEnemy) {
+      this.defeatEnemy(hitEnemy.sprite)
     }
 
     this.time.delayedCall(120, () => {
@@ -514,12 +616,13 @@ export class PrototypeScene extends Phaser.Scene {
     })
   }
 
-  private hurtPlayer(): void {
-    if (this.isInvulnerable || this.isHurting || this.enemyDefeated || this.isHomingAttacking || this.isDead) {
+  private hurtPlayer(enemy: ArcadeSprite): void {
+    if (this.isInvulnerable || this.isHurting || this.isEnemyDefeated(enemy) || this.isHomingAttacking || this.isDead) {
       return
     }
 
     this.playerHealth -= 1
+    this.damageTaken += 1
     this.updateHealthText()
 
     if (this.playerHealth <= 0) {
@@ -537,10 +640,10 @@ export class PrototypeScene extends Phaser.Scene {
     this.stopPlayerHurtBlink()
     this.attackReady = false
 
-    const knockbackDirection = this.player.x < this.enemy.x ? -1 : 1
+    const knockbackDirection = this.player.x < enemy.x ? -1 : 1
     this.player.setVelocity(knockbackDirection * 360, -360)
     this.playPlayerAnimation('player-hurt')
-    this.setObjectiveText(`Hit taken. Health: ${this.playerHealth}/${PLAYER_MAX_HEALTH}.`)
+    this.setStatusMessage(`Armor integrity reduced. HP ${this.playerHealth}/${PLAYER_MAX_HEALTH}.`)
 
     this.hurtTween = this.tweens.add({
       targets: this.player,
@@ -558,36 +661,82 @@ export class PrototypeScene extends Phaser.Scene {
     this.time.delayedCall(900, () => {
       this.isInvulnerable = false
       this.stopPlayerHurtBlink()
-      this.setObjectiveText('Move: A/D or arrows  Jump: W/Space  Attack: J/Z  Homing: jump + attack')
+      this.setStatusMessage('Armor stabilized. Continue toward the gate.')
     })
   }
 
-  private defeatEnemy(): void {
-    this.enemyDefeated = true
+  private defeatEnemy(sprite: ArcadeSprite): void {
+    const enemy = this.enemies.find((candidate) => candidate.sprite === sprite)
+
+    if (!enemy || enemy.defeated) {
+      return
+    }
+
+    enemy.defeated = true
+    this.enemiesDefeated += 1
     this.homingReticle?.setVisible(false)
-    this.enemy.setVelocity(0, 0)
-    this.enemy.body.enable = false
-    this.enemy.play('enemy-guard-death')
-    this.setObjectiveText('Enemy defeated. Reach the GOAL flag.')
+    enemy.sprite.setVelocity(0, 0)
+    enemy.sprite.body.enable = false
+    enemy.sprite.play('enemy-guard-death')
+    this.setStatusMessage('Hostile signal cleared. Route to the gate is open.')
 
     this.time.delayedCall(520, () => {
-      this.enemy.setVisible(false)
+      enemy.sprite.setVisible(false)
     })
   }
 
   private updateEnemyPatrol(): void {
-    if (this.enemyDefeated) {
+    for (const enemy of this.enemies) {
+      if (enemy.defeated) {
+        continue
+      }
+
+      if (enemy.sprite.x < enemy.point.patrolMinX) {
+        enemy.direction = 1
+      } else if (enemy.sprite.x > enemy.point.patrolMaxX) {
+        enemy.direction = -1
+      }
+
+      enemy.sprite.setVelocityX(enemy.direction * 80)
+      enemy.sprite.setFlipX(enemy.direction > 0)
+    }
+  }
+
+  private isEnemyDefeated(sprite: ArcadeSprite): boolean {
+    return this.enemies.find((enemy) => enemy.sprite === sprite)?.defeated ?? true
+  }
+
+  private updateCheckpoint(): void {
+    const nextCheckpointIndex = prototypeStage.checkpoints.findIndex((checkpoint, index) => index > this.activeCheckpointIndex && this.player.x >= checkpoint.x)
+
+    if (nextCheckpointIndex === -1) {
       return
     }
 
-    if (this.enemy.x < prototypeStage.enemy.patrolMinX) {
-      this.enemyDirection = 1
-    } else if (this.enemy.x > prototypeStage.enemy.patrolMaxX) {
-      this.enemyDirection = -1
-    }
-
-    this.enemy.setVelocityX(this.enemyDirection * 80)
-    this.enemy.setFlipX(this.enemyDirection > 0)
+    const checkpoint = prototypeStage.checkpoints[nextCheckpointIndex]
+    this.activeCheckpointIndex = nextCheckpointIndex
+    this.respawnPoint = { x: checkpoint.spawnX, y: checkpoint.spawnY }
+    const sprite = this.checkpointSprites[nextCheckpointIndex]
+    const glow = this.checkpointGlows[nextCheckpointIndex]
+    const ring = this.checkpointRings[nextCheckpointIndex]
+    sprite.setAlpha(1)
+    sprite.setTint(0xfff0a8)
+    glow.setFillStyle(THEME.gold, 0.7)
+    ring.setStrokeStyle(4, THEME.gold, 1)
+    this.tweens.add({
+      targets: sprite,
+      scaleX: sprite.scaleX * 1.12,
+      scaleY: sprite.scaleY * 1.12,
+      duration: 180,
+      yoyo: true,
+    })
+    this.tweens.add({
+      targets: [glow, ring],
+      alpha: 1,
+      duration: 180,
+      yoyo: true,
+    })
+    this.setStatusMessage('Checkpoint synchronized. Restoration point updated.')
   }
 
   private respawnPlayer(): void {
@@ -603,11 +752,12 @@ export class PrototypeScene extends Phaser.Scene {
     this.stopPlayerHurtBlink()
     this.setPlayerHomingCollision(true)
     this.setPlayerVisualState('normal')
-    this.player.setPosition(prototypeStage.playerSpawn.x, prototypeStage.playerSpawn.y)
+    this.player.setPosition(this.respawnPoint.x, this.respawnPoint.y)
     this.player.setVelocity(0, 0)
     this.player.body.enable = true
     this.playPlayerAnimation('player-idle')
-    this.setObjectiveText('Move: A/D or arrows  Jump: W/Space  Attack: J/Z  Homing: jump + attack')
+    this.setEnemiesFrozen(false)
+    this.setStatusMessage('Systems restored. Recommencing mission.')
   }
 
   private defeatPlayer(reason: 'damage' | 'fall'): void {
@@ -616,6 +766,9 @@ export class PrototypeScene extends Phaser.Scene {
     }
 
     this.isDead = true
+    if (reason === 'fall') {
+      this.falls += 1
+    }
     this.isHurting = false
     this.isInvulnerable = true
     this.isAttacking = false
@@ -628,12 +781,34 @@ export class PrototypeScene extends Phaser.Scene {
     this.setPlayerVisualState('normal')
     this.player.setAccelerationX(0)
     this.player.setVelocity(0, reason === 'fall' ? 0 : -160)
+    this.setEnemiesFrozen(true)
     this.playPlayerAnimation('player-death')
-    this.setObjectiveText(reason === 'fall' ? 'Fell out. Respawning.' : 'Player defeated. Respawning.')
+    this.setStatusMessage(reason === 'fall' ? 'Route lost. Restoring from checkpoint.' : 'Critical damage. Restoring from checkpoint.')
 
-    this.time.delayedCall(1100, () => {
-      this.respawnPlayer()
+    this.time.delayedCall(700, () => {
+      this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
+        this.respawnPlayer()
+        this.cameras.main.fadeIn(450, 245, 250, 255)
+      })
+      this.cameras.main.fadeOut(350, 245, 250, 255)
     })
+  }
+
+  private setEnemiesFrozen(frozen: boolean): void {
+    for (const enemy of this.enemies) {
+      if (enemy.defeated || !enemy.sprite.active) continue
+
+      enemy.sprite.setVelocity(0, 0)
+      enemy.sprite.setAcceleration(0, 0)
+      enemy.sprite.body.allowGravity = !frozen
+
+      if (frozen) {
+        enemy.sprite.anims.pause()
+      } else {
+        enemy.sprite.anims.resume()
+        enemy.sprite.setVelocityX(enemy.direction * 80)
+      }
+    }
   }
 
   private completeStage(): void {
@@ -650,10 +825,11 @@ export class PrototypeScene extends Phaser.Scene {
     this.stopPlayerHurtBlink()
     this.player.setVelocity(0, 0)
     this.player.setAccelerationX(0)
-    this.enemy.setVelocityX(0)
+    for (const enemy of this.enemies) {
+      enemy.sprite.setVelocityX(0)
+    }
     this.goal.setTint(THEME.cyan)
-    this.goalLabel.setColor('#f8fafc')
-    this.setObjectiveText(`Stage Clear. ${this.getCoinLabel()}  ${this.getTimerLabel()}`)
+    this.setStatusMessage(`Gate reached. ${this.getCoinLabel()}  ${this.getTimerLabel()}`)
     this.dispatchHudState({ cleared: true })
     this.setPlayerVisualState('normal')
     this.playPlayerAnimation('player-idle')
@@ -677,7 +853,7 @@ export class PrototypeScene extends Phaser.Scene {
   }
 
   private tryHomingAttack(): boolean {
-    if (!this.attackReady || this.isHurting || this.isHomingAttacking || this.enemyDefeated || this.isDead) {
+    if (!this.attackReady || this.isHurting || this.isHomingAttacking || this.isDead) {
       return false
     }
 
@@ -701,28 +877,22 @@ export class PrototypeScene extends Phaser.Scene {
   }
 
   private findHomingTarget(): ArcadeSprite | undefined {
-    if (this.enemyDefeated || !this.enemy.active || !this.enemy.visible) {
-      return undefined
-    }
-
-    const distance = Phaser.Math.Distance.Between(this.player.x, this.player.y, this.enemy.x, this.enemy.y)
-
-    if (distance > HOMING_ATTACK_RANGE) {
-      return undefined
-    }
-
     const facing = this.player.flipX ? -1 : 1
-    const targetDirection = Math.sign(this.enemy.x - this.player.x) || facing
-
-    if (targetDirection !== facing && Math.abs(this.enemy.x - this.player.x) > 48) {
-      return undefined
-    }
-
-    return this.enemy
+    return this.enemies
+      .filter((enemy) => !enemy.defeated && enemy.sprite.active && enemy.sprite.visible)
+      .map((enemy) => ({
+        sprite: enemy.sprite,
+        distance: Phaser.Math.Distance.Between(this.player.x, this.player.y, enemy.sprite.x, enemy.sprite.y),
+      }))
+      .filter(({ sprite, distance }) => {
+        const targetDirection = Math.sign(sprite.x - this.player.x) || facing
+        return distance <= HOMING_ATTACK_RANGE && (targetDirection === facing || Math.abs(sprite.x - this.player.x) <= 48)
+      })
+      .sort((a, b) => a.distance - b.distance)[0]?.sprite
   }
 
   private updateHomingReticle(grounded: boolean): void {
-    if (grounded || this.stageCleared || this.isDead || this.isAttacking || this.isHurting || this.isHomingAttacking || this.enemyDefeated) {
+    if (grounded || this.stageCleared || this.isDead || this.isAttacking || this.isHurting || this.isHomingAttacking) {
       this.homingReticle?.setVisible(false)
       return
     }
@@ -750,7 +920,7 @@ export class PrototypeScene extends Phaser.Scene {
       return
     }
 
-    if (this.enemyDefeated || !this.homingTarget.active || !this.homingTarget.visible) {
+    if (this.isEnemyDefeated(this.homingTarget) || !this.homingTarget.active || !this.homingTarget.visible) {
       this.finishHomingAttack(false)
       return
     }
@@ -767,7 +937,7 @@ export class PrototypeScene extends Phaser.Scene {
     this.emitHomingTrail(startX, startY, contactX, contactY)
     this.player.setPosition(contactX, contactY)
     this.player.setVelocity(0, 0)
-    this.defeatEnemy()
+    this.defeatEnemy(target)
     this.finishHomingAttack(true)
   }
 
@@ -778,10 +948,10 @@ export class PrototypeScene extends Phaser.Scene {
 
     if (hit) {
       this.player.setVelocity(0, HOMING_ATTACK_BOUNCE_Y)
-      this.setObjectiveText('Homing Attack hit. Reach the GOAL flag.')
+      this.setStatusMessage('Homing strike confirmed. Continue toward the gate.')
     } else {
       this.player.setVelocity(0, 0)
-      this.setObjectiveText('Move: A/D or arrows  Jump: W/Space  Attack: J/Z  Homing: jump + attack')
+      this.setStatusMessage('No target contact. Resume course.')
     }
 
     this.time.delayedCall(HOMING_ATTACK_RECOVERY_MS, () => {
@@ -924,8 +1094,30 @@ export class PrototypeScene extends Phaser.Scene {
     return `TIME ${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${String(centiseconds).padStart(2, '0')}`
   }
 
-  private setObjectiveText(message: string): void {
-    this.objectiveMessage = message
+  private getRank(): string {
+    const elapsedSeconds = this.stageTimeMs / 1000
+    const { sTime, aTime, bTime, cTime } = prototypeStage.rankTargets
+
+    let timeScore = 300
+    if (elapsedSeconds > sTime && elapsedSeconds <= aTime) timeScore = 240
+    else if (elapsedSeconds > aTime && elapsedSeconds <= bTime) timeScore = 170
+    else if (elapsedSeconds > bTime && elapsedSeconds <= cTime) timeScore = 100
+    else if (elapsedSeconds > cTime) timeScore = Math.max(0, 100 - (elapsedSeconds - cTime) * 3)
+
+    const coinScore = (this.collectedCoins / COIN_TARGET_COUNT) * 200
+    const enemyScore = (this.enemiesDefeated / prototypeStage.enemies.length) * 150
+    const checkpointScore = ((this.activeCheckpointIndex + 1) / prototypeStage.checkpoints.length) * 50
+    const score = 300 + timeScore + coinScore + enemyScore + checkpointScore - this.damageTaken * 80 - this.falls * 180
+
+    if (score >= 850) return 'S'
+    if (score >= 700) return 'A'
+    if (score >= 550) return 'B'
+    if (score >= 400) return 'C'
+    return 'D'
+  }
+
+  private setStatusMessage(message: string): void {
+    this.statusMessage = message
     this.dispatchHudState()
   }
 
@@ -936,8 +1128,34 @@ export class PrototypeScene extends Phaser.Scene {
         hpMax: PLAYER_MAX_HEALTH,
         coins: this.collectedCoins,
         coinTarget: COIN_TARGET_COUNT,
+        damageTaken: this.damageTaken,
+        falls: this.falls,
+        enemiesDefeated: this.enemiesDefeated,
+        enemyTarget: prototypeStage.enemies.length,
+        checkpointsReached: this.activeCheckpointIndex + 1,
+        checkpointTarget: prototypeStage.checkpoints.length,
+        rank: this.getRank(),
         time: this.getTimerValue(),
-        objective: this.objectiveMessage,
+        objective: prototypeStage.objective,
+        statusMessage: this.statusMessage,
+        playerProgress: Phaser.Math.Clamp(this.player.x / WORLD_WIDTH, 0, 1),
+        playerProgressY: Phaser.Math.Clamp(this.player.y / WORLD_HEIGHT, 0, 1),
+        goalProgress: prototypeStage.goal.x / WORLD_WIDTH,
+        enemyActive: this.enemies.some((enemy) => !enemy.defeated),
+        enemyMarkers: this.enemies.filter((enemy) => !enemy.defeated).map((enemy) => ({
+          x: enemy.sprite.x / WORLD_WIDTH,
+          y: enemy.sprite.y / WORLD_HEIGHT,
+        })),
+        mapPlatforms: prototypeStage.platforms.map((platform) => ({
+          x: platform.col / TILE_COLUMNS,
+          y: (platform.row * TILE_SIZE) / WORLD_HEIGHT,
+          width: platform.width / TILE_COLUMNS,
+        })),
+        checkpointMarkers: prototypeStage.checkpoints.map((checkpoint) => ({
+          x: checkpoint.x / WORLD_WIDTH,
+          y: checkpoint.y / WORLD_HEIGHT,
+        })),
+        activeCheckpointIndex: this.activeCheckpointIndex,
         cleared: this.stageCleared,
         ...overrides,
       },

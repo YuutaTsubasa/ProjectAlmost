@@ -32,6 +32,9 @@ Use `generate2dsprite` for first-pass assets. Keep the background `#FF00FF` duri
 - `slash_fx`: 4 frames.
 - `white_palace_platform_tiles`: 3-tile concept-derived platform strip integrated.
 - `white_palace_parallax`: 3-layer scenery-only sky, far palace, and mid palace set integrated.
+- `hud_portraits`: player identity portrait and Palace Navigator AI portrait integrated.
+- `white_palace_goal`: generated White Palace goal flag integrated.
+- `white_palace_checkpoint`: generated checkpoint beacon integrated.
 
 ## Reference Policy
 
@@ -149,6 +152,33 @@ Do not wire generated art directly into gameplay until the movement, collision, 
 - Runtime sky: `public/assets/maps/white_palace_sky.png`.
 - Runtime far palace: `public/assets/maps/white_palace_far_bg.png`.
 - Runtime mid palace: `public/assets/maps/white_palace_mid_bg.png`.
+- Runtime seamless mid palace strip: `public/assets/maps/white_palace_mid_bg_loop.png`.
 - Canvas contract: all layers are `1920x1080`; far and mid layers use alpha transparency.
+- Repeat contract: the mid palace runtime strip is `3840x1080`, composed as source plus horizontal mirror so both loop boundaries match.
 - Runtime contract: scenery only. Platforms, collisions, actors, pickups, goal, and HUD remain separate.
 - Status: first-pass White Palace parallax background integrated.
+
+### `hud_portraits`
+
+- Generated source and prompts: `assets/source/generated/hud_portraits/`.
+- Runtime player portrait: `public/assets/hud/player-portrait.png`.
+- Runtime AI portrait: `public/assets/hud/ai-navigator.png`.
+- Runtime size: `512x512`.
+- Status: White Palace HUD player and navigator portraits integrated.
+
+### `white_palace_goal`
+
+- Generated source and prompt: `assets/source/generated/white_palace_goal/`.
+- Runtime asset: `public/assets/props/white_palace_goal.png`.
+- Runtime canvas: `192x256` transparent PNG.
+- Idle animation source and QC: `assets/source/generated/white_palace_goal_idle/`.
+- Runtime idle sheet: `public/assets/props/white_palace_goal_idle.png`.
+- Phaser idle frames: `4` frames at `256x256`, bottom anchored with aligned flagpole.
+- Status: generated White Palace goal flag and idle breeze animation integrated.
+
+### `white_palace_checkpoint`
+
+- Generated source and prompt: `assets/source/generated/white_palace_checkpoint/`.
+- Runtime asset: `public/assets/props/white_palace_checkpoint.png`.
+- Runtime behavior: dim before activation, cyan glow after synchronization.
+- Status: generated White Palace checkpoint beacon integrated.

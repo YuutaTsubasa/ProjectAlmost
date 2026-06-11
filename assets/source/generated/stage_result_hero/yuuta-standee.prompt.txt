@@ -1,0 +1,9 @@
+Full-body standing illustration of Yuuta Tsubasa for the Stage Result screen.
+
+Young anime knight with layered pale silver-blond and deep royal-blue hair,
+blue eyes, polished silver plate armor, black flexible joints, and subtle blue
+accents. Relaxed victorious pose, facing slightly right, full body visible.
+Bright Japanese fantasy game illustration style matching White Palace.
+
+Generated on a flat solid magenta chroma-key background, then processed into a
+transparent PNG for the UI.
