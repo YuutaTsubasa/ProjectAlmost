@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { IMAGE_ASSETS } from './game/assets/assetManifest'
+
   let {
     menuOpen,
     selectedItem,
@@ -17,7 +19,7 @@
 </script>
 
 <section class:menu-open={menuOpen} class="title-screen" aria-label="Project Almost title screen">
-  <img src="/assets/title/project-almost-title-background.png" alt="" />
+  <img src={IMAGE_ASSETS.titleBackground} alt="" />
   <div class="title-light" aria-hidden="true"></div>
   <header class="title-logo">
     <i aria-hidden="true">✦</i>

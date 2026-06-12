@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { IMAGE_ASSETS } from './game/assets/assetManifest'
+
   export let stageId: string
   export let stageSubtitle: string
   export let time: string
@@ -30,7 +32,7 @@
 <section class="stage-result" aria-label="Stage Result">
   <div class="result-veil"></div>
   <div class="result-hero">
-    <img src="/assets/results/yuuta-stage-result-standee.png" alt="Yuuta Tsubasa" />
+    <img src={IMAGE_ASSETS.resultStandee} alt="Yuuta Tsubasa" />
     <div><strong>Yuuta Tsubasa</strong><span>Paladin</span></div>
   </div>
 

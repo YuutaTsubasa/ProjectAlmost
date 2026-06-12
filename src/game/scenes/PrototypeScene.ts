@@ -1,4 +1,5 @@
 import * as Phaser from 'phaser'
+import { IMAGE_ASSETS } from '../assets/assetManifest'
 import { groundedBottomY, groundedCenterY, objectDefinitions } from '../objects/objectDefinitions'
 import { activeStage } from '../stages/stageRegistry'
 import type { CoinPoint, EnemyPoint, PlatformRect } from '../stages/stageTypes'
@@ -110,44 +111,44 @@ export class PrototypeScene extends Phaser.Scene {
   }
 
   preload(): void {
-    this.load.image('white-palace-sky', '/assets/maps/white_palace_sky.png')
-    this.load.image('white-palace-far-bg', '/assets/maps/white_palace_far_bg.png')
-    this.load.image('white-palace-mid-bg', '/assets/maps/white_palace_mid_bg_loop.png')
-    this.load.image('palace-tiles', '/assets/tiles/white_palace_platform_tiles.png')
-    this.load.image('checkpoint-beacon', '/assets/props/white_palace_checkpoint.png')
-    this.load.spritesheet('stage-goal', '/assets/props/white_palace_goal_idle.png', {
+    this.load.image('white-palace-sky', IMAGE_ASSETS.palaceSky)
+    this.load.image('white-palace-far-bg', IMAGE_ASSETS.palaceFarBackground)
+    this.load.image('white-palace-mid-bg', IMAGE_ASSETS.palaceMidBackground)
+    this.load.image('palace-tiles', IMAGE_ASSETS.palaceTiles)
+    this.load.image('checkpoint-beacon', IMAGE_ASSETS.checkpoint)
+    this.load.spritesheet('stage-goal', IMAGE_ASSETS.goalIdle, {
       frameWidth: 256,
       frameHeight: 256,
     })
-    this.load.spritesheet('player-idle', '/assets/sprites/player_idle/sheet-transparent.png', {
+    this.load.spritesheet('player-idle', IMAGE_ASSETS.playerIdle, {
       frameWidth: 128,
       frameHeight: 128,
     })
-    this.load.spritesheet('player-run', '/assets/sprites/player_run/sheet-transparent.png', {
+    this.load.spritesheet('player-run', IMAGE_ASSETS.playerRun, {
       frameWidth: 128,
       frameHeight: 128,
     })
-    this.load.spritesheet('player-attack', '/assets/sprites/player_attack/sheet-transparent.png', {
+    this.load.spritesheet('player-attack', IMAGE_ASSETS.playerAttack, {
       frameWidth: 128,
       frameHeight: 128,
     })
-    this.load.spritesheet('player-jump', '/assets/sprites/player_jump/sheet-transparent.png', {
+    this.load.spritesheet('player-jump', IMAGE_ASSETS.playerJump, {
       frameWidth: 128,
       frameHeight: 128,
     })
-    this.load.spritesheet('player-hurt', '/assets/sprites/player_hurt/sheet-transparent.png', {
+    this.load.spritesheet('player-hurt', IMAGE_ASSETS.playerHurt, {
       frameWidth: 128,
       frameHeight: 128,
     })
-    this.load.spritesheet('player-death', '/assets/sprites/player_death/sheet-transparent.png', {
+    this.load.spritesheet('player-death', IMAGE_ASSETS.playerDeath, {
       frameWidth: 128,
       frameHeight: 128,
     })
-    this.load.spritesheet('enemy-guard-walk', '/assets/sprites/enemy_guard_walk/sheet-transparent.png', {
+    this.load.spritesheet('enemy-guard-walk', IMAGE_ASSETS.enemyGuardWalk, {
       frameWidth: 128,
       frameHeight: 128,
     })
-    this.load.spritesheet('enemy-guard-death', '/assets/sprites/enemy_guard_death/sheet-transparent.png', {
+    this.load.spritesheet('enemy-guard-death', IMAGE_ASSETS.enemyGuardDeath, {
       frameWidth: 128,
       frameHeight: 128,
     })

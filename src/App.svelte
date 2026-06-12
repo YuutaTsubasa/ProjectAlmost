@@ -5,6 +5,7 @@
   import StageResult from './StageResult.svelte'
   import SettingsPanel, { type GameSettings } from './SettingsPanel.svelte'
   import TitleScreen from './TitleScreen.svelte'
+  import { IMAGE_ASSETS, MUSIC_ASSETS, PRELOAD_ASSETS, SFX_ASSETS, type MusicTrack } from './game/assets/assetManifest'
   import { createPlatformerGame } from './game/createGame'
   import { deleteSave, loadSave, recordStageClear, type SaveData } from './game/save/saveData'
   import { getNextStageId, stages, type StageId } from './game/stages/stageRegistry'
@@ -57,13 +58,6 @@
   let gamepadFrame = 0
   let gamepadPrevious = new Set<number>()
   let gamepadAxisReady = true
-  type MusicTrack = 'title' | 'map' | 'stage' | 'result'
-  const MUSIC_TRACKS: Record<MusicTrack, string> = {
-    title: '/assets/audio/titlescreen.mp3',
-    map: '/assets/audio/world01_map.mp3',
-    stage: '/assets/audio/world01_stage.mp3',
-    result: '/assets/audio/game_result.mp3',
-  }
   let musicPlayer: HTMLAudioElement | undefined
   let desiredMusicTrack: MusicTrack = 'title'
   let activeMusicTrack: MusicTrack = 'title'
@@ -74,27 +68,7 @@
   let musicFadeFrame = 0
   const BASE_MUSIC_VOLUME = 0.42
   const SETTINGS_KEY = 'project-almost:settings'
-  const PRELOAD_IMAGES = [
-    '/assets/hud/ai-navigator.png',
-    '/assets/hud/player-portrait.png',
-    '/assets/maps/white_palace_far_bg.png',
-    '/assets/maps/white_palace_mid_bg_loop.png',
-    '/assets/maps/white_palace_sky.png',
-    '/assets/maps/white_palace_stage_select.png',
-    '/assets/props/white_palace_checkpoint.png',
-    '/assets/props/white_palace_goal_idle.png',
-    '/assets/results/yuuta-stage-result-standee.png',
-    '/assets/title/project-almost-title-background.png',
-    '/assets/sprites/enemy_guard_death/sheet-transparent.png',
-    '/assets/sprites/enemy_guard_walk/sheet-transparent.png',
-    '/assets/sprites/player_attack/sheet-transparent.png',
-    '/assets/sprites/player_death/sheet-transparent.png',
-    '/assets/sprites/player_hurt/sheet-transparent.png',
-    '/assets/sprites/player_idle/sheet-transparent.png',
-    '/assets/sprites/player_jump/sheet-transparent.png',
-    '/assets/sprites/player_run/sheet-transparent.png',
-    '/assets/tiles/white_palace_platform_tiles.png',
-  ]
+  const IMAGE_ASSET_PATHS = new Set<string>(Object.values(IMAGE_ASSETS))
   const DEFAULT_SETTINGS: GameSettings = {
     masterVolume: 100,
     musicVolume: 80,
@@ -178,7 +152,7 @@
     if (activeMusicTrack !== desiredMusicTrack) {
       activeMusicTrack = desiredMusicTrack
       audio.pause()
-      audio.src = MUSIC_TRACKS[activeMusicTrack]
+      audio.src = MUSIC_ASSETS[activeMusicTrack]
       audio.dataset.track = activeMusicTrack
       audio.currentTime = 0
       audio.load()
@@ -352,25 +326,29 @@
     let completed = 0
     const reportComplete = () => {
       completed += 1
-      bootProgress = Math.round((completed / (PRELOAD_IMAGES.length + 1)) * 100)
+      bootProgress = Math.round((completed / (PRELOAD_ASSETS.length + 1)) * 100)
     }
 
-    const imageLoads = PRELOAD_IMAGES.map(async (source) => {
-      const image = new Image()
-      image.src = source
+    const assetLoads = PRELOAD_ASSETS.map(async (source) => {
       try {
-        await image.decode()
-      } catch {
-        await new Promise<void>((resolve) => {
-          image.onload = () => resolve()
-          image.onerror = () => resolve()
-        })
+        const response = await fetch(source, { cache: 'force-cache' })
+        if (!response.ok) throw new Error(`${response.status} ${response.statusText}`)
+        await response.blob()
+
+        if (IMAGE_ASSET_PATHS.has(source)) {
+          const image = new Image()
+          image.src = source
+          await image.decode()
+        }
+      } catch (error) {
+        console.warn(`Unable to preload ${source}`, error)
+      } finally {
+        reportComplete()
       }
-      reportComplete()
     })
 
     await Promise.all([
-      ...imageLoads,
+      ...assetLoads,
       document.fonts.ready.then(reportComplete),
     ])
     bootProgress = 100
@@ -732,7 +710,7 @@
         settings = { ...DEFAULT_SETTINGS }
       }
     }
-    musicPlayer = new Audio(MUSIC_TRACKS.title)
+    musicPlayer = new Audio(MUSIC_ASSETS.title)
     musicPlayer.id = 'bgm-player'
     musicPlayer.dataset.track = 'title'
     musicPlayer.hidden = true
@@ -741,8 +719,8 @@
     document.body.append(musicPlayer)
     musicPlayer.load()
     musicPlayer.addEventListener('canplay', ensureDesiredMusicPlaying)
-    for (const name of ['ui-move', 'ui-confirm', 'ui-back', 'armor-step', 'hit', 'coin', 'death', 'checkpoint', 'goal']) {
-      const audio = new Audio(`/assets/audio/sfx/${name}.wav`)
+    for (const [name, source] of Object.entries(SFX_ASSETS)) {
+      const audio = new Audio(source)
       audio.preload = 'auto'
       audio.load()
       sfx.set(name, audio)
@@ -839,7 +817,7 @@
             <span class="corner br"></span>
             <div class="hud-label"><span></span>System Status</div>
             <div class="status-body">
-              <img class="portrait-slot" src="/assets/hud/player-portrait.png" alt="Yuuta Tsubasa" />
+              <img class="portrait-slot" src={IMAGE_ASSETS.playerPortrait} alt="Yuuta Tsubasa" />
               <div class="status-info">
                 <strong>Yuuta Tsubasa</strong>
                 <div class="hp-heading">
@@ -922,7 +900,7 @@
                 </div>
               </div>
               <div class="ai-callout">
-                <img class="ai-face" src="/assets/hud/ai-navigator.png" alt="Palace navigator AI" />
+                <img class="ai-face" src={IMAGE_ASSETS.aiNavigator} alt="Palace navigator AI" />
                 <div>
                   <span>Palace Navigator</span>
                   <p>› {hud.statusMessage}</p>

@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte'
+  import { IMAGE_ASSETS } from './game/assets/assetManifest'
   import { stages as stageData, type StageId } from './game/stages/stageRegistry'
   import { isStageUnlocked, type SaveData } from './game/save/saveData'
 
@@ -118,7 +119,7 @@
     </div>
 
     <div class="select-roster">
-      <img src="/assets/hud/player-portrait.png" alt="Yuuta Tsubasa" />
+      <img src={IMAGE_ASSETS.playerPortrait} alt="Yuuta Tsubasa" />
       <div><span>Active Character</span><strong>Yuuta Tsubasa</strong></div>
     </div>
   </aside>
