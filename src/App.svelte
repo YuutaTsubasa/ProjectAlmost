@@ -6,6 +6,7 @@
   import SettingsPanel, { type GameSettings } from './SettingsPanel.svelte'
   import TitleScreen from './TitleScreen.svelte'
   import VirtualControls from './VirtualControls.svelte'
+  import WorldSelect from './WorldSelect.svelte'
   import { IMAGE_ASSETS, MUSIC_ASSETS, PRELOAD_ASSETS, SFX_ASSETS, type MusicTrack } from './game/assets/assetManifest'
   import { createPlatformerGame } from './game/createGame'
   import { deleteSave, loadSave, recordStageClear, type SaveData } from './game/save/saveData'
@@ -43,7 +44,7 @@
   let game: Phaser.Game | undefined
   let bootReady = false
   let bootProgress = 0
-  let screen: 'title' | 'select' | 'game' = 'title'
+  let screen: 'title' | 'world' | 'select' | 'game' = 'title'
   let selectedStageId: StageId = '1-1'
   let titleMenuOpen = false
   let titleSelection = 0
@@ -202,7 +203,7 @@
 
     if (screen === 'title') {
       playMusic('title', volume * (titleMenuOpen ? 1 : 0.35))
-    } else if (screen === 'select') {
+    } else if (screen === 'world' || screen === 'select') {
       playMusic('map', volume)
     } else {
       if (hud.cleared) {
@@ -409,6 +410,19 @@
     }, 620)
   }
 
+  async function enterWorldSelect() {
+    if (transitionPhase !== 'idle') return
+    transitionPhase = 'cover'
+    await new Promise((resolve) => window.setTimeout(resolve, 260))
+    screen = 'world'
+    syncMusic()
+    await new Promise((resolve) => window.setTimeout(resolve, 280))
+    transitionPhase = 'reveal'
+    window.setTimeout(() => {
+      transitionPhase = 'idle'
+    }, 620)
+  }
+
   async function returnToTitle() {
     if (transitionPhase !== 'idle') {
       returnToTitlePending = true
@@ -431,7 +445,7 @@
     playSfx('ui-confirm')
     if (index === 0) {
       prepareMusicTrack('map')
-      void enterStageSelect()
+      void enterWorldSelect()
     }
     if (index === 1) {
       settingsOrigin = 'title'
@@ -720,7 +734,11 @@
           if (justPressed(0)) dispatchGamepadKey('Enter')
           if (justPressed(1)) dispatchGamepadKey('Escape')
         }
-      } else if (screen === 'select') {
+      } else if (screen === 'world' || screen === 'select') {
+        if (screen === 'world') {
+          if (justPressed(12) || (vertical < 0 && gamepadAxisReady)) dispatchGamepadKey('ArrowUp')
+          if (justPressed(13) || (vertical > 0 && gamepadAxisReady)) dispatchGamepadKey('ArrowDown')
+        }
         if (justPressed(14) || (horizontal < 0 && gamepadAxisReady)) dispatchGamepadKey('ArrowLeft')
         if (justPressed(15) || (horizontal > 0 && gamepadAxisReady)) dispatchGamepadKey('ArrowRight')
         if (justPressed(0)) dispatchGamepadKey('Enter')
@@ -851,9 +869,13 @@
         </div>
       {/if}
     </section>
+  {:else if screen === 'world'}
+    <section class="game-panel" aria-label="World select">
+      <WorldSelect onEnter={enterStageSelect} onBack={returnToTitle} {saveData} />
+    </section>
   {:else if screen === 'select'}
     <section class="game-panel" aria-label="White Palace stage select">
-      <StageSelect onEnter={enterStage} onBack={returnToTitle} {saveData} initialStageId={selectedStageId} />
+      <StageSelect onEnter={enterStage} onBack={enterWorldSelect} {saveData} initialStageId={selectedStageId} />
     </section>
   {:else}
   <section class="game-panel game-enter" aria-label={`White Palace ${selectedStageId} gameplay`}>

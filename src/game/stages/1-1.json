@@ -3,13 +3,13 @@
   "subtitle": "The First Gate",
   "objective": "Reach the Goal",
   "rankTargets": {
-    "sTime": 20,
-    "aTime": 30,
-    "bTime": 45,
-    "cTime": 60
+    "sTime": 30,
+    "aTime": 42,
+    "bTime": 58,
+    "cTime": 78
   },
   "world": {
-    "width": 6400,
+    "width": 9600,
     "height": 1080,
     "tileSize": 64
   },
@@ -83,6 +83,36 @@
       "row": 5,
       "width": 7,
       "height": 1
+    },
+    {
+      "col": 103,
+      "row": 6,
+      "width": 5,
+      "height": 1
+    },
+    {
+      "col": 111,
+      "row": 8,
+      "width": 10,
+      "height": 1
+    },
+    {
+      "col": 124,
+      "row": 7,
+      "width": 4,
+      "height": 1
+    },
+    {
+      "col": 130,
+      "row": 6,
+      "width": 4,
+      "height": 1
+    },
+    {
+      "col": 136,
+      "row": 8,
+      "width": 12,
+      "height": 1
     }
   ],
   "coins": [
@@ -153,6 +183,38 @@
     {
       "x": 6160,
       "y": 264
+    },
+    {
+      "x": 6720,
+      "y": 328
+    },
+    {
+      "x": 7240,
+      "y": 456
+    },
+    {
+      "x": 7500,
+      "y": 456
+    },
+    {
+      "x": 8064,
+      "y": 392
+    },
+    {
+      "x": 8384,
+      "y": 328
+    },
+    {
+      "x": 8820,
+      "y": 456
+    },
+    {
+      "x": 9100,
+      "y": 456
+    },
+    {
+      "x": 9240,
+      "y": 456
     }
   ],
   "enemies": [
@@ -183,6 +245,34 @@
       "surfaceY": 384,
       "patrolMinX": 5520,
       "patrolMaxX": 5680
+    },
+    {
+      "id": "descent-guard",
+      "x": 7420,
+      "surfaceY": 512,
+      "patrolMinX": 7240,
+      "patrolMaxX": 7620
+    },
+    {
+      "id": "final-combo-a",
+      "x": 8064,
+      "surfaceY": 448,
+      "patrolMinX": 8010,
+      "patrolMaxX": 8118
+    },
+    {
+      "id": "final-combo-b",
+      "x": 8384,
+      "surfaceY": 384,
+      "patrolMinX": 8330,
+      "patrolMaxX": 8438
+    },
+    {
+      "id": "gate-guard",
+      "x": 9000,
+      "surfaceY": 512,
+      "patrolMinX": 8840,
+      "patrolMaxX": 9160
     }
   ],
   "checkpoints": [
@@ -198,6 +288,13 @@
       "x": 4320,
       "surfaceY": 512,
       "spawnX": 4380,
+      "spawnSurfaceY": 512
+    },
+    {
+      "id": "final-trial",
+      "x": 7300,
+      "surfaceY": 512,
+      "spawnX": 7360,
       "spawnSurfaceY": 512
     }
   ],
@@ -230,11 +327,29 @@
       "id": "final-ascent",
       "startX": 4220,
       "endX": 6400,
-      "purpose": "Combined movement and final goal"
+      "purpose": "Combined movement and upper route"
+    },
+    {
+      "id": "descent-run",
+      "startX": 6400,
+      "endX": 7800,
+      "purpose": "Downhill landing and grounded combat"
+    },
+    {
+      "id": "final-combo",
+      "startX": 7800,
+      "endX": 8700,
+      "purpose": "Jump and Homing Attack combination"
+    },
+    {
+      "id": "gate-approach",
+      "startX": 8700,
+      "endX": 9600,
+      "purpose": "Final combat and goal"
     }
   ],
   "goal": {
-    "x": 6220,
-    "surfaceY": 320
+    "x": 9340,
+    "surfaceY": 512
   }
 }

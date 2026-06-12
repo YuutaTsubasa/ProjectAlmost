@@ -2586,6 +2586,333 @@ input {
   font: inherit;
 }
 
+.world-select {
+  --world-accent: #4a91d5;
+  --world-deep: #173f77;
+  --world-pale: #dff4ff;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  container-type: size;
+  color: #17345d;
+  background: #d8efff;
+}
+
+.world-backdrop {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(235, 249, 255, 0.96) 0 31%, rgba(223, 244, 255, 0.72) 54%, rgba(202, 232, 250, 0.88)),
+    url("/assets/maps/white_palace_stage_select.png") center / cover;
+  transition: filter 300ms ease;
+}
+
+.world-backdrop::after {
+  content: "";
+  position: absolute;
+  inset: 2.2cqh 1.25cqw;
+  border: 1px solid rgba(47, 111, 208, 0.36);
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.3);
+  pointer-events: none;
+}
+
+.world-banner {
+  position: absolute;
+  top: 2.1cqh;
+  left: 50%;
+  z-index: 5;
+  display: flex;
+  width: 37.5cqw;
+  height: 7.4cqh;
+  gap: 1.4cqw;
+  align-items: center;
+  justify-content: center;
+  transform: translateX(-50%);
+  clip-path: polygon(22px 0, calc(100% - 22px) 0, 100% 50%, calc(100% - 22px) 100%, 22px 100%, 0 50%);
+  background: linear-gradient(180deg, #9bd3ff, var(--world-accent) 48%, var(--world-deep));
+  color: white;
+  filter: drop-shadow(0 14px 22px rgba(20, 49, 95, 0.35));
+  animation: select-banner-enter 500ms 100ms cubic-bezier(0.2, 0.85, 0.2, 1.1) both;
+}
+
+.world-banner strong {
+  font-size: min(2.5cqw, 48px);
+  letter-spacing: 0.18em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.world-banner span {
+  color: #ffe6a0;
+  font-size: min(1.4cqw, 27px);
+}
+
+.world-detail {
+  position: absolute;
+  top: 11cqh;
+  bottom: 5.5cqh;
+  left: 3cqw;
+  z-index: 4;
+  box-sizing: border-box;
+  width: 29cqw;
+  padding: 1.5cqh 1.3cqw;
+  border: 1.5px solid rgba(47, 111, 208, 0.48);
+  border-radius: 7px;
+  background: rgba(244, 251, 255, 0.88);
+  box-shadow: 0 20px 46px -24px rgba(18, 59, 131, 0.7);
+  backdrop-filter: blur(9px) saturate(120%);
+  animation: select-detail-enter 520ms 220ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.world-preview {
+  position: relative;
+  display: grid;
+  height: 32cqh;
+  overflow: hidden;
+  place-items: center;
+  border: 2px solid color-mix(in srgb, var(--theme-color) 65%, white);
+  border-radius: 5px;
+  background: var(--theme-surface);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.66);
+}
+
+.world-preview::before,
+.world-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--theme-pattern);
+  opacity: 0.7;
+}
+
+.world-preview > span {
+  position: relative;
+  color: rgba(255, 255, 255, 0.88);
+  font: 700 min(8cqw, 150px)/1 Georgia, serif;
+  text-shadow: 0 8px 24px color-mix(in srgb, var(--theme-color) 72%, black);
+}
+
+.world-preview > b {
+  position: absolute;
+  right: 1cqw;
+  bottom: 1cqh;
+  padding: 0.45cqh 0.65cqw;
+  border: 1px solid rgba(255, 255, 255, 0.62);
+  border-radius: 3px;
+  background: rgba(13, 31, 55, 0.58);
+  color: white;
+  font-size: min(0.72cqw, 14px);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.world-number {
+  display: block;
+  margin-top: 1.5cqh;
+  color: var(--world-accent);
+  font-size: min(0.72cqw, 14px);
+  font-weight: 700;
+  letter-spacing: 0.25em;
+}
+
+.world-detail > strong {
+  display: block;
+  margin-top: 0.3cqh;
+  font-size: min(2.15cqw, 42px);
+  letter-spacing: 0.04em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.world-detail > p {
+  min-height: 4.8cqh;
+  margin: 0.8cqh 0 0;
+  color: #58769a;
+  font-size: min(0.82cqw, 16px);
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.world-rule {
+  height: 1px;
+  margin: 1.2cqh 0;
+  background: linear-gradient(90deg, transparent, rgba(47, 111, 208, 0.48), transparent);
+}
+
+.world-progress {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+}
+
+.world-progress span {
+  color: #58769a;
+  font-size: min(0.68cqw, 13px);
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.world-progress b {
+  font-size: min(1.6cqw, 31px);
+  line-height: 1;
+}
+
+.world-progress small {
+  color: #58769a;
+  font-size: 0.58em;
+}
+
+.world-detail > button {
+  display: flex;
+  width: 100%;
+  min-height: 5.4cqh;
+  margin-top: 1.4cqh;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 0.9cqw;
+  border: 1px solid rgba(47, 111, 208, 0.48);
+  border-radius: 5px;
+  background: linear-gradient(100deg, var(--world-deep), var(--world-accent));
+  color: white;
+  cursor: pointer;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.world-detail > button:disabled {
+  background: rgba(94, 121, 151, 0.55);
+  cursor: default;
+}
+
+.world-detail > button b {
+  font-size: min(1.5cqw, 30px);
+}
+
+.world-grid {
+  position: absolute;
+  top: 12cqh;
+  right: 3cqw;
+  bottom: 11cqh;
+  left: 35cqw;
+  z-index: 3;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  gap: 1.4cqw;
+}
+
+.world-card {
+  --theme-color: #4a91d5;
+  --theme-surface: #8bc9ef;
+  --theme-pattern: linear-gradient(145deg, rgba(255, 255, 255, 0.28), transparent 48%, rgba(15, 61, 112, 0.34));
+  position: relative;
+  display: grid;
+  overflow: hidden;
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr auto;
+  padding: 1cqh 0.85cqw;
+  border: 1.5px solid color-mix(in srgb, var(--theme-color) 68%, white);
+  border-radius: 6px;
+  background: var(--theme-surface);
+  box-shadow: 0 16px 30px -18px color-mix(in srgb, var(--theme-color) 75%, black);
+  color: white;
+  cursor: pointer;
+  text-align: left;
+  animation: select-node-enter 360ms calc(300ms + var(--node-index, 0) * 55ms) cubic-bezier(0.2, 0.9, 0.25, 1.2) both;
+}
+
+.world-card.active {
+  outline: 3px solid #ffe6a0;
+  outline-offset: 4px;
+  scale: 1.025;
+}
+
+.world-card.locked {
+  filter: saturate(0.45) brightness(0.76);
+}
+
+.world-card-number {
+  position: absolute;
+  top: 0.8cqh;
+  left: 0.7cqw;
+  z-index: 1;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: min(0.72cqw, 14px);
+  font-weight: 700;
+  letter-spacing: 0.18em;
+}
+
+.world-card-symbol {
+  position: relative;
+  z-index: 1;
+  align-self: center;
+  justify-self: center;
+  font: 700 min(4.8cqw, 92px)/1 Georgia, serif;
+  text-shadow: 0 6px 18px color-mix(in srgb, var(--theme-color) 72%, black);
+}
+
+.world-card-copy {
+  position: relative;
+  z-index: 1;
+  display: block;
+  padding-top: 0.8cqh;
+  border-top: 1px solid rgba(255, 255, 255, 0.44);
+}
+
+.world-card-copy strong,
+.world-card-copy small {
+  display: block;
+}
+
+.world-card-copy strong {
+  font-size: min(1.1cqw, 21px);
+  letter-spacing: 0.05em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.world-card-copy small {
+  margin-top: 0.4cqh;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: min(0.58cqw, 11px);
+  font-weight: 700;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.world-card > i {
+  position: absolute;
+  top: 0.7cqh;
+  right: 0.6cqw;
+  z-index: 1;
+  color: rgba(255, 255, 255, 0.8);
+  font-style: normal;
+}
+
+.theme-palace { --theme-color: #3987cf; --theme-surface: #8ccbf1; --theme-pattern: linear-gradient(145deg, rgba(255,255,255,.42), transparent 52%, rgba(34,102,168,.42)); }
+.theme-forest { --theme-color: #327d62; --theme-surface: #6fae83; --theme-pattern: linear-gradient(145deg, rgba(208,245,194,.3), transparent 50%, rgba(18,74,57,.46)); }
+.theme-ocean { --theme-color: #216fa4; --theme-surface: #53a5c4; --theme-pattern: linear-gradient(165deg, rgba(185,241,255,.3), transparent 48%, rgba(14,65,109,.46)); }
+.theme-snow { --theme-color: #6687a6; --theme-surface: #b4cfdf; --theme-pattern: linear-gradient(145deg, rgba(255,255,255,.62), transparent 48%, rgba(66,102,137,.38)); }
+.theme-volcano { --theme-color: #b54f35; --theme-surface: #d17a55; --theme-pattern: linear-gradient(145deg, rgba(255,205,132,.28), transparent 48%, rgba(91,26,24,.5)); }
+.theme-abyss { --theme-color: #5b467c; --theme-surface: #76618d; --theme-pattern: linear-gradient(145deg, rgba(201,174,231,.24), transparent 48%, rgba(27,19,48,.58)); }
+
+.world-controls {
+  animation: select-controls-enter 420ms 650ms ease-out both;
+}
+
+.world-select.confirming .world-detail,
+.world-select.confirming .world-grid,
+.world-select.confirming .world-controls,
+.world-select.confirming .world-banner {
+  opacity: 0;
+  transition: opacity 180ms ease-out;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
