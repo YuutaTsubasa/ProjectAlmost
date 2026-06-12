@@ -2305,14 +2305,18 @@ input {
 
 .coin-mark {
   display: grid;
+  flex: 0 0 2.3cqw;
   width: 2.3cqw;
-  aspect-ratio: 1;
+  height: 2.3cqw;
+  box-sizing: border-box;
   place-items: center;
   border: 2px solid #fff1c7;
   border-radius: 50%;
   background: radial-gradient(circle at 35% 25%, #fff1ae, #f3c64d 54%, #bd7b18);
   color: #80530e;
+  font-size: min(0.9cqw, 17px);
   font-weight: 700;
+  line-height: 1;
   box-shadow: 0 3px 7px rgba(128, 83, 14, 0.32);
 }
 
