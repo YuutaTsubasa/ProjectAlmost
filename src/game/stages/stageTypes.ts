@@ -13,6 +13,9 @@ export type CoinPoint = {
 export type GuardEnemyPoint = {
   id: string
   type?: 'guard'
+  respawnPolicy?: 'persistent' | 'regenerate'
+  countsForScore?: boolean
+  respawnDelayMs?: number
   x: number
   surfaceY: number
   patrolMinX: number
@@ -22,6 +25,9 @@ export type GuardEnemyPoint = {
 export type AzureCoreEnemyPoint = {
   id: string
   type: 'azure-core'
+  respawnPolicy?: 'persistent' | 'regenerate'
+  countsForScore?: boolean
+  respawnDelayMs?: number
   x: number
   y: number
   patrolMinX: number

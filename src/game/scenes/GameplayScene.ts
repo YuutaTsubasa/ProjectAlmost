@@ -38,6 +38,8 @@ const COYOTE_TIME_MS = 120
 const GROUND_ACCELERATION = 950
 const AIR_ACCELERATION = 720
 const PLAYER_MAX_RUN_SPEED = 500
+const DEFAULT_REGENERATE_DELAY_MS = 1400
+const ENEMY_REGENERATE_SAFE_DISTANCE = 140
 const THEME = {
   royalBlue: 0x2f6fb4,
   cyan: 0x33b5ff,
@@ -118,6 +120,10 @@ export class GameplayScene extends Phaser.Scene {
 
   private get coinTargetCount(): number {
     return activeStage.coins.length
+  }
+
+  private get scoreEnemyTargetCount(): number {
+    return activeStage.enemies.filter((enemy) => this.enemyCountsForScore(enemy)).length
   }
 
   preload(): void {
@@ -600,20 +606,7 @@ export class GameplayScene extends Phaser.Scene {
       sprite.setOrigin(definition.origin.x, definition.origin.y)
       sprite.setCollideWorldBounds(true)
       if (isCore) {
-        sprite.body.allowGravity = false
-        sprite.setImmovable(true)
-        sprite.body.setSize(definition.body.width, definition.body.height)
-        sprite.body.setOffset(definition.body.offsetX, definition.body.offsetY)
-        sprite.setDepth(9)
-        this.tweens.add({
-          targets: sprite,
-          y: spawnY - 14,
-          angle: 10,
-          duration: 950,
-          ease: 'Sine.easeInOut',
-          yoyo: true,
-          repeat: -1,
-        })
+        this.configureAzureCore(sprite, spawnY)
       } else {
         sprite.setScale(0.82)
         sprite.setVelocityX(-80)
@@ -628,6 +621,30 @@ export class GameplayScene extends Phaser.Scene {
         defeated: false,
         direction: -1,
       }
+    })
+  }
+
+  private configureAzureCore(sprite: ArcadeSprite, spawnY: number): void {
+    sprite.setPosition(sprite.x, spawnY)
+    sprite.setScale(1)
+    sprite.setAlpha(1)
+    sprite.setAngle(0)
+    sprite.setVisible(true)
+    sprite.body.enable = true
+    sprite.body.allowGravity = false
+    sprite.setImmovable(true)
+    const definition = objectDefinitions['azure-core']
+    sprite.body.setSize(definition.body.width, definition.body.height)
+    sprite.body.setOffset(definition.body.offsetX, definition.body.offsetY)
+    sprite.setDepth(9)
+    this.tweens.add({
+      targets: sprite,
+      y: spawnY - 14,
+      angle: 10,
+      duration: 950,
+      ease: 'Sine.easeInOut',
+      yoyo: true,
+      repeat: -1,
     })
   }
 
@@ -799,7 +816,9 @@ export class GameplayScene extends Phaser.Scene {
 
     enemy.defeated = true
     this.dispatchSfx('hit')
-    this.enemiesDefeated += 1
+    if (this.enemyCountsForScore(enemy.point)) {
+      this.enemiesDefeated += 1
+    }
     this.homingReticle?.setVisible(false)
     enemy.sprite.setVelocity(0, 0)
     enemy.sprite.body.enable = false
@@ -821,6 +840,61 @@ export class GameplayScene extends Phaser.Scene {
     this.time.delayedCall(520, () => {
       enemy.sprite.setVisible(false)
     })
+
+    if (this.enemyRespawnPolicy(enemy.point) === 'regenerate') {
+      this.scheduleEnemyRegeneration(enemy)
+    }
+  }
+
+  private enemyRespawnPolicy(point: EnemyPoint): 'persistent' | 'regenerate' {
+    return point.respawnPolicy ?? (point.type === 'azure-core' ? 'regenerate' : 'persistent')
+  }
+
+  private enemyCountsForScore(point: EnemyPoint): boolean {
+    return point.countsForScore ?? point.type !== 'azure-core'
+  }
+
+  private scheduleEnemyRegeneration(enemy: EnemyRuntime): void {
+    const delay = enemy.point.respawnDelayMs ?? DEFAULT_REGENERATE_DELAY_MS
+    this.time.delayedCall(delay, () => this.tryRegenerateEnemy(enemy))
+  }
+
+  private tryRegenerateEnemy(enemy: EnemyRuntime): void {
+    if (this.stageCleared || !enemy.defeated) return
+
+    const spawnY = enemy.point.type === 'azure-core' ? enemy.point.y : groundedCenterY(enemy.point.surfaceY, 'guard')
+    const playerDistance = Phaser.Math.Distance.Between(this.player.x, this.player.y, enemy.point.x, spawnY)
+    if (this.isDead || playerDistance < ENEMY_REGENERATE_SAFE_DISTANCE) {
+      this.time.delayedCall(300, () => this.tryRegenerateEnemy(enemy))
+      return
+    }
+
+    this.tweens.killTweensOf(enemy.sprite)
+    enemy.sprite.setPosition(enemy.point.x, spawnY)
+    if (enemy.point.type === 'azure-core') {
+      this.configureAzureCore(enemy.sprite, spawnY)
+      enemy.sprite.body.enable = false
+      enemy.sprite.setScale(0.35)
+      enemy.sprite.setAlpha(0)
+      this.tweens.add({
+        targets: enemy.sprite,
+        scale: 1,
+        alpha: 1,
+        duration: 320,
+        ease: 'Back.easeOut',
+        onComplete: () => {
+          enemy.defeated = false
+          enemy.sprite.body.enable = true
+          this.setStatusMessage('Azure Core signal regenerated. Homing route restored.')
+        },
+      })
+    } else {
+      enemy.defeated = false
+      enemy.sprite.setVisible(true)
+      enemy.sprite.setAlpha(1)
+      enemy.sprite.body.enable = true
+      enemy.sprite.play('enemy-guard-walk')
+    }
   }
 
   private updateEnemyPatrol(): void {
@@ -1281,7 +1355,8 @@ export class GameplayScene extends Phaser.Scene {
     else if (elapsedSeconds > cTime) timeScore = Math.max(0, 100 - (elapsedSeconds - cTime) * 3)
 
     const coinScore = (this.collectedCoins / this.coinTargetCount) * 200
-    const enemyScore = (this.enemiesDefeated / activeStage.enemies.length) * 150
+    const enemyTarget = this.scoreEnemyTargetCount
+    const enemyScore = enemyTarget > 0 ? (this.enemiesDefeated / enemyTarget) * 150 : 150
     const checkpointScore = ((this.activeCheckpointIndex + 1) / activeStage.checkpoints.length) * 50
     const score = 300 + timeScore + coinScore + enemyScore + checkpointScore - this.damageTaken * 80 - this.falls * 180
 
@@ -1307,7 +1382,7 @@ export class GameplayScene extends Phaser.Scene {
         damageTaken: this.damageTaken,
         falls: this.falls,
         enemiesDefeated: this.enemiesDefeated,
-        enemyTarget: activeStage.enemies.length,
+        enemyTarget: this.scoreEnemyTargetCount,
         checkpointsReached: this.activeCheckpointIndex + 1,
         checkpointTarget: activeStage.checkpoints.length,
         rank: this.getRank(),

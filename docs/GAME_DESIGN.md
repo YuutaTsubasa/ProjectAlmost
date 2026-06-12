@@ -66,6 +66,9 @@ Both playable characters share the same controls and gameplay abilities. Their d
 - Player hurt reaction with knockback and brief invulnerability.
 - One enemy target for melee and homing attack tests.
 - First enemy type: white palace guard with patrol and defeat animation.
+- Enemy stage data can override `respawnPolicy`, `respawnDelayMs`, and `countsForScore`.
+- Azure Cores regenerate after defeat by default so Homing routes cannot become soft-locked; they do not count toward combat enemy score.
+- Guards remain defeated by default and count toward combat enemy score.
 - Collectible coins placed per stage data.
 - Respawn after falling below the level.
 - HUD shows current stage objective and collected coin count.
