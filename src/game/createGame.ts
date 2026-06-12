@@ -1,7 +1,9 @@
 import * as Phaser from 'phaser'
 import { PrototypeScene } from './scenes/PrototypeScene'
+import { selectStage, type StageId } from './stages/stageRegistry'
 
-export function createPlatformerGame(parent: HTMLElement): Phaser.Game {
+export function createPlatformerGame(parent: HTMLElement, stageId: StageId = '1-1'): Phaser.Game {
+  selectStage(stageId)
   return new Phaser.Game({
     type: Phaser.AUTO,
     parent,

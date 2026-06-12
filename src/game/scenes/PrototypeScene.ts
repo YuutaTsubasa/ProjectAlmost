@@ -1,5 +1,7 @@
 import * as Phaser from 'phaser'
-import { type CoinPoint, type EnemyPoint, type PlatformRect, prototypeStage } from '../stages/prototypeStage'
+import { groundedBottomY, groundedCenterY, objectDefinitions } from '../objects/objectDefinitions'
+import { activeStage } from '../stages/stageRegistry'
+import type { CoinPoint, EnemyPoint, PlatformRect } from '../stages/stageTypes'
 
 type ArcadeSprite = Phaser.Types.Physics.Arcade.SpriteWithDynamicBody
 type TilemapLayer = Phaser.Tilemaps.TilemapLayer | Phaser.Tilemaps.TilemapGPULayer
@@ -15,18 +17,11 @@ type EnemyRuntime = {
   direction: number
 }
 
-const { width: WORLD_WIDTH, height: WORLD_HEIGHT, tileSize: TILE_SIZE } = prototypeStage.world
-const TILE_COLUMNS = WORLD_WIDTH / TILE_SIZE
-const TILE_ROWS = Math.ceil(WORLD_HEIGHT / TILE_SIZE)
 const SOLID_TILE_INDEXES = [0, 1, 2]
 const PLAYER_MAX_HEALTH = 3
-const COIN_TARGET_COUNT = prototypeStage.coins.length
-const FALL_DEFEAT_Y = WORLD_HEIGHT + 80
 const CAMERA_ZOOM = 1.25
 const PLAYER_SCALE = 0.78
 const PLAYER_ATTACK_SCALE = 0.98
-const PLAYER_BODY_SIZE = { width: 34, height: 72 }
-const PLAYER_BODY_OFFSET = { x: 47, y: 42 }
 const PLAYER_ATTACK_VISUAL_Y_OFFSET = -10
 const HOMING_ATTACK_RANGE = 360
 const HOMING_ATTACK_RECOVERY_MS = 220
@@ -77,12 +72,41 @@ export class PrototypeScene extends Phaser.Scene {
   private timerStarted = false
   private gamepadJumpDown = false
   private gamepadAttackDown = false
-  private statusMessage = 'Path confirmed. Proceed to the first gate.'
+  private wasGrounded = true
+  private nextFootstepAt = 0
+  private statusMessage = this.getInitialStatusMessage()
   private activeCheckpointIndex = -1
-  private respawnPoint = { ...prototypeStage.playerSpawn }
+  private respawnPoint = {
+    x: activeStage.playerSpawn.x,
+    y: groundedCenterY(activeStage.playerSpawn.surfaceY, 'player'),
+  }
 
   constructor() {
     super('PrototypeScene')
+  }
+
+  private get worldWidth(): number {
+    return activeStage.world.width
+  }
+
+  private get worldHeight(): number {
+    return activeStage.world.height
+  }
+
+  private get tileSize(): number {
+    return activeStage.world.tileSize
+  }
+
+  private get tileColumns(): number {
+    return this.worldWidth / this.tileSize
+  }
+
+  private get tileRows(): number {
+    return Math.ceil(this.worldHeight / this.tileSize)
+  }
+
+  private get coinTargetCount(): number {
+    return activeStage.coins.length
   }
 
   preload(): void {
@@ -134,9 +158,9 @@ export class PrototypeScene extends Phaser.Scene {
     this.createTextures()
     this.createAnimations()
 
-    this.physics.world.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT)
+    this.physics.world.setBounds(0, 0, this.worldWidth, this.worldHeight)
     this.physics.world.setBoundsCollision(true, true, true, false)
-    this.cameras.main.setBounds(0, 0, WORLD_WIDTH, WORLD_HEIGHT)
+    this.cameras.main.setBounds(0, 0, this.worldWidth, this.worldHeight)
 
     this.createParallaxBackground()
     this.terrainLayer = this.createTerrainLayer()
@@ -144,25 +168,38 @@ export class PrototypeScene extends Phaser.Scene {
     this.createEnemies()
     this.createCheckpoints()
 
-    this.player = this.physics.add.sprite(prototypeStage.playerSpawn.x, prototypeStage.playerSpawn.y, 'player-idle')
+    const playerDefinition = objectDefinitions.player
+    this.player = this.physics.add.sprite(
+      activeStage.playerSpawn.x,
+      groundedCenterY(activeStage.playerSpawn.surfaceY, 'player'),
+      'player-idle',
+    )
+    this.player.setOrigin(playerDefinition.origin.x, playerDefinition.origin.y)
     this.player.setCollideWorldBounds(true)
     this.player.setDragX(1500)
     this.player.setMaxVelocity(420, 900)
     this.setPlayerVisualState('normal')
     this.player.play('player-idle')
 
-    this.goal = this.physics.add.staticSprite(prototypeStage.goal.x, prototypeStage.goal.y + 48, 'stage-goal')
-    this.goal.setOrigin(0.5, 1)
-    this.goal.setDisplaySize(96, 128)
+    const goalDefinition = objectDefinitions.goal
+    this.goal = this.physics.add.staticSprite(
+      activeStage.goal.x,
+      groundedBottomY(activeStage.goal.surfaceY, 'goal'),
+      'stage-goal',
+    )
+    this.goal.setOrigin(goalDefinition.origin.x, goalDefinition.origin.y)
+    this.goal.setDisplaySize(goalDefinition.displaySize.width, goalDefinition.displaySize.height)
     this.goal.refreshBody()
-    this.goal.setSize(52, 112)
-    this.goal.setOffset(22, 16)
+    this.goal.setSize(goalDefinition.body.width, goalDefinition.body.height)
+    this.goal.setOffset(goalDefinition.body.offsetX, goalDefinition.body.offsetY)
     this.goal.setDepth(8)
     this.goal.play('stage-goal-idle')
 
     this.physics.add.collider(this.player, this.terrainLayer)
     for (const enemy of this.enemies) {
-      this.physics.add.collider(enemy.sprite, this.terrainLayer)
+      if (enemy.point.type !== 'azure-core') {
+        this.physics.add.collider(enemy.sprite, this.terrainLayer)
+      }
       this.physics.add.collider(this.player, enemy.sprite, () => this.hurtPlayer(enemy.sprite))
     }
     this.physics.add.overlap(this.player, this.goal, () => this.completeStage())
@@ -209,9 +246,14 @@ export class PrototypeScene extends Phaser.Scene {
     this.timerStarted = false
     this.gamepadJumpDown = false
     this.gamepadAttackDown = false
-    this.statusMessage = 'Path confirmed. Proceed to the first gate.'
+    this.wasGrounded = true
+    this.nextFootstepAt = 0
+    this.statusMessage = this.getInitialStatusMessage()
     this.activeCheckpointIndex = -1
-    this.respawnPoint = { ...prototypeStage.playerSpawn }
+    this.respawnPoint = {
+      x: activeStage.playerSpawn.x,
+      y: groundedCenterY(activeStage.playerSpawn.surfaceY, 'player'),
+    }
   }
 
   update(): void {
@@ -263,8 +305,11 @@ export class PrototypeScene extends Phaser.Scene {
     if (jumpPressed && grounded) {
       this.timerStarted = true
       this.player.setVelocityY(-640)
+      this.dispatchSfx('armor-step')
+      this.nextFootstepAt = this.time.now + 270
     }
 
+    this.updateMovementSfx(grounded, left || right)
     this.updatePlayerAnimation(left || right, grounded)
 
     if (attackPressed) {
@@ -284,7 +329,7 @@ export class PrototypeScene extends Phaser.Scene {
     this.updateTimer()
     this.updateParallaxBackground()
 
-    if (this.player.y > FALL_DEFEAT_Y) {
+    if (this.player.y > this.worldHeight + 80) {
       this.defeatPlayer('fall')
     }
   }
@@ -293,6 +338,7 @@ export class PrototypeScene extends Phaser.Scene {
     this.makeRectTexture('attack', 56, 36, THEME.cyan, THEME.royalBlue)
     this.makeHomingReticleTexture()
     this.makeCoinTexture()
+    this.makeAzureCoreTexture()
   }
 
   private createAnimations(): void {
@@ -425,21 +471,40 @@ export class PrototypeScene extends Phaser.Scene {
     graphics.destroy()
   }
 
+  private makeAzureCoreTexture(): void {
+    const graphics = this.make.graphics()
+    graphics.fillStyle(0xffffff, 0.88)
+    graphics.fillCircle(38, 38, 28)
+    graphics.lineStyle(6, 0xb7dfff, 0.95)
+    graphics.strokeCircle(38, 38, 29)
+    graphics.lineStyle(3, THEME.royalBlue, 0.9)
+    graphics.strokeCircle(38, 38, 20)
+    graphics.fillStyle(THEME.cyan, 0.95)
+    graphics.fillCircle(38, 38, 13)
+    graphics.fillStyle(THEME.white, 0.9)
+    graphics.fillCircle(34, 34, 5)
+    graphics.lineStyle(4, THEME.cyan, 0.7)
+    graphics.lineBetween(4, 38, 16, 38)
+    graphics.lineBetween(60, 38, 72, 38)
+    graphics.generateTexture('azure-core', 76, 76)
+    graphics.destroy()
+  }
+
   private createParallaxBackground(): void {
     this.add
-      .tileSprite(0, 0, 1920, WORLD_HEIGHT, 'white-palace-sky')
+      .tileSprite(0, 0, 1920, this.worldHeight, 'white-palace-sky')
       .setOrigin(0)
       .setScrollFactor(0)
       .setDepth(-30)
 
     this.farBackground = this.add
-      .tileSprite(0, 0, 1920, WORLD_HEIGHT, 'white-palace-far-bg')
+      .tileSprite(0, 0, 1920, this.worldHeight, 'white-palace-far-bg')
       .setOrigin(0)
       .setScrollFactor(0)
       .setDepth(-20)
 
     this.midBackground = this.add
-      .tileSprite(0, 0, 1920, WORLD_HEIGHT, 'white-palace-mid-bg')
+      .tileSprite(0, 0, 1920, this.worldHeight, 'white-palace-mid-bg')
       .setOrigin(0)
       .setScrollFactor(0)
       .setDepth(-10)
@@ -453,10 +518,10 @@ export class PrototypeScene extends Phaser.Scene {
   private createTerrainLayer(): TilemapLayer {
     const map = this.make.tilemap({
       data: this.buildTerrainData(),
-      tileWidth: TILE_SIZE,
-      tileHeight: TILE_SIZE,
+      tileWidth: this.tileSize,
+      tileHeight: this.tileSize,
     })
-    const tileset = map.addTilesetImage('palace-tiles', undefined, TILE_SIZE, TILE_SIZE, 0, 0)
+    const tileset = map.addTilesetImage('palace-tiles', undefined, this.tileSize, this.tileSize, 0, 0)
     const layer = map.createLayer(0, tileset!, 0, 0)
 
     if (!layer) {
@@ -470,7 +535,7 @@ export class PrototypeScene extends Phaser.Scene {
   }
 
   private createCoins(): void {
-    this.coins = prototypeStage.coins.map((point, index) => {
+    this.coins = activeStage.coins.map((point, index) => {
       const sprite = this.add.image(point.x, point.y, 'coin')
       sprite.setDepth(12)
       sprite.setData('baseY', point.y)
@@ -493,14 +558,35 @@ export class PrototypeScene extends Phaser.Scene {
   }
 
   private createEnemies(): void {
-    this.enemies = prototypeStage.enemies.map((point) => {
-      const sprite = this.physics.add.sprite(point.x, point.y, 'enemy-guard-walk')
+    this.enemies = activeStage.enemies.map((point) => {
+      const isCore = point.type === 'azure-core'
+      const definition = isCore ? objectDefinitions['azure-core'] : objectDefinitions.guard
+      const spawnY = isCore ? point.y : groundedCenterY(point.surfaceY, 'guard')
+      const sprite = this.physics.add.sprite(point.x, spawnY, isCore ? 'azure-core' : 'enemy-guard-walk')
+      sprite.setOrigin(definition.origin.x, definition.origin.y)
       sprite.setCollideWorldBounds(true)
-      sprite.setScale(0.82)
-      sprite.setVelocityX(-80)
-      sprite.body.setSize(46, 54)
-      sprite.body.setOffset(41, 54)
-      sprite.play('enemy-guard-walk')
+      if (isCore) {
+        sprite.body.allowGravity = false
+        sprite.setImmovable(true)
+        sprite.body.setSize(definition.body.width, definition.body.height)
+        sprite.body.setOffset(definition.body.offsetX, definition.body.offsetY)
+        sprite.setDepth(9)
+        this.tweens.add({
+          targets: sprite,
+          y: spawnY - 14,
+          angle: 10,
+          duration: 950,
+          ease: 'Sine.easeInOut',
+          yoyo: true,
+          repeat: -1,
+        })
+      } else {
+        sprite.setScale(0.82)
+        sprite.setVelocityX(-80)
+        sprite.body.setSize(definition.body.width, definition.body.height)
+        sprite.body.setOffset(definition.body.offsetX, definition.body.offsetY)
+        sprite.play('enemy-guard-walk')
+      }
 
       return {
         sprite,
@@ -512,23 +598,25 @@ export class PrototypeScene extends Phaser.Scene {
   }
 
   private createCheckpoints(): void {
+    const definition = objectDefinitions.checkpoint
     this.checkpointGlows = []
     this.checkpointRings = []
-    this.checkpointSprites = prototypeStage.checkpoints.map((checkpoint, index) => {
-      const glow = this.add.ellipse(checkpoint.x, checkpoint.y - 3, 92, 20, THEME.cyan, 0.24)
+    this.checkpointSprites = activeStage.checkpoints.map((checkpoint, index) => {
+      const bottomY = groundedBottomY(checkpoint.surfaceY, 'checkpoint')
+      const glow = this.add.ellipse(checkpoint.x, bottomY - 3, 92, 20, THEME.cyan, 0.24)
       glow.setDepth(6)
       glow.setBlendMode(Phaser.BlendModes.ADD)
       this.checkpointGlows[index] = glow
 
-      const ring = this.add.ellipse(checkpoint.x, checkpoint.y - 52, 74, 74)
+      const ring = this.add.ellipse(checkpoint.x, bottomY - 52, 74, 74)
       ring.setStrokeStyle(3, THEME.cyan, 0.7)
       ring.setDepth(8)
       ring.setBlendMode(Phaser.BlendModes.ADD)
       this.checkpointRings[index] = ring
 
-      const sprite = this.add.image(checkpoint.x, checkpoint.y, 'checkpoint-beacon')
-      sprite.setOrigin(0.5, 1)
-      sprite.setDisplaySize(76, 114)
+      const sprite = this.add.image(checkpoint.x, bottomY, 'checkpoint-beacon')
+      sprite.setOrigin(definition.origin.x, definition.origin.y)
+      sprite.setDisplaySize(definition.displaySize.width, definition.displaySize.height)
       sprite.setAlpha(0.82)
       sprite.setDepth(7)
 
@@ -548,9 +636,9 @@ export class PrototypeScene extends Phaser.Scene {
   }
 
   private buildTerrainData(): number[][] {
-    const data = Array.from({ length: TILE_ROWS }, () => Array.from({ length: TILE_COLUMNS }, () => -1))
+    const data = Array.from({ length: this.tileRows }, () => Array.from({ length: this.tileColumns }, () => -1))
 
-    for (const rect of prototypeStage.platforms) {
+    for (const rect of activeStage.platforms) {
       this.writePlatformTiles(data, rect.col, rect.row, rect.width, rect.height)
     }
 
@@ -587,6 +675,8 @@ export class PrototypeScene extends Phaser.Scene {
     }
 
     this.attackReady = false
+    this.dispatchSfx('armor-step')
+    this.nextFootstepAt = this.time.now + 270
     this.isAttacking = true
     this.setPlayerVisualState('attack')
     this.playPlayerAnimation('player-attack')
@@ -594,7 +684,7 @@ export class PrototypeScene extends Phaser.Scene {
     const direction = this.player.flipX ? -1 : 1
     const hitbox = this.add.image(this.player.x + direction * 48, this.player.y - 4, 'attack')
     hitbox.setFlipX(direction < 0)
-    hitbox.setAlpha(0.35)
+    hitbox.setVisible(false)
 
     const hitEnemy = this.enemies.find((enemy) => !enemy.defeated && Phaser.Geom.Intersects.RectangleToRectangle(hitbox.getBounds(), enemy.sprite.getBounds()))
 
@@ -622,6 +712,7 @@ export class PrototypeScene extends Phaser.Scene {
     }
 
     this.playerHealth -= 1
+    this.dispatchSfx('hit')
     this.damageTaken += 1
     this.updateHealthText()
 
@@ -673,11 +764,24 @@ export class PrototypeScene extends Phaser.Scene {
     }
 
     enemy.defeated = true
+    this.dispatchSfx('hit')
     this.enemiesDefeated += 1
     this.homingReticle?.setVisible(false)
     enemy.sprite.setVelocity(0, 0)
     enemy.sprite.body.enable = false
-    enemy.sprite.play('enemy-guard-death')
+    if (enemy.point.type === 'azure-core') {
+      this.tweens.killTweensOf(enemy.sprite)
+      this.tweens.add({
+        targets: enemy.sprite,
+        scale: 1.8,
+        alpha: 0,
+        angle: enemy.sprite.angle + 90,
+        duration: 260,
+        ease: 'Quad.easeOut',
+      })
+    } else {
+      enemy.sprite.play('enemy-guard-death')
+    }
     this.setStatusMessage('Hostile signal cleared. Route to the gate is open.')
 
     this.time.delayedCall(520, () => {
@@ -688,6 +792,9 @@ export class PrototypeScene extends Phaser.Scene {
   private updateEnemyPatrol(): void {
     for (const enemy of this.enemies) {
       if (enemy.defeated) {
+        continue
+      }
+      if (enemy.point.type === 'azure-core') {
         continue
       }
 
@@ -707,15 +814,19 @@ export class PrototypeScene extends Phaser.Scene {
   }
 
   private updateCheckpoint(): void {
-    const nextCheckpointIndex = prototypeStage.checkpoints.findIndex((checkpoint, index) => index > this.activeCheckpointIndex && this.player.x >= checkpoint.x)
+    const nextCheckpointIndex = activeStage.checkpoints.findIndex((checkpoint, index) => index > this.activeCheckpointIndex && this.player.x >= checkpoint.x)
 
     if (nextCheckpointIndex === -1) {
       return
     }
 
-    const checkpoint = prototypeStage.checkpoints[nextCheckpointIndex]
+    const checkpoint = activeStage.checkpoints[nextCheckpointIndex]
     this.activeCheckpointIndex = nextCheckpointIndex
-    this.respawnPoint = { x: checkpoint.spawnX, y: checkpoint.spawnY }
+    this.dispatchSfx('checkpoint')
+    this.respawnPoint = {
+      x: checkpoint.spawnX,
+      y: groundedCenterY(checkpoint.spawnSurfaceY, 'player'),
+    }
     const sprite = this.checkpointSprites[nextCheckpointIndex]
     const glow = this.checkpointGlows[nextCheckpointIndex]
     const ring = this.checkpointRings[nextCheckpointIndex]
@@ -766,6 +877,7 @@ export class PrototypeScene extends Phaser.Scene {
     }
 
     this.isDead = true
+    this.dispatchSfx('death')
     if (reason === 'fall') {
       this.falls += 1
     }
@@ -800,13 +912,16 @@ export class PrototypeScene extends Phaser.Scene {
 
       enemy.sprite.setVelocity(0, 0)
       enemy.sprite.setAcceleration(0, 0)
-      enemy.sprite.body.allowGravity = !frozen
+      const definition = objectDefinitions[enemy.point.type ?? 'guard']
+      enemy.sprite.body.allowGravity = !frozen && definition.gravity
 
       if (frozen) {
         enemy.sprite.anims.pause()
       } else {
         enemy.sprite.anims.resume()
-        enemy.sprite.setVelocityX(enemy.direction * 80)
+        if (definition.behavior === 'patrol') {
+          enemy.sprite.setVelocityX(enemy.direction * 80)
+        }
       }
     }
   }
@@ -817,6 +932,7 @@ export class PrototypeScene extends Phaser.Scene {
     }
 
     this.stageCleared = true
+    this.dispatchSfx('goal')
     this.isAttacking = false
     this.isHomingAttacking = false
     this.attackReady = false
@@ -848,8 +964,9 @@ export class PrototypeScene extends Phaser.Scene {
       this.playerVisualYOffset = offsetY
     }
 
-    this.player.body.setSize(PLAYER_BODY_SIZE.width, PLAYER_BODY_SIZE.height)
-    this.player.body.setOffset(PLAYER_BODY_OFFSET.x, PLAYER_BODY_OFFSET.y)
+    const body = objectDefinitions.player.body
+    this.player.body.setSize(body.width, body.height)
+    this.player.body.setOffset(body.offsetX, body.offsetY)
   }
 
   private tryHomingAttack(): boolean {
@@ -935,8 +1052,10 @@ export class PrototypeScene extends Phaser.Scene {
 
     this.player.setFlipX(target.x < startX)
     this.emitHomingTrail(startX, startY, contactX, contactY)
+    this.collectCoinsAlongLine(startX, startY, contactX, contactY)
     this.player.setPosition(contactX, contactY)
     this.player.setVelocity(0, 0)
+    this.dispatchSfx('armor-step')
     this.defeatEnemy(target)
     this.finishHomingAttack(true)
   }
@@ -992,6 +1111,26 @@ export class PrototypeScene extends Phaser.Scene {
     }
   }
 
+  private collectCoinsAlongLine(startX: number, startY: number, endX: number, endY: number): void {
+    const dx = endX - startX
+    const dy = endY - startY
+    const lengthSquared = dx * dx + dy * dy
+
+    for (const coin of this.coins) {
+      if (coin.collected) continue
+
+      const projection = lengthSquared === 0
+        ? 0
+        : Phaser.Math.Clamp(((coin.sprite.x - startX) * dx + (coin.sprite.y - startY) * dy) / lengthSquared, 0, 1)
+      const closestX = startX + dx * projection
+      const closestY = startY + dy * projection
+
+      if (Phaser.Math.Distance.Between(closestX, closestY, coin.sprite.x, coin.sprite.y) <= 52) {
+        this.collectCoin(coin)
+      }
+    }
+  }
+
   private setPlayerHomingCollision(enabled: boolean): void {
     this.player.body.allowGravity = enabled
     this.player.body.checkCollision.none = !enabled
@@ -1033,6 +1172,7 @@ export class PrototypeScene extends Phaser.Scene {
 
   private collectCoin(coin: CoinRuntime): void {
     coin.collected = true
+    this.dispatchSfx('coin')
     this.collectedCoins += 1
     this.updateCoinText()
 
@@ -1073,7 +1213,7 @@ export class PrototypeScene extends Phaser.Scene {
   }
 
   private getCoinLabel(): string {
-    return `COIN ${String(this.collectedCoins).padStart(3, '0')} / ${COIN_TARGET_COUNT}`
+    return `COIN ${String(this.collectedCoins).padStart(3, '0')} / ${this.coinTargetCount}`
   }
 
   private updateTimer(): void {
@@ -1096,7 +1236,7 @@ export class PrototypeScene extends Phaser.Scene {
 
   private getRank(): string {
     const elapsedSeconds = this.stageTimeMs / 1000
-    const { sTime, aTime, bTime, cTime } = prototypeStage.rankTargets
+    const { sTime, aTime, bTime, cTime } = activeStage.rankTargets
 
     let timeScore = 300
     if (elapsedSeconds > sTime && elapsedSeconds <= aTime) timeScore = 240
@@ -1104,9 +1244,9 @@ export class PrototypeScene extends Phaser.Scene {
     else if (elapsedSeconds > bTime && elapsedSeconds <= cTime) timeScore = 100
     else if (elapsedSeconds > cTime) timeScore = Math.max(0, 100 - (elapsedSeconds - cTime) * 3)
 
-    const coinScore = (this.collectedCoins / COIN_TARGET_COUNT) * 200
-    const enemyScore = (this.enemiesDefeated / prototypeStage.enemies.length) * 150
-    const checkpointScore = ((this.activeCheckpointIndex + 1) / prototypeStage.checkpoints.length) * 50
+    const coinScore = (this.collectedCoins / this.coinTargetCount) * 200
+    const enemyScore = (this.enemiesDefeated / activeStage.enemies.length) * 150
+    const checkpointScore = ((this.activeCheckpointIndex + 1) / activeStage.checkpoints.length) * 50
     const score = 300 + timeScore + coinScore + enemyScore + checkpointScore - this.damageTaken * 80 - this.falls * 180
 
     if (score >= 850) return 'S'
@@ -1127,39 +1267,63 @@ export class PrototypeScene extends Phaser.Scene {
         hp: this.playerHealth,
         hpMax: PLAYER_MAX_HEALTH,
         coins: this.collectedCoins,
-        coinTarget: COIN_TARGET_COUNT,
+        coinTarget: this.coinTargetCount,
         damageTaken: this.damageTaken,
         falls: this.falls,
         enemiesDefeated: this.enemiesDefeated,
-        enemyTarget: prototypeStage.enemies.length,
+        enemyTarget: activeStage.enemies.length,
         checkpointsReached: this.activeCheckpointIndex + 1,
-        checkpointTarget: prototypeStage.checkpoints.length,
+        checkpointTarget: activeStage.checkpoints.length,
         rank: this.getRank(),
         time: this.getTimerValue(),
-        objective: prototypeStage.objective,
+        objective: activeStage.objective,
         statusMessage: this.statusMessage,
-        playerProgress: Phaser.Math.Clamp(this.player.x / WORLD_WIDTH, 0, 1),
-        playerProgressY: Phaser.Math.Clamp(this.player.y / WORLD_HEIGHT, 0, 1),
-        goalProgress: prototypeStage.goal.x / WORLD_WIDTH,
+        playerProgress: Phaser.Math.Clamp(this.player.x / this.worldWidth, 0, 1),
+        playerProgressY: Phaser.Math.Clamp(this.player.y / this.worldHeight, 0, 1),
+        goalProgress: activeStage.goal.x / this.worldWidth,
         enemyActive: this.enemies.some((enemy) => !enemy.defeated),
         enemyMarkers: this.enemies.filter((enemy) => !enemy.defeated).map((enemy) => ({
-          x: enemy.sprite.x / WORLD_WIDTH,
-          y: enemy.sprite.y / WORLD_HEIGHT,
+          x: enemy.sprite.x / this.worldWidth,
+          y: enemy.sprite.y / this.worldHeight,
         })),
-        mapPlatforms: prototypeStage.platforms.map((platform) => ({
-          x: platform.col / TILE_COLUMNS,
-          y: (platform.row * TILE_SIZE) / WORLD_HEIGHT,
-          width: platform.width / TILE_COLUMNS,
+        mapPlatforms: activeStage.platforms.map((platform) => ({
+          x: platform.col / this.tileColumns,
+          y: (platform.row * this.tileSize) / this.worldHeight,
+          width: platform.width / this.tileColumns,
         })),
-        checkpointMarkers: prototypeStage.checkpoints.map((checkpoint) => ({
-          x: checkpoint.x / WORLD_WIDTH,
-          y: checkpoint.y / WORLD_HEIGHT,
+        checkpointMarkers: activeStage.checkpoints.map((checkpoint) => ({
+          x: checkpoint.x / this.worldWidth,
+          y: checkpoint.surfaceY / this.worldHeight,
         })),
         activeCheckpointIndex: this.activeCheckpointIndex,
         cleared: this.stageCleared,
         ...overrides,
       },
     }))
+  }
+
+  private dispatchSfx(name: string): void {
+    window.dispatchEvent(new CustomEvent('projectrun:sfx', { detail: name }))
+  }
+
+  private getInitialStatusMessage(): string {
+    return activeStage.id === '1-2'
+      ? 'Azure Core signals detected. Chain Homing Attacks to cross the courtyard.'
+      : 'Path confirmed. Proceed to the first gate.'
+  }
+
+  private updateMovementSfx(grounded: boolean, moving: boolean): void {
+    if (grounded && !this.wasGrounded) {
+      this.dispatchSfx('armor-step')
+      this.nextFootstepAt = this.time.now + 180
+    }
+
+    if (grounded && moving && Math.abs(this.player.body.velocity.x) > 80 && this.time.now >= this.nextFootstepAt) {
+      this.dispatchSfx('armor-step')
+      this.nextFootstepAt = this.time.now + 270
+    }
+
+    this.wasGrounded = grounded
   }
 
   private getTimerValue(): string {

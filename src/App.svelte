@@ -4,7 +4,10 @@
   import StageSelect from './StageSelect.svelte'
   import StageResult from './StageResult.svelte'
   import SettingsPanel, { type GameSettings } from './SettingsPanel.svelte'
+  import TitleScreen from './TitleScreen.svelte'
   import { createPlatformerGame } from './game/createGame'
+  import { deleteSave, loadSave, recordStageClear, type SaveData } from './game/save/saveData'
+  import { getNextStageId, stages, type StageId } from './game/stages/stageRegistry'
 
   type HudState = {
     hp: number
@@ -36,20 +39,39 @@
   let game: Phaser.Game | undefined
   let bootReady = false
   let bootProgress = 0
-  let screen: 'select' | 'game' = 'select'
+  let screen: 'title' | 'select' | 'game' = 'title'
+  let selectedStageId: StageId = '1-1'
+  let titleMenuOpen = false
+  let titleSelection = 0
+  let returnToTitlePending = false
   let transitionPhase: 'idle' | 'cover' | 'reveal' = 'idle'
   let paused = false
   let pauseSelection = 0
   let settingsOpen = false
+  let settingsOrigin: 'title' | 'pause' = 'pause'
   let settingsSelection = 0
+  let deleteSaveConfirmOpen = false
+  let deleteSaveConfirmSelection = 0
   let resultSelection = 0
+  let saveData: SaveData = { version: 1, stageRecords: {} }
   let gamepadFrame = 0
   let gamepadPrevious = new Set<number>()
   let gamepadAxisReady = true
-  let mapMusic: HTMLAudioElement | undefined
-  let stageMusic: HTMLAudioElement | undefined
+  type MusicTrack = 'title' | 'map' | 'stage' | 'result'
+  const MUSIC_TRACKS: Record<MusicTrack, string> = {
+    title: '/assets/audio/titlescreen.mp3',
+    map: '/assets/audio/world01_map.mp3',
+    stage: '/assets/audio/world01_stage.mp3',
+    result: '/assets/audio/game_result.mp3',
+  }
+  let musicPlayer: HTMLAudioElement | undefined
+  let desiredMusicTrack: MusicTrack = 'title'
+  let activeMusicTrack: MusicTrack = 'title'
+  let desiredMusicVolume = 0
+  let musicRetryTimer = 0
+  const sfx = new Map<string, HTMLAudioElement>()
   let musicUnlocked = false
-  const musicFadeFrames = new Map<HTMLAudioElement, number>()
+  let musicFadeFrame = 0
   const BASE_MUSIC_VOLUME = 0.42
   const SETTINGS_KEY = 'project-almost:settings'
   const PRELOAD_IMAGES = [
@@ -62,6 +84,7 @@
     '/assets/props/white_palace_checkpoint.png',
     '/assets/props/white_palace_goal_idle.png',
     '/assets/results/yuuta-stage-result-standee.png',
+    '/assets/title/project-almost-title-background.png',
     '/assets/sprites/enemy_guard_death/sheet-transparent.png',
     '/assets/sprites/enemy_guard_walk/sheet-transparent.png',
     '/assets/sprites/player_attack/sheet-transparent.png',
@@ -75,6 +98,7 @@
   const DEFAULT_SETTINGS: GameSettings = {
     masterVolume: 100,
     musicVolume: 80,
+    sfxVolume: 80,
     fullscreen: false,
     screenShake: true,
     vibration: true,
@@ -111,47 +135,101 @@
     const next = (event as CustomEvent<Partial<HudState>>).detail
     const clearedChanged = next.cleared !== undefined && next.cleared !== hud.cleared
     hud = { ...hud, ...next }
-    if (clearedChanged) syncMusic()
+    if (clearedChanged) {
+      if (hud.cleared) {
+        saveData = recordStageClear(saveData, selectedStageId, { time: hud.time, rank: hud.rank, coins: hud.coins })
+      }
+      syncMusic()
+    }
   }
 
   function fadeMusic(audio: HTMLAudioElement | undefined, target: number, duration = 450) {
     if (!audio) return
-    const previousFrame = musicFadeFrames.get(audio)
-    if (previousFrame) window.cancelAnimationFrame(previousFrame)
+    cancelMusicFade()
     const startVolume = audio.volume
     const startedAt = performance.now()
 
     const step = (now: number) => {
       const progress = Math.min(1, (now - startedAt) / duration)
       audio.volume = startVolume + (target - startVolume) * progress
-      if (progress < 1) musicFadeFrames.set(audio, window.requestAnimationFrame(step))
-      else {
-        musicFadeFrames.delete(audio)
-        if (target === 0) audio.pause()
-      }
+      if (progress < 1) musicFadeFrame = window.requestAnimationFrame(step)
+      else musicFadeFrame = 0
     }
-    musicFadeFrames.set(audio, window.requestAnimationFrame(step))
+    musicFadeFrame = window.requestAnimationFrame(step)
   }
 
-  function playMusic(audio: HTMLAudioElement | undefined, volume: number) {
+  function cancelMusicFade() {
+    if (musicFadeFrame) window.cancelAnimationFrame(musicFadeFrame)
+    musicFadeFrame = 0
+  }
+
+  function scheduleMusicRetry() {
+    window.clearTimeout(musicRetryTimer)
+    musicRetryTimer = window.setTimeout(() => {
+      if (musicUnlocked && musicPlayer?.paused) void ensureDesiredMusicPlaying()
+    }, 500)
+  }
+
+  async function ensureDesiredMusicPlaying() {
+    const audio = musicPlayer
     if (!audio || !musicUnlocked) return
-    if (audio.paused) {
-      audio.volume = 0
-      void audio.play().catch(() => {})
+
+    cancelMusicFade()
+    if (activeMusicTrack !== desiredMusicTrack) {
+      activeMusicTrack = desiredMusicTrack
+      audio.pause()
+      audio.src = MUSIC_TRACKS[activeMusicTrack]
+      audio.dataset.track = activeMusicTrack
+      audio.currentTime = 0
+      audio.load()
     }
-    fadeMusic(audio, volume)
+
+    try {
+      if (audio.paused) {
+        audio.volume = 0
+        await audio.play()
+      }
+      if (!audio.paused && activeMusicTrack === desiredMusicTrack) fadeMusic(audio, desiredMusicVolume)
+      else scheduleMusicRetry()
+    } catch {
+      scheduleMusicRetry()
+    }
+  }
+
+  function playMusic(track: MusicTrack, volume: number) {
+    desiredMusicTrack = track
+    desiredMusicVolume = volume
+    void ensureDesiredMusicPlaying()
+  }
+
+  function prepareMusicTrack(track: MusicTrack) {
+    desiredMusicTrack = track
+    desiredMusicVolume = 0
+    void ensureDesiredMusicPlaying()
+  }
+
+  function resetMusic(track: MusicTrack) {
+    if (!musicPlayer || activeMusicTrack !== track) return
+    cancelMusicFade()
+    musicPlayer.pause()
+    musicPlayer.currentTime = 0
+    musicPlayer.volume = 0
   }
 
   function syncMusic() {
     if (!musicUnlocked) return
     const volume = BASE_MUSIC_VOLUME * (settings.masterVolume / 100) * (settings.musicVolume / 100)
 
-    if (screen === 'select') {
-      fadeMusic(stageMusic, 0)
-      playMusic(mapMusic, volume)
+    if (screen === 'title') {
+      playMusic('title', volume * (titleMenuOpen ? 1 : 0.35))
+    } else if (screen === 'select') {
+      playMusic('map', volume)
     } else {
-      fadeMusic(mapMusic, 0)
-      playMusic(stageMusic, paused || hud.cleared ? volume * 0.45 : volume)
+      if (hud.cleared) {
+        playMusic('result', volume)
+      } else {
+        playMusic('stage', paused ? volume * 0.45 : volume)
+      }
     }
   }
 
@@ -160,14 +238,31 @@
     syncMusic()
   }
 
+  function playSfx(name: string) {
+    const source = sfx.get(name)
+    if (!source || settings.sfxVolume === 0 || settings.masterVolume === 0) return
+    const audio = source.cloneNode() as HTMLAudioElement
+    audio.volume = (settings.masterVolume / 100) * (settings.sfxVolume / 100)
+    void audio.play().catch(() => {})
+  }
+
+  function handleSfxEvent(event: Event) {
+    playSfx((event as CustomEvent<string>).detail)
+  }
+
+  function handlePrepareMusicEvent(event: Event) {
+    prepareMusicTrack((event as CustomEvent<MusicTrack>).detail)
+  }
+
   function adjustSettings(index: number, direction: number) {
-    if (index === 0 || index === 1) {
-      const key = index === 0 ? 'masterVolume' : 'musicVolume'
+    if (index >= 0 && index <= 2) {
+      const key = index === 0 ? 'masterVolume' : index === 1 ? 'musicVolume' : 'sfxVolume'
       settings = { ...settings, [key]: Math.max(0, Math.min(100, settings[key] + direction * 10)) }
-    } else if (index >= 2 && index <= 4) {
+    } else if (index >= 3 && index <= 5) {
       activateSettingsItem(index)
       return
     }
+    playSfx('ui-move')
     saveSettings()
   }
 
@@ -179,33 +274,78 @@
   }
 
   function closeSettings() {
+    playSfx('ui-back')
+    deleteSaveConfirmOpen = false
     settingsOpen = false
-    pauseSelection = 2
+    if (settingsOrigin === 'pause') pauseSelection = 2
+    else titleSelection = 1
   }
 
   function activateSettingsItem(index = settingsSelection) {
-    if (index === 0 || index === 1) {
+    playSfx('ui-confirm')
+    if (index >= 0 && index <= 2) {
       adjustSettings(index, 1)
-    } else if (index === 2) {
-      void toggleFullscreen()
     } else if (index === 3) {
+      void toggleFullscreen()
+    } else if (index === 4) {
       settings = { ...settings, screenShake: !settings.screenShake }
       saveSettings()
-    } else if (index === 4) {
+    } else if (index === 5) {
       settings = { ...settings, vibration: !settings.vibration }
       saveSettings()
-    } else if (index === 5) {
+    } else if (index === 6) {
       settings = { ...DEFAULT_SETTINGS, fullscreen: Boolean(document.fullscreenElement) }
       saveSettings()
-    } else if (index === 6) {
+    } else if (index === 7) {
+      deleteSaveConfirmSelection = 0
+      deleteSaveConfirmOpen = true
+    } else if (index === 8) {
       closeSettings()
     }
   }
 
+  function cancelDeleteSave() {
+    playSfx('ui-back')
+    deleteSaveConfirmOpen = false
+    deleteSaveConfirmSelection = 0
+  }
+
+  function confirmDeleteSave() {
+    playSfx('ui-confirm')
+    saveData = deleteSave()
+    deleteSaveConfirmOpen = false
+    deleteSaveConfirmSelection = 0
+  }
+
   function unlockMusic() {
-    if (musicUnlocked) return
-    musicUnlocked = true
+    if (!musicUnlocked) {
+      musicUnlocked = true
+      syncMusic()
+    } else if (musicPlayer?.paused) {
+      void ensureDesiredMusicPlaying()
+    }
+  }
+
+  function openTitleMenu() {
+    if (titleMenuOpen) return
+    playSfx('ui-confirm')
+    titleMenuOpen = true
     syncMusic()
+  }
+
+  async function attemptTitleMusicAutoplay() {
+    if (!musicPlayer || musicUnlocked) return
+    const volume = BASE_MUSIC_VOLUME * (settings.masterVolume / 100) * (settings.musicVolume / 100) * 0.35
+    musicPlayer.volume = volume
+    try {
+      await musicPlayer.play()
+      musicUnlocked = true
+      desiredMusicTrack = 'title'
+      desiredMusicVolume = volume
+      syncMusic()
+    } catch {
+      // Browsers commonly require the first keyboard, pointer, or gamepad interaction.
+    }
   }
 
   async function preloadGameAssets() {
@@ -238,21 +378,71 @@
     bootReady = true
   }
 
-  async function enterStage() {
+  async function enterStage(stageId: StageId) {
     if (transitionPhase !== 'idle') return
+    selectedStageId = stageId
     transitionPhase = 'cover'
     await new Promise((resolve) => window.setTimeout(resolve, 260))
     screen = 'game'
     paused = false
     resultSelection = 0
+    resetMusic('result')
     syncMusic()
     await tick()
-    game = createPlatformerGame(gameHost)
+    game = createPlatformerGame(gameHost, selectedStageId)
     await new Promise((resolve) => window.setTimeout(resolve, 420))
     transitionPhase = 'reveal'
     window.setTimeout(() => {
       transitionPhase = 'idle'
     }, 620)
+  }
+
+  async function enterStageSelect() {
+    if (transitionPhase !== 'idle') return
+    transitionPhase = 'cover'
+    await new Promise((resolve) => window.setTimeout(resolve, 260))
+    screen = 'select'
+    syncMusic()
+    await new Promise((resolve) => window.setTimeout(resolve, 280))
+    transitionPhase = 'reveal'
+    window.setTimeout(() => {
+      transitionPhase = 'idle'
+      if (returnToTitlePending) {
+        returnToTitlePending = false
+        void returnToTitle()
+      }
+    }, 620)
+  }
+
+  async function returnToTitle() {
+    if (transitionPhase !== 'idle') {
+      returnToTitlePending = true
+      return
+    }
+    transitionPhase = 'cover'
+    await new Promise((resolve) => window.setTimeout(resolve, 260))
+    screen = 'title'
+    titleMenuOpen = true
+    titleSelection = 0
+    syncMusic()
+    await new Promise((resolve) => window.setTimeout(resolve, 280))
+    transitionPhase = 'reveal'
+    window.setTimeout(() => {
+      transitionPhase = 'idle'
+    }, 620)
+  }
+
+  function activateTitleItem(index = titleSelection) {
+    playSfx('ui-confirm')
+    if (index === 0) {
+      prepareMusicTrack('map')
+      void enterStageSelect()
+    }
+    if (index === 1) {
+      settingsOrigin = 'title'
+      settingsSelection = 0
+      settingsOpen = true
+    }
   }
 
   function returnToStageSelect() {
@@ -266,6 +456,7 @@
 
   function pauseGame() {
     if (!game || hud.cleared) return
+    playSfx('ui-confirm')
     game.scene.pause('PrototypeScene')
     pauseSelection = 0
     settingsOpen = false
@@ -274,6 +465,7 @@
   }
 
   function resumeGame() {
+    playSfx('ui-back')
     game?.scene.resume('PrototypeScene')
     paused = false
     syncMusic()
@@ -281,16 +473,44 @@
 
   async function restartStage() {
     if (!game || transitionPhase !== 'idle') return
+    resetMusic('stage')
+    prepareMusicTrack('stage')
     transitionPhase = 'cover'
     await new Promise((resolve) => window.setTimeout(resolve, 260))
     game.destroy(true)
     game = undefined
     paused = false
     resultSelection = 0
-    syncMusic()
+    resetMusic('result')
     hud = { ...hud, coins: 0, damageTaken: 0, falls: 0, enemiesDefeated: 0, checkpointsReached: 0, time: '00:00.00', rank: '--', cleared: false }
+    syncMusic()
     await tick()
-    game = createPlatformerGame(gameHost)
+    game = createPlatformerGame(gameHost, selectedStageId)
+    await new Promise((resolve) => window.setTimeout(resolve, 420))
+    transitionPhase = 'reveal'
+    window.setTimeout(() => {
+      transitionPhase = 'idle'
+    }, 620)
+  }
+
+  async function enterNextStage() {
+    const nextStageId = getNextStageId(selectedStageId)
+    if (!game || !nextStageId || !saveData.stageRecords[selectedStageId]?.cleared || transitionPhase !== 'idle') return
+
+    resetMusic('stage')
+    prepareMusicTrack('stage')
+    transitionPhase = 'cover'
+    await new Promise((resolve) => window.setTimeout(resolve, 260))
+    game.destroy(true)
+    game = undefined
+    selectedStageId = nextStageId
+    paused = false
+    resultSelection = 0
+    resetMusic('result')
+    hud = { ...hud, coins: 0, damageTaken: 0, falls: 0, enemiesDefeated: 0, checkpointsReached: 0, time: '00:00.00', rank: '--', cleared: false }
+    syncMusic()
+    await tick()
+    game = createPlatformerGame(gameHost, selectedStageId)
     await new Promise((resolve) => window.setTimeout(resolve, 420))
     transitionPhase = 'reveal'
     window.setTimeout(() => {
@@ -303,13 +523,16 @@
   }
 
   function movePauseSelection(direction: number) {
+    playSfx('ui-move')
     pauseSelection = (pauseSelection + direction + pauseItems.length) % pauseItems.length
   }
 
   function activatePauseItem(index = pauseSelection) {
+    playSfx('ui-confirm')
     if (index === 0) resumeGame()
     if (index === 1) restartStage()
     if (index === 2) {
+      settingsOrigin = 'pause'
       settingsSelection = 0
       settingsOpen = true
     }
@@ -317,29 +540,72 @@
   }
 
   function handleGlobalKeydown(event: KeyboardEvent) {
+    if (screen === 'title') {
+      event.preventDefault()
+      if (settingsOpen) {
+        if (deleteSaveConfirmOpen) {
+          if (event.key === 'Escape') cancelDeleteSave()
+          else if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+            playSfx('ui-move')
+            deleteSaveConfirmSelection = deleteSaveConfirmSelection === 0 ? 1 : 0
+          } else if (event.code === 'Space' || event.key === 'Enter') {
+            if (deleteSaveConfirmSelection === 0) cancelDeleteSave()
+            else confirmDeleteSave()
+          }
+        } else if (event.key === 'Escape') closeSettings()
+        else if (event.key === 'ArrowUp') {
+          playSfx('ui-move')
+          settingsSelection = (settingsSelection + 8) % 9
+        } else if (event.key === 'ArrowDown') {
+          playSfx('ui-move')
+          settingsSelection = (settingsSelection + 1) % 9
+        }
+        else if (event.key === 'ArrowLeft') adjustSettings(settingsSelection, -1)
+        else if (event.key === 'ArrowRight') adjustSettings(settingsSelection, 1)
+        else if (event.code === 'Space' || event.key === 'Enter') activateSettingsItem()
+      } else if (!titleMenuOpen) {
+        openTitleMenu()
+      } else if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+        playSfx('ui-move')
+        titleSelection = titleSelection === 0 ? 1 : 0
+      } else if (event.code === 'Space' || event.key === 'Enter') {
+        activateTitleItem()
+      } else if (event.key === 'Escape') {
+        playSfx('ui-back')
+        titleMenuOpen = false
+      }
+      return
+    }
+
     if (screen !== 'game') return
 
     if (hud.cleared) {
       if (event.key === 'Escape') {
         event.preventDefault()
+        playSfx('ui-back')
         returnToStageSelect()
       } else if (event.key === 'ArrowLeft') {
         event.preventDefault()
+        playSfx('ui-move')
         resultSelection = Math.max(0, resultSelection - 1)
       } else if (event.key === 'ArrowRight') {
         event.preventDefault()
-        resultSelection = Math.min(1, resultSelection + 1)
+        playSfx('ui-move')
+        resultSelection = Math.min(getNextStageId(selectedStageId) ? 2 : 1, resultSelection + 1)
       } else if (event.code === 'Space' || event.key === 'Enter') {
         event.preventDefault()
+        playSfx('ui-confirm')
         if (resultSelection === 0) restartStage()
         if (resultSelection === 1) returnToStageSelect()
+        if (resultSelection === 2) enterNextStage()
       }
       return
     }
 
     if (event.key === 'Escape') {
       event.preventDefault()
-      if (settingsOpen) closeSettings()
+      if (deleteSaveConfirmOpen) cancelDeleteSave()
+      else if (settingsOpen) closeSettings()
       else if (paused) resumeGame()
       else pauseGame()
       return
@@ -348,12 +614,24 @@
     if (!paused) return
 
     if (settingsOpen) {
-      if (event.key === 'ArrowUp') {
+      if (deleteSaveConfirmOpen) {
+        if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+          event.preventDefault()
+          playSfx('ui-move')
+          deleteSaveConfirmSelection = deleteSaveConfirmSelection === 0 ? 1 : 0
+        } else if (event.code === 'Space' || event.key === 'Enter') {
+          event.preventDefault()
+          if (deleteSaveConfirmSelection === 0) cancelDeleteSave()
+          else confirmDeleteSave()
+        }
+      } else if (event.key === 'ArrowUp') {
         event.preventDefault()
-        settingsSelection = (settingsSelection + 6) % 7
+        playSfx('ui-move')
+        settingsSelection = (settingsSelection + 8) % 9
       } else if (event.key === 'ArrowDown') {
         event.preventDefault()
-        settingsSelection = (settingsSelection + 1) % 7
+        playSfx('ui-move')
+        settingsSelection = (settingsSelection + 1) % 9
       } else if (event.key === 'ArrowLeft') {
         event.preventDefault()
         adjustSettings(settingsSelection, -1)
@@ -397,10 +675,27 @@
       const horizontal = Math.abs(pad.axes[0] ?? 0) > 0.45 ? Math.sign(pad.axes[0]) : 0
       const vertical = Math.abs(pad.axes[1] ?? 0) > 0.45 ? Math.sign(pad.axes[1]) : 0
 
-      if (screen === 'select') {
+      if (screen === 'title') {
+        if (settingsOpen) {
+          if (justPressed(12) || (vertical < 0 && gamepadAxisReady)) dispatchGamepadKey('ArrowUp')
+          if (justPressed(13) || (vertical > 0 && gamepadAxisReady)) dispatchGamepadKey('ArrowDown')
+          if (justPressed(14) || (horizontal < 0 && gamepadAxisReady)) dispatchGamepadKey('ArrowLeft')
+          if (justPressed(15) || (horizontal > 0 && gamepadAxisReady)) dispatchGamepadKey('ArrowRight')
+          if (justPressed(0)) dispatchGamepadKey('Enter')
+          if (justPressed(1)) dispatchGamepadKey('Escape')
+        } else if (!titleMenuOpen && pressed.size > 0) {
+          dispatchGamepadKey('Enter')
+        } else {
+          if (justPressed(12) || (vertical < 0 && gamepadAxisReady)) dispatchGamepadKey('ArrowUp')
+          if (justPressed(13) || (vertical > 0 && gamepadAxisReady)) dispatchGamepadKey('ArrowDown')
+          if (justPressed(0)) dispatchGamepadKey('Enter')
+          if (justPressed(1)) dispatchGamepadKey('Escape')
+        }
+      } else if (screen === 'select') {
         if (justPressed(14) || (horizontal < 0 && gamepadAxisReady)) dispatchGamepadKey('ArrowLeft')
         if (justPressed(15) || (horizontal > 0 && gamepadAxisReady)) dispatchGamepadKey('ArrowRight')
         if (justPressed(0)) dispatchGamepadKey('Enter')
+        if (justPressed(1)) dispatchGamepadKey('Escape')
       } else if (hud.cleared) {
         if (justPressed(14) || (horizontal < 0 && gamepadAxisReady)) dispatchGamepadKey('ArrowLeft')
         if (justPressed(15) || (horizontal > 0 && gamepadAxisReady)) dispatchGamepadKey('ArrowRight')
@@ -428,6 +723,7 @@
   }
 
   onMount(() => {
+    saveData = loadSave()
     const storedSettings = localStorage.getItem(SETTINGS_KEY)
     if (storedSettings) {
       try {
@@ -436,36 +732,56 @@
         settings = { ...DEFAULT_SETTINGS }
       }
     }
-    mapMusic = new Audio('/assets/audio/world01_map.mp3')
-    stageMusic = new Audio('/assets/audio/world01_stage.mp3')
-    mapMusic.loop = true
-    stageMusic.loop = true
-    mapMusic.preload = 'auto'
-    stageMusic.preload = 'auto'
-    mapMusic.load()
-    stageMusic.load()
+    musicPlayer = new Audio(MUSIC_TRACKS.title)
+    musicPlayer.id = 'bgm-player'
+    musicPlayer.dataset.track = 'title'
+    musicPlayer.hidden = true
+    musicPlayer.loop = true
+    musicPlayer.preload = 'auto'
+    document.body.append(musicPlayer)
+    musicPlayer.load()
+    musicPlayer.addEventListener('canplay', ensureDesiredMusicPlaying)
+    for (const name of ['ui-move', 'ui-confirm', 'ui-back', 'armor-step', 'hit', 'coin', 'death', 'checkpoint', 'goal']) {
+      const audio = new Audio(`/assets/audio/sfx/${name}.wav`)
+      audio.preload = 'auto'
+      audio.load()
+      sfx.set(name, audio)
+    }
+    void attemptTitleMusicAutoplay()
     window.addEventListener('projectrun:hud', handleHudEvent)
+    window.addEventListener('projectrun:sfx', handleSfxEvent)
+    window.addEventListener('projectrun:prepare-music', handlePrepareMusicEvent)
     window.addEventListener('keydown', handleGlobalKeydown)
-    window.addEventListener('keydown', unlockMusic, { once: true })
-    window.addEventListener('pointerdown', unlockMusic, { once: true })
+    window.addEventListener('keydown', unlockMusic)
+    window.addEventListener('pointerdown', unlockMusic)
+    window.addEventListener('touchstart', unlockMusic)
+    const handleVisibilityChange = () => {
+      if (!document.hidden) void ensureDesiredMusicPlaying()
+    }
     const handleFullscreenChange = () => {
       settings = { ...settings, fullscreen: Boolean(document.fullscreenElement) }
     }
     document.addEventListener('fullscreenchange', handleFullscreenChange)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
     gamepadFrame = window.requestAnimationFrame(pollGamepad)
     void preloadGameAssets()
 
     return () => {
       window.removeEventListener('projectrun:hud', handleHudEvent)
+      window.removeEventListener('projectrun:sfx', handleSfxEvent)
+      window.removeEventListener('projectrun:prepare-music', handlePrepareMusicEvent)
       window.removeEventListener('keydown', handleGlobalKeydown)
       window.removeEventListener('keydown', unlockMusic)
       window.removeEventListener('pointerdown', unlockMusic)
+      window.removeEventListener('touchstart', unlockMusic)
       document.removeEventListener('fullscreenchange', handleFullscreenChange)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
       window.cancelAnimationFrame(gamepadFrame)
-      for (const frame of musicFadeFrames.values()) window.cancelAnimationFrame(frame)
-      musicFadeFrames.clear()
-      mapMusic?.pause()
-      stageMusic?.pause()
+      window.clearTimeout(musicRetryTimer)
+      cancelMusicFade()
+      musicPlayer?.removeEventListener('canplay', ensureDesiredMusicPlaying)
+      musicPlayer?.pause()
+      musicPlayer?.remove()
       game?.destroy(true)
     }
   })
@@ -480,12 +796,37 @@
       <div class="boot-meter"><i style={`width:${bootProgress}%`}></i></div>
       <b>{String(bootProgress).padStart(3, '0')}%</b>
     </section>
+  {:else if screen === 'title'}
+    <section class="game-panel">
+      <TitleScreen
+        menuOpen={titleMenuOpen}
+        selectedItem={titleSelection}
+        onOpenMenu={openTitleMenu}
+        onSelect={(index) => titleSelection = index}
+        onActivate={activateTitleItem}
+      />
+      {#if settingsOpen}
+        <div class="title-settings-overlay">
+          <SettingsPanel
+            {settings}
+            selectedItem={settingsSelection}
+            onSelect={(index) => settingsSelection = index}
+            onAdjust={adjustSettings}
+            onActivate={activateSettingsItem}
+            confirmDelete={deleteSaveConfirmOpen}
+            confirmSelection={deleteSaveConfirmSelection}
+            onCancelDelete={cancelDeleteSave}
+            onConfirmDelete={confirmDeleteSave}
+          />
+        </div>
+      {/if}
+    </section>
   {:else if screen === 'select'}
     <section class="game-panel" aria-label="White Palace stage select">
-      <StageSelect onEnter={enterStage} />
+      <StageSelect onEnter={enterStage} onBack={returnToTitle} {saveData} initialStageId={selectedStageId} />
     </section>
   {:else}
-  <section class="game-panel game-enter" aria-label="White Palace 1-1 playable prototype">
+  <section class="game-panel game-enter" aria-label={`White Palace ${selectedStageId} playable prototype`}>
     <div class="game-frame">
       <div class="play-surface">
         <div bind:this={gameHost} class="game-host"></div>
@@ -524,8 +865,8 @@
                 </svg>
               </span>
               <div>
-                <strong>White Palace 1-1</strong>
-                <span>The First Gate</span>
+                <strong>White Palace {selectedStageId}</strong>
+                <span>{stages[selectedStageId].subtitle}</span>
               </div>
               <span class="emblem flip" aria-hidden="true">
                 <svg viewBox="0 0 26 52" fill="currentColor">
@@ -622,6 +963,8 @@
 
           {#if hud.cleared}
             <StageResult
+              stageId={selectedStageId}
+              stageSubtitle={stages[selectedStageId].subtitle}
               time={hud.time}
               coins={hud.coins}
               coinTarget={hud.coinTarget}
@@ -634,6 +977,8 @@
               rank={hud.rank}
               onRetry={restartStage}
               onStageSelect={returnToStageSelect}
+              onNextStage={enterNextStage}
+              nextStageAvailable={Boolean(getNextStageId(selectedStageId) && saveData.stageRecords[selectedStageId]?.cleared)}
               selectedAction={resultSelection}
               onSelectAction={(index) => resultSelection = index}
             />
@@ -648,6 +993,10 @@
                   onSelect={(index) => settingsSelection = index}
                   onAdjust={adjustSettings}
                   onActivate={activateSettingsItem}
+                  confirmDelete={deleteSaveConfirmOpen}
+                  confirmSelection={deleteSaveConfirmSelection}
+                  onCancelDelete={cancelDeleteSave}
+                  onConfirmDelete={confirmDeleteSave}
                 />
               {:else}
               <div class="pause-menu">

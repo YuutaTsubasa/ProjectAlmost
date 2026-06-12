@@ -1,4 +1,6 @@
 <script lang="ts">
+  export let stageId: string
+  export let stageSubtitle: string
   export let time: string
   export let coins: number
   export let coinTarget: number
@@ -11,12 +13,15 @@
   export let rank: string
   export let onRetry: () => void
   export let onStageSelect: () => void
+  export let onNextStage: () => void
+  export let nextStageAvailable: boolean
   export let selectedAction: number
   export let onSelectAction: (index: number) => void
 
   function activate(index = selectedAction) {
     if (index === 0) onRetry()
     if (index === 1) onStageSelect()
+    if (index === 2 && nextStageAvailable) onNextStage()
   }
 
   const actions = ['Retry', 'Stage Select', 'Next Stage']
@@ -31,7 +36,7 @@
 
   <div class="result-content">
     <header class="result-banner"><span>✦</span><strong>Stage Clear</strong><span>✦</span></header>
-    <div class="result-stage-name"><b>White Palace 1-1</b><i></i><span>The First Gate</span></div>
+    <div class="result-stage-name"><b>White Palace {stageId}</b><i></i><span>{stageSubtitle}</span></div>
 
     <div class="result-board">
       <div class="result-stats">
@@ -53,15 +58,15 @@
       {#each actions as action, index}
         <button
           class:active={selectedAction === index}
-          class:locked={index === 2}
-          disabled={index === 2}
+          class:locked={index === 2 && !nextStageAvailable}
+          disabled={index === 2 && !nextStageAvailable}
           onclick={() => {
             onSelectAction(index)
             activate(index)
           }}
         >
           <b>{action}</b>
-          {#if index === 2}<span>Locked</span>{/if}
+          {#if index === 2 && !nextStageAvailable}<span>Locked</span>{/if}
         </button>
       {/each}
     </nav>

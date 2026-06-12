@@ -1,7 +1,12 @@
 <script lang="ts">
   import { onMount } from 'svelte'
+  import { stages as stageData, type StageId } from './game/stages/stageRegistry'
+  import { isStageUnlocked, type SaveData } from './game/save/saveData'
 
-  export let onEnter: () => void
+  export let onEnter: (stageId: StageId) => void
+  export let onBack: () => void
+  export let saveData: SaveData
+  export let initialStageId: StageId
 
   type StageOption = {
     id: string
@@ -14,31 +19,38 @@
     cleared: boolean
   }
 
-  const stages: StageOption[] = [
-    { id: '1-1', subtitle: 'The First Gate', objective: 'Reach the Goal', coins: 17, x: 35, y: 70, unlocked: true, cleared: false },
-    { id: '1-2', subtitle: 'Azure Courtyard', objective: 'Locked', coins: 21, x: 49, y: 59, unlocked: false, cleared: false },
+  const stageOptions: StageOption[] = [
+    { id: '1-1', subtitle: stageData['1-1'].subtitle, objective: stageData['1-1'].objective, coins: stageData['1-1'].coins.length, x: 35, y: 70, unlocked: isStageUnlocked(saveData, '1-1'), cleared: Boolean(saveData.stageRecords['1-1']?.cleared) },
+    { id: '1-2', subtitle: stageData['1-2'].subtitle, objective: isStageUnlocked(saveData, '1-2') ? stageData['1-2'].objective : 'Locked', coins: stageData['1-2'].coins.length, x: 49, y: 59, unlocked: isStageUnlocked(saveData, '1-2'), cleared: Boolean(saveData.stageRecords['1-2']?.cleared) },
     { id: '1-3', subtitle: 'Sky Terrace', objective: 'Locked', coins: 24, x: 61, y: 42, unlocked: false, cleared: false },
     { id: '1-4', subtitle: 'The Arch Bridge', objective: 'Locked', coins: 28, x: 73, y: 54, unlocked: false, cleared: false },
     { id: '1-5', subtitle: 'Hanging Garden', objective: 'Locked', coins: 30, x: 83, y: 34, unlocked: false, cleared: false },
     { id: '1-6', subtitle: 'The High Spire', objective: 'Locked', coins: 35, x: 91, y: 17, unlocked: false, cleared: false },
   ]
 
-  let selectedIndex = 0
-  let selected = stages[selectedIndex]
+  let selectedIndex = Math.max(0, stageOptions.findIndex((stage) => stage.id === initialStageId))
+  let selected = stageOptions[selectedIndex]
   let confirming = false
+  let inputReady = false
 
   function selectStage(index: number) {
-    selectedIndex = (index + stages.length) % stages.length
-    selected = stages[selectedIndex]
+    if ((index + stageOptions.length) % stageOptions.length !== selectedIndex) {
+      window.dispatchEvent(new CustomEvent('projectrun:sfx', { detail: 'ui-move' }))
+    }
+    selectedIndex = (index + stageOptions.length) % stageOptions.length
+    selected = stageOptions[selectedIndex]
   }
 
   function confirmStage() {
-    if (!selected.unlocked || confirming) return
+    if (!inputReady || !selected.unlocked || confirming) return
+    window.dispatchEvent(new CustomEvent('projectrun:sfx', { detail: 'ui-confirm' }))
+    window.dispatchEvent(new CustomEvent('projectrun:prepare-music', { detail: 'stage' }))
     confirming = true
-    window.setTimeout(onEnter, 280)
+    window.setTimeout(() => onEnter(selected.id as StageId), 280)
   }
 
   function handleKeydown(event: KeyboardEvent) {
+    if (!inputReady) return
     if (event.key === 'ArrowLeft') {
       event.preventDefault()
       selectStage(selectedIndex - 1)
@@ -48,12 +60,22 @@
     } else if (event.code === 'Space' || event.key === 'Enter') {
       event.preventDefault()
       confirmStage()
+    } else if (event.key === 'Escape') {
+      event.preventDefault()
+      window.dispatchEvent(new CustomEvent('projectrun:sfx', { detail: 'ui-back' }))
+      onBack()
     }
   }
 
   onMount(() => {
+    const readyTimer = window.setTimeout(() => {
+      inputReady = true
+    }, 360)
     window.addEventListener('keydown', handleKeydown)
-    return () => window.removeEventListener('keydown', handleKeydown)
+    return () => {
+      window.clearTimeout(readyTimer)
+      window.removeEventListener('keydown', handleKeydown)
+    }
   })
 </script>
 
@@ -87,12 +109,12 @@
     <span class="select-label">Collectibles</span>
     <div class="select-collectible">
       <span class="coin-mark">I</span>
-      <b>{selected.unlocked ? '00' : '0'} <small>/ {selected.coins}</small></b>
+      <b>{saveData.stageRecords[selected.id as StageId]?.maxCoins ?? 0} <small>/ {selected.coins}</small></b>
     </div>
 
     <div class="select-stats">
-      <div><span class="select-label">Best Time</span><b>{selected.unlocked ? '00:00.00' : '--:--.--'}</b></div>
-      <div><span class="select-label">Rank</span><b class="select-rank">--</b></div>
+      <div><span class="select-label">Best Time</span><b>{saveData.stageRecords[selected.id as StageId]?.bestTime ?? (selected.unlocked ? '--:--.--' : '--:--.--')}</b></div>
+      <div><span class="select-label">Rank</span><b class="select-rank">{saveData.stageRecords[selected.id as StageId]?.bestRank ?? '--'}</b></div>
     </div>
 
     <div class="select-roster">
@@ -103,12 +125,12 @@
 
   <div class="select-map">
     <svg class="select-paths" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-      {#each stages.slice(0, -1) as stage, index}
-        <line class:live={stage.unlocked && stages[index + 1].unlocked} x1={stage.x} y1={stage.y} x2={stages[index + 1].x} y2={stages[index + 1].y}></line>
+      {#each stageOptions.slice(0, -1) as stage, index}
+        <line class:live={stage.unlocked && stageOptions[index + 1].unlocked} x1={stage.x} y1={stage.y} x2={stageOptions[index + 1].x} y2={stageOptions[index + 1].y}></line>
       {/each}
     </svg>
 
-    {#each stages as stage, index}
+    {#each stageOptions as stage, index}
       <button
         class:active={index === selectedIndex}
         class:locked={!stage.unlocked}
