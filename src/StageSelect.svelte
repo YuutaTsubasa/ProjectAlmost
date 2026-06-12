@@ -52,10 +52,10 @@
 
   function handleKeydown(event: KeyboardEvent) {
     if (!inputReady) return
-    if (event.key === 'ArrowLeft') {
+    if (event.key === 'ArrowLeft' || event.code === 'KeyA') {
       event.preventDefault()
       selectStage(selectedIndex - 1)
-    } else if (event.key === 'ArrowRight') {
+    } else if (event.key === 'ArrowRight' || event.code === 'KeyD') {
       event.preventDefault()
       selectStage(selectedIndex + 1)
     } else if (event.code === 'Space' || event.key === 'Enter') {
@@ -144,6 +144,10 @@
         style={`left:${stage.x}%;top:${stage.y}%;--node-index:${index}`}
         aria-label={`White Palace ${stage.id}, ${stage.subtitle}${stage.unlocked ? '' : ', locked'}`}
         onclick={() => selectStage(index)}
+        ondblclick={() => {
+          selectStage(index)
+          confirmStage()
+        }}
       >
         <i></i>
         <b>{stage.unlocked ? stage.id : '◆'}</b>

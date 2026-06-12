@@ -33,6 +33,11 @@ const HOMING_ATTACK_FRAME = 2
 const HOMING_TRAIL_SPACING = 28
 const HOMING_TRAIL_HOLD_MS = 70
 const HOMING_TRAIL_FADE_MS = 260
+const JUMP_BUFFER_MS = 140
+const COYOTE_TIME_MS = 120
+const GROUND_ACCELERATION = 950
+const AIR_ACCELERATION = 720
+const PLAYER_MAX_RUN_SPEED = 500
 const THEME = {
   royalBlue: 0x2f6fb4,
   cyan: 0x33b5ff,
@@ -78,6 +83,8 @@ export class GameplayScene extends Phaser.Scene {
   private virtualAttackPressed = false
   private wasGrounded = true
   private nextFootstepAt = 0
+  private lastGroundedAt = 0
+  private jumpBufferedUntil = 0
   private statusMessage = this.getInitialStatusMessage()
   private activeCheckpointIndex = -1
   private respawnPoint = {
@@ -181,7 +188,7 @@ export class GameplayScene extends Phaser.Scene {
     this.player.setOrigin(playerDefinition.origin.x, playerDefinition.origin.y)
     this.player.setCollideWorldBounds(true)
     this.player.setDragX(1500)
-    this.player.setMaxVelocity(420, 900)
+    this.player.setMaxVelocity(PLAYER_MAX_RUN_SPEED, 900)
     this.setPlayerVisualState('normal')
     this.player.play('player-idle')
 
@@ -266,6 +273,8 @@ export class GameplayScene extends Phaser.Scene {
     this.virtualAttackPressed = false
     this.wasGrounded = true
     this.nextFootstepAt = 0
+    this.lastGroundedAt = 0
+    this.jumpBufferedUntil = 0
     this.statusMessage = this.getInitialStatusMessage()
     this.activeCheckpointIndex = -1
     this.respawnPoint = {
@@ -287,12 +296,14 @@ export class GameplayScene extends Phaser.Scene {
 
     const left = this.cursors.left.isDown || this.keys.left.isDown || padLeft || this.virtualMoveX < 0
     const right = this.cursors.right.isDown || this.keys.right.isDown || padRight || this.virtualMoveX > 0
-    const jumpPressed = Phaser.Input.Keyboard.JustDown(this.cursors.space) || Phaser.Input.Keyboard.JustDown(this.keys.jump) || padJumpPressed || this.virtualJumpPressed
+    const jumpPressed = Phaser.Input.Keyboard.JustDown(this.cursors.space) || Phaser.Input.Keyboard.JustDown(this.cursors.up) || Phaser.Input.Keyboard.JustDown(this.keys.jump) || padJumpPressed || this.virtualJumpPressed
     const attackPressed = Phaser.Input.Keyboard.JustDown(this.keys.attack) || Phaser.Input.Keyboard.JustDown(this.keys.attackAlt) || padAttackPressed || this.virtualAttackPressed
     this.virtualJumpPressed = false
     this.virtualAttackPressed = false
 
-    const grounded = this.player.body.blocked.down
+    const grounded = this.player.body.blocked.down || this.player.body.touching.down
+    if (grounded) this.lastGroundedAt = this.time.now
+    if (jumpPressed) this.jumpBufferedUntil = this.time.now + JUMP_BUFFER_MS
 
     if (this.isDead) {
       this.player.setAccelerationX(0)
@@ -308,13 +319,13 @@ export class GameplayScene extends Phaser.Scene {
 
     if (left) {
       this.timerStarted = true
-      this.player.setAccelerationX(-1800)
+      this.player.setAccelerationX(-(grounded ? GROUND_ACCELERATION : AIR_ACCELERATION))
       if (!this.isHurting) {
         this.player.setFlipX(true)
       }
     } else if (right) {
       this.timerStarted = true
-      this.player.setAccelerationX(1800)
+      this.player.setAccelerationX(grounded ? GROUND_ACCELERATION : AIR_ACCELERATION)
       if (!this.isHurting) {
         this.player.setFlipX(false)
       }
@@ -322,9 +333,12 @@ export class GameplayScene extends Phaser.Scene {
       this.player.setAccelerationX(0)
     }
 
-    if (jumpPressed && grounded) {
+    const canUseGroundJump = grounded || this.time.now - this.lastGroundedAt <= COYOTE_TIME_MS
+    if (this.jumpBufferedUntil >= this.time.now && canUseGroundJump) {
       this.timerStarted = true
       this.player.setVelocityY(-640)
+      this.jumpBufferedUntil = 0
+      this.lastGroundedAt = 0
       this.dispatchSfx('armor-step')
       this.nextFootstepAt = this.time.now + 270
     }
@@ -879,6 +893,8 @@ export class GameplayScene extends Phaser.Scene {
     this.homingTarget = undefined
     this.attackReady = true
     this.playerHealth = PLAYER_MAX_HEALTH
+    this.jumpBufferedUntil = 0
+    this.lastGroundedAt = this.time.now
     this.updateHealthText()
     this.stopPlayerHurtBlink()
     this.setPlayerHomingCollision(true)

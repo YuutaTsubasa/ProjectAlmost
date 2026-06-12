@@ -257,6 +257,10 @@
     else titleSelection = 1
   }
 
+  function closeSettingsFromBackdrop(event: MouseEvent) {
+    if (!deleteSaveConfirmOpen && event.target === event.currentTarget) closeSettings()
+  }
+
   function activateSettingsItem(index = settingsSelection) {
     playSfx('ui-confirm')
     if (index >= 0 && index <= 2) {
@@ -369,9 +373,9 @@
     resultSelection = 0
     resetMusic('result')
     syncMusic()
-    await tick()
-    game = createPlatformerGame(gameHost, selectedStageId)
+    await createStageGame()
     await new Promise((resolve) => window.setTimeout(resolve, 420))
+    resetGameLoopTiming()
     transitionPhase = 'reveal'
     window.setTimeout(() => {
       transitionPhase = 'idle'
@@ -450,8 +454,25 @@
   function resumeGame() {
     playSfx('ui-back')
     game?.scene.resume('GameplayScene')
+    resetGameLoopTiming()
     paused = false
     syncMusic()
+  }
+
+  function nextAnimationFrame() {
+    return new Promise<void>((resolve) => window.requestAnimationFrame(() => resolve()))
+  }
+
+  function resetGameLoopTiming() {
+    game?.loop.resetDelta()
+  }
+
+  async function createStageGame() {
+    await tick()
+    await nextAnimationFrame()
+    game = createPlatformerGame(gameHost, selectedStageId)
+    await nextAnimationFrame()
+    resetGameLoopTiming()
   }
 
   async function restartStage() {
@@ -468,9 +489,9 @@
     resetMusic('result')
     hud = { ...hud, coins: 0, damageTaken: 0, falls: 0, enemiesDefeated: 0, checkpointsReached: 0, time: '00:00.00', rank: '--', cleared: false }
     syncMusic()
-    await tick()
-    game = createPlatformerGame(gameHost, selectedStageId)
+    await createStageGame()
     await new Promise((resolve) => window.setTimeout(resolve, 420))
+    resetGameLoopTiming()
     transitionPhase = 'reveal'
     window.setTimeout(() => {
       transitionPhase = 'idle'
@@ -494,9 +515,9 @@
     resetMusic('result')
     hud = { ...hud, coins: 0, damageTaken: 0, falls: 0, enemiesDefeated: 0, checkpointsReached: 0, time: '00:00.00', rank: '--', cleared: false }
     syncMusic()
-    await tick()
-    game = createPlatformerGame(gameHost, selectedStageId)
+    await createStageGame()
     await new Promise((resolve) => window.setTimeout(resolve, 420))
+    resetGameLoopTiming()
     transitionPhase = 'reveal'
     window.setTimeout(() => {
       transitionPhase = 'idle'
@@ -532,7 +553,7 @@
       if (settingsOpen) {
         if (deleteSaveConfirmOpen) {
           if (event.key === 'Escape') cancelDeleteSave()
-          else if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+          else if (event.key === 'ArrowLeft' || event.key === 'ArrowRight' || event.code === 'KeyA' || event.code === 'KeyD') {
             playSfx('ui-move')
             deleteSaveConfirmSelection = deleteSaveConfirmSelection === 0 ? 1 : 0
           } else if (event.code === 'Space' || event.key === 'Enter') {
@@ -547,8 +568,8 @@
           playSfx('ui-move')
           settingsSelection = (settingsSelection + 1) % 9
         }
-        else if (event.key === 'ArrowLeft') adjustSettings(settingsSelection, -1)
-        else if (event.key === 'ArrowRight') adjustSettings(settingsSelection, 1)
+        else if (event.key === 'ArrowLeft' || event.code === 'KeyA') adjustSettings(settingsSelection, -1)
+        else if (event.key === 'ArrowRight' || event.code === 'KeyD') adjustSettings(settingsSelection, 1)
         else if (event.code === 'Space' || event.key === 'Enter') activateSettingsItem()
       } else if (!titleMenuOpen) {
         openTitleMenu()
@@ -571,11 +592,11 @@
         event.preventDefault()
         playSfx('ui-back')
         returnToStageSelect()
-      } else if (event.key === 'ArrowLeft') {
+      } else if (event.key === 'ArrowLeft' || event.code === 'KeyA') {
         event.preventDefault()
         playSfx('ui-move')
         resultSelection = Math.max(0, resultSelection - 1)
-      } else if (event.key === 'ArrowRight') {
+      } else if (event.key === 'ArrowRight' || event.code === 'KeyD') {
         event.preventDefault()
         playSfx('ui-move')
         resultSelection = Math.min(getNextStageId(selectedStageId) ? 2 : 1, resultSelection + 1)
@@ -602,7 +623,7 @@
 
     if (settingsOpen) {
       if (deleteSaveConfirmOpen) {
-        if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+        if (event.key === 'ArrowLeft' || event.key === 'ArrowRight' || event.code === 'KeyA' || event.code === 'KeyD') {
           event.preventDefault()
           playSfx('ui-move')
           deleteSaveConfirmSelection = deleteSaveConfirmSelection === 0 ? 1 : 0
@@ -619,10 +640,10 @@
         event.preventDefault()
         playSfx('ui-move')
         settingsSelection = (settingsSelection + 1) % 9
-      } else if (event.key === 'ArrowLeft') {
+      } else if (event.key === 'ArrowLeft' || event.code === 'KeyA') {
         event.preventDefault()
         adjustSettings(settingsSelection, -1)
-      } else if (event.key === 'ArrowRight') {
+      } else if (event.key === 'ArrowRight' || event.code === 'KeyD') {
         event.preventDefault()
         adjustSettings(settingsSelection, 1)
       } else if (event.code === 'Space' || event.key === 'Enter') {
@@ -804,7 +825,7 @@
         onActivate={activateTitleItem}
       />
       {#if settingsOpen}
-        <div class="title-settings-overlay">
+        <div class="title-settings-overlay" role="presentation" onclick={closeSettingsFromBackdrop}>
           <SettingsPanel
             {settings}
             selectedItem={settingsSelection}
@@ -916,7 +937,7 @@
                   <div><b>← →</b><span>Move</span></div>
                   <div><b>Space</b><span>Jump</span></div>
                   <div><b>J</b><span>Attack</span></div>
-                  <div><b>Space + J</b><span>Homing</span></div>
+                  <div><b>Air + J</b><span>Homing</span></div>
                 </div>
               </div>
               <div class="ai-callout">
@@ -983,7 +1004,7 @@
           {/if}
 
           {#if paused}
-            <div class="pause-overlay">
+            <div class="pause-overlay" role="presentation" onclick={settingsOpen ? closeSettingsFromBackdrop : undefined}>
               {#if settingsOpen}
                 <SettingsPanel
                   {settings}
