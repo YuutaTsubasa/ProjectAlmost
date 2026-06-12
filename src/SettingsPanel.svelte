@@ -60,29 +60,62 @@
 
   <div class="settings-list" role="menu" aria-label="Settings">
     {#each items as item, index}
-      <button
-        class:active={selectedItem === index}
-        class:action={item.kind === 'action'}
-        class:danger={item.kind === 'danger'}
-        role="menuitem"
-        onclick={() => {
-          onSelect(index)
-          onActivate(index)
-        }}
-      >
-        <span class="settings-index">{String(index + 1).padStart(2, '0')}</span>
-        <b>{item.label}</b>
-        {#if item.kind === 'volume'}
+      {#if item.kind === 'volume'}
+        <div
+          class:active={selectedItem === index}
+          class="settings-row"
+          role="menuitem"
+          tabindex="0"
+          onclick={() => onSelect(index)}
+          onkeydown={(event) => {
+            if (event.key === 'Enter' || event.code === 'Space') onSelect(index)
+          }}
+        >
+          <span class="settings-index">{String(index + 1).padStart(2, '0')}</span>
+          <b>{item.label}</b>
+          <span class="settings-adjust">
+            <button
+              aria-label={`Decrease ${item.label}`}
+              onclick={(event) => {
+                event.stopPropagation()
+                onSelect(index)
+                onAdjust(index, -1)
+              }}
+            >−</button>
+            <span class="settings-value">{valueFor(index)}</span>
+            <button
+              aria-label={`Increase ${item.label}`}
+              onclick={(event) => {
+                event.stopPropagation()
+                onSelect(index)
+                onAdjust(index, 1)
+              }}
+            >+</button>
+          </span>
           <span class="settings-meter" aria-hidden="true">
             <i style={`width:${index === 0 ? settings.masterVolume : index === 1 ? settings.musicVolume : settings.sfxVolume}%`}></i>
           </span>
-        {/if}
-        {#if valueFor(index)}
-          <span class:enabled={valueFor(index) === 'On'} class="settings-value">{valueFor(index)}</span>
-        {:else}
-          <span class="settings-action-mark">›</span>
-        {/if}
-      </button>
+        </div>
+      {:else}
+        <button
+          class:active={selectedItem === index}
+          class:action={item.kind === 'action'}
+          class:danger={item.kind === 'danger'}
+          role="menuitem"
+          onclick={() => {
+            onSelect(index)
+            onActivate(index)
+          }}
+        >
+          <span class="settings-index">{String(index + 1).padStart(2, '0')}</span>
+          <b>{item.label}</b>
+          {#if valueFor(index)}
+            <span class:enabled={valueFor(index) === 'On'} class="settings-value">{valueFor(index)}</span>
+          {:else}
+            <span class="settings-action-mark">›</span>
+          {/if}
+        </button>
+      {/if}
     {/each}
   </div>
 
