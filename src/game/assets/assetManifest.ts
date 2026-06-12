@@ -22,9 +22,19 @@ export const IMAGE_ASSETS = {
 
 export const MUSIC_ASSETS = {
   title: '/assets/audio/titlescreen.mp3',
-  map: '/assets/audio/world01_map.mp3',
-  stage: '/assets/audio/world01_stage.mp3',
   result: '/assets/audio/game_result.mp3',
+  world01Bgm: '/assets/audio/world01_bgm.mp3',
+  world01Map: '/assets/audio/world01_map.mp3',
+  world02Bgm: '/assets/audio/world02_bgm.mp3',
+  world02Map: '/assets/audio/world02_map.mp3',
+  world03Bgm: '/assets/audio/world03_bgm.mp3',
+  world03Map: '/assets/audio/world03_map.mp3',
+  world04Bgm: '/assets/audio/world04_bgm.mp3',
+  world04Map: '/assets/audio/world04_map.mp3',
+  world05Bgm: '/assets/audio/world05_bgm.mp3',
+  world05Map: '/assets/audio/world05_map.mp3',
+  world06Bgm: '/assets/audio/world06_bgm.mp3',
+  world06Map: '/assets/audio/world06_map.mp3',
 } as const
 
 export const SFX_ASSETS = {

@@ -46,6 +46,7 @@
   let bootProgress = 0
   let screen: 'title' | 'world' | 'select' | 'game' = 'title'
   let selectedStageId: StageId = '1-1'
+  let selectedWorldIndex = 1
   let titleMenuOpen = false
   let titleSelection = 0
   let returnToTitlePending = false
@@ -197,19 +198,26 @@
     musicPlayer.volume = 0
   }
 
+  function getWorldMusicTrack(kind: 'bgm' | 'map'): MusicTrack {
+    const world = String(selectedWorldIndex).padStart(2, '0')
+    return `world${world}${kind === 'bgm' ? 'Bgm' : 'Map'}` as MusicTrack
+  }
+
   function syncMusic() {
     if (!musicUnlocked) return
     const volume = BASE_MUSIC_VOLUME * (settings.masterVolume / 100) * (settings.musicVolume / 100)
 
     if (screen === 'title') {
       playMusic('title', volume * (titleMenuOpen ? 1 : 0.35))
-    } else if (screen === 'world' || screen === 'select') {
-      playMusic('map', volume)
+    } else if (screen === 'world') {
+      playMusic(getWorldMusicTrack('bgm'), volume)
+    } else if (screen === 'select') {
+      playMusic(getWorldMusicTrack('map'), volume)
     } else {
       if (hud.cleared) {
         playMusic('result', volume)
       } else {
-        playMusic('stage', paused ? volume * 0.45 : volume)
+        playMusic(getWorldMusicTrack('bgm'), paused ? volume * 0.45 : volume)
       }
     }
   }
@@ -229,10 +237,6 @@
 
   function handleSfxEvent(event: Event) {
     playSfx((event as CustomEvent<string>).detail)
-  }
-
-  function handlePrepareMusicEvent(event: Event) {
-    prepareMusicTrack((event as CustomEvent<MusicTrack>).detail)
   }
 
   function adjustSettings(index: number, direction: number) {
@@ -444,7 +448,7 @@
   function activateTitleItem(index = titleSelection) {
     playSfx('ui-confirm')
     if (index === 0) {
-      prepareMusicTrack('map')
+      prepareMusicTrack(getWorldMusicTrack('bgm'))
       void enterWorldSelect()
     }
     if (index === 1) {
@@ -502,8 +506,8 @@
   async function restartStage() {
     if (!game || transitionPhase !== 'idle') return
     hideVirtualControls()
-    resetMusic('stage')
-    prepareMusicTrack('stage')
+    resetMusic(getWorldMusicTrack('bgm'))
+    prepareMusicTrack(getWorldMusicTrack('bgm'))
     transitionPhase = 'cover'
     await new Promise((resolve) => window.setTimeout(resolve, 260))
     game.destroy(true)
@@ -527,8 +531,8 @@
     if (!game || !nextStageId || !saveData.stageRecords[selectedStageId]?.cleared || transitionPhase !== 'idle') return
 
     hideVirtualControls()
-    resetMusic('stage')
-    prepareMusicTrack('stage')
+    resetMusic(getWorldMusicTrack('bgm'))
+    prepareMusicTrack(getWorldMusicTrack('bgm'))
     transitionPhase = 'cover'
     await new Promise((resolve) => window.setTimeout(resolve, 260))
     game.destroy(true)
@@ -798,7 +802,6 @@
     void attemptTitleMusicAutoplay()
     window.addEventListener('projectrun:hud', handleHudEvent)
     window.addEventListener('projectrun:sfx', handleSfxEvent)
-    window.addEventListener('projectrun:prepare-music', handlePrepareMusicEvent)
     window.addEventListener('keydown', handleGlobalKeydown)
     window.addEventListener('keydown', unlockMusic)
     window.addEventListener('pointerdown', unlockMusic)
@@ -817,7 +820,6 @@
     return () => {
       window.removeEventListener('projectrun:hud', handleHudEvent)
       window.removeEventListener('projectrun:sfx', handleSfxEvent)
-      window.removeEventListener('projectrun:prepare-music', handlePrepareMusicEvent)
       window.removeEventListener('keydown', handleGlobalKeydown)
       window.removeEventListener('keydown', unlockMusic)
       window.removeEventListener('pointerdown', unlockMusic)
@@ -871,11 +873,23 @@
     </section>
   {:else if screen === 'world'}
     <section class="game-panel" aria-label="World select">
-      <WorldSelect onEnter={enterStageSelect} onBack={returnToTitle} {saveData} />
+      <WorldSelect
+        onSelect={(worldIndex) => {
+          selectedWorldIndex = worldIndex
+          syncMusic()
+        }}
+        onEnter={(worldIndex) => {
+          selectedWorldIndex = worldIndex
+          void enterStageSelect()
+        }}
+        onBack={returnToTitle}
+        initialWorldIndex={selectedWorldIndex}
+        {saveData}
+      />
     </section>
   {:else if screen === 'select'}
     <section class="game-panel" aria-label="White Palace stage select">
-      <StageSelect onEnter={enterStage} onBack={enterWorldSelect} {saveData} initialStageId={selectedStageId} />
+      <StageSelect onEnter={enterStage} onBack={enterWorldSelect} {saveData} initialStageId={selectedStageId} worldIndex={selectedWorldIndex} />
     </section>
   {:else}
   <section class="game-panel game-enter" aria-label={`White Palace ${selectedStageId} gameplay`}>

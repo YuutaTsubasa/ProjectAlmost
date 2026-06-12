@@ -9,6 +9,7 @@
   export let onBack: () => void
   export let saveData: SaveData
   export let initialStageId: StageId
+  export let worldIndex = 1
 
   type StageOption = {
     id: string
@@ -21,14 +22,25 @@
     cleared: boolean
   }
 
-  const stageOptions: StageOption[] = [
-    { id: '1-1', subtitle: stageData['1-1'].subtitle, objective: stageData['1-1'].objective, coins: stageData['1-1'].coins.length, x: 35, y: 70, unlocked: isStageUnlocked(saveData, '1-1'), cleared: Boolean(saveData.stageRecords['1-1']?.cleared) },
-    { id: '1-2', subtitle: stageData['1-2'].subtitle, objective: isStageUnlocked(saveData, '1-2') ? stageData['1-2'].objective : 'Locked', coins: stageData['1-2'].coins.length, x: 49, y: 59, unlocked: isStageUnlocked(saveData, '1-2'), cleared: Boolean(saveData.stageRecords['1-2']?.cleared) },
-    { id: '1-3', subtitle: 'Sky Terrace', objective: 'Locked', coins: 24, x: 61, y: 42, unlocked: false, cleared: false },
-    { id: '1-4', subtitle: 'The Arch Bridge', objective: 'Locked', coins: 28, x: 73, y: 54, unlocked: false, cleared: false },
-    { id: '1-5', subtitle: 'Hanging Garden', objective: 'Locked', coins: 30, x: 83, y: 34, unlocked: false, cleared: false },
-    { id: '1-6', subtitle: 'The High Spire', objective: 'Locked', coins: 35, x: 91, y: 17, unlocked: false, cleared: false },
-  ]
+  const placeholderPositions = [{ x: 35, y: 70 }, { x: 49, y: 59 }, { x: 61, y: 42 }, { x: 73, y: 54 }, { x: 83, y: 34 }, { x: 91, y: 17 }]
+  const stageOptions: StageOption[] = worldIndex === 1
+    ? [
+        { id: '1-1', subtitle: stageData['1-1'].subtitle, objective: stageData['1-1'].objective, coins: stageData['1-1'].coins.length, x: 35, y: 70, unlocked: isStageUnlocked(saveData, '1-1'), cleared: Boolean(saveData.stageRecords['1-1']?.cleared) },
+        { id: '1-2', subtitle: stageData['1-2'].subtitle, objective: isStageUnlocked(saveData, '1-2') ? stageData['1-2'].objective : 'Locked', coins: stageData['1-2'].coins.length, x: 49, y: 59, unlocked: isStageUnlocked(saveData, '1-2'), cleared: Boolean(saveData.stageRecords['1-2']?.cleared) },
+        { id: '1-3', subtitle: 'Sky Terrace', objective: 'Locked', coins: 24, x: 61, y: 42, unlocked: false, cleared: false },
+        { id: '1-4', subtitle: 'The Arch Bridge', objective: 'Locked', coins: 28, x: 73, y: 54, unlocked: false, cleared: false },
+        { id: '1-5', subtitle: 'Hanging Garden', objective: 'Locked', coins: 30, x: 83, y: 34, unlocked: false, cleared: false },
+        { id: '1-6', subtitle: 'The High Spire', objective: 'Locked', coins: 35, x: 91, y: 17, unlocked: false, cleared: false },
+      ]
+    : placeholderPositions.map((position, index) => ({
+        id: `${worldIndex}-${index + 1}`,
+        subtitle: 'Locked',
+        objective: 'Locked',
+        coins: 0,
+        ...position,
+        unlocked: false,
+        cleared: false,
+      }))
 
   let selectedIndex = Math.max(0, stageOptions.findIndex((stage) => stage.id === initialStageId))
   let selected = stageOptions[selectedIndex]
@@ -36,7 +48,11 @@
   let inputReady = false
 
   function stageSubtitleKey(id: string): TranslationKey {
-    return `stage.${id}.subtitle` as TranslationKey
+    return worldIndex === 1 ? `stage.${id}.subtitle` as TranslationKey : 'common.locked'
+  }
+
+  function worldNameKey(): TranslationKey {
+    return `world.${worldIndex}.name` as TranslationKey
   }
 
   function selectStage(index: number) {
@@ -50,7 +66,6 @@
   function confirmStage() {
     if (!inputReady || !selected.unlocked || confirming) return
     window.dispatchEvent(new CustomEvent('projectrun:sfx', { detail: 'ui-confirm' }))
-    window.dispatchEvent(new CustomEvent('projectrun:prepare-music', { detail: 'stage' }))
     confirming = true
     window.setTimeout(() => onEnter(selected.id as StageId), 280)
   }
@@ -86,7 +101,7 @@
 </script>
 
 <section class:confirming class="stage-select" aria-label={$translator('stageSelect.title')}>
-  <div class="select-world" aria-hidden="true">
+    <div class={`select-world world-${worldIndex}`} aria-hidden="true">
     <div class="select-sky"></div>
     <div class="select-palace far"></div>
     <div class="select-palace near"></div>
@@ -105,7 +120,7 @@
       <div class="preview-scene"></div>
       {#if !selected.unlocked}<div class="preview-lock">{$translator('common.locked')}</div>{/if}
     </div>
-    <strong class="select-title">White Palace {selected.id}</strong>
+    <strong class="select-title">{$translator(worldNameKey())} {selected.id}</strong>
     <span class="select-subtitle">{$translator(stageSubtitleKey(selected.id))}</span>
 
     <div class="select-rule"></div>
@@ -147,7 +162,7 @@
         class:cleared={stage.cleared}
         class="stage-node"
         style={`left:${stage.x}%;top:${stage.y}%;--node-index:${index}`}
-        aria-label={`White Palace ${stage.id}, ${$translator(stageSubtitleKey(stage.id))}${stage.unlocked ? '' : `, ${$translator('common.locked')}`}`}
+        aria-label={`${$translator(worldNameKey())} ${stage.id}, ${$translator(stageSubtitleKey(stage.id))}${stage.unlocked ? '' : `, ${$translator('common.locked')}`}`}
         onclick={() => selectStage(index)}
         ondblclick={() => {
           selectStage(index)

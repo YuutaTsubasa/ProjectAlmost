@@ -4,8 +4,10 @@
   import { translator, type TranslationKey } from './i18n'
 
   export let saveData: SaveData
-  export let onEnter: () => void
+  export let onEnter: (worldIndex: number) => void
+  export let onSelect: (worldIndex: number) => void
   export let onBack: () => void
+  export let initialWorldIndex = 1
 
   type WorldOption = {
     id: string
@@ -19,14 +21,14 @@
 
   const worlds: WorldOption[] = [
     { id: '01', name: 'world.1.name', subtitle: 'world.1.subtitle', symbol: '♜', theme: 'palace', unlocked: true, stageCount: 6 },
-    { id: '02', name: 'world.2.name', subtitle: 'world.2.subtitle', symbol: '♧', theme: 'forest', unlocked: false, stageCount: 6 },
-    { id: '03', name: 'world.3.name', subtitle: 'world.3.subtitle', symbol: '≈', theme: 'ocean', unlocked: false, stageCount: 6 },
-    { id: '04', name: 'world.4.name', subtitle: 'world.4.subtitle', symbol: '△', theme: 'snow', unlocked: false, stageCount: 6 },
-    { id: '05', name: 'world.5.name', subtitle: 'world.5.subtitle', symbol: '◇', theme: 'volcano', unlocked: false, stageCount: 6 },
-    { id: '06', name: 'world.6.name', subtitle: 'world.6.subtitle', symbol: '✦', theme: 'abyss', unlocked: false, stageCount: 6 },
+    { id: '02', name: 'world.2.name', subtitle: 'world.2.subtitle', symbol: '♧', theme: 'forest', unlocked: true, stageCount: 6 },
+    { id: '03', name: 'world.3.name', subtitle: 'world.3.subtitle', symbol: '≈', theme: 'ocean', unlocked: true, stageCount: 6 },
+    { id: '04', name: 'world.4.name', subtitle: 'world.4.subtitle', symbol: '△', theme: 'snow', unlocked: true, stageCount: 6 },
+    { id: '05', name: 'world.5.name', subtitle: 'world.5.subtitle', symbol: '◇', theme: 'volcano', unlocked: true, stageCount: 6 },
+    { id: '06', name: 'world.6.name', subtitle: 'world.6.subtitle', symbol: '✦', theme: 'abyss', unlocked: true, stageCount: 6 },
   ]
 
-  let selectedIndex = 0
+  let selectedIndex = Math.max(0, Math.min(worlds.length - 1, initialWorldIndex - 1))
   let inputReady = false
   let confirming = false
   $: selected = worlds[selectedIndex]
@@ -36,6 +38,7 @@
     const next = (index + worlds.length) % worlds.length
     if (next !== selectedIndex) window.dispatchEvent(new CustomEvent('projectrun:sfx', { detail: 'ui-move' }))
     selectedIndex = next
+    onSelect(next + 1)
   }
 
   function confirmWorld(index = selectedIndex) {
@@ -44,7 +47,7 @@
     selectedIndex = index
     window.dispatchEvent(new CustomEvent('projectrun:sfx', { detail: 'ui-confirm' }))
     confirming = true
-    window.setTimeout(onEnter, 260)
+    window.setTimeout(() => onEnter(index + 1), 260)
   }
 
   function handleKeydown(event: KeyboardEvent) {

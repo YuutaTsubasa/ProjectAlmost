@@ -2145,6 +2145,26 @@ input {
   background: url("/assets/maps/white_palace_stage_select.png") center / cover no-repeat;
 }
 
+.select-world.world-2 {
+  background-image: url("/assets/maps/emerald_sanctuary_stage_select.png");
+}
+
+.select-world.world-3 {
+  background-image: url("/assets/maps/cerulean_depths_stage_select.png");
+}
+
+.select-world.world-4 {
+  background-image: url("/assets/maps/frostveil_peaks_stage_select.png");
+}
+
+.select-world.world-5 {
+  background-image: url("/assets/maps/emberfall_caldera_stage_select.png");
+}
+
+.select-world.world-6 {
+  background-image: url("/assets/maps/abyssal_hollow_stage_select.png");
+}
+
 .select-sky {
   display: none;
 }
@@ -2603,9 +2623,9 @@ input {
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(90deg, rgba(235, 249, 255, 0.96) 0 31%, rgba(223, 244, 255, 0.72) 54%, rgba(202, 232, 250, 0.88)),
-    url("/assets/maps/white_palace_stage_select.png") center / cover;
-  transition: filter 300ms ease;
+    linear-gradient(90deg, rgba(11, 35, 61, 0.2), rgba(11, 35, 61, 0.04) 38%, rgba(11, 35, 61, 0.16)),
+    var(--world-background) center / cover no-repeat;
+  transition: background-image 300ms ease, filter 300ms ease;
 }
 
 .world-backdrop::after {
@@ -2690,7 +2710,10 @@ input {
   position: relative;
   color: rgba(255, 255, 255, 0.88);
   font: 700 min(8cqw, 150px)/1 Georgia, serif;
-  text-shadow: 0 8px 24px color-mix(in srgb, var(--theme-color) 72%, black);
+  -webkit-text-stroke: 1px rgba(11, 32, 58, 0.28);
+  text-shadow:
+    0 2px 2px rgba(7, 21, 40, 0.86),
+    0 8px 24px color-mix(in srgb, var(--theme-color) 58%, black);
 }
 
 .world-preview > b {
@@ -2843,6 +2866,7 @@ input {
   font-size: min(0.72cqw, 14px);
   font-weight: 700;
   letter-spacing: 0.18em;
+  text-shadow: 0 1px 3px rgba(5, 19, 39, 0.95);
 }
 
 .world-card-symbol {
@@ -2851,7 +2875,10 @@ input {
   align-self: center;
   justify-self: center;
   font: 700 min(4.8cqw, 92px)/1 Georgia, serif;
-  text-shadow: 0 6px 18px color-mix(in srgb, var(--theme-color) 72%, black);
+  -webkit-text-stroke: 1px rgba(11, 32, 58, 0.3);
+  text-shadow:
+    0 2px 3px rgba(5, 19, 39, 0.9),
+    0 6px 18px color-mix(in srgb, var(--theme-color) 58%, black);
 }
 
 .world-card-copy {
@@ -2860,6 +2887,7 @@ input {
   display: block;
   padding-top: 0.8cqh;
   border-top: 1px solid rgba(255, 255, 255, 0.44);
+  text-shadow: 0 1px 3px rgba(5, 19, 39, 0.96);
 }
 
 .world-card-copy strong,
@@ -2892,6 +2920,7 @@ input {
   z-index: 1;
   color: rgba(255, 255, 255, 0.8);
   font-style: normal;
+  text-shadow: 0 1px 4px rgba(5, 19, 39, 0.95);
 }
 
 .theme-palace { --theme-color: #3987cf; --theme-surface: #8ccbf1; --theme-pattern: linear-gradient(145deg, rgba(255,255,255,.42), transparent 52%, rgba(34,102,168,.42)); }
@@ -2900,6 +2929,43 @@ input {
 .theme-snow { --theme-color: #6687a6; --theme-surface: #b4cfdf; --theme-pattern: linear-gradient(145deg, rgba(255,255,255,.62), transparent 48%, rgba(66,102,137,.38)); }
 .theme-volcano { --theme-color: #b54f35; --theme-surface: #d17a55; --theme-pattern: linear-gradient(145deg, rgba(255,205,132,.28), transparent 48%, rgba(91,26,24,.5)); }
 .theme-abyss { --theme-color: #5b467c; --theme-surface: #76618d; --theme-pattern: linear-gradient(145deg, rgba(201,174,231,.24), transparent 48%, rgba(27,19,48,.58)); }
+
+.world-select.theme-palace { --world-background: url("/assets/maps/white_palace_stage_select.png"); }
+.world-select.theme-forest { --world-background: url("/assets/maps/emerald_sanctuary_stage_select.png"); }
+.world-select.theme-ocean { --world-background: url("/assets/maps/cerulean_depths_stage_select.png"); }
+.world-select.theme-snow { --world-background: url("/assets/maps/frostveil_peaks_stage_select.png"); }
+.world-select.theme-volcano { --world-background: url("/assets/maps/emberfall_caldera_stage_select.png"); }
+.world-select.theme-abyss { --world-background: url("/assets/maps/abyssal_hollow_stage_select.png"); }
+
+.world-preview.theme-palace,
+.world-card.theme-palace {
+  background: url("/assets/maps/white_palace_stage_select.png") center / cover no-repeat;
+}
+
+.world-preview.theme-forest,
+.world-card.theme-forest {
+  background: url("/assets/maps/emerald_sanctuary_stage_select.png") center / cover no-repeat;
+}
+
+.world-preview.theme-ocean,
+.world-card.theme-ocean {
+  background: url("/assets/maps/cerulean_depths_stage_select.png") center / cover no-repeat;
+}
+
+.world-preview.theme-snow,
+.world-card.theme-snow {
+  background: url("/assets/maps/frostveil_peaks_stage_select.png") center / cover no-repeat;
+}
+
+.world-preview.theme-volcano,
+.world-card.theme-volcano {
+  background: url("/assets/maps/emberfall_caldera_stage_select.png") center / cover no-repeat;
+}
+
+.world-preview.theme-abyss,
+.world-card.theme-abyss {
+  background: url("/assets/maps/abyssal_hollow_stage_select.png") center / cover no-repeat;
+}
 
 .world-controls {
   animation: select-controls-enter 420ms 650ms ease-out both;
