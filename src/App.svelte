@@ -561,10 +561,10 @@
             else confirmDeleteSave()
           }
         } else if (event.key === 'Escape') closeSettings()
-        else if (event.key === 'ArrowUp') {
+        else if (event.key === 'ArrowUp' || event.code === 'KeyW') {
           playSfx('ui-move')
           settingsSelection = (settingsSelection + 8) % 9
-        } else if (event.key === 'ArrowDown') {
+        } else if (event.key === 'ArrowDown' || event.code === 'KeyS') {
           playSfx('ui-move')
           settingsSelection = (settingsSelection + 1) % 9
         }
@@ -573,7 +573,7 @@
         else if (event.code === 'Space' || event.key === 'Enter') activateSettingsItem()
       } else if (!titleMenuOpen) {
         openTitleMenu()
-      } else if (event.key === 'ArrowUp' || event.key === 'ArrowDown') {
+      } else if (event.key === 'ArrowUp' || event.key === 'ArrowDown' || event.code === 'KeyW' || event.code === 'KeyS') {
         playSfx('ui-move')
         titleSelection = titleSelection === 0 ? 1 : 0
       } else if (event.code === 'Space' || event.key === 'Enter') {
@@ -632,11 +632,11 @@
           if (deleteSaveConfirmSelection === 0) cancelDeleteSave()
           else confirmDeleteSave()
         }
-      } else if (event.key === 'ArrowUp') {
+      } else if (event.key === 'ArrowUp' || event.code === 'KeyW') {
         event.preventDefault()
         playSfx('ui-move')
         settingsSelection = (settingsSelection + 8) % 9
-      } else if (event.key === 'ArrowDown') {
+      } else if (event.key === 'ArrowDown' || event.code === 'KeyS') {
         event.preventDefault()
         playSfx('ui-move')
         settingsSelection = (settingsSelection + 1) % 9
@@ -653,10 +653,10 @@
       return
     }
 
-    if (event.key === 'ArrowUp') {
+    if (event.key === 'ArrowUp' || event.code === 'KeyW') {
       event.preventDefault()
       movePauseSelection(-1)
-    } else if (event.key === 'ArrowDown') {
+    } else if (event.key === 'ArrowDown' || event.code === 'KeyS') {
       event.preventDefault()
       movePauseSelection(1)
     } else if (event.code === 'Space' || event.key === 'Enter') {
