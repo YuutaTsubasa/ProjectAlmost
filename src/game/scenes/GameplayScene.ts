@@ -3,6 +3,7 @@ import { IMAGE_ASSETS } from '../assets/assetManifest'
 import { groundedBottomY, groundedCenterY, objectDefinitions } from '../objects/objectDefinitions'
 import { activeStage } from '../stages/stageRegistry'
 import type { CoinPoint, EnemyPoint, PlatformRect } from '../stages/stageTypes'
+import type { TranslationKey, TranslationParams } from '../../i18n'
 
 type ArcadeSprite = Phaser.Types.Physics.Arcade.SpriteWithDynamicBody
 type TilemapLayer = Phaser.Tilemaps.TilemapLayer | Phaser.Tilemaps.TilemapGPULayer
@@ -88,6 +89,7 @@ export class GameplayScene extends Phaser.Scene {
   private lastGroundedAt = 0
   private jumpBufferedUntil = 0
   private statusMessage = this.getInitialStatusMessage()
+  private statusParams: TranslationParams = {}
   private activeCheckpointIndex = -1
   private respawnPoint = {
     x: activeStage.playerSpawn.x,
@@ -282,6 +284,7 @@ export class GameplayScene extends Phaser.Scene {
     this.lastGroundedAt = 0
     this.jumpBufferedUntil = 0
     this.statusMessage = this.getInitialStatusMessage()
+    this.statusParams = {}
     this.activeCheckpointIndex = -1
     this.respawnPoint = {
       x: activeStage.playerSpawn.x,
@@ -785,7 +788,7 @@ export class GameplayScene extends Phaser.Scene {
     const knockbackDirection = this.player.x < enemy.x ? -1 : 1
     this.player.setVelocity(knockbackDirection * 360, -360)
     this.playPlayerAnimation('player-hurt')
-    this.setStatusMessage(`Armor integrity reduced. HP ${this.playerHealth}/${PLAYER_MAX_HEALTH}.`)
+    this.setStatusMessage('status.hurt', { hp: this.playerHealth, max: PLAYER_MAX_HEALTH })
 
     this.hurtTween = this.tweens.add({
       targets: this.player,
@@ -803,7 +806,7 @@ export class GameplayScene extends Phaser.Scene {
     this.time.delayedCall(900, () => {
       this.isInvulnerable = false
       this.stopPlayerHurtBlink()
-      this.setStatusMessage('Armor stabilized. Continue toward the gate.')
+      this.setStatusMessage('status.stabilized')
     })
   }
 
@@ -835,7 +838,7 @@ export class GameplayScene extends Phaser.Scene {
     } else {
       enemy.sprite.play('enemy-guard-death')
     }
-    this.setStatusMessage('Hostile signal cleared. Route to the gate is open.')
+    this.setStatusMessage('status.enemyCleared')
 
     this.time.delayedCall(520, () => {
       enemy.sprite.setVisible(false)
@@ -885,7 +888,7 @@ export class GameplayScene extends Phaser.Scene {
         onComplete: () => {
           enemy.defeated = false
           enemy.sprite.body.enable = true
-          this.setStatusMessage('Azure Core signal regenerated. Homing route restored.')
+          this.setStatusMessage('status.coreRegenerated')
         },
       })
     } else {
@@ -955,7 +958,7 @@ export class GameplayScene extends Phaser.Scene {
       duration: 180,
       yoyo: true,
     })
-    this.setStatusMessage('Checkpoint synchronized. Restoration point updated.')
+    this.setStatusMessage('status.checkpoint')
   }
 
   private respawnPlayer(): void {
@@ -978,7 +981,7 @@ export class GameplayScene extends Phaser.Scene {
     this.player.body.enable = true
     this.playPlayerAnimation('player-idle')
     this.setEnemiesFrozen(false)
-    this.setStatusMessage('Systems restored. Recommencing mission.')
+    this.setStatusMessage('status.restored')
   }
 
   private defeatPlayer(reason: 'damage' | 'fall'): void {
@@ -1005,7 +1008,7 @@ export class GameplayScene extends Phaser.Scene {
     this.player.setVelocity(0, reason === 'fall' ? 0 : -160)
     this.setEnemiesFrozen(true)
     this.playPlayerAnimation('player-death')
-    this.setStatusMessage(reason === 'fall' ? 'Route lost. Restoring from checkpoint.' : 'Critical damage. Restoring from checkpoint.')
+    this.setStatusMessage(reason === 'fall' ? 'status.fall' : 'status.critical')
 
     this.time.delayedCall(700, () => {
       this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
@@ -1055,7 +1058,7 @@ export class GameplayScene extends Phaser.Scene {
       enemy.sprite.setVelocityX(0)
     }
     this.goal.setTint(THEME.cyan)
-    this.setStatusMessage(`Gate reached. ${this.getCoinLabel()}  ${this.getTimerLabel()}`)
+    this.setStatusMessage('status.goal', { coins: this.getCoinLabel(), time: this.getTimerLabel() })
     this.dispatchHudState({ cleared: true })
     this.setPlayerVisualState('normal')
     this.playPlayerAnimation('player-idle')
@@ -1177,10 +1180,10 @@ export class GameplayScene extends Phaser.Scene {
 
     if (hit) {
       this.player.setVelocity(0, HOMING_ATTACK_BOUNCE_Y)
-      this.setStatusMessage('Homing strike confirmed. Continue toward the gate.')
+      this.setStatusMessage('status.homingHit')
     } else {
       this.player.setVelocity(0, 0)
-      this.setStatusMessage('No target contact. Resume course.')
+      this.setStatusMessage('status.homingMiss')
     }
 
     this.time.delayedCall(HOMING_ATTACK_RECOVERY_MS, () => {
@@ -1367,8 +1370,9 @@ export class GameplayScene extends Phaser.Scene {
     return 'D'
   }
 
-  private setStatusMessage(message: string): void {
+  private setStatusMessage(message: TranslationKey, params: TranslationParams = {}): void {
     this.statusMessage = message
+    this.statusParams = params
     this.dispatchHudState()
   }
 
@@ -1389,6 +1393,7 @@ export class GameplayScene extends Phaser.Scene {
         time: this.getTimerValue(),
         objective: activeStage.objective,
         statusMessage: this.statusMessage,
+        statusParams: this.statusParams,
         playerProgress: Phaser.Math.Clamp(this.player.x / this.worldWidth, 0, 1),
         playerProgressY: Phaser.Math.Clamp(this.player.y / this.worldHeight, 0, 1),
         goalProgress: activeStage.goal.x / this.worldWidth,
@@ -1417,10 +1422,10 @@ export class GameplayScene extends Phaser.Scene {
     window.dispatchEvent(new CustomEvent('projectrun:sfx', { detail: name }))
   }
 
-  private getInitialStatusMessage(): string {
+  private getInitialStatusMessage(): TranslationKey {
     return activeStage.id === '1-2'
-      ? 'Azure Core signals detected. Chain Homing Attacks to cross the courtyard.'
-      : 'Path confirmed. Proceed to the first gate.'
+      ? 'status.azureDetected'
+      : 'status.initial'
   }
 
   private updateMovementSfx(grounded: boolean, moving: boolean): void {

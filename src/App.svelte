@@ -9,7 +9,8 @@
   import { IMAGE_ASSETS, MUSIC_ASSETS, PRELOAD_ASSETS, SFX_ASSETS, type MusicTrack } from './game/assets/assetManifest'
   import { createPlatformerGame } from './game/createGame'
   import { deleteSave, loadSave, recordStageClear, type SaveData } from './game/save/saveData'
-  import { getNextStageId, stages, type StageId } from './game/stages/stageRegistry'
+  import { getNextStageId, type StageId } from './game/stages/stageRegistry'
+  import { nextLocale, setLocale, translator, type TranslationKey, type TranslationParams } from './i18n'
 
   type HudState = {
     hp: number
@@ -25,7 +26,8 @@
     rank: string
     time: string
     objective: string
-    statusMessage: string
+    statusMessage: TranslationKey
+    statusParams: TranslationParams
     playerProgress: number
     playerProgressY: number
     goalProgress: number
@@ -75,12 +77,13 @@
     masterVolume: 100,
     musicVolume: 80,
     sfxVolume: 80,
+    language: 'en',
     fullscreen: false,
     screenShake: true,
     vibration: true,
   }
   let settings: GameSettings = { ...DEFAULT_SETTINGS }
-  const pauseItems = ['Resume', 'Restart Stage', 'Settings', 'Return to Stage Select']
+  const pauseItems = ['pause.resume', 'pause.restart', 'title.settings', 'pause.stageSelect'] as const
   let hud: HudState = {
     hp: 3,
     hpMax: 3,
@@ -95,7 +98,8 @@
     rank: '--',
     time: '00:00.00',
     objective: 'Reach the Goal',
-    statusMessage: 'Path confirmed. Proceed to the first gate.',
+    statusMessage: 'status.initial',
+    statusParams: {},
     playerProgress: 0,
     playerProgressY: 0,
     goalProgress: 0.92,
@@ -234,7 +238,10 @@
     if (index >= 0 && index <= 2) {
       const key = index === 0 ? 'masterVolume' : index === 1 ? 'musicVolume' : 'sfxVolume'
       settings = { ...settings, [key]: Math.max(0, Math.min(100, settings[key] + direction * 10)) }
-    } else if (index >= 3 && index <= 5) {
+    } else if (index === 3) {
+      settings = { ...settings, language: nextLocale(settings.language, direction) }
+      setLocale(settings.language)
+    } else if (index >= 4 && index <= 6) {
       activateSettingsItem(index)
       return
     }
@@ -266,20 +273,23 @@
     if (index >= 0 && index <= 2) {
       adjustSettings(index, 1)
     } else if (index === 3) {
-      void toggleFullscreen()
+      adjustSettings(index, 1)
     } else if (index === 4) {
+      void toggleFullscreen()
+    } else if (index === 5) {
       settings = { ...settings, screenShake: !settings.screenShake }
       saveSettings()
-    } else if (index === 5) {
+    } else if (index === 6) {
       settings = { ...settings, vibration: !settings.vibration }
       saveSettings()
-    } else if (index === 6) {
-      settings = { ...DEFAULT_SETTINGS, fullscreen: Boolean(document.fullscreenElement) }
-      saveSettings()
     } else if (index === 7) {
+      settings = { ...DEFAULT_SETTINGS, fullscreen: Boolean(document.fullscreenElement) }
+      setLocale(settings.language)
+      saveSettings()
+    } else if (index === 8) {
       deleteSaveConfirmSelection = 0
       deleteSaveConfirmOpen = true
-    } else if (index === 8) {
+    } else if (index === 9) {
       closeSettings()
     }
   }
@@ -563,10 +573,10 @@
         } else if (event.key === 'Escape') closeSettings()
         else if (event.key === 'ArrowUp' || event.code === 'KeyW') {
           playSfx('ui-move')
-          settingsSelection = (settingsSelection + 8) % 9
+          settingsSelection = (settingsSelection + 9) % 10
         } else if (event.key === 'ArrowDown' || event.code === 'KeyS') {
           playSfx('ui-move')
-          settingsSelection = (settingsSelection + 1) % 9
+          settingsSelection = (settingsSelection + 1) % 10
         }
         else if (event.key === 'ArrowLeft' || event.code === 'KeyA') adjustSettings(settingsSelection, -1)
         else if (event.key === 'ArrowRight' || event.code === 'KeyD') adjustSettings(settingsSelection, 1)
@@ -635,11 +645,11 @@
       } else if (event.key === 'ArrowUp' || event.code === 'KeyW') {
         event.preventDefault()
         playSfx('ui-move')
-        settingsSelection = (settingsSelection + 8) % 9
+        settingsSelection = (settingsSelection + 9) % 10
       } else if (event.key === 'ArrowDown' || event.code === 'KeyS') {
         event.preventDefault()
         playSfx('ui-move')
-        settingsSelection = (settingsSelection + 1) % 9
+        settingsSelection = (settingsSelection + 1) % 10
       } else if (event.key === 'ArrowLeft' || event.code === 'KeyA') {
         event.preventDefault()
         adjustSettings(settingsSelection, -1)
@@ -751,6 +761,7 @@
         settings = { ...DEFAULT_SETTINGS }
       }
     }
+    settings = { ...settings, language: setLocale(settings.language) }
     musicPlayer = new Audio(MUSIC_ASSETS.title)
     musicPlayer.id = 'bgm-player'
     musicPlayer.dataset.track = 'title'
@@ -811,7 +822,7 @@
     <section class="game-panel boot-screen" aria-label="Loading game">
       <div class="boot-emblem">✦</div>
       <strong>Project Almost</strong>
-      <span>Initializing White Palace</span>
+      <span>{$translator('boot.initializing')}</span>
       <div class="boot-meter"><i style={`width:${bootProgress}%`}></i></div>
       <b>{String(bootProgress).padStart(3, '0')}%</b>
     </section>
@@ -856,7 +867,7 @@
             <span class="corner tr"></span>
             <span class="corner bl"></span>
             <span class="corner br"></span>
-            <div class="hud-label"><span></span>System Status</div>
+            <div class="hud-label"><span></span>{$translator('hud.systemStatus')}</div>
             <div class="status-body">
               <img class="portrait-slot" src={IMAGE_ASSETS.playerPortrait} alt="Yuuta Tsubasa" />
               <div class="status-info">
@@ -885,7 +896,7 @@
               </span>
               <div>
                 <strong>White Palace {selectedStageId}</strong>
-                <span>{stages[selectedStageId].subtitle}</span>
+                <span>{$translator(`stage.${selectedStageId}.subtitle`)}</span>
               </div>
               <span class="emblem flip" aria-hidden="true">
                 <svg viewBox="0 0 26 52" fill="currentColor">
@@ -904,7 +915,7 @@
           <section class="hud-panel map-hud">
             <span class="corner tr"></span>
             <span class="corner bl"></span>
-            <div class="hud-label"><span></span>Map Overview</div>
+            <div class="hud-label"><span></span>{$translator('hud.mapOverview')}</div>
             <div class="mini-map">
               <svg viewBox="0 0 100 36" aria-label="White Palace stage map">
                 {#each hud.mapPlatforms as platform}
@@ -925,55 +936,55 @@
           <section class="hud-panel objective-hud">
             <span class="corner tl"></span>
             <span class="corner br"></span>
-            <div class="hud-label"><span></span>Objective</div>
-            <p>{hud.objective}</p>
+            <div class="hud-label"><span></span>{$translator('hud.objective')}</div>
+            <p>{$translator('stage.objective.reachGoal')}</p>
           </section>
 
           <section class="bottom-hud">
             <div class="bottom-fill">
               <div class="skill-group">
-                <div class="hud-label"><span></span>Controls</div>
+                <div class="hud-label"><span></span>{$translator('hud.controls')}</div>
                 <div class="skills">
-                  <div><b>← →</b><span>Move</span></div>
-                  <div><b>Space</b><span>Jump</span></div>
-                  <div><b>J</b><span>Attack</span></div>
-                  <div><b>Air + J</b><span>Homing</span></div>
+                  <div><b>← →</b><span>{$translator('hud.move')}</span></div>
+                  <div><b>Space</b><span>{$translator('hud.jump')}</span></div>
+                  <div><b>J</b><span>{$translator('hud.attack')}</span></div>
+                  <div><b>Air + J</b><span>{$translator('hud.homing')}</span></div>
                 </div>
               </div>
               <div class="ai-callout">
                 <img class="ai-face" src={IMAGE_ASSETS.aiNavigator} alt="Palace navigator AI" />
                 <div>
-                  <span>Palace Navigator</span>
-                  <p>› {hud.statusMessage}</p>
+                  <span>{$translator('hud.navigator')}</span>
+                  <p>› {$translator(hud.statusMessage as TranslationKey, hud.statusParams)}</p>
                 </div>
               </div>
               <div class="readouts">
                 <div>
-                  <span>Time</span>
+                  <span>{$translator('hud.time')}</span>
                   <b>{hud.time}</b>
                 </div>
                 <div>
-                  <span>Coins</span>
+                  <span>{$translator('hud.coins')}</span>
                   <b>{hud.coins} <small>/ {hud.coinTarget}</small></b>
                 </div>
                 <div>
-                  <span>Damage</span>
+                  <span>{$translator('hud.damage')}</span>
                   <b>{hud.damageTaken}</b>
                 </div>
                 <div>
-                  <span>Falls</span>
+                  <span>{$translator('hud.falls')}</span>
                   <b>{hud.falls}</b>
                 </div>
                 <div>
-                  <span>Enemies</span>
+                  <span>{$translator('hud.enemies')}</span>
                   <b>{hud.enemiesDefeated} <small>/ {hud.enemyTarget}</small></b>
                 </div>
                 <div>
-                  <span>Checkpoints</span>
+                  <span>{$translator('hud.checkpoints')}</span>
                   <b>{hud.checkpointsReached} <small>/ {hud.checkpointTarget}</small></b>
                 </div>
                 <div class="live-rank">
-                  <span>Rank</span>
+                  <span>{$translator('hud.rank')}</span>
                   <b class={`rank-${hud.rank.toLowerCase()}`}>{hud.rank}</b>
                 </div>
               </div>
@@ -983,7 +994,6 @@
           {#if hud.cleared}
             <StageResult
               stageId={selectedStageId}
-              stageSubtitle={stages[selectedStageId].subtitle}
               time={hud.time}
               coins={hud.coins}
               coinTarget={hud.coinTarget}
@@ -1019,8 +1029,8 @@
                 />
               {:else}
               <div class="pause-menu">
-                <span class="pause-kicker">System Menu</span>
-                <strong>Paused</strong>
+                <span class="pause-kicker">{$translator('settings.systemMenu')}</span>
+                <strong>{$translator('pause.paused')}</strong>
                 <div class="pause-rule"></div>
                 <nav aria-label="Pause menu">
                   {#each pauseItems as item, index}
@@ -1032,11 +1042,11 @@
                       }}
                     >
                       <span>{String(index + 1).padStart(2, '0')}</span>
-                      <b>{item}</b>
+                      <b>{$translator(item)}</b>
                     </button>
                   {/each}
                 </nav>
-                <p><kbd>↑</kbd><kbd>↓</kbd> Select <kbd>Enter</kbd> Confirm <kbd>Esc</kbd> Resume</p>
+                <p><kbd>↑</kbd><kbd>↓</kbd> {$translator('common.select')} <kbd>Enter</kbd> {$translator('common.confirm')} <kbd>Esc</kbd> {$translator('pause.resume')}</p>
               </div>
               {/if}
             </div>

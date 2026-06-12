@@ -1,8 +1,8 @@
 <script lang="ts">
   import { IMAGE_ASSETS } from './game/assets/assetManifest'
+  import { translator, type TranslationKey } from './i18n'
 
   export let stageId: string
-  export let stageSubtitle: string
   export let time: string
   export let coins: number
   export let coinTarget: number
@@ -26,33 +26,33 @@
     if (index === 2 && nextStageAvailable) onNextStage()
   }
 
-  const actions = ['Retry', 'Stage Select', 'Next Stage']
+  const actions = ['result.retry', 'result.stageSelect', 'result.nextStage'] as const
 </script>
 
 <section class="stage-result" aria-label="Stage Result">
   <div class="result-veil"></div>
   <div class="result-hero">
     <img src={IMAGE_ASSETS.resultStandee} alt="Yuuta Tsubasa" />
-    <div><strong>Yuuta Tsubasa</strong><span>Paladin</span></div>
+    <div><strong>Yuuta Tsubasa</strong><span>{$translator('result.paladin')}</span></div>
   </div>
 
   <div class="result-content">
-    <header class="result-banner"><span>✦</span><strong>Stage Clear</strong><span>✦</span></header>
-    <div class="result-stage-name"><b>White Palace {stageId}</b><i></i><span>{stageSubtitle}</span></div>
+    <header class="result-banner"><span>✦</span><strong>{$translator('result.title')}</strong><span>✦</span></header>
+    <div class="result-stage-name"><b>White Palace {stageId}</b><i></i><span>{$translator(`stage.${stageId}.subtitle` as TranslationKey)}</span></div>
 
     <div class="result-board">
       <div class="result-stats">
-        <div><span>Clear Time</span><b>{time}</b><small>New Record</small></div>
-        <div><span>Coins</span><b>{coins}<em>/ {coinTarget}</em></b><small class:perfect={coins === coinTarget}>{coins === coinTarget ? 'Perfect' : ''}</small></div>
-        <div><span>Damage Taken</span><b>{damageTaken}</b><small class:perfect={damageTaken === 0}>{damageTaken === 0 ? 'Perfect' : ''}</small></div>
-        <div><span>Falls</span><b>{falls}</b><small class:perfect={falls === 0}>{falls === 0 ? 'Perfect' : ''}</small></div>
-        <div><span>Enemies Defeated</span><b>{enemiesDefeated}<em>/ {enemyTarget}</em></b><small class:perfect={enemiesDefeated === enemyTarget}>{enemiesDefeated === enemyTarget ? 'Perfect' : ''}</small></div>
-        <div><span>Checkpoints</span><b>{checkpointsReached}<em>/ {checkpointTarget}</em></b><small class:perfect={checkpointsReached === checkpointTarget}>{checkpointsReached === checkpointTarget ? 'Perfect' : ''}</small></div>
+        <div><span>{$translator('result.clearTime')}</span><b>{time}</b><small>{$translator('result.newRecord')}</small></div>
+        <div><span>{$translator('hud.coins')}</span><b>{coins}<em>/ {coinTarget}</em></b><small class:perfect={coins === coinTarget}>{coins === coinTarget ? $translator('result.perfect') : ''}</small></div>
+        <div><span>{$translator('result.damageTaken')}</span><b>{damageTaken}</b><small class:perfect={damageTaken === 0}>{damageTaken === 0 ? $translator('result.perfect') : ''}</small></div>
+        <div><span>{$translator('hud.falls')}</span><b>{falls}</b><small class:perfect={falls === 0}>{falls === 0 ? $translator('result.perfect') : ''}</small></div>
+        <div><span>{$translator('result.enemiesDefeated')}</span><b>{enemiesDefeated}<em>/ {enemyTarget}</em></b><small class:perfect={enemiesDefeated === enemyTarget}>{enemiesDefeated === enemyTarget ? $translator('result.perfect') : ''}</small></div>
+        <div><span>{$translator('hud.checkpoints')}</span><b>{checkpointsReached}<em>/ {checkpointTarget}</em></b><small class:perfect={checkpointsReached === checkpointTarget}>{checkpointsReached === checkpointTarget ? $translator('result.perfect') : ''}</small></div>
       </div>
       <div class="result-rank">
-        <span>Rank</span>
+        <span>{$translator('hud.rank')}</span>
         <div class={`rank-${rank.toLowerCase()}`}><b>{rank}</b></div>
-        <small>Final Evaluation</small>
+        <small>{$translator('result.finalEvaluation')}</small>
       </div>
     </div>
 
@@ -67,8 +67,8 @@
             activate(index)
           }}
         >
-          <b>{action}</b>
-          {#if index === 2 && !nextStageAvailable}<span>Locked</span>{/if}
+          <b>{$translator(action)}</b>
+          {#if index === 2 && !nextStageAvailable}<span>{$translator('common.locked')}</span>{/if}
         </button>
       {/each}
     </nav>

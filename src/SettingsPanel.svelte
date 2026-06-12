@@ -1,8 +1,11 @@
 <script lang="ts">
+  import { translator, type Locale, type TranslationKey } from './i18n'
+
   export type GameSettings = {
     masterVolume: number
     musicVolume: number
     sfxVolume: number
+    language: Locale
     fullscreen: boolean
     screenShake: boolean
     vibration: boolean
@@ -30,32 +33,34 @@
     onConfirmDelete: () => void
   } = $props()
 
-  const items = [
-    { label: 'Master Volume', kind: 'volume' },
-    { label: 'Music Volume', kind: 'volume' },
-    { label: 'SFX Volume', kind: 'volume' },
-    { label: 'Fullscreen', kind: 'toggle' },
-    { label: 'Screen Shake', kind: 'toggle' },
-    { label: 'Controller Vibration', kind: 'toggle' },
-    { label: 'Reset to Default', kind: 'action' },
-    { label: 'Delete Save Data', kind: 'danger' },
-    { label: 'Back', kind: 'action' },
+  const items: Array<{ label: TranslationKey; kind: 'volume' | 'choice' | 'toggle' | 'action' | 'danger' }> = [
+    { label: 'settings.masterVolume', kind: 'volume' },
+    { label: 'settings.musicVolume', kind: 'volume' },
+    { label: 'settings.sfxVolume', kind: 'volume' },
+    { label: 'settings.language', kind: 'choice' },
+    { label: 'settings.fullscreen', kind: 'toggle' },
+    { label: 'settings.screenShake', kind: 'toggle' },
+    { label: 'settings.vibration', kind: 'toggle' },
+    { label: 'settings.reset', kind: 'action' },
+    { label: 'settings.deleteSave', kind: 'danger' },
+    { label: 'common.back', kind: 'action' },
   ] as const
 
   function valueFor(index: number) {
     if (index === 0) return `${settings.masterVolume}%`
     if (index === 1) return `${settings.musicVolume}%`
     if (index === 2) return `${settings.sfxVolume}%`
-    if (index === 3) return settings.fullscreen ? 'On' : 'Off'
-    if (index === 4) return settings.screenShake ? 'On' : 'Off'
-    if (index === 5) return settings.vibration ? 'On' : 'Off'
+    if (index === 3) return $translator(`language.${settings.language}` as TranslationKey)
+    if (index === 4) return $translator(settings.fullscreen ? 'common.on' : 'common.off')
+    if (index === 5) return $translator(settings.screenShake ? 'common.on' : 'common.off')
+    if (index === 6) return $translator(settings.vibration ? 'common.on' : 'common.off')
     return ''
   }
 </script>
 
 <div class="settings-panel">
-  <span class="pause-kicker">System Menu</span>
-  <strong>Settings</strong>
+  <span class="pause-kicker">{$translator('settings.systemMenu')}</span>
+  <strong>{$translator('settings.title')}</strong>
   <div class="pause-rule"></div>
 
   <div class="settings-list" role="menu" aria-label="Settings">
@@ -72,10 +77,10 @@
           }}
         >
           <span class="settings-index">{String(index + 1).padStart(2, '0')}</span>
-          <b>{item.label}</b>
+          <b>{$translator(item.label)}</b>
           <span class="settings-adjust">
             <button
-              aria-label={`Decrease ${item.label}`}
+              aria-label={$translator('settings.decrease', { item: $translator(item.label) })}
               onclick={(event) => {
                 event.stopPropagation()
                 onSelect(index)
@@ -84,7 +89,7 @@
             >−</button>
             <span class="settings-value">{valueFor(index)}</span>
             <button
-              aria-label={`Increase ${item.label}`}
+              aria-label={$translator('settings.increase', { item: $translator(item.label) })}
               onclick={(event) => {
                 event.stopPropagation()
                 onSelect(index)
@@ -108,9 +113,9 @@
           }}
         >
           <span class="settings-index">{String(index + 1).padStart(2, '0')}</span>
-          <b>{item.label}</b>
+          <b>{$translator(item.label)}</b>
           {#if valueFor(index)}
-            <span class:enabled={valueFor(index) === 'On'} class="settings-value">{valueFor(index)}</span>
+            <span class="settings-value">{valueFor(index)}</span>
           {:else}
             <span class="settings-action-mark">›</span>
           {/if}
@@ -119,18 +124,18 @@
     {/each}
   </div>
 
-  <p><kbd>↑</kbd><kbd>↓</kbd> Select <kbd>←</kbd><kbd>→</kbd> Adjust <kbd>Esc</kbd> Back</p>
+  <p><kbd>↑</kbd><kbd>↓</kbd> {$translator('common.select')} <kbd>←</kbd><kbd>→</kbd> {$translator('common.adjust')} <kbd>Esc</kbd> {$translator('common.back')}</p>
 </div>
 
 {#if confirmDelete}
   <div class="confirm-dialog" role="alertdialog" aria-modal="true" aria-label="Delete save data confirmation">
     <div>
-      <span class="pause-kicker">Warning</span>
-      <strong>Delete Save Data?</strong>
-      <p>All stage clears, unlocks, records, and best ranks will be permanently deleted.</p>
+      <span class="pause-kicker">{$translator('common.warning')}</span>
+      <strong>{$translator('settings.deleteTitle')}</strong>
+      <p>{$translator('settings.deleteBody')}</p>
       <nav>
-        <button class:active={confirmSelection === 0} onclick={onCancelDelete}>Cancel</button>
-        <button class:active={confirmSelection === 1} class="danger" onclick={onConfirmDelete}>Delete</button>
+        <button class:active={confirmSelection === 0} onclick={onCancelDelete}>{$translator('common.cancel')}</button>
+        <button class:active={confirmSelection === 1} class="danger" onclick={onConfirmDelete}>{$translator('common.delete')}</button>
       </nav>
     </div>
   </div>

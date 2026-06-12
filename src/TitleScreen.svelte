@@ -1,5 +1,6 @@
 <script lang="ts">
   import { IMAGE_ASSETS } from './game/assets/assetManifest'
+  import { translator } from './i18n'
 
   let {
     menuOpen,
@@ -15,7 +16,7 @@
     onActivate: (index: number) => void
   } = $props()
 
-  const menuItems = ['Start Game', 'Settings']
+  const menuItems = ['title.start', 'title.settings'] as const
 </script>
 
 <section class:menu-open={menuOpen} class="title-screen" aria-label="Project Almost title screen">
@@ -30,7 +31,7 @@
     <button class="title-enter-catcher" aria-label="Open title menu" onclick={onOpenMenu}></button>
     <div class="title-prompt" aria-hidden="true">
       <span></span>
-      <b>Press Any Button</b>
+      <b>{$translator('title.pressAny')}</b>
       <span></span>
     </div>
   {:else}
@@ -45,12 +46,12 @@
           }}
         >
           <span>{String(index + 1).padStart(2, '0')}</span>
-          <b>{item}</b>
+          <b>{$translator(item)}</b>
           <i>›</i>
         </button>
       {/each}
     </nav>
-    <p class="title-controls"><kbd>↑</kbd><kbd>↓</kbd> Select <kbd>Enter</kbd> Confirm</p>
+    <p class="title-controls"><kbd>↑</kbd><kbd>↓</kbd> {$translator('common.select')} <kbd>Enter</kbd> {$translator('common.confirm')}</p>
   {/if}
   <small class="title-copyright">© 2026 Yuuta Tsubasa Studio</small>
 </section>

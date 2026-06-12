@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { translator } from './i18n'
+
   export let onPause: () => void
 
   let stickPointerId: number | undefined
@@ -45,10 +47,10 @@
   }
 </script>
 
-<div class="virtual-controls" aria-label="Touch controls">
+<div class="virtual-controls" aria-label={$translator('hud.controls')}>
   <button
     class="virtual-pause"
-    aria-label="Pause"
+    aria-label={$translator('touch.pause')}
     onpointerdown={(event) => {
       event.preventDefault()
       onPause()
@@ -58,7 +60,7 @@
   <div
     class="virtual-stick"
     role="slider"
-    aria-label="Move"
+    aria-label={$translator('touch.move')}
     aria-valuemin="-1"
     aria-valuemax="1"
     aria-valuenow={stickX === 0 ? 0 : Math.sign(stickX)}
@@ -74,19 +76,19 @@
   <div class="virtual-actions">
     <button
       class="virtual-action jump"
-      aria-label="Jump"
+      aria-label={$translator('touch.jump')}
       onpointerdown={(event) => {
         event.preventDefault()
         pressAction('jump')
       }}
-    ><b>↑</b><span>Jump</span></button>
+    ><b>↑</b><span>{$translator('touch.jump')}</span></button>
     <button
       class="virtual-action attack"
-      aria-label="Attack"
+      aria-label={$translator('touch.attack')}
       onpointerdown={(event) => {
         event.preventDefault()
         pressAction('attack')
       }}
-    ><b>✦</b><span>Attack</span></button>
+    ><b>✦</b><span>{$translator('touch.attack')}</span></button>
   </div>
 </div>

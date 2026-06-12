@@ -3,6 +3,7 @@
   import { IMAGE_ASSETS } from './game/assets/assetManifest'
   import { stages as stageData, type StageId } from './game/stages/stageRegistry'
   import { isStageUnlocked, type SaveData } from './game/save/saveData'
+  import { translator, type TranslationKey } from './i18n'
 
   export let onEnter: (stageId: StageId) => void
   export let onBack: () => void
@@ -33,6 +34,10 @@
   let selected = stageOptions[selectedIndex]
   let confirming = false
   let inputReady = false
+
+  function stageSubtitleKey(id: string): TranslationKey {
+    return `stage.${id}.subtitle` as TranslationKey
+  }
 
   function selectStage(index: number) {
     if ((index + stageOptions.length) % stageOptions.length !== selectedIndex) {
@@ -80,7 +85,7 @@
   })
 </script>
 
-<section class:confirming class="stage-select" aria-label="Stage Select">
+<section class:confirming class="stage-select" aria-label={$translator('stageSelect.title')}>
   <div class="select-world" aria-hidden="true">
     <div class="select-sky"></div>
     <div class="select-palace far"></div>
@@ -91,39 +96,39 @@
 
   <header class="select-banner">
     <span>✦</span>
-    <strong>Stage Select</strong>
+    <strong>{$translator('stageSelect.title')}</strong>
     <span>✦</span>
   </header>
 
   <aside class="select-detail">
     <div class="select-preview">
       <div class="preview-scene"></div>
-      {#if !selected.unlocked}<div class="preview-lock">Locked</div>{/if}
+      {#if !selected.unlocked}<div class="preview-lock">{$translator('common.locked')}</div>{/if}
     </div>
     <strong class="select-title">White Palace {selected.id}</strong>
-    <span class="select-subtitle">{selected.subtitle}</span>
+    <span class="select-subtitle">{$translator(stageSubtitleKey(selected.id))}</span>
 
     <div class="select-rule"></div>
-    <span class="select-label">Objective</span>
-    <p class="select-objective">{selected.objective}</p>
+    <span class="select-label">{$translator('stageSelect.objective')}</span>
+    <p class="select-objective">{selected.unlocked ? $translator('stage.objective.reachGoal') : $translator('common.locked')}</p>
 
-    <span class="select-label">Collectibles</span>
+    <span class="select-label">{$translator('stageSelect.collectibles')}</span>
     <div class="select-collectible">
       <span class="coin-mark">I</span>
       <b>{saveData.stageRecords[selected.id as StageId]?.maxCoins ?? 0} <small>/ {selected.coins}</small></b>
     </div>
 
     <div class="select-stats">
-      <div><span class="select-label">Best Time</span><b>{saveData.stageRecords[selected.id as StageId]?.bestTime ?? (selected.unlocked ? '--:--.--' : '--:--.--')}</b></div>
-      <div><span class="select-label">Rank</span><b class="select-rank">{saveData.stageRecords[selected.id as StageId]?.bestRank ?? '--'}</b></div>
+      <div><span class="select-label">{$translator('stageSelect.bestTime')}</span><b>{saveData.stageRecords[selected.id as StageId]?.bestTime ?? (selected.unlocked ? '--:--.--' : '--:--.--')}</b></div>
+      <div><span class="select-label">{$translator('stageSelect.rank')}</span><b class="select-rank">{saveData.stageRecords[selected.id as StageId]?.bestRank ?? '--'}</b></div>
     </div>
 
     <div class="select-roster">
       <img src={IMAGE_ASSETS.playerPortrait} alt="Yuuta Tsubasa" />
-      <div><span>Active Character</span><strong>Yuuta Tsubasa</strong></div>
+      <div><span>{$translator('stageSelect.activeCharacter')}</span><strong>Yuuta Tsubasa</strong></div>
     </div>
     <button class="stage-deploy" disabled={!selected.unlocked || confirming} onclick={confirmStage}>
-      <span>{selected.unlocked ? 'Deploy' : 'Locked'}</span>
+      <span>{selected.unlocked ? $translator('stageSelect.deploy') : $translator('common.locked')}</span>
       <b>›</b>
     </button>
   </aside>
@@ -142,7 +147,7 @@
         class:cleared={stage.cleared}
         class="stage-node"
         style={`left:${stage.x}%;top:${stage.y}%;--node-index:${index}`}
-        aria-label={`White Palace ${stage.id}, ${stage.subtitle}${stage.unlocked ? '' : ', locked'}`}
+        aria-label={`White Palace ${stage.id}, ${$translator(stageSubtitleKey(stage.id))}${stage.unlocked ? '' : `, ${$translator('common.locked')}`}`}
         onclick={() => selectStage(index)}
         ondblclick={() => {
           selectStage(index)
@@ -151,16 +156,16 @@
       >
         <i></i>
         <b>{stage.unlocked ? stage.id : '◆'}</b>
-        <span><strong>{stage.id}</strong>{stage.subtitle}</span>
+        <span><strong>{stage.id}</strong>{$translator(stageSubtitleKey(stage.id))}</span>
       </button>
     {/each}
 
   </div>
 
   <div class="select-controls">
-    <span><kbd>←</kbd><kbd>→</kbd> Select</span>
-    <span><kbd>Space</kbd> Confirm</span>
-    <span><kbd>Esc</kbd> Back</span>
+    <span><kbd>←</kbd><kbd>→</kbd> {$translator('common.select')}</span>
+    <span><kbd>Space</kbd> {$translator('common.confirm')}</span>
+    <span><kbd>Esc</kbd> {$translator('common.back')}</span>
   </div>
 
 </section>
