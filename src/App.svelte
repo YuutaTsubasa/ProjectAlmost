@@ -5,6 +5,7 @@
   import StageResult from './StageResult.svelte'
   import SettingsPanel, { type GameSettings } from './SettingsPanel.svelte'
   import TitleScreen from './TitleScreen.svelte'
+  import VirtualControls from './VirtualControls.svelte'
   import { IMAGE_ASSETS, MUSIC_ASSETS, PRELOAD_ASSETS, SFX_ASSETS, type MusicTrack } from './game/assets/assetManifest'
   import { createPlatformerGame } from './game/createGame'
   import { deleteSave, loadSave, recordStageClear, type SaveData } from './game/save/saveData'
@@ -58,6 +59,7 @@
   let gamepadFrame = 0
   let gamepadPrevious = new Set<number>()
   let gamepadAxisReady = true
+  let virtualControlsVisible = false
   let musicPlayer: HTMLAudioElement | undefined
   let desiredMusicTrack: MusicTrack = 'title'
   let activeMusicTrack: MusicTrack = 'title'
@@ -358,6 +360,7 @@
 
   async function enterStage(stageId: StageId) {
     if (transitionPhase !== 'idle') return
+    hideVirtualControls()
     selectedStageId = stageId
     transitionPhase = 'cover'
     await new Promise((resolve) => window.setTimeout(resolve, 260))
@@ -424,6 +427,7 @@
   }
 
   function returnToStageSelect() {
+    hideVirtualControls()
     game?.destroy(true)
     game = undefined
     paused = false
@@ -434,8 +438,9 @@
 
   function pauseGame() {
     if (!game || hud.cleared) return
+    hideVirtualControls()
     playSfx('ui-confirm')
-    game.scene.pause('PrototypeScene')
+    game.scene.pause('GameplayScene')
     pauseSelection = 0
     settingsOpen = false
     paused = true
@@ -444,13 +449,14 @@
 
   function resumeGame() {
     playSfx('ui-back')
-    game?.scene.resume('PrototypeScene')
+    game?.scene.resume('GameplayScene')
     paused = false
     syncMusic()
   }
 
   async function restartStage() {
     if (!game || transitionPhase !== 'idle') return
+    hideVirtualControls()
     resetMusic('stage')
     prepareMusicTrack('stage')
     transitionPhase = 'cover'
@@ -475,6 +481,7 @@
     const nextStageId = getNextStageId(selectedStageId)
     if (!game || !nextStageId || !saveData.stageRecords[selectedStageId]?.cleared || transitionPhase !== 'idle') return
 
+    hideVirtualControls()
     resetMusic('stage')
     prepareMusicTrack('stage')
     transitionPhase = 'cover'
@@ -518,6 +525,8 @@
   }
 
   function handleGlobalKeydown(event: KeyboardEvent) {
+    hideVirtualControls()
+
     if (screen === 'title') {
       event.preventDefault()
       if (settingsOpen) {
@@ -639,6 +648,16 @@
     window.dispatchEvent(new KeyboardEvent('keydown', { key, code, bubbles: true }))
   }
 
+  function showVirtualControls() {
+    if (screen === 'game' && !paused && !hud.cleared) virtualControlsVisible = true
+  }
+
+  function hideVirtualControls() {
+    if (!virtualControlsVisible) return
+    virtualControlsVisible = false
+    window.dispatchEvent(new CustomEvent('projectrun:virtual-input', { detail: { type: 'move', x: 0 } }))
+  }
+
   function pollGamepad() {
     const pad = Array.from(navigator.getGamepads?.() ?? []).find((candidate): candidate is Gamepad => candidate !== null)
 
@@ -652,6 +671,7 @@
       const justPressed = (index: number) => pressed.has(index) && !gamepadPrevious.has(index)
       const horizontal = Math.abs(pad.axes[0] ?? 0) > 0.45 ? Math.sign(pad.axes[0]) : 0
       const vertical = Math.abs(pad.axes[1] ?? 0) > 0.45 ? Math.sign(pad.axes[1]) : 0
+      if (pressed.size > 0 || horizontal !== 0 || vertical !== 0) hideVirtualControls()
 
       if (screen === 'title') {
         if (settingsOpen) {
@@ -804,9 +824,9 @@
       <StageSelect onEnter={enterStage} onBack={returnToTitle} {saveData} initialStageId={selectedStageId} />
     </section>
   {:else}
-  <section class="game-panel game-enter" aria-label={`White Palace ${selectedStageId} playable prototype`}>
+  <section class="game-panel game-enter" aria-label={`White Palace ${selectedStageId} gameplay`}>
     <div class="game-frame">
-      <div class="play-surface">
+      <div class="play-surface" role="application" aria-label="Gameplay touch area" onpointerdown={showVirtualControls}>
         <div bind:this={gameHost} class="game-host"></div>
 
         <div class="hud-layer" aria-label="White Palace HUD">
@@ -1001,6 +1021,9 @@
             </div>
           {/if}
         </div>
+        {#if virtualControlsVisible && !paused && !hud.cleared}
+          <VirtualControls onPause={pauseGame} />
+        {/if}
       </div>
     </div>
   </section>

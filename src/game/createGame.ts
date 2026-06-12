@@ -1,5 +1,5 @@
 import * as Phaser from 'phaser'
-import { PrototypeScene } from './scenes/PrototypeScene'
+import { GameplayScene } from './scenes/GameplayScene'
 import { selectStage, type StageId } from './stages/stageRegistry'
 
 export function createPlatformerGame(parent: HTMLElement, stageId: StageId = '1-1'): Phaser.Game {
@@ -21,6 +21,6 @@ export function createPlatformerGame(parent: HTMLElement, stageId: StageId = '1-
       mode: Phaser.Scale.FIT,
       autoCenter: Phaser.Scale.CENTER_BOTH,
     },
-    scene: [PrototypeScene],
+    scene: [GameplayScene],
   })
 }

@@ -40,7 +40,7 @@ const THEME = {
   white: 0xf8fdff,
 }
 
-export class PrototypeScene extends Phaser.Scene {
+export class GameplayScene extends Phaser.Scene {
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys
   private keys!: Record<'left' | 'right' | 'jump' | 'attack' | 'attackAlt', Phaser.Input.Keyboard.Key>
   private player!: ArcadeSprite
@@ -73,6 +73,9 @@ export class PrototypeScene extends Phaser.Scene {
   private timerStarted = false
   private gamepadJumpDown = false
   private gamepadAttackDown = false
+  private virtualMoveX = 0
+  private virtualJumpPressed = false
+  private virtualAttackPressed = false
   private wasGrounded = true
   private nextFootstepAt = 0
   private statusMessage = this.getInitialStatusMessage()
@@ -83,7 +86,7 @@ export class PrototypeScene extends Phaser.Scene {
   }
 
   constructor() {
-    super('PrototypeScene')
+    super('GameplayScene')
   }
 
   private get worldWidth(): number {
@@ -219,6 +222,17 @@ export class PrototypeScene extends Phaser.Scene {
     this.cameras.main.setDeadzone(360, 240)
 
     this.dispatchHudState()
+    window.addEventListener('projectrun:virtual-input', this.handleVirtualInput)
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
+      window.removeEventListener('projectrun:virtual-input', this.handleVirtualInput)
+    })
+  }
+
+  private handleVirtualInput = (event: Event): void => {
+    const detail = (event as CustomEvent<{ type: 'move' | 'jump' | 'attack'; x?: number }>).detail
+    if (detail.type === 'move') this.virtualMoveX = detail.x ?? 0
+    if (detail.type === 'jump') this.virtualJumpPressed = true
+    if (detail.type === 'attack') this.virtualAttackPressed = true
   }
 
   private resetRuntimeState(): void {
@@ -247,6 +261,9 @@ export class PrototypeScene extends Phaser.Scene {
     this.timerStarted = false
     this.gamepadJumpDown = false
     this.gamepadAttackDown = false
+    this.virtualMoveX = 0
+    this.virtualJumpPressed = false
+    this.virtualAttackPressed = false
     this.wasGrounded = true
     this.nextFootstepAt = 0
     this.statusMessage = this.getInitialStatusMessage()
@@ -268,10 +285,12 @@ export class PrototypeScene extends Phaser.Scene {
     this.gamepadJumpDown = padJumpDown
     this.gamepadAttackDown = padAttackDown
 
-    const left = this.cursors.left.isDown || this.keys.left.isDown || padLeft
-    const right = this.cursors.right.isDown || this.keys.right.isDown || padRight
-    const jumpPressed = Phaser.Input.Keyboard.JustDown(this.cursors.space) || Phaser.Input.Keyboard.JustDown(this.keys.jump) || padJumpPressed
-    const attackPressed = Phaser.Input.Keyboard.JustDown(this.keys.attack) || Phaser.Input.Keyboard.JustDown(this.keys.attackAlt) || padAttackPressed
+    const left = this.cursors.left.isDown || this.keys.left.isDown || padLeft || this.virtualMoveX < 0
+    const right = this.cursors.right.isDown || this.keys.right.isDown || padRight || this.virtualMoveX > 0
+    const jumpPressed = Phaser.Input.Keyboard.JustDown(this.cursors.space) || Phaser.Input.Keyboard.JustDown(this.keys.jump) || padJumpPressed || this.virtualJumpPressed
+    const attackPressed = Phaser.Input.Keyboard.JustDown(this.keys.attack) || Phaser.Input.Keyboard.JustDown(this.keys.attackAlt) || padAttackPressed || this.virtualAttackPressed
+    this.virtualJumpPressed = false
+    this.virtualAttackPressed = false
 
     const grounded = this.player.body.blocked.down
 

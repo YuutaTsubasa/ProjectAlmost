@@ -2,7 +2,7 @@
 
 ## Current State
 
-ProjectAlmost is currently a Web-first Svelte + Phaser prototype. The playable loop already supports player movement, jumping, melee attack, hurt reaction, knockback, brief invulnerability, one patrolling enemy, enemy defeat, camera follow, and fall respawn.
+ProjectAlmost is a Web-first Svelte + Phaser game. The current flow includes Title Screen, Stage Select, two playable stages, pause/settings menus, Stage Result, save progression, keyboard/gamepad input, BGM, and SFX.
 
 The project has not added Tauri yet. Keep gameplay iteration in the Web target until the core loop is stable.
 
@@ -20,7 +20,7 @@ npm run check
 npm run build
 ```
 
-Known build note: Vite warns that the Phaser bundle is larger than 500 kB. This is expected for the current prototype and does not block development.
+Known build note: Vite warns that the Phaser bundle is larger than 500 kB. This does not block development.
 
 ## Done
 
@@ -43,30 +43,15 @@ Known build note: Vite warns that the Phaser bundle is larger than 500 kB. This 
 
 ## Immediate Next Task
 
-Add a stage goal / exit point.
-
-Acceptance criteria:
-
-- Place a visible goal object near the end of the current prototype level.
-- Detect player overlap with the goal.
-- Show a clear state such as `Stage Clear`.
-- Stop or pause player control after clear, or make the clear state explicit in the HUD.
-- Keep this simple and data-free for the first pass.
-
-Reason: this turns the current loop into `move -> jump platforms -> fight enemy -> reach goal`.
+Create final art and behavior for Azure Core, then continue building White Palace stages from the JSON stage format.
 
 ## Recommended Task Order
 
-1. Add stage goal / exit point.
-2. Extract prototype constants into simple stage data: platforms, enemy spawn, player spawn, goal position.
-3. Add enemy hurt flash or hit pause before death.
-4. Add Homing Attack targeting and dash behavior.
-5. Add a first-pass level reset / restart input.
-6. Add gamepad support.
-7. Add mobile touch virtual buttons.
-8. Add Tauri v2 desktop wrapper.
-9. Add Tauri mobile targets after Web gameplay is stable.
-10. Add collectible coins later; they are secondary to combat, platforming, and stage completion.
+1. Replace Azure Core graybox art with final animation assets.
+2. Add more enemy behaviors and White Palace stages.
+3. Add automated smoke tests for navigation, save progression, and stage completion.
+4. Add mobile touch virtual buttons.
+5. Evaluate desktop and mobile packaging after Web gameplay is stable.
 
 ## Asset Workflow
 
@@ -97,15 +82,15 @@ npm run build
 
 - Keep Svelte responsible for page shell, HUD, settings, and menus.
 - Keep frame-by-frame gameplay inside Phaser.
-- Do not add Tauri until the Web prototype has stage completion and stable combat/platforming.
-- Do not add coin collection before the combat/platforming/goal loop is solid.
 - Avoid keeping obsolete placeholder sprite folders. They create confusion for future handoff.
 
 ## Current Main Files
 
 - `src/App.svelte`: Svelte shell and Phaser mount.
 - `src/game/createGame.ts`: Phaser game configuration.
-- `src/game/scenes/PrototypeScene.ts`: current gameplay prototype.
+- `src/game/scenes/GameplayScene.ts`: current gameplay scene.
+- `src/game/stages/`: stage JSON, types, and registry.
+- `src/game/save/saveData.ts`: local save progression.
 - `docs/GAME_DESIGN.md`: story, worlds, mechanics, vertical slice.
 - `docs/TECHNICAL_PLAN.md`: architecture and implementation sequence.
 - `docs/ASSET_PIPELINE.md`: sprite generation and asset inventory.

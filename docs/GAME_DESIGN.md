@@ -61,12 +61,12 @@ Both playable characters share the same controls and gameplay abilities. Their d
 ## First Vertical Slice
 
 - One playable knight scene using final-reference sprites.
-- One 2-screen prototype level.
+- Two playable White Palace stages.
 - Left/right movement, run modifier, jump, melee attack.
 - Player hurt reaction with knockback and brief invulnerability.
 - One enemy target for melee and homing attack tests.
 - First enemy type: white palace guard with patrol and defeat animation.
-- Five collectible coins in the prototype stage.
+- Collectible coins placed per stage data.
 - Respawn after falling below the level.
 - HUD shows current stage objective and collected coin count.
 
@@ -75,5 +75,5 @@ Both playable characters share the same controls and gameplay abilities. Their d
 - Full six-world campaign.
 - Final boss implementation.
 - Complete mobile UI polish.
-- Save data.
-- Final music and sound effects.
+- Full multi-profile save-slot UI.
+- Final music and sound effects for every world.

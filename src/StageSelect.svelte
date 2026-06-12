@@ -122,6 +122,10 @@
       <img src={IMAGE_ASSETS.playerPortrait} alt="Yuuta Tsubasa" />
       <div><span>Active Character</span><strong>Yuuta Tsubasa</strong></div>
     </div>
+    <button class="stage-deploy" disabled={!selected.unlocked || confirming} onclick={confirmStage}>
+      <span>{selected.unlocked ? 'Deploy' : 'Locked'}</span>
+      <b>›</b>
+    </button>
   </aside>
 
   <div class="select-map">
