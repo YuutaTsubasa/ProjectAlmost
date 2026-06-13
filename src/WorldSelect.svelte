@@ -52,6 +52,12 @@
     window.setTimeout(() => onEnter(index + 1), 260)
   }
 
+  function goBack() {
+    if (!inputReady || confirming) return
+    window.dispatchEvent(new CustomEvent('projectrun:sfx', { detail: 'ui-back' }))
+    onBack()
+  }
+
   function handleKeydown(event: KeyboardEvent) {
     if (!inputReady) return
     if (event.key === 'ArrowLeft' || event.code === 'KeyA') {
@@ -71,8 +77,7 @@
       confirmWorld()
     } else if (event.key === 'Escape') {
       event.preventDefault()
-      window.dispatchEvent(new CustomEvent('projectrun:sfx', { detail: 'ui-back' }))
-      onBack()
+      goBack()
     }
   }
 
@@ -93,6 +98,11 @@
     <span aria-hidden="true"></span>
     <strong>{$translator('worldSelect.title')}</strong>
   </header>
+
+  <button class="menu-back-button dark world-back-button" onclick={goBack} aria-label={$translator('common.back')}>
+    <span aria-hidden="true">‹</span>
+    <b>{$translator('common.back')}</b>
+  </button>
 
   <div class="world-cinematic-copy">
     <span class="world-number">WORLD {selected.id}</span>

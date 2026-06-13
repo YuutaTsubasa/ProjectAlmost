@@ -420,6 +420,85 @@ input {
   font: inherit;
 }
 
+.menu-back-button {
+  position: absolute;
+  top: 3.2cqh;
+  right: 2.4cqw;
+  z-index: 24;
+  display: flex;
+  min-width: 8.5cqw;
+  height: 4.8cqh;
+  gap: 0.55cqw;
+  align-items: center;
+  justify-content: center;
+  padding: 0 0.9cqw;
+  border: 1px solid rgba(47, 111, 208, 0.42);
+  border-radius: 5px;
+  background: rgba(244, 251, 255, 0.78);
+  box-shadow: 0 10px 24px -16px rgba(20, 49, 95, 0.75);
+  color: #315987;
+  cursor: pointer;
+  font: inherit;
+  backdrop-filter: blur(9px);
+  transition: border-color 150ms ease, background 150ms ease, transform 150ms ease;
+}
+
+.menu-back-button:hover,
+.menu-back-button:focus-visible {
+  border-color: rgba(47, 111, 208, 0.78);
+  background: rgba(255, 255, 255, 0.94);
+  transform: translateX(-0.25cqw);
+}
+
+.menu-back-button span {
+  font-size: min(1.55cqw, 30px);
+  line-height: 1;
+}
+
+.menu-back-button b {
+  font-size: min(0.72cqw, 14px);
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.menu-back-button.dark {
+  border-color: rgba(255, 255, 255, 0.28);
+  background: rgba(4, 10, 20, 0.56);
+  box-shadow: 0 10px 24px -14px #000;
+  color: rgba(255, 255, 255, 0.92);
+  text-shadow: 0 1px 4px #000;
+}
+
+.menu-back-button.dark:hover,
+.menu-back-button.dark:focus-visible {
+  border-color: var(--world-gold);
+  background: rgba(4, 10, 20, 0.78);
+}
+
+@media (pointer: coarse) {
+  .menu-back-button {
+    top: 2.4cqh;
+    right: 1.8cqw;
+    min-width: 12cqw;
+    height: 7cqh;
+    gap: 0.8cqw;
+    padding: 0 1.4cqw;
+  }
+
+  .menu-back-button span {
+    font-size: min(2.2cqw, 42px);
+  }
+
+  .menu-back-button b {
+    font-size: min(1cqw, 19px);
+  }
+}
+
+.title-back-button {
+  animation: title-menu-in 420ms 80ms both;
+}
+
 .title-settings-overlay {
   --accent: #2f6fd0;
   --glow: #9cdcff;
@@ -2084,7 +2163,8 @@ input {
 
 .stage-select.confirming .select-detail,
 .stage-select.confirming .select-banner,
-.stage-select.confirming .select-controls {
+.stage-select.confirming .select-controls,
+.stage-select.confirming .stage-back-button {
   opacity: 0;
   transition: opacity 180ms ease-out;
 }
@@ -3276,7 +3356,8 @@ input {
 .world-select.confirming .world-cinematic-copy,
 .world-select.confirming .world-rail,
 .world-select.confirming .world-controls,
-.world-select.confirming .world-cinematic-head {
+.world-select.confirming .world-cinematic-head,
+.world-select.confirming .world-back-button {
   opacity: 0;
   transition: opacity 180ms ease-out;
 }

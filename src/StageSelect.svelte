@@ -70,6 +70,12 @@
     window.setTimeout(() => onEnter(selected.id as StageId), 280)
   }
 
+  function goBack() {
+    if (!inputReady || confirming) return
+    window.dispatchEvent(new CustomEvent('projectrun:sfx', { detail: 'ui-back' }))
+    onBack()
+  }
+
   function handleKeydown(event: KeyboardEvent) {
     if (!inputReady) return
     if (event.key === 'ArrowLeft' || event.code === 'KeyA') {
@@ -83,8 +89,7 @@
       confirmStage()
     } else if (event.key === 'Escape') {
       event.preventDefault()
-      window.dispatchEvent(new CustomEvent('projectrun:sfx', { detail: 'ui-back' }))
-      onBack()
+      goBack()
     }
   }
 
@@ -114,6 +119,11 @@
     <strong>{$translator('stageSelect.title')}</strong>
     <span>✦</span>
   </header>
+
+  <button class="menu-back-button stage-back-button" onclick={goBack} aria-label={$translator('common.back')}>
+    <span aria-hidden="true">‹</span>
+    <b>{$translator('common.back')}</b>
+  </button>
 
   <aside class="select-detail">
     <div class="select-preview">

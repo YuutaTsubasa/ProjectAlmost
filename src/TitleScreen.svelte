@@ -16,7 +16,7 @@
     onActivate: (index: number) => void
   } = $props()
 
-  const menuItems = ['title.start', 'title.settings'] as const
+  const menuItems = ['title.start', 'title.settings', 'common.back'] as const
 </script>
 
 <section class:menu-open={menuOpen} class="title-screen" aria-label="Project Almost title screen">

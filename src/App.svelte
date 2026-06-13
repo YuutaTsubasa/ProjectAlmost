@@ -446,7 +446,7 @@
   }
 
   function activateTitleItem(index = titleSelection) {
-    playSfx('ui-confirm')
+    playSfx(index === 2 ? 'ui-back' : 'ui-confirm')
     if (index === 0) {
       prepareMusicTrack(getWorldMusicTrack('bgm'))
       void enterWorldSelect()
@@ -455,6 +455,11 @@
       settingsOrigin = 'title'
       settingsSelection = 0
       settingsOpen = true
+    }
+    if (index === 2) {
+      titleMenuOpen = false
+      titleSelection = 0
+      syncMusic()
     }
   }
 
@@ -603,7 +608,8 @@
         openTitleMenu()
       } else if (event.key === 'ArrowUp' || event.key === 'ArrowDown' || event.code === 'KeyW' || event.code === 'KeyS') {
         playSfx('ui-move')
-        titleSelection = titleSelection === 0 ? 1 : 0
+        const direction = event.key === 'ArrowUp' || event.code === 'KeyW' ? -1 : 1
+        titleSelection = (titleSelection + direction + 3) % 3
       } else if (event.code === 'Space' || event.key === 'Enter') {
         activateTitleItem()
       } else if (event.key === 'Escape') {
