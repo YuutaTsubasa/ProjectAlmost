@@ -33,6 +33,8 @@
   let confirming = false
   $: selected = worlds[selectedIndex]
   $: clearedStages = Object.values(saveData.stageRecords).filter((record) => record?.cleared).length
+  $: selectedClearedStages = selected.id === '01' ? clearedStages : 0
+  $: selectedProgress = `${Math.min(100, (selectedClearedStages / selected.stageCount) * 100)}%`
 
   function selectWorld(index: number) {
     const next = (index + worlds.length) % worlds.length
@@ -60,10 +62,10 @@
       selectWorld(selectedIndex + 1)
     } else if (event.key === 'ArrowUp' || event.code === 'KeyW') {
       event.preventDefault()
-      selectWorld(selectedIndex - 3)
+      selectWorld(selectedIndex - 1)
     } else if (event.key === 'ArrowDown' || event.code === 'KeyS') {
       event.preventDefault()
-      selectWorld(selectedIndex + 3)
+      selectWorld(selectedIndex + 1)
     } else if (event.code === 'Space' || event.key === 'Enter') {
       event.preventDefault()
       confirmWorld()
@@ -87,37 +89,38 @@
 <section class:confirming class={`world-select theme-${selected.theme}`} aria-label={$translator('worldSelect.title')}>
   <div class="world-backdrop" aria-hidden="true"></div>
 
-  <header class="world-banner">
-    <span>✦</span>
+  <header class="world-cinematic-head">
+    <span aria-hidden="true"></span>
     <strong>{$translator('worldSelect.title')}</strong>
-    <span>✦</span>
   </header>
 
-  <aside class="world-detail">
-    <div class={`world-preview theme-${selected.theme}`}>
-      <span>{selected.symbol}</span>
-      {#if !selected.unlocked}<b>{$translator('common.locked')}</b>{/if}
-    </div>
+  <div class="world-cinematic-copy">
     <span class="world-number">WORLD {selected.id}</span>
-    <strong>{$translator(selected.name)}</strong>
+    <strong class="world-cinematic-name">{$translator(selected.name)}</strong>
     <p>{$translator(selected.subtitle)}</p>
-    <div class="world-rule"></div>
-    <div class="world-progress">
-      <span>{$translator('worldSelect.progress')}</span>
-      <b>{selected.id === '01' ? clearedStages : 0} <small>/ {selected.stageCount}</small></b>
+
+    <div class="world-cinematic-progress">
+      <div>
+        <span>{$translator('worldSelect.progress')}</span>
+        <b>{selectedClearedStages}<small> / {selected.stageCount}</small></b>
+      </div>
+      <div class="world-progress-track" aria-hidden="true">
+        <span style={`width: ${selectedProgress}`}></span>
+      </div>
     </div>
-    <button disabled={!selected.unlocked || confirming} onclick={() => confirmWorld()}>
+
+    <button class="world-enter" disabled={!selected.unlocked || confirming} onclick={() => confirmWorld()}>
       <span>{selected.unlocked ? $translator('worldSelect.enter') : $translator('common.locked')}</span>
       <b>›</b>
     </button>
-  </aside>
+  </div>
 
-  <div class="world-grid">
+  <nav class="world-rail" aria-label={$translator('worldSelect.title')}>
     {#each worlds as world, index}
       <button
         class:active={index === selectedIndex}
         class:locked={!world.unlocked}
-        class={`world-card theme-${world.theme}`}
+        class={`world-thumb theme-${world.theme}`}
         aria-label={`${$translator(world.name)}${world.unlocked ? '' : `, ${$translator('common.locked')}`}`}
         onclick={() => selectWorld(index)}
         ondblclick={() => {
@@ -125,16 +128,16 @@
           confirmWorld(index)
         }}
       >
-        <span class="world-card-number">{world.id}</span>
-        <span class="world-card-symbol">{world.symbol}</span>
-        <span class="world-card-copy">
+        <span class="world-thumb-art" aria-hidden="true">{world.symbol}</span>
+        <span class="world-thumb-copy">
           <strong>{$translator(world.name)}</strong>
-          <small>{world.unlocked ? $translator(world.subtitle) : $translator('common.locked')}</small>
+          <small>{world.unlocked ? `WORLD ${world.id}` : $translator('common.locked')}</small>
         </span>
+        <span class="world-thumb-number">{world.id}</span>
         {#if !world.unlocked}<i>◆</i>{/if}
       </button>
     {/each}
-  </div>
+  </nav>
 
   <div class="select-controls world-controls">
     <span><kbd>←</kbd><kbd>→</kbd><kbd>↑</kbd><kbd>↓</kbd> {$translator('common.select')}</span>
