@@ -27,7 +27,7 @@
     ? [
         { id: '1-1', subtitle: stageData['1-1'].subtitle, objective: stageData['1-1'].objective, coins: stageData['1-1'].coins.length, x: 35, y: 70, unlocked: isStageUnlocked(saveData, '1-1'), cleared: Boolean(saveData.stageRecords['1-1']?.cleared) },
         { id: '1-2', subtitle: stageData['1-2'].subtitle, objective: isStageUnlocked(saveData, '1-2') ? stageData['1-2'].objective : 'Locked', coins: stageData['1-2'].coins.length, x: 49, y: 59, unlocked: isStageUnlocked(saveData, '1-2'), cleared: Boolean(saveData.stageRecords['1-2']?.cleared) },
-        { id: '1-3', subtitle: 'Sky Terrace', objective: 'Locked', coins: 24, x: 61, y: 42, unlocked: false, cleared: false },
+        { id: '1-3', subtitle: stageData['1-3'].subtitle, objective: isStageUnlocked(saveData, '1-3') ? stageData['1-3'].objective : 'Locked', coins: stageData['1-3'].coins.length, x: 61, y: 42, unlocked: isStageUnlocked(saveData, '1-3'), cleared: Boolean(saveData.stageRecords['1-3']?.cleared) },
         { id: '1-4', subtitle: 'The Arch Bridge', objective: 'Locked', coins: 28, x: 73, y: 54, unlocked: false, cleared: false },
         { id: '1-5', subtitle: 'Hanging Garden', objective: 'Locked', coins: 30, x: 83, y: 34, unlocked: false, cleared: false },
         { id: '1-6', subtitle: 'The High Spire', objective: 'Locked', coins: 35, x: 91, y: 17, unlocked: false, cleared: false },

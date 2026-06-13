@@ -1423,7 +1423,7 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   private getInitialStatusMessage(): TranslationKey {
-    return activeStage.id === '1-2'
+    return activeStage.enemies.some((enemy) => enemy.type === 'azure-core')
       ? 'status.azureDetected'
       : 'status.initial'
   }
