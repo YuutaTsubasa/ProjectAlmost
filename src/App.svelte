@@ -51,6 +51,7 @@
   let titleSelection = 0
   let returnToTitlePending = false
   let transitionPhase: 'idle' | 'cover' | 'reveal' = 'idle'
+  let transitionStyle: 'page' | 'world-stage-forward' | 'world-stage-back' = 'page'
   let paused = false
   let pauseSelection = 0
   let settingsOpen = false
@@ -399,14 +400,16 @@
 
   async function enterStageSelect() {
     if (transitionPhase !== 'idle') return
+    transitionStyle = 'world-stage-forward'
     transitionPhase = 'cover'
-    await new Promise((resolve) => window.setTimeout(resolve, 260))
+    await new Promise((resolve) => window.setTimeout(resolve, 300))
     screen = 'select'
     syncMusic()
-    await new Promise((resolve) => window.setTimeout(resolve, 280))
+    await new Promise((resolve) => window.setTimeout(resolve, 140))
     transitionPhase = 'reveal'
     window.setTimeout(() => {
       transitionPhase = 'idle'
+      transitionStyle = 'page'
       if (returnToTitlePending) {
         returnToTitlePending = false
         void returnToTitle()
@@ -416,14 +419,16 @@
 
   async function enterWorldSelect() {
     if (transitionPhase !== 'idle') return
+    transitionStyle = screen === 'select' ? 'world-stage-back' : 'page'
     transitionPhase = 'cover'
-    await new Promise((resolve) => window.setTimeout(resolve, 260))
+    await new Promise((resolve) => window.setTimeout(resolve, transitionStyle === 'page' ? 260 : 300))
     screen = 'world'
     syncMusic()
-    await new Promise((resolve) => window.setTimeout(resolve, 280))
+    await new Promise((resolve) => window.setTimeout(resolve, transitionStyle === 'page' ? 280 : 140))
     transitionPhase = 'reveal'
     window.setTimeout(() => {
       transitionPhase = 'idle'
+      transitionStyle = 'page'
     }, 620)
   }
 
@@ -1103,7 +1108,13 @@
   {/if}
 
   {#if transitionPhase !== 'idle'}
-    <div class:reveal={transitionPhase === 'reveal'} class="page-transition" aria-hidden="true">
+    <div
+      class:reveal={transitionPhase === 'reveal'}
+      class:world-shift={transitionStyle !== 'page'}
+      class:reverse={transitionStyle === 'world-stage-back'}
+      class="page-transition"
+      aria-hidden="true"
+    >
       <div class="transition-emblem">✦</div>
     </div>
   {/if}

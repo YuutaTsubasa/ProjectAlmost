@@ -98,6 +98,55 @@ input {
   animation: page-reveal 620ms cubic-bezier(0.35, 0, 0.2, 1) forwards;
 }
 
+.page-transition.world-shift {
+  overflow: hidden;
+  background:
+    linear-gradient(90deg, rgba(12, 42, 77, 0.12), rgba(118, 199, 255, 0.08), rgba(12, 42, 77, 0.12));
+  opacity: 1;
+  backdrop-filter: brightness(0.9) saturate(0.9) blur(1px);
+  animation: world-shift-cover 300ms ease-out forwards;
+}
+
+.page-transition.world-shift::before,
+.page-transition.world-shift::after {
+  content: "";
+  position: absolute;
+  top: -15%;
+  bottom: -15%;
+  left: -32%;
+  width: 24%;
+  transform: skewX(-12deg);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.34), rgba(118, 199, 255, 0.14), transparent);
+  filter: blur(5px);
+  animation: world-shift-light 580ms cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+}
+
+.page-transition.world-shift::after {
+  left: -42%;
+  width: 12%;
+  opacity: 0.65;
+  animation-delay: 70ms;
+}
+
+.page-transition.world-shift.reverse::before,
+.page-transition.world-shift.reverse::after {
+  right: -32%;
+  left: auto;
+  animation-name: world-shift-light-reverse;
+}
+
+.page-transition.world-shift.reverse::after {
+  right: -42%;
+}
+
+.page-transition.world-shift.reveal {
+  animation: world-shift-reveal 540ms ease-out forwards;
+}
+
+.page-transition.world-shift .transition-emblem {
+  display: none;
+}
+
 .transition-emblem {
   color: #fff;
   font-size: min(3vw, 58px);
@@ -113,6 +162,26 @@ input {
 @keyframes page-reveal {
   from { opacity: 1; }
   to { opacity: 0; }
+}
+
+@keyframes world-shift-cover {
+  from { opacity: 0; backdrop-filter: brightness(1) saturate(1) blur(0); }
+  to { opacity: 1; backdrop-filter: brightness(0.9) saturate(0.9) blur(1px); }
+}
+
+@keyframes world-shift-reveal {
+  from { opacity: 1; backdrop-filter: brightness(0.9) saturate(0.9) blur(1px); }
+  to { opacity: 0; backdrop-filter: brightness(1) saturate(1) blur(0); }
+}
+
+@keyframes world-shift-light {
+  from { left: -32%; }
+  to { left: 112%; }
+}
+
+@keyframes world-shift-light-reverse {
+  from { right: -32%; }
+  to { right: 112%; }
 }
 
 @keyframes transition-emblem-pulse {
@@ -476,6 +545,11 @@ input {
   background: rgba(4, 10, 20, 0.78);
 }
 
+.stage-back-button {
+  right: auto;
+  left: 2.4cqw;
+}
+
 @media (pointer: coarse) {
   .menu-back-button {
     top: 2.4cqh;
@@ -492,6 +566,11 @@ input {
 
   .menu-back-button b {
     font-size: min(1cqw, 19px);
+  }
+
+  .stage-back-button {
+    right: auto;
+    left: 1.8cqw;
   }
 }
 
@@ -2181,7 +2260,7 @@ input {
 }
 
 @keyframes select-world-enter {
-  from { opacity: 0; scale: 1.04; filter: brightness(1.25); }
+  from { opacity: 1; scale: 1; filter: brightness(0.86) saturate(0.9); }
   to { opacity: 1; scale: 1; filter: brightness(1); }
 }
 
