@@ -7,7 +7,8 @@
   import TitleScreen from './TitleScreen.svelte'
   import VirtualControls from './VirtualControls.svelte'
   import WorldSelect from './WorldSelect.svelte'
-  import { IMAGE_ASSETS, MUSIC_ASSETS, PRELOAD_ASSETS, SFX_ASSETS, type MusicTrack } from './game/assets/assetManifest'
+  import { IMAGE_ASSETS, PRELOAD_ASSETS, SFX_ASSETS, type MusicTrack } from './game/assets/assetManifest'
+  import { createMusicController, type MusicController } from './game/audio/musicController'
   import { createPlatformerGame } from './game/createGame'
   import { deleteSave, loadSave, recordStageClear, type SaveData } from './game/save/saveData'
   import { getNextStageId, type StageId } from './game/stages/stageRegistry'
@@ -65,14 +66,8 @@
   let gamepadPrevious = new Set<number>()
   let gamepadAxisReady = true
   let virtualControlsVisible = false
-  let musicPlayer: HTMLAudioElement | undefined
-  let desiredMusicTrack: MusicTrack = 'title'
-  let activeMusicTrack: MusicTrack = 'title'
-  let desiredMusicVolume = 0
-  let musicRetryTimer = 0
+  let music: MusicController | undefined
   const sfx = new Map<string, HTMLAudioElement>()
-  let musicUnlocked = false
-  let musicFadeFrame = 0
   const BASE_MUSIC_VOLUME = 0.42
   const SETTINGS_KEY = 'project-almost:settings'
   const IMAGE_ASSET_PATHS = new Set<string>(Object.values(IMAGE_ASSETS))
@@ -126,99 +121,26 @@
     }
   }
 
-  function fadeMusic(audio: HTMLAudioElement | undefined, target: number, duration = 450) {
-    if (!audio) return
-    cancelMusicFade()
-    const startVolume = audio.volume
-    const startedAt = performance.now()
-
-    const step = (now: number) => {
-      const progress = Math.min(1, (now - startedAt) / duration)
-      audio.volume = startVolume + (target - startVolume) * progress
-      if (progress < 1) musicFadeFrame = window.requestAnimationFrame(step)
-      else musicFadeFrame = 0
-    }
-    musicFadeFrame = window.requestAnimationFrame(step)
-  }
-
-  function cancelMusicFade() {
-    if (musicFadeFrame) window.cancelAnimationFrame(musicFadeFrame)
-    musicFadeFrame = 0
-  }
-
-  function scheduleMusicRetry() {
-    window.clearTimeout(musicRetryTimer)
-    musicRetryTimer = window.setTimeout(() => {
-      if (musicUnlocked && musicPlayer?.paused) void ensureDesiredMusicPlaying()
-    }, 500)
-  }
-
-  async function ensureDesiredMusicPlaying() {
-    const audio = musicPlayer
-    if (!audio || !musicUnlocked) return
-
-    cancelMusicFade()
-    if (activeMusicTrack !== desiredMusicTrack) {
-      activeMusicTrack = desiredMusicTrack
-      audio.pause()
-      audio.src = MUSIC_ASSETS[activeMusicTrack]
-      audio.dataset.track = activeMusicTrack
-      audio.currentTime = 0
-      audio.load()
-    }
-
-    try {
-      if (audio.paused) {
-        audio.volume = 0
-        await audio.play()
-      }
-      if (!audio.paused && activeMusicTrack === desiredMusicTrack) fadeMusic(audio, desiredMusicVolume)
-      else scheduleMusicRetry()
-    } catch {
-      scheduleMusicRetry()
-    }
-  }
-
-  function playMusic(track: MusicTrack, volume: number) {
-    desiredMusicTrack = track
-    desiredMusicVolume = volume
-    void ensureDesiredMusicPlaying()
-  }
-
-  function prepareMusicTrack(track: MusicTrack) {
-    desiredMusicTrack = track
-    desiredMusicVolume = 0
-    void ensureDesiredMusicPlaying()
-  }
-
-  function resetMusic(track: MusicTrack) {
-    if (!musicPlayer || activeMusicTrack !== track) return
-    cancelMusicFade()
-    musicPlayer.pause()
-    musicPlayer.currentTime = 0
-    musicPlayer.volume = 0
-  }
-
   function getWorldMusicTrack(kind: 'bgm' | 'map'): MusicTrack {
     const world = String(selectedWorldIndex).padStart(2, '0')
     return `world${world}${kind === 'bgm' ? 'Bgm' : 'Map'}` as MusicTrack
   }
 
   function syncMusic() {
-    if (!musicUnlocked) return
+    if (!music?.isUnlocked) return
     const volume = BASE_MUSIC_VOLUME * (settings.masterVolume / 100) * (settings.musicVolume / 100)
 
     if (screen === 'title') {
-      playMusic('title', volume * (titleMenuOpen ? 1 : 0.35))
+      music.setDesired('title', volume * (titleMenuOpen ? 1 : 0.35))
     } else if (screen === 'world') {
-      playMusic(getWorldMusicTrack('bgm'), volume)
+      music.setDesired(getWorldMusicTrack('bgm'), volume)
     } else if (screen === 'select') {
-      playMusic(getWorldMusicTrack('map'), volume)
+      music.setDesired(getWorldMusicTrack('map'), volume)
     } else {
       if (hud.cleared) {
-        playMusic('result', volume)
+        music.setDesired('result', volume)
       } else {
-        playMusic(getWorldMusicTrack('bgm'), paused ? volume * 0.45 : volume)
+        music.setDesired(getWorldMusicTrack('bgm'), paused ? volume * 0.45 : volume)
       }
     }
   }
@@ -314,12 +236,13 @@
   }
 
   function unlockMusic() {
-    if (!musicUnlocked) {
-      musicUnlocked = true
-      syncMusic()
-    } else if (musicPlayer?.paused) {
-      void ensureDesiredMusicPlaying()
-    }
+    if (!music) return
+    const wasUnlocked = music.isUnlocked
+    music.unlock()
+    // On first unlock the controller has no real desired state yet; push it from
+    // the current screen. When already unlocked, unlock() reconciled (covers a
+    // tab that came back paused).
+    if (!wasUnlocked) syncMusic()
   }
 
   function openTitleMenu() {
@@ -330,18 +253,10 @@
   }
 
   async function attemptTitleMusicAutoplay() {
-    if (!musicPlayer || musicUnlocked) return
+    if (!music) return
     const volume = BASE_MUSIC_VOLUME * (settings.masterVolume / 100) * (settings.musicVolume / 100) * 0.35
-    musicPlayer.volume = volume
-    try {
-      await musicPlayer.play()
-      musicUnlocked = true
-      desiredMusicTrack = 'title'
-      desiredMusicVolume = volume
-      syncMusic()
-    } catch {
-      // Browsers commonly require the first keyboard, pointer, or gamepad interaction.
-    }
+    const ok = await music.attemptAutoplay(volume)
+    if (ok) syncMusic()
   }
 
   async function preloadGameAssets() {
@@ -387,7 +302,7 @@
     screen = 'game'
     paused = false
     resultSelection = 0
-    resetMusic('result')
+    music?.reset('result')
     syncMusic()
     await createStageGame()
     await new Promise((resolve) => window.setTimeout(resolve, 420))
@@ -453,7 +368,7 @@
   function activateTitleItem(index = titleSelection) {
     playSfx(index === 2 ? 'ui-back' : 'ui-confirm')
     if (index === 0) {
-      prepareMusicTrack(getWorldMusicTrack('bgm'))
+      music?.prepare(getWorldMusicTrack('bgm'))
       void enterWorldSelect()
     }
     if (index === 1) {
@@ -516,15 +431,15 @@
   async function restartStage() {
     if (!game || transitionPhase !== 'idle') return
     hideVirtualControls()
-    resetMusic(getWorldMusicTrack('bgm'))
-    prepareMusicTrack(getWorldMusicTrack('bgm'))
+    music?.reset(getWorldMusicTrack('bgm'))
+    music?.prepare(getWorldMusicTrack('bgm'))
     transitionPhase = 'cover'
     await new Promise((resolve) => window.setTimeout(resolve, 260))
     game.destroy(true)
     game = undefined
     paused = false
     resultSelection = 0
-    resetMusic('result')
+    music?.reset('result')
     hud = { ...hud, coins: 0, damageTaken: 0, falls: 0, enemiesDefeated: 0, checkpointsReached: 0, time: '00:00.00', rank: '--', cleared: false }
     syncMusic()
     await createStageGame()
@@ -541,8 +456,8 @@
     if (!game || !nextStageId || !saveData.stageRecords[selectedStageId]?.cleared || transitionPhase !== 'idle') return
 
     hideVirtualControls()
-    resetMusic(getWorldMusicTrack('bgm'))
-    prepareMusicTrack(getWorldMusicTrack('bgm'))
+    music?.reset(getWorldMusicTrack('bgm'))
+    music?.prepare(getWorldMusicTrack('bgm'))
     transitionPhase = 'cover'
     await new Promise((resolve) => window.setTimeout(resolve, 260))
     game.destroy(true)
@@ -550,7 +465,7 @@
     selectedStageId = nextStageId
     paused = false
     resultSelection = 0
-    resetMusic('result')
+    music?.reset('result')
     hud = { ...hud, coins: 0, damageTaken: 0, falls: 0, enemiesDefeated: 0, checkpointsReached: 0, time: '00:00.00', rank: '--', cleared: false }
     syncMusic()
     await createStageGame()
@@ -795,15 +710,7 @@
       }
     }
     settings = { ...settings, language: setLocale(settings.language) }
-    musicPlayer = new Audio(MUSIC_ASSETS.title)
-    musicPlayer.id = 'bgm-player'
-    musicPlayer.dataset.track = 'title'
-    musicPlayer.hidden = true
-    musicPlayer.loop = true
-    musicPlayer.preload = 'auto'
-    document.body.append(musicPlayer)
-    musicPlayer.load()
-    musicPlayer.addEventListener('canplay', ensureDesiredMusicPlaying)
+    music = createMusicController({ initialTrack: 'title' })
     for (const [name, source] of Object.entries(SFX_ASSETS)) {
       const audio = new Audio(source)
       audio.preload = 'auto'
@@ -818,7 +725,7 @@
     window.addEventListener('pointerdown', unlockMusic)
     window.addEventListener('touchstart', unlockMusic)
     const handleVisibilityChange = () => {
-      if (!document.hidden) void ensureDesiredMusicPlaying()
+      if (!document.hidden) music?.nudge()
     }
     const handleFullscreenChange = () => {
       settings = { ...settings, fullscreen: Boolean(document.fullscreenElement) }
@@ -838,11 +745,8 @@
       document.removeEventListener('fullscreenchange', handleFullscreenChange)
       document.removeEventListener('visibilitychange', handleVisibilityChange)
       window.cancelAnimationFrame(gamepadFrame)
-      window.clearTimeout(musicRetryTimer)
-      cancelMusicFade()
-      musicPlayer?.removeEventListener('canplay', ensureDesiredMusicPlaying)
-      musicPlayer?.pause()
-      musicPlayer?.remove()
+      music?.destroy()
+      music = undefined
       game?.destroy(true)
     }
   })
