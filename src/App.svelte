@@ -69,6 +69,7 @@
   let music: MusicController | undefined
   const sfx = new Map<string, HTMLAudioElement>()
   const BASE_MUSIC_VOLUME = 0.42
+  const ASSET_PRELOAD_TIMEOUT_MS = 8000
   const SETTINGS_KEY = 'project-almost:settings'
   const IMAGE_ASSET_PATHS = new Set<string>(Object.values(IMAGE_ASSETS))
   const DEFAULT_SETTINGS: GameSettings = {
@@ -126,6 +127,11 @@
     return `world${world}${kind === 'bgm' ? 'Bgm' : 'Map'}` as MusicTrack
   }
 
+  function getStageMusicTrack(stageId = selectedStageId): MusicTrack {
+    const world = stageId.split('-')[0].padStart(2, '0')
+    return `world${world}${stageId.endsWith('-6') ? 'Boss' : 'Bgm'}` as MusicTrack
+  }
+
   function syncMusic() {
     if (!music?.isUnlocked) return
     const volume = BASE_MUSIC_VOLUME * (settings.masterVolume / 100) * (settings.musicVolume / 100)
@@ -140,7 +146,7 @@
       if (hud.cleared) {
         music.setDesired('result', volume)
       } else {
-        music.setDesired(getWorldMusicTrack('bgm'), paused ? volume * 0.45 : volume)
+        music.setDesired(getStageMusicTrack(), paused ? volume * 0.45 : volume)
       }
     }
   }
@@ -267,19 +273,31 @@
     }
 
     const assetLoads = PRELOAD_ASSETS.map(async (source) => {
+      let timeoutId: number | undefined
       try {
-        const response = await fetch(source, { cache: 'force-cache' })
-        if (!response.ok) throw new Error(`${response.status} ${response.statusText}`)
-        await response.blob()
+        await Promise.race([
+          (async () => {
+            const response = await fetch(source, { cache: 'force-cache' })
+            if (!response.ok) throw new Error(`${response.status} ${response.statusText}`)
+            await response.blob()
 
-        if (IMAGE_ASSET_PATHS.has(source)) {
-          const image = new Image()
-          image.src = source
-          await image.decode()
-        }
+            if (IMAGE_ASSET_PATHS.has(source)) {
+              const image = new Image()
+              image.src = source
+              await image.decode()
+            }
+          })(),
+          new Promise<never>((_, reject) => {
+            timeoutId = window.setTimeout(
+              () => reject(new Error(`Timed out after ${ASSET_PRELOAD_TIMEOUT_MS}ms`)),
+              ASSET_PRELOAD_TIMEOUT_MS,
+            )
+          }),
+        ])
       } catch (error) {
         console.warn(`Unable to preload ${source}`, error)
       } finally {
+        if (timeoutId !== undefined) window.clearTimeout(timeoutId)
         reportComplete()
       }
     })
@@ -431,8 +449,8 @@
   async function restartStage() {
     if (!game || transitionPhase !== 'idle') return
     hideVirtualControls()
-    music?.reset(getWorldMusicTrack('bgm'))
-    music?.prepare(getWorldMusicTrack('bgm'))
+    music?.reset(getStageMusicTrack())
+    music?.prepare(getStageMusicTrack())
     transitionPhase = 'cover'
     await new Promise((resolve) => window.setTimeout(resolve, 260))
     game.destroy(true)
@@ -456,13 +474,13 @@
     if (!game || !nextStageId || !saveData.stageRecords[selectedStageId]?.cleared || transitionPhase !== 'idle') return
 
     hideVirtualControls()
-    music?.reset(getWorldMusicTrack('bgm'))
-    music?.prepare(getWorldMusicTrack('bgm'))
+    music?.reset(getStageMusicTrack())
     transitionPhase = 'cover'
     await new Promise((resolve) => window.setTimeout(resolve, 260))
     game.destroy(true)
     game = undefined
     selectedStageId = nextStageId
+    music?.prepare(getStageMusicTrack(nextStageId))
     paused = false
     resultSelection = 0
     music?.reset('result')
@@ -888,7 +906,7 @@
             <span class="corner tl"></span>
             <span class="corner br"></span>
             <div class="hud-label"><span></span>{$translator('hud.objective')}</div>
-            <p>{$translator('stage.objective.reachGoal')}</p>
+            <p>{$translator(selectedStageId === '1-6' ? 'stage.objective.defeatBoss' : 'stage.objective.reachGoal')}</p>
           </section>
 
           <section class="bottom-hud">
@@ -897,7 +915,8 @@
                 <div class="hud-label"><span></span>{$translator('hud.controls')}</div>
                 <div class="skills">
                   <div><b>← →</b><span>{$translator('hud.move')}</span></div>
-                  <div><b>Space</b><span>{$translator('hud.jump')}</span></div>
+                  <div><b>Space ×2</b><span>{$translator('hud.jump')}</span></div>
+                  <div><b>↓ / S</b><span>{$translator('hud.crouch')}</span></div>
                   <div><b>J</b><span>{$translator('hud.attack')}</span></div>
                   <div><b>Air + J</b><span>{$translator('hud.homing')}</span></div>
                 </div>

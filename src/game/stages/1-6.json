@@ -1,0 +1,120 @@
+{
+  "id": "1-6",
+  "subtitle": "The High Spire",
+  "objective": "Defeat the Boss",
+  "rankTargets": {
+    "sTime": 75,
+    "aTime": 100,
+    "bTime": 130,
+    "cTime": 180
+  },
+  "world": {
+    "width": 6400,
+    "height": 1080,
+    "tileSize": 64
+  },
+  "playerSpawn": {
+    "x": 256,
+    "surfaceY": 512
+  },
+  "platforms": [
+    { "col": 2, "row": 8, "width": 16, "height": 1 },
+    { "col": 21, "row": 8, "width": 8, "height": 1 },
+    { "col": 32, "row": 7, "width": 7, "height": 1 },
+    { "col": 42, "row": 8, "width": 8, "height": 1 },
+    { "col": 53, "row": 6, "width": 7, "height": 1 },
+    { "col": 63, "row": 8, "width": 9, "height": 1 },
+    { "col": 75, "row": 7, "width": 8, "height": 1 },
+    { "col": 86, "row": 8, "width": 13, "height": 1 },
+    { "col": 89, "row": 7, "width": 6, "height": 1 }
+  ],
+  "coins": [],
+  "enemies": [
+    {
+      "id": "boss-prototype",
+      "type": "azure-core",
+      "respawnPolicy": "persistent",
+      "countsForScore": true,
+      "x": 5880,
+      "y": 384,
+      "patrolMinX": 5880,
+      "patrolMaxX": 5880
+    },
+    {
+      "id": "approach-core-1",
+      "type": "azure-core",
+      "respawnDelayMs": 650,
+      "x": 1248,
+      "y": 350,
+      "patrolMinX": 1248,
+      "patrolMaxX": 1248
+    },
+    {
+      "id": "approach-core-2",
+      "type": "azure-core",
+      "respawnDelayMs": 650,
+      "x": 1984,
+      "y": 330,
+      "patrolMinX": 1984,
+      "patrolMaxX": 1984
+    },
+    {
+      "id": "approach-core-3",
+      "type": "azure-core",
+      "respawnDelayMs": 650,
+      "x": 2624,
+      "y": 320,
+      "patrolMinX": 2624,
+      "patrolMaxX": 2624
+    },
+    {
+      "id": "approach-core-4",
+      "type": "azure-core",
+      "respawnDelayMs": 650,
+      "x": 3328,
+      "y": 290,
+      "patrolMinX": 3328,
+      "patrolMaxX": 3328
+    },
+    {
+      "id": "approach-core-5",
+      "type": "azure-core",
+      "respawnDelayMs": 650,
+      "x": 3968,
+      "y": 340,
+      "patrolMinX": 3968,
+      "patrolMaxX": 3968
+    },
+    {
+      "id": "approach-core-6",
+      "type": "azure-core",
+      "respawnDelayMs": 650,
+      "x": 4736,
+      "y": 310,
+      "patrolMinX": 4736,
+      "patrolMaxX": 4736
+    },
+    {
+      "id": "approach-core-7",
+      "type": "azure-core",
+      "respawnDelayMs": 650,
+      "x": 5440,
+      "y": 330,
+      "patrolMinX": 5440,
+      "patrolMaxX": 5440
+    }
+  ],
+  "checkpoints": [],
+  "sections": [
+    {
+      "id": "boss-arena",
+      "startX": 128,
+      "endX": 6336,
+      "purpose": "Four continuous barrage approach runs against a platform-bound boss"
+    }
+  ],
+  "goal": {
+    "x": 6200,
+    "surfaceY": 512
+  }
+}

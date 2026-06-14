@@ -28,9 +28,9 @@
         { id: '1-1', subtitle: stageData['1-1'].subtitle, objective: stageData['1-1'].objective, coins: stageData['1-1'].coins.length, x: 35, y: 70, unlocked: isStageUnlocked(saveData, '1-1'), cleared: Boolean(saveData.stageRecords['1-1']?.cleared) },
         { id: '1-2', subtitle: stageData['1-2'].subtitle, objective: isStageUnlocked(saveData, '1-2') ? stageData['1-2'].objective : 'Locked', coins: stageData['1-2'].coins.length, x: 49, y: 59, unlocked: isStageUnlocked(saveData, '1-2'), cleared: Boolean(saveData.stageRecords['1-2']?.cleared) },
         { id: '1-3', subtitle: stageData['1-3'].subtitle, objective: isStageUnlocked(saveData, '1-3') ? stageData['1-3'].objective : 'Locked', coins: stageData['1-3'].coins.length, x: 61, y: 42, unlocked: isStageUnlocked(saveData, '1-3'), cleared: Boolean(saveData.stageRecords['1-3']?.cleared) },
-        { id: '1-4', subtitle: 'The Arch Bridge', objective: 'Locked', coins: 28, x: 73, y: 54, unlocked: false, cleared: false },
-        { id: '1-5', subtitle: 'Hanging Garden', objective: 'Locked', coins: 30, x: 83, y: 34, unlocked: false, cleared: false },
-        { id: '1-6', subtitle: 'The High Spire', objective: 'Locked', coins: 35, x: 91, y: 17, unlocked: false, cleared: false },
+        { id: '1-4', subtitle: stageData['1-4'].subtitle, objective: isStageUnlocked(saveData, '1-4') ? stageData['1-4'].objective : 'Locked', coins: stageData['1-4'].coins.length, x: 73, y: 54, unlocked: isStageUnlocked(saveData, '1-4'), cleared: Boolean(saveData.stageRecords['1-4']?.cleared) },
+        { id: '1-5', subtitle: stageData['1-5'].subtitle, objective: isStageUnlocked(saveData, '1-5') ? stageData['1-5'].objective : 'Locked', coins: stageData['1-5'].coins.length, x: 83, y: 34, unlocked: isStageUnlocked(saveData, '1-5'), cleared: Boolean(saveData.stageRecords['1-5']?.cleared) },
+        { id: '1-6', subtitle: stageData['1-6'].subtitle, objective: isStageUnlocked(saveData, '1-6') ? stageData['1-6'].objective : 'Locked', coins: stageData['1-6'].coins.length, x: 91, y: 17, unlocked: isStageUnlocked(saveData, '1-6'), cleared: Boolean(saveData.stageRecords['1-6']?.cleared) },
       ]
     : placeholderPositions.map((position, index) => ({
         id: `${worldIndex}-${index + 1}`,
@@ -135,7 +135,7 @@
 
     <div class="select-rule"></div>
     <span class="select-label">{$translator('stageSelect.objective')}</span>
-    <p class="select-objective">{selected.unlocked ? $translator('stage.objective.reachGoal') : $translator('common.locked')}</p>
+    <p class="select-objective">{selected.unlocked ? $translator(selected.id === '1-6' ? 'stage.objective.defeatBoss' : 'stage.objective.reachGoal') : $translator('common.locked')}</p>
 
     <span class="select-label">{$translator('stageSelect.collectibles')}</span>
     <div class="select-collectible">

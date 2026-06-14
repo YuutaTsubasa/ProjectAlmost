@@ -1,0 +1,139 @@
+{
+  "id": "1-6",
+  "subtitle": "The High Spire",
+  "status": "blockout",
+  "designIntent": "A compact five-hit bullet-hell platform boss that tests World 01 movement, jumping, route reading, and Homing Attack without becoming a normal scrolling stage.",
+  "world": {
+    "width": 2048,
+    "height": 1080,
+    "tileSize": 64
+  },
+  "arenaBounds": {
+    "x": 128,
+    "y": 192,
+    "width": 1792,
+    "height": 576
+  },
+  "playerSpawn": {
+    "x": 320,
+    "surfaceY": 768
+  },
+  "bossSpawn": {
+    "x": 1024,
+    "y": 300
+  },
+  "exitGoal": {
+    "x": 1760,
+    "surfaceY": 768,
+    "unlockCondition": "Boss phase 5 defeated and all hostile projectiles cleared"
+  },
+  "platforms": [
+    { "col": 2, "row": 12, "width": 28, "height": 1 },
+    { "col": 4, "row": 9, "width": 6, "height": 1 },
+    { "col": 22, "row": 9, "width": 6, "height": 1 },
+    { "col": 8, "row": 6, "width": 5, "height": 1 },
+    { "col": 19, "row": 6, "width": 5, "height": 1 },
+    { "col": 14, "row": 8, "width": 4, "height": 1 }
+  ],
+  "homingCores": [
+    {
+      "id": "left-lift-core",
+      "x": 640,
+      "y": 300,
+      "role": "Lift the player from the left side platform into an aerial dodge or attack route"
+    },
+    {
+      "id": "right-lift-core",
+      "x": 1408,
+      "y": 300,
+      "role": "Lift the player from the right side platform into an aerial dodge or attack route"
+    },
+    {
+      "id": "left-cross-core",
+      "x": 844,
+      "y": 470,
+      "role": "Start a fast horizontal crossing through the arena center"
+    },
+    {
+      "id": "right-cross-core",
+      "x": 1204,
+      "y": 470,
+      "role": "Complete a fast horizontal crossing through the arena center"
+    }
+  ],
+  "phases": [
+    {
+      "id": "phase-1-fan",
+      "title": "Royal Fan",
+      "bossPosition": { "x": 1024, "y": 300 },
+      "pattern": "Three slow fan-shaped volleys aimed at the player's current position, followed by a long recovery.",
+      "playerLesson": "Read simple gaps, use the floor and side platforms, then jump or Homing Attack during recovery.",
+      "attackWindow": "Boss descends to center height after the third fan volley.",
+      "activeCoreIds": [],
+      "safeZones": [
+        { "x": 220, "y": 600, "width": 420, "height": 168 },
+        { "x": 1408, "y": 600, "width": 420, "height": 168 }
+      ]
+    },
+    {
+      "id": "phase-2-cross",
+      "title": "Azure Divide",
+      "bossPosition": { "x": 1024, "y": 300 },
+      "pattern": "A dense vertical bullet wall sweeps from alternating sides while the center floor becomes unsafe.",
+      "playerLesson": "Use the cross cores to Homing Attack through the center before the wall closes.",
+      "attackWindow": "Boss pauses above the destination side after each successful crossing.",
+      "activeCoreIds": ["left-cross-core", "right-cross-core"],
+      "safeZones": [
+        { "x": 256, "y": 470, "width": 384, "height": 298 },
+        { "x": 1408, "y": 470, "width": 384, "height": 298 }
+      ]
+    },
+    {
+      "id": "phase-3-rain",
+      "title": "Silver Rain",
+      "bossPosition": { "x": 1024, "y": 230 },
+      "pattern": "Staggered vertical rain leaves temporary gaps that shift between floor, side platforms, and upper platforms.",
+      "playerLesson": "Climb and descend between platform heights instead of remaining on the floor.",
+      "attackWindow": "Boss drops near the center platform after the final rain lane.",
+      "activeCoreIds": ["left-lift-core", "right-lift-core"],
+      "safeZones": [
+        { "x": 512, "y": 300, "width": 320, "height": 468 },
+        { "x": 1216, "y": 300, "width": 320, "height": 468 }
+      ]
+    },
+    {
+      "id": "phase-4-orbit",
+      "title": "Crown Orbit",
+      "bossPosition": { "x": 1024, "y": 350 },
+      "pattern": "Two rotating rings expand from the boss while aimed shots punish standing still.",
+      "playerLesson": "Maintain a circular route using floor, side platforms, lift cores, and cross cores.",
+      "attackWindow": "The orbit breaks after two rotations and exposes the boss at arena center.",
+      "activeCoreIds": ["left-lift-core", "right-lift-core", "left-cross-core", "right-cross-core"],
+      "safeZones": [
+        { "x": 256, "y": 250, "width": 256, "height": 518 },
+        { "x": 1536, "y": 250, "width": 256, "height": 518 }
+      ]
+    },
+    {
+      "id": "phase-5-finale",
+      "title": "White Palace Finale",
+      "bossPosition": { "x": 1024, "y": 260 },
+      "pattern": "Short remixes of fan, divide, rain, and orbit patterns with reduced recovery time.",
+      "playerLesson": "Combine every World 01 movement skill and choose between safe platform routes and faster Homing routes.",
+      "attackWindow": "A final long recovery begins after all four pattern fragments are survived.",
+      "activeCoreIds": ["left-lift-core", "right-lift-core", "left-cross-core", "right-cross-core"],
+      "safeZones": [
+        { "x": 256, "y": 600, "width": 300, "height": 168 },
+        { "x": 1492, "y": 600, "width": 300, "height": 168 }
+      ]
+    }
+  ],
+  "implementationNotes": [
+    "Do not register this blockout as a playable StageData entry until boss state, projectile hazards, and goal gating exist.",
+    "The boss should take exactly one hit per phase and become invulnerable while a pattern is active.",
+    "Azure Cores used by the arena must regenerate quickly and must not count toward the enemy score.",
+    "Projectiles should be cleared between phases so the next pattern always starts from a deterministic state.",
+    "Falling should respawn the player inside the same phase instead of resetting boss health.",
+    "The exit goal remains hidden and non-collidable until phase 5 is defeated."
+  ]
+}

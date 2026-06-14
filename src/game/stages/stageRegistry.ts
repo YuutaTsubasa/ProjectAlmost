@@ -1,16 +1,25 @@
 import firstGateJson from './1-1.json'
 import azureCourtyardJson from './1-2.json'
 import skyTerraceJson from './1-3.json'
+import archBridgeJson from './1-4.json'
+import hangingGardenJson from './1-5.json'
+import highSpireJson from './1-6.json'
 import type { GuardEnemyPoint, StageData } from './stageTypes'
 
 const firstGate = firstGateJson as StageData
 const azureCourtyard = azureCourtyardJson as StageData
 const skyTerrace = skyTerraceJson as StageData
+const archBridge = archBridgeJson as StageData
+const hangingGarden = hangingGardenJson as StageData
+const highSpire = highSpireJson as StageData
 
 export const stages = {
   '1-1': firstGate,
   '1-2': azureCourtyard,
   '1-3': skyTerrace,
+  '1-4': archBridge,
+  '1-5': hangingGarden,
+  '1-6': highSpire,
 } as const satisfies Record<string, StageData>
 
 export type StageId = keyof typeof stages

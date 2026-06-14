@@ -18,6 +18,7 @@ type EnemyRuntime = {
   defeated: boolean
   direction: number
 }
+type BossProjectile = ArcadeSprite
 
 const SOLID_TILE_INDEXES = [0, 1, 2]
 const PLAYER_MAX_HEALTH = 3
@@ -25,6 +26,7 @@ const CAMERA_ZOOM = 1.25
 const PLAYER_SCALE = 0.78
 const PLAYER_ATTACK_SCALE = 0.98
 const PLAYER_ATTACK_VISUAL_Y_OFFSET = -10
+const PLAYER_CROUCH_VISUAL_Y_OFFSET = 10
 const HOMING_ATTACK_RANGE = 360
 const HOMING_ATTACK_RECOVERY_MS = 220
 const HOMING_ATTACK_BOUNCE_Y = -420
@@ -41,6 +43,9 @@ const AIR_ACCELERATION = 720
 const PLAYER_MAX_RUN_SPEED = 500
 const DEFAULT_REGENERATE_DELAY_MS = 1400
 const ENEMY_REGENERATE_SAFE_DISTANCE = 140
+const BOSS_STAGE_ID = '1-6'
+const BOSS_PHASE_COUNT = 4
+const BOSS_PROJECTILE_LIFETIME_MS = 7200
 const THEME = {
   royalBlue: 0x2f6fb4,
   cyan: 0x33b5ff,
@@ -50,7 +55,7 @@ const THEME = {
 
 export class GameplayScene extends Phaser.Scene {
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys
-  private keys!: Record<'left' | 'right' | 'jump' | 'attack' | 'attackAlt', Phaser.Input.Keyboard.Key>
+  private keys!: Record<'left' | 'right' | 'jump' | 'crouch' | 'attack' | 'attackAlt', Phaser.Input.Keyboard.Key>
   private player!: ArcadeSprite
   private enemies: EnemyRuntime[] = []
   private goal!: Phaser.Types.Physics.Arcade.SpriteWithStaticBody
@@ -67,6 +72,7 @@ export class GameplayScene extends Phaser.Scene {
   private isHurting = false
   private isInvulnerable = false
   private isHomingAttacking = false
+  private isCrouching = false
   private isDead = false
   private homingTarget?: ArcadeSprite
   private homingReticle?: Phaser.GameObjects.Image
@@ -79,15 +85,24 @@ export class GameplayScene extends Phaser.Scene {
   private enemiesDefeated = 0
   private stageTimeMs = 0
   private timerStarted = false
+  private stageInputArmed = false
   private gamepadJumpDown = false
   private gamepadAttackDown = false
   private virtualMoveX = 0
+  private virtualCrouch = false
   private virtualJumpPressed = false
   private virtualAttackPressed = false
   private wasGrounded = true
   private nextFootstepAt = 0
   private lastGroundedAt = 0
   private jumpBufferedUntil = 0
+  private remainingAirJumps = 1
+  private bossPrototype?: EnemyRuntime
+  private bossProjectiles: BossProjectile[] = []
+  private bossPhase = 0
+  private bossPatternGeneration = 0
+  private bossShotIndex = 0
+  private bossPatternEvent?: Phaser.Time.TimerEvent
   private statusMessage = this.getInitialStatusMessage()
   private statusParams: TranslationParams = {}
   private activeCheckpointIndex = -1
@@ -150,6 +165,10 @@ export class GameplayScene extends Phaser.Scene {
       frameWidth: 128,
       frameHeight: 128,
     })
+    this.load.spritesheet('player-crouch', IMAGE_ASSETS.playerCrouch, {
+      frameWidth: 128,
+      frameHeight: 128,
+    })
     this.load.spritesheet('player-jump', IMAGE_ASSETS.playerJump, {
       frameWidth: 128,
       frameHeight: 128,
@@ -167,6 +186,18 @@ export class GameplayScene extends Phaser.Scene {
       frameHeight: 128,
     })
     this.load.spritesheet('enemy-guard-death', IMAGE_ASSETS.enemyGuardDeath, {
+      frameWidth: 128,
+      frameHeight: 128,
+    })
+    this.load.spritesheet('boss-priestess-cast', IMAGE_ASSETS.bossPriestessCast, {
+      frameWidth: 128,
+      frameHeight: 128,
+    })
+    this.load.spritesheet('boss-priestess-hurt', IMAGE_ASSETS.bossPriestessHurt, {
+      frameWidth: 128,
+      frameHeight: 128,
+    })
+    this.load.spritesheet('boss-priestess-death', IMAGE_ASSETS.bossPriestessDeath, {
       frameWidth: 128,
       frameHeight: 128,
     })
@@ -222,15 +253,19 @@ export class GameplayScene extends Phaser.Scene {
       this.physics.add.collider(this.player, enemy.sprite, () => this.hurtPlayer(enemy.sprite))
     }
     this.physics.add.overlap(this.player, this.goal, () => this.completeStage())
+    this.initializeBossPrototype()
+    this.stopEnemyMovement()
 
     this.cursors = this.input.keyboard!.createCursorKeys()
     this.keys = this.input.keyboard!.addKeys({
       left: Phaser.Input.Keyboard.KeyCodes.A,
       right: Phaser.Input.Keyboard.KeyCodes.D,
       jump: Phaser.Input.Keyboard.KeyCodes.W,
+      crouch: Phaser.Input.Keyboard.KeyCodes.S,
       attack: Phaser.Input.Keyboard.KeyCodes.J,
       attackAlt: Phaser.Input.Keyboard.KeyCodes.Z,
-    }) as Record<'left' | 'right' | 'jump' | 'attack' | 'attackAlt', Phaser.Input.Keyboard.Key>
+    }) as Record<'left' | 'right' | 'jump' | 'crouch' | 'attack' | 'attackAlt', Phaser.Input.Keyboard.Key>
+    this.input.keyboard!.resetKeys()
 
     this.cameras.main.startFollow(this.player, true, 0.12, 0.12)
     this.cameras.main.setZoom(CAMERA_ZOOM)
@@ -244,8 +279,9 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   private handleVirtualInput = (event: Event): void => {
-    const detail = (event as CustomEvent<{ type: 'move' | 'jump' | 'attack'; x?: number }>).detail
+    const detail = (event as CustomEvent<{ type: 'move' | 'crouch' | 'jump' | 'attack'; x?: number; active?: boolean }>).detail
     if (detail.type === 'move') this.virtualMoveX = detail.x ?? 0
+    if (detail.type === 'crouch') this.virtualCrouch = Boolean(detail.active)
     if (detail.type === 'jump') this.virtualJumpPressed = true
     if (detail.type === 'attack') this.virtualAttackPressed = true
   }
@@ -262,6 +298,7 @@ export class GameplayScene extends Phaser.Scene {
     this.isHurting = false
     this.isInvulnerable = false
     this.isHomingAttacking = false
+    this.isCrouching = false
     this.isDead = false
     this.homingTarget = undefined
     this.homingReticle = undefined
@@ -274,15 +311,24 @@ export class GameplayScene extends Phaser.Scene {
     this.enemiesDefeated = 0
     this.stageTimeMs = 0
     this.timerStarted = false
+    this.stageInputArmed = false
     this.gamepadJumpDown = false
     this.gamepadAttackDown = false
     this.virtualMoveX = 0
+    this.virtualCrouch = false
     this.virtualJumpPressed = false
     this.virtualAttackPressed = false
     this.wasGrounded = true
     this.nextFootstepAt = 0
     this.lastGroundedAt = 0
     this.jumpBufferedUntil = 0
+    this.remainingAirJumps = 1
+    this.bossPrototype = undefined
+    this.bossProjectiles = []
+    this.bossPhase = 0
+    this.bossPatternGeneration = 0
+    this.bossShotIndex = 0
+    this.bossPatternEvent = undefined
     this.statusMessage = this.getInitialStatusMessage()
     this.statusParams = {}
     this.activeCheckpointIndex = -1
@@ -296,6 +342,7 @@ export class GameplayScene extends Phaser.Scene {
     const pad = Array.from(navigator.getGamepads?.() ?? []).find((candidate): candidate is Gamepad => candidate !== null)
     const padLeft = Boolean(pad && (pad.axes[0] < -0.35 || pad.buttons[14]?.pressed))
     const padRight = Boolean(pad && (pad.axes[0] > 0.35 || pad.buttons[15]?.pressed))
+    const padDown = Boolean(pad && (pad.axes[1] > 0.5 || pad.buttons[13]?.pressed))
     const padJumpDown = Boolean(pad?.buttons[0]?.pressed)
     const padAttackDown = Boolean(pad?.buttons[2]?.pressed)
     const padJumpPressed = padJumpDown && !this.gamepadJumpDown
@@ -305,13 +352,27 @@ export class GameplayScene extends Phaser.Scene {
 
     const left = this.cursors.left.isDown || this.keys.left.isDown || padLeft || this.virtualMoveX < 0
     const right = this.cursors.right.isDown || this.keys.right.isDown || padRight || this.virtualMoveX > 0
+    const crouchHeld = this.cursors.down.isDown || this.keys.crouch.isDown || padDown || this.virtualCrouch
     const jumpPressed = Phaser.Input.Keyboard.JustDown(this.cursors.space) || Phaser.Input.Keyboard.JustDown(this.cursors.up) || Phaser.Input.Keyboard.JustDown(this.keys.jump) || padJumpPressed || this.virtualJumpPressed
     const attackPressed = Phaser.Input.Keyboard.JustDown(this.keys.attack) || Phaser.Input.Keyboard.JustDown(this.keys.attackAlt) || padAttackPressed || this.virtualAttackPressed
+    const gameplayInputHeld = left || right || crouchHeld || this.cursors.space.isDown || this.cursors.up.isDown || this.keys.jump.isDown || this.keys.attack.isDown || this.keys.attackAlt.isDown || padJumpDown || padAttackDown || this.virtualJumpPressed || this.virtualAttackPressed
     this.virtualJumpPressed = false
     this.virtualAttackPressed = false
+    if (!this.stageInputArmed) {
+      if (!gameplayInputHeld) this.stageInputArmed = true
+      this.player.setAccelerationX(0)
+      this.updateParallaxBackground()
+      return
+    }
+    if (!this.timerStarted && (left || right || crouchHeld || jumpPressed || attackPressed)) {
+      this.startStageAction()
+    }
 
     const grounded = this.player.body.blocked.down || this.player.body.touching.down
-    if (grounded) this.lastGroundedAt = this.time.now
+    if (grounded) {
+      this.lastGroundedAt = this.time.now
+      this.remainingAirJumps = 1
+    }
     if (jumpPressed) this.jumpBufferedUntil = this.time.now + JUMP_BUFFER_MS
 
     if (this.isDead) {
@@ -326,7 +387,13 @@ export class GameplayScene extends Phaser.Scene {
       return
     }
 
-    if (left) {
+    const shouldCrouch = crouchHeld && grounded && !this.isAttacking && !this.isHurting
+    this.setCrouching(shouldCrouch)
+
+    if (this.isCrouching) {
+      this.player.setAccelerationX(0)
+      this.player.setVelocityX(0)
+    } else if (left) {
       this.timerStarted = true
       this.player.setAccelerationX(-(grounded ? GROUND_ACCELERATION : AIR_ACCELERATION))
       if (!this.isHurting) {
@@ -343,9 +410,17 @@ export class GameplayScene extends Phaser.Scene {
     }
 
     const canUseGroundJump = grounded || this.time.now - this.lastGroundedAt <= COYOTE_TIME_MS
-    if (this.jumpBufferedUntil >= this.time.now && canUseGroundJump) {
+    const canUseAirJump = !canUseGroundJump && this.remainingAirJumps > 0
+    if (this.jumpBufferedUntil >= this.time.now && (canUseGroundJump || canUseAirJump)) {
       this.timerStarted = true
+      this.setCrouching(false)
+      if (canUseAirJump) {
+        this.isAttacking = false
+        this.setPlayerVisualState('normal')
+        this.playPlayerAnimation('player-jump')
+      }
       this.player.setVelocityY(-640)
+      if (canUseAirJump) this.remainingAirJumps -= 1
       this.jumpBufferedUntil = 0
       this.lastGroundedAt = 0
       this.dispatchSfx('armor-step')
@@ -353,9 +428,9 @@ export class GameplayScene extends Phaser.Scene {
     }
 
     this.updateMovementSfx(grounded, left || right)
-    this.updatePlayerAnimation(left || right, grounded)
+    this.updatePlayerAnimation(!this.isCrouching && (left || right), grounded)
 
-    if (attackPressed) {
+    if (attackPressed && !this.isCrouching) {
       this.timerStarted = true
       if (!grounded && this.tryHomingAttack()) {
         return
@@ -366,7 +441,10 @@ export class GameplayScene extends Phaser.Scene {
 
     this.updateHomingReticle(grounded)
     this.updateHomingAttack()
-    this.updateEnemyPatrol()
+    if (this.timerStarted) {
+      this.updateEnemyPatrol()
+      this.updateBossProjectiles()
+    }
     this.updateCheckpoint()
     this.updateCoins()
     this.updateTimer()
@@ -382,6 +460,7 @@ export class GameplayScene extends Phaser.Scene {
     this.makeHomingReticleTexture()
     this.makeCoinTexture()
     this.makeAzureCoreTexture()
+    this.makeBossProjectileTexture()
   }
 
   private createAnimations(): void {
@@ -404,6 +483,13 @@ export class GameplayScene extends Phaser.Scene {
       frames: this.anims.generateFrameNumbers('player-attack', { start: 0, end: 3 }),
       frameRate: 12,
       repeat: 0,
+    })
+
+    this.anims.create({
+      key: 'player-crouch',
+      frames: this.anims.generateFrameNumbers('player-crouch', { start: 0, end: 3 }),
+      frameRate: 5,
+      repeat: -1,
     })
 
     this.anims.create({
@@ -442,6 +528,27 @@ export class GameplayScene extends Phaser.Scene {
     })
 
     this.anims.create({
+      key: 'boss-priestess-cast',
+      frames: this.anims.generateFrameNumbers('boss-priestess-cast', { start: 0, end: 3 }),
+      frameRate: 7,
+      repeat: -1,
+    })
+
+    this.anims.create({
+      key: 'boss-priestess-hurt',
+      frames: this.anims.generateFrameNumbers('boss-priestess-hurt', { start: 0, end: 3 }),
+      frameRate: 8,
+      repeat: 0,
+    })
+
+    this.anims.create({
+      key: 'boss-priestess-death',
+      frames: this.anims.generateFrameNumbers('boss-priestess-death', { start: 0, end: 3 }),
+      frameRate: 5,
+      repeat: 0,
+    })
+
+    this.anims.create({
       key: 'stage-goal-idle',
       frames: this.anims.generateFrameNumbers('stage-goal', { start: 0, end: 3 }),
       frameRate: 5,
@@ -461,6 +568,11 @@ export class GameplayScene extends Phaser.Scene {
       return
     }
 
+    if (this.isCrouching) {
+      this.playPlayerAnimation('player-crouch', true)
+      return
+    }
+
     this.setPlayerVisualState('normal')
     this.playPlayerAnimation(isMoving ? 'player-run' : 'player-idle', true)
   }
@@ -470,7 +582,7 @@ export class GameplayScene extends Phaser.Scene {
       return
     }
 
-    if (this.player.anims.currentAnim?.key !== key) {
+    if (this.player.anims.currentAnim?.key !== key || this.player.texture.key !== key) {
       this.player.play(key)
     }
   }
@@ -530,6 +642,18 @@ export class GameplayScene extends Phaser.Scene {
     graphics.lineBetween(4, 38, 16, 38)
     graphics.lineBetween(60, 38, 72, 38)
     graphics.generateTexture('azure-core', 76, 76)
+    graphics.destroy()
+  }
+
+  private makeBossProjectileTexture(): void {
+    const graphics = this.make.graphics()
+    graphics.fillStyle(0xfff7ff, 0.95)
+    graphics.fillCircle(14, 14, 10)
+    graphics.lineStyle(4, 0x77bfff, 0.9)
+    graphics.strokeCircle(14, 14, 11)
+    graphics.fillStyle(0xff70c8, 0.9)
+    graphics.fillCircle(14, 14, 5)
+    graphics.generateTexture('boss-projectile', 28, 28)
     graphics.destroy()
   }
 
@@ -651,6 +775,218 @@ export class GameplayScene extends Phaser.Scene {
     })
   }
 
+  private initializeBossPrototype(): void {
+    if (activeStage.id !== BOSS_STAGE_ID) return
+
+    this.bossPrototype = this.enemies.find((enemy) => enemy.point.id === 'boss-prototype')
+    if (!this.bossPrototype) return
+
+    this.goal.setVisible(false)
+    this.goal.body.enable = false
+    this.tweens.killTweensOf(this.bossPrototype.sprite)
+    this.bossPrototype.sprite.setTexture('boss-priestess-cast', 0)
+    this.bossPrototype.sprite.setScale(1.2)
+    this.bossPrototype.sprite.body.setSize(48, 92)
+    this.bossPrototype.sprite.body.setOffset(40, 26)
+    this.bossPrototype.sprite.clearTint()
+    this.bossPrototype.sprite.setDepth(14)
+  }
+
+  private startStageAction(): void {
+    if (this.timerStarted) return
+    this.timerStarted = true
+    this.game.loop.resetDelta()
+    this.player.setVisible(true)
+    this.player.body.enable = true
+    this.cameras.main.startFollow(this.player, true, 0.12, 0.12)
+    this.cameras.main.centerOn(this.player.x, this.player.y)
+    if (activeStage.id === BOSS_STAGE_ID) {
+      this.startBossPattern()
+    }
+  }
+
+  private stopEnemyMovement(): void {
+    for (const enemy of this.enemies) {
+      enemy.sprite.setVelocity(0, 0)
+      enemy.sprite.setAcceleration(0, 0)
+    }
+  }
+
+  private startBossPattern(): void {
+    const boss = this.bossPrototype
+    if (!boss || boss.point.type !== 'azure-core' || this.bossPhase >= BOSS_PHASE_COUNT || this.stageCleared) return
+
+    const generation = ++this.bossPatternGeneration
+    this.clearBossProjectiles()
+    this.bossPatternEvent?.remove(false)
+    this.bossShotIndex = 0
+    this.tweens.killTweensOf(boss.sprite)
+    boss.defeated = false
+    boss.sprite.body.enable = true
+    boss.sprite.setVisible(true)
+    boss.sprite.setAlpha(1)
+    boss.sprite.setScale(1.2)
+    boss.sprite.clearTint()
+    boss.sprite.setPosition(boss.point.x, boss.point.y)
+    boss.sprite.play('boss-priestess-cast', true)
+    this.setStatusMessage('status.bossPattern', { phase: this.bossPhase + 1, max: BOSS_PHASE_COUNT })
+    for (const enemy of this.enemies) {
+      if (enemy === boss || enemy.point.type !== 'azure-core') continue
+      this.tweens.killTweensOf(enemy.sprite)
+      enemy.defeated = false
+      this.configureAzureCore(enemy.sprite, enemy.point.y)
+    }
+    this.fireBossVolley(this.bossPhase, this.bossShotIndex++)
+
+    this.bossPatternEvent = this.time.addEvent({
+      delay: Math.max(540, 980 - this.bossPhase * 90),
+      loop: true,
+      callback: () => {
+        if (generation !== this.bossPatternGeneration || this.stageCleared || this.isDead) return
+        this.fireBossVolley(this.bossPhase, this.bossShotIndex++)
+      },
+    })
+  }
+
+  private fireBossVolley(phase: number, shotIndex: number): void {
+    const boss = this.bossPrototype?.sprite
+    if (!boss || !boss.visible) return
+    const originX = boss.x
+    const originY = boss.y
+    const aimedAngle = Phaser.Math.Angle.Between(originX, originY, this.player.x, this.player.y)
+
+    if (phase === 0) {
+      this.spawnBossProjectile(originX, originY, aimedAngle, 330)
+      return
+    }
+
+    if (phase === 1) {
+      const sweep = Math.sin(shotIndex * 0.72) * 0.36
+      for (const offset of [-0.2, 0, 0.2]) {
+        this.spawnBossProjectile(originX, originY, Math.PI + sweep + offset, 350)
+      }
+      return
+    }
+
+    if (phase === 2) {
+      const verticalBias = shotIndex % 2 === 0 ? -0.5 : 0.5
+      for (const offset of [-0.16, 0.16]) {
+        this.spawnBossProjectile(originX, originY, Math.PI + verticalBias + offset, 390)
+      }
+      if (shotIndex % 2 === 0) {
+        this.spawnBossProjectile(originX, originY, aimedAngle, 360)
+      }
+      return
+    }
+
+    if (phase === 3) {
+      for (let index = 0; index < 5; index += 1) {
+        const angle = Math.PI / 2 + (Math.PI * index) / 4 + shotIndex * 0.1
+        this.spawnBossProjectile(originX, originY, angle, 390)
+      }
+      return
+    }
+
+  }
+
+  private spawnBossProjectile(x: number, y: number, angle: number, speed: number): void {
+    const projectile = this.physics.add.sprite(x, y, 'boss-projectile')
+    projectile.body.allowGravity = false
+    projectile.setVelocity(Math.cos(angle) * speed, Math.sin(angle) * speed)
+    projectile.setDepth(16)
+    projectile.setBlendMode(Phaser.BlendModes.ADD)
+    projectile.setData('spawnedAt', this.time.now)
+    this.bossProjectiles.push(projectile)
+  }
+
+  private updateBossProjectiles(): void {
+    if (this.bossProjectiles.length === 0) return
+
+    for (const projectile of [...this.bossProjectiles]) {
+      const expired = this.time.now - Number(projectile.getData('spawnedAt')) > BOSS_PROJECTILE_LIFETIME_MS
+      const outside = projectile.x < -80 || projectile.x > this.worldWidth + 80 || projectile.y < -80 || projectile.y > this.worldHeight + 80
+      if (outside) {
+        this.destroyBossProjectile(projectile)
+        continue
+      }
+      if (expired) {
+        this.fadeBossProjectile(projectile)
+        continue
+      }
+
+      if (!this.isDead && Phaser.Math.Distance.Between(this.player.x, this.player.y, projectile.x, projectile.y) < 42) {
+        if (this.isCrouching) continue
+        this.destroyBossProjectile(projectile)
+        this.applyPlayerHit(projectile.x)
+      }
+    }
+  }
+
+  private destroyBossProjectile(projectile: BossProjectile): void {
+    this.bossProjectiles = this.bossProjectiles.filter((candidate) => candidate !== projectile)
+    projectile.destroy()
+  }
+
+  private fadeBossProjectile(projectile: BossProjectile, duration = 220): void {
+    this.bossProjectiles = this.bossProjectiles.filter((candidate) => candidate !== projectile)
+    projectile.body.enable = false
+    this.tweens.add({
+      targets: projectile,
+      alpha: 0,
+      scale: projectile.scale * 0.72,
+      duration,
+      ease: 'Quad.easeOut',
+      onComplete: () => projectile.destroy(),
+    })
+  }
+
+  private clearBossProjectiles(): void {
+    for (const projectile of [...this.bossProjectiles]) this.fadeBossProjectile(projectile, 160)
+    this.bossProjectiles = []
+  }
+
+  private hitBossPrototype(): void {
+    const boss = this.bossPrototype
+    if (!boss || boss.defeated) return
+
+    this.bossPatternGeneration += 1
+    this.bossPatternEvent?.remove(false)
+    this.bossPatternEvent = undefined
+    this.dispatchSfx('hit')
+    this.clearBossProjectiles()
+    this.bossPhase += 1
+    boss.defeated = true
+    boss.sprite.body.enable = false
+
+    if (this.bossPhase >= BOSS_PHASE_COUNT) {
+      this.enemiesDefeated = 1
+      boss.sprite.play('boss-priestess-death', true)
+      this.time.delayedCall(800, () => {
+        this.goal.setVisible(true)
+        this.goal.body.enable = true
+        this.goal.clearTint()
+      })
+      this.setStatusMessage('status.bossDefeated')
+      return
+    }
+
+    boss.sprite.play('boss-priestess-hurt', true)
+    this.playerHealth = PLAYER_MAX_HEALTH
+    this.updateHealthText()
+    this.isAttacking = false
+    this.isHomingAttacking = false
+    this.attackReady = true
+    this.homingTarget = undefined
+    this.homingReticle?.setVisible(false)
+    this.setPlayerHomingCollision(true)
+    this.setPlayerVisualState('normal')
+    this.player.setPosition(activeStage.playerSpawn.x, groundedCenterY(activeStage.playerSpawn.surfaceY, 'player'))
+    this.player.setVelocity(0, 0)
+    this.cameras.main.centerOn(this.player.x, this.player.y)
+    this.cameras.main.flash(180, 245, 250, 255)
+    this.time.delayedCall(620, () => this.startBossPattern())
+  }
+
   private createCheckpoints(): void {
     const definition = objectDefinitions.checkpoint
     this.checkpointGlows = []
@@ -765,6 +1101,14 @@ export class GameplayScene extends Phaser.Scene {
       return
     }
 
+    this.applyPlayerHit(enemy.x)
+  }
+
+  private applyPlayerHit(sourceX: number): void {
+    if (this.isInvulnerable || this.isHurting || this.isHomingAttacking || this.isCrouching || this.isDead) {
+      return
+    }
+
     this.playerHealth -= 1
     this.dispatchSfx('hit')
     this.damageTaken += 1
@@ -779,13 +1123,14 @@ export class GameplayScene extends Phaser.Scene {
     this.isInvulnerable = true
     this.isAttacking = false
     this.isHomingAttacking = false
+    this.isCrouching = false
     this.homingTarget = undefined
     this.setPlayerHomingCollision(true)
     this.setPlayerVisualState('normal')
     this.stopPlayerHurtBlink()
     this.attackReady = false
 
-    const knockbackDirection = this.player.x < enemy.x ? -1 : 1
+    const knockbackDirection = this.player.x < sourceX ? -1 : 1
     this.player.setVelocity(knockbackDirection * 360, -360)
     this.playPlayerAnimation('player-hurt')
     this.setStatusMessage('status.hurt', { hp: this.playerHealth, max: PLAYER_MAX_HEALTH })
@@ -814,6 +1159,11 @@ export class GameplayScene extends Phaser.Scene {
     const enemy = this.enemies.find((candidate) => candidate.sprite === sprite)
 
     if (!enemy || enemy.defeated) {
+      return
+    }
+
+    if (enemy === this.bossPrototype) {
+      this.hitBossPrototype()
       return
     }
 
@@ -864,7 +1214,6 @@ export class GameplayScene extends Phaser.Scene {
 
   private tryRegenerateEnemy(enemy: EnemyRuntime): void {
     if (this.stageCleared || !enemy.defeated) return
-
     const spawnY = enemy.point.type === 'azure-core' ? enemy.point.y : groundedCenterY(enemy.point.surfaceY, 'guard')
     const playerDistance = Phaser.Math.Distance.Between(this.player.x, this.player.y, enemy.point.x, spawnY)
     if (this.isDead || playerDistance < ENEMY_REGENERATE_SAFE_DISTANCE) {
@@ -966,11 +1315,13 @@ export class GameplayScene extends Phaser.Scene {
     this.isInvulnerable = false
     this.isAttacking = false
     this.isHomingAttacking = false
+    this.setCrouching(false)
     this.isDead = false
     this.homingTarget = undefined
     this.attackReady = true
     this.playerHealth = PLAYER_MAX_HEALTH
     this.jumpBufferedUntil = 0
+    this.remainingAirJumps = 1
     this.lastGroundedAt = this.time.now
     this.updateHealthText()
     this.stopPlayerHurtBlink()
@@ -982,6 +1333,9 @@ export class GameplayScene extends Phaser.Scene {
     this.playPlayerAnimation('player-idle')
     this.setEnemiesFrozen(false)
     this.setStatusMessage('status.restored')
+    if (activeStage.id === BOSS_STAGE_ID && this.bossPhase < BOSS_PHASE_COUNT) {
+      this.time.delayedCall(500, () => this.startBossPattern())
+    }
   }
 
   private defeatPlayer(reason: 'damage' | 'fall'): void {
@@ -998,9 +1352,16 @@ export class GameplayScene extends Phaser.Scene {
     this.isInvulnerable = true
     this.isAttacking = false
     this.isHomingAttacking = false
+    this.setCrouching(false)
     this.attackReady = false
     this.homingTarget = undefined
     this.homingReticle?.setVisible(false)
+    if (activeStage.id === BOSS_STAGE_ID) {
+      this.bossPatternGeneration += 1
+      this.bossPatternEvent?.remove(false)
+      this.bossPatternEvent = undefined
+      this.clearBossProjectiles()
+    }
     this.stopPlayerHurtBlink()
     this.setPlayerHomingCollision(true)
     this.setPlayerVisualState('normal')
@@ -1080,6 +1441,22 @@ export class GameplayScene extends Phaser.Scene {
     const body = objectDefinitions.player.body
     this.player.body.setSize(body.width, body.height)
     this.player.body.setOffset(body.offsetX, body.offsetY)
+  }
+
+  private setCrouching(crouching: boolean): void {
+    if (this.isCrouching === crouching) return
+    this.isCrouching = crouching
+    const body = objectDefinitions.player.body
+    if (crouching) {
+      this.setPlayerVisualState('normal')
+      this.player.y += PLAYER_CROUCH_VISUAL_Y_OFFSET
+      this.playerVisualYOffset = PLAYER_CROUCH_VISUAL_Y_OFFSET
+      this.player.body.setSize(body.width + 10, 38)
+      this.player.body.setOffset(body.offsetX - 5, body.offsetY + 24)
+      this.playPlayerAnimation('player-crouch')
+    } else {
+      this.setPlayerVisualState('normal')
+    }
   }
 
   private tryHomingAttack(): boolean {
@@ -1169,8 +1546,11 @@ export class GameplayScene extends Phaser.Scene {
     this.player.setPosition(contactX, contactY)
     this.player.setVelocity(0, 0)
     this.dispatchSfx('armor-step')
+    const resetsBossRun = target === this.bossPrototype?.sprite && this.bossPhase < BOSS_PHASE_COUNT - 1
     this.defeatEnemy(target)
-    this.finishHomingAttack(true)
+    if (!resetsBossRun) {
+      this.finishHomingAttack(true)
+    }
   }
 
   private finishHomingAttack(hit: boolean): void {
@@ -1179,6 +1559,7 @@ export class GameplayScene extends Phaser.Scene {
     this.setPlayerHomingCollision(true)
 
     if (hit) {
+      this.remainingAirJumps = 1
       this.player.setVelocity(0, HOMING_ATTACK_BOUNCE_Y)
       this.setStatusMessage('status.homingHit')
     } else {
@@ -1357,10 +1738,12 @@ export class GameplayScene extends Phaser.Scene {
     else if (elapsedSeconds > bTime && elapsedSeconds <= cTime) timeScore = 100
     else if (elapsedSeconds > cTime) timeScore = Math.max(0, 100 - (elapsedSeconds - cTime) * 3)
 
-    const coinScore = (this.collectedCoins / this.coinTargetCount) * 200
+    const coinScore = this.coinTargetCount > 0 ? (this.collectedCoins / this.coinTargetCount) * 200 : 200
     const enemyTarget = this.scoreEnemyTargetCount
     const enemyScore = enemyTarget > 0 ? (this.enemiesDefeated / enemyTarget) * 150 : 150
-    const checkpointScore = ((this.activeCheckpointIndex + 1) / activeStage.checkpoints.length) * 50
+    const checkpointScore = activeStage.checkpoints.length > 0
+      ? ((this.activeCheckpointIndex + 1) / activeStage.checkpoints.length) * 50
+      : 50
     const score = 300 + timeScore + coinScore + enemyScore + checkpointScore - this.damageTaken * 80 - this.falls * 180
 
     if (score >= 850) return 'S'

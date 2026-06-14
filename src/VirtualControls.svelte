@@ -22,6 +22,7 @@
     stickX = dx * scale
     stickY = dy * scale
     emit({ type: 'move', x: Math.abs(dx / radius) > 0.28 ? Math.sign(dx) : 0 })
+    emit({ type: 'crouch', active: dy / radius > 0.55 })
   }
 
   function startStick(event: PointerEvent) {
@@ -40,6 +41,7 @@
     stickX = 0
     stickY = 0
     emit({ type: 'move', x: 0 })
+    emit({ type: 'crouch', active: false })
   }
 
   function pressAction(action: 'jump' | 'attack') {

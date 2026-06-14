@@ -1204,37 +1204,39 @@ input {
 }
 
 .skills {
-  display: flex;
-  gap: 0.73cqw;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.35cqw;
   margin-top: 0.93cqh;
 }
 
 .skills div {
   display: grid;
-  width: 4.45cqw;
+  min-width: 0;
   gap: 4px;
   justify-items: center;
 }
 
 .skills b {
   display: grid;
-  width: 4.2cqw;
+  width: 100%;
   height: 5cqh;
   place-items: center;
   border: 1px solid var(--hud-line);
   border-radius: 6px;
   background: linear-gradient(180deg, #fff, var(--accent-pale));
   color: var(--hud-ink);
-  font-size: min(0.68cqw, 13px);
+  font-size: min(0.58cqw, 12px);
   line-height: 1;
   text-align: center;
 }
 
 .skills span {
   color: var(--hud-soft);
-  font-size: min(0.57cqw, 11px);
+  font-size: min(0.49cqw, 10px);
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0;
+  text-align: center;
   text-transform: uppercase;
 }
 

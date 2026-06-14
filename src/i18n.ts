@@ -20,14 +20,14 @@ const en = {
   'stageSelect.bestTime': 'Best Time', 'stageSelect.rank': 'Rank', 'stageSelect.activeCharacter': 'Active Character', 'stageSelect.deploy': 'Deploy',
   'stage.1-1.subtitle': 'The First Gate', 'stage.1-2.subtitle': 'Azure Courtyard', 'stage.1-3.subtitle': 'Sky Terrace',
   'stage.1-4.subtitle': 'The Arch Bridge', 'stage.1-5.subtitle': 'Hanging Garden', 'stage.1-6.subtitle': 'The High Spire',
-  'stage.objective.reachGoal': 'Reach the Goal',
+  'stage.objective.reachGoal': 'Reach the Goal', 'stage.objective.defeatBoss': 'Defeat the Boss',
   'settings.systemMenu': 'System Menu', 'settings.title': 'Settings', 'settings.masterVolume': 'Master Volume',
   'settings.musicVolume': 'Music Volume', 'settings.sfxVolume': 'SFX Volume', 'settings.language': 'Language',
   'settings.fullscreen': 'Fullscreen', 'settings.screenShake': 'Screen Shake', 'settings.vibration': 'Controller Vibration',
   'settings.reset': 'Reset to Default', 'settings.deleteSave': 'Delete Save Data', 'settings.decrease': 'Decrease {item}', 'settings.increase': 'Increase {item}',
   'settings.deleteTitle': 'Delete Save Data?', 'settings.deleteBody': 'All stage clears, unlocks, records, and best ranks will be permanently deleted.',
   'hud.systemStatus': 'System Status', 'hud.mapOverview': 'Map Overview', 'hud.objective': 'Objective', 'hud.controls': 'Controls',
-  'hud.move': 'Move', 'hud.jump': 'Jump', 'hud.attack': 'Attack', 'hud.homing': 'Homing', 'hud.navigator': 'Palace Navigator',
+  'hud.move': 'Move', 'hud.jump': 'Jump', 'hud.crouch': 'Crouch', 'hud.attack': 'Attack', 'hud.homing': 'Homing', 'hud.navigator': 'Palace Navigator',
   'hud.time': 'Time', 'hud.coins': 'Coins', 'hud.damage': 'Damage', 'hud.falls': 'Falls', 'hud.enemies': 'Enemies',
   'hud.checkpoints': 'Checkpoints', 'hud.rank': 'Rank',
   'pause.paused': 'Paused', 'pause.resume': 'Resume', 'pause.restart': 'Restart Stage', 'pause.stageSelect': 'Return to Stage Select',
@@ -43,6 +43,8 @@ const en = {
   'status.fall': 'Route lost. Restoring from checkpoint.', 'status.critical': 'Critical damage. Restoring from checkpoint.',
   'status.goal': 'Gate reached. {coins}  {time}', 'status.homingHit': 'Homing strike confirmed. Continue toward the gate.',
   'status.homingMiss': 'No target contact. Resume course.',
+  'status.bossPattern': 'Boss phase {phase}/{max}. Evade the barrage.', 'status.bossVulnerable': 'Attack window open. Strike the Boss now.',
+  'status.bossDefeated': 'Boss signal defeated. The exit is open.',
 } as const
 
 type TranslationKey = keyof typeof en
@@ -64,14 +66,14 @@ const ja: Dictionary = {
   'stageSelect.title': 'ステージ選択', 'stageSelect.objective': '目標', 'stageSelect.collectibles': '収集物', 'stageSelect.bestTime': 'ベストタイム',
   'stageSelect.rank': 'ランク', 'stageSelect.activeCharacter': '使用キャラクター', 'stageSelect.deploy': '出撃',
   'stage.1-1.subtitle': '最初の門', 'stage.1-2.subtitle': '蒼の中庭', 'stage.1-3.subtitle': '空中テラス', 'stage.1-4.subtitle': '大アーチ橋',
-  'stage.1-5.subtitle': '空中庭園', 'stage.1-6.subtitle': '高き尖塔', 'stage.objective.reachGoal': 'ゴールへ到達',
+  'stage.1-5.subtitle': '空中庭園', 'stage.1-6.subtitle': '高き尖塔', 'stage.objective.reachGoal': 'ゴールへ到達', 'stage.objective.defeatBoss': 'ボスを倒す',
   'settings.systemMenu': 'システムメニュー', 'settings.title': '設定', 'settings.masterVolume': 'マスター音量', 'settings.musicVolume': '音楽音量',
   'settings.sfxVolume': '効果音音量', 'settings.language': '言語', 'settings.fullscreen': 'フルスクリーン', 'settings.screenShake': '画面振動',
   'settings.vibration': 'コントローラー振動', 'settings.reset': '初期設定に戻す', 'settings.deleteSave': 'セーブデータ削除',
   'settings.decrease': '{item}を下げる', 'settings.increase': '{item}を上げる', 'settings.deleteTitle': 'セーブデータを削除しますか？',
   'settings.deleteBody': 'ステージクリア、解放、記録、最高ランクがすべて削除されます。',
   'hud.systemStatus': 'システム状態', 'hud.mapOverview': 'マップ', 'hud.objective': '目標', 'hud.controls': '操作', 'hud.move': '移動',
-  'hud.jump': 'ジャンプ', 'hud.attack': '攻撃', 'hud.homing': 'ホーミング', 'hud.navigator': '宮殿ナビゲーター', 'hud.time': 'タイム',
+  'hud.jump': 'ジャンプ', 'hud.crouch': 'しゃがむ', 'hud.attack': '攻撃', 'hud.homing': 'ホーミング', 'hud.navigator': '宮殿ナビゲーター', 'hud.time': 'タイム',
   'hud.coins': 'コイン', 'hud.damage': 'ダメージ', 'hud.falls': '落下', 'hud.enemies': '敵', 'hud.checkpoints': 'チェックポイント', 'hud.rank': 'ランク',
   'pause.paused': 'ポーズ', 'pause.resume': '再開', 'pause.restart': 'ステージ再開', 'pause.stageSelect': 'ステージ選択へ',
   'result.title': 'ステージクリア', 'result.clearTime': 'クリアタイム', 'result.newRecord': '新記録', 'result.perfect': 'パーフェクト',
@@ -84,6 +86,8 @@ const ja: Dictionary = {
   'status.restored': 'システム復旧。任務を再開します。', 'status.fall': '進路喪失。チェックポイントから復旧します。',
   'status.critical': '致命的損傷。チェックポイントから復旧します。', 'status.goal': '門へ到達。{coins}  {time}',
   'status.homingHit': 'ホーミング攻撃成功。門へ進んでください。', 'status.homingMiss': 'ターゲット未接触。進路へ戻ってください。',
+  'status.bossPattern': 'ボスフェーズ {phase}/{max}。弾幕を回避してください。', 'status.bossVulnerable': '攻撃チャンス。今すぐボスを攻撃してください。',
+  'status.bossDefeated': 'ボスを撃破。出口が開きました。',
 }
 
 const zhTW: Dictionary = {
@@ -102,14 +106,14 @@ const zhTW: Dictionary = {
   'stageSelect.title': '選擇關卡', 'stageSelect.objective': '目標', 'stageSelect.collectibles': '收集品', 'stageSelect.bestTime': '最佳時間',
   'stageSelect.rank': '評價', 'stageSelect.activeCharacter': '出戰角色', 'stageSelect.deploy': '出戰',
   'stage.1-1.subtitle': '最初之門', 'stage.1-2.subtitle': '蒼藍中庭', 'stage.1-3.subtitle': '天空露台', 'stage.1-4.subtitle': '拱橋',
-  'stage.1-5.subtitle': '空中花園', 'stage.1-6.subtitle': '高塔', 'stage.objective.reachGoal': '抵達終點',
+  'stage.1-5.subtitle': '空中花園', 'stage.1-6.subtitle': '高塔', 'stage.objective.reachGoal': '抵達終點', 'stage.objective.defeatBoss': '擊敗 Boss',
   'settings.systemMenu': '系統選單', 'settings.title': '設定', 'settings.masterVolume': '主音量', 'settings.musicVolume': '音樂音量',
   'settings.sfxVolume': '音效音量', 'settings.language': '語言', 'settings.fullscreen': '全螢幕', 'settings.screenShake': '畫面震動',
   'settings.vibration': '控制器震動', 'settings.reset': '恢復預設值', 'settings.deleteSave': '刪除存檔',
   'settings.decrease': '降低{item}', 'settings.increase': '提高{item}', 'settings.deleteTitle': '刪除存檔？',
   'settings.deleteBody': '所有過關、解鎖、紀錄與最佳評價都將永久刪除。',
   'hud.systemStatus': '系統狀態', 'hud.mapOverview': '地圖', 'hud.objective': '目標', 'hud.controls': '操作', 'hud.move': '移動',
-  'hud.jump': '跳躍', 'hud.attack': '攻擊', 'hud.homing': '追蹤攻擊', 'hud.navigator': '宮殿導航 AI', 'hud.time': '時間',
+  'hud.jump': '跳躍', 'hud.crouch': '蹲下', 'hud.attack': '攻擊', 'hud.homing': '追蹤攻擊', 'hud.navigator': '宮殿導航 AI', 'hud.time': '時間',
   'hud.coins': '金幣', 'hud.damage': '受傷', 'hud.falls': '墜落', 'hud.enemies': '敵人', 'hud.checkpoints': '記錄點', 'hud.rank': '評價',
   'pause.paused': '暫停', 'pause.resume': '繼續', 'pause.restart': '重新開始關卡', 'pause.stageSelect': '返回選關畫面',
   'result.title': '關卡完成', 'result.clearTime': '完成時間', 'result.newRecord': '新紀錄', 'result.perfect': '完美',
@@ -121,6 +125,8 @@ const zhTW: Dictionary = {
   'status.coreRegenerated': 'Azure Core 已重新凝聚，追蹤路徑恢復。', 'status.checkpoint': '記錄點同步完成，重生位置已更新。',
   'status.restored': '系統恢復，重新開始任務。', 'status.fall': '偏離路徑，正在從記錄點恢復。', 'status.critical': '受到致命傷害，正在從記錄點恢復。',
   'status.goal': '已抵達大門。{coins}  {time}', 'status.homingHit': '追蹤攻擊命中，繼續前往大門。', 'status.homingMiss': '未命中目標，繼續前進。',
+  'status.bossPattern': 'Boss 階段 {phase}/{max}，閃避彈幕。', 'status.bossVulnerable': '攻擊窗口開啟，現在攻擊 Boss。',
+  'status.bossDefeated': 'Boss 已擊敗，出口已開啟。',
 }
 
 const ko: Dictionary = {
@@ -139,14 +145,14 @@ const ko: Dictionary = {
   'stageSelect.title': '스테이지 선택', 'stageSelect.objective': '목표', 'stageSelect.collectibles': '수집품', 'stageSelect.bestTime': '최고 기록',
   'stageSelect.rank': '랭크', 'stageSelect.activeCharacter': '출전 캐릭터', 'stageSelect.deploy': '출전',
   'stage.1-1.subtitle': '첫 번째 문', 'stage.1-2.subtitle': '푸른 안뜰', 'stage.1-3.subtitle': '하늘 테라스', 'stage.1-4.subtitle': '아치 다리',
-  'stage.1-5.subtitle': '공중 정원', 'stage.1-6.subtitle': '높은 첨탑', 'stage.objective.reachGoal': '목표 지점에 도달',
+  'stage.1-5.subtitle': '공중 정원', 'stage.1-6.subtitle': '높은 첨탑', 'stage.objective.reachGoal': '목표 지점에 도달', 'stage.objective.defeatBoss': '보스 처치',
   'settings.systemMenu': '시스템 메뉴', 'settings.title': '설정', 'settings.masterVolume': '전체 음량', 'settings.musicVolume': '음악 음량',
   'settings.sfxVolume': '효과음 음량', 'settings.language': '언어', 'settings.fullscreen': '전체 화면', 'settings.screenShake': '화면 흔들림',
   'settings.vibration': '컨트롤러 진동', 'settings.reset': '기본값 복원', 'settings.deleteSave': '저장 데이터 삭제',
   'settings.decrease': '{item} 낮추기', 'settings.increase': '{item} 높이기', 'settings.deleteTitle': '저장 데이터를 삭제할까요?',
   'settings.deleteBody': '모든 클리어, 해금, 기록 및 최고 랭크가 영구 삭제됩니다.',
   'hud.systemStatus': '시스템 상태', 'hud.mapOverview': '지도', 'hud.objective': '목표', 'hud.controls': '조작', 'hud.move': '이동',
-  'hud.jump': '점프', 'hud.attack': '공격', 'hud.homing': '호밍', 'hud.navigator': '궁전 내비게이터', 'hud.time': '시간',
+  'hud.jump': '점프', 'hud.crouch': '앉기', 'hud.attack': '공격', 'hud.homing': '호밍', 'hud.navigator': '궁전 내비게이터', 'hud.time': '시간',
   'hud.coins': '코인', 'hud.damage': '피해', 'hud.falls': '낙하', 'hud.enemies': '적', 'hud.checkpoints': '체크포인트', 'hud.rank': '랭크',
   'pause.paused': '일시 정지', 'pause.resume': '계속', 'pause.restart': '스테이지 재시작', 'pause.stageSelect': '스테이지 선택으로',
   'result.title': '스테이지 클리어', 'result.clearTime': '클리어 시간', 'result.newRecord': '신기록', 'result.perfect': '완벽',
@@ -158,6 +164,8 @@ const ko: Dictionary = {
   'status.coreRegenerated': 'Azure Core 재생 완료. 호밍 경로가 복구되었습니다.', 'status.checkpoint': '체크포인트 동기화 완료.',
   'status.restored': '시스템 복구. 임무를 재개합니다.', 'status.fall': '경로 이탈. 체크포인트에서 복구합니다.', 'status.critical': '치명적 피해. 체크포인트에서 복구합니다.',
   'status.goal': '문에 도달했습니다. {coins}  {time}', 'status.homingHit': '호밍 공격 성공. 문으로 이동하세요.', 'status.homingMiss': '대상 접촉 실패. 경로로 복귀하세요.',
+  'status.bossPattern': '보스 페이즈 {phase}/{max}. 탄막을 피하세요.', 'status.bossVulnerable': '공격 기회가 열렸습니다. 지금 보스를 공격하세요.',
+  'status.bossDefeated': '보스를 처치했습니다. 출구가 열렸습니다.',
 }
 
 const dictionaries: Record<Locale, Dictionary> = { en, ja, 'zh-TW': zhTW, ko }
