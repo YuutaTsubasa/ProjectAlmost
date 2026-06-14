@@ -86,6 +86,7 @@ export class GameplayScene extends Phaser.Scene {
   private stageTimeMs = 0
   private timerStarted = false
   private stageInputArmed = false
+  private isAvgLocked = false
   private gamepadJumpDown = false
   private gamepadAttackDown = false
   private virtualMoveX = 0
@@ -273,9 +274,25 @@ export class GameplayScene extends Phaser.Scene {
 
     this.dispatchHudState()
     window.addEventListener('projectrun:virtual-input', this.handleVirtualInput)
+    window.addEventListener('projectrun:avg-state', this.handleAvgState)
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {
       window.removeEventListener('projectrun:virtual-input', this.handleVirtualInput)
+      window.removeEventListener('projectrun:avg-state', this.handleAvgState)
     })
+  }
+
+  private handleAvgState = (event: Event): void => {
+    this.isAvgLocked = Boolean((event as CustomEvent<{ active: boolean }>).detail.active)
+    this.player.setAccelerationX(0)
+    this.virtualMoveX = 0
+    this.virtualCrouch = false
+    this.virtualJumpPressed = false
+    this.virtualAttackPressed = false
+    this.input.keyboard?.resetKeys()
+    if (!this.isAvgLocked) {
+      this.stageInputArmed = false
+      this.game.loop.resetDelta()
+    }
   }
 
   private handleVirtualInput = (event: Event): void => {
@@ -312,6 +329,7 @@ export class GameplayScene extends Phaser.Scene {
     this.stageTimeMs = 0
     this.timerStarted = false
     this.stageInputArmed = false
+    this.isAvgLocked = false
     this.gamepadJumpDown = false
     this.gamepadAttackDown = false
     this.virtualMoveX = 0
@@ -339,6 +357,12 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   update(): void {
+    if (this.isAvgLocked) {
+      this.player.setAccelerationX(0)
+      this.updateParallaxBackground()
+      return
+    }
+
     const pad = Array.from(navigator.getGamepads?.() ?? []).find((candidate): candidate is Gamepad => candidate !== null)
     const padLeft = Boolean(pad && (pad.axes[0] < -0.35 || pad.buttons[14]?.pressed))
     const padRight = Boolean(pad && (pad.axes[0] > 0.35 || pad.buttons[15]?.pressed))

@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount, tick } from 'svelte'
   import type Phaser from 'phaser'
+  import AvgOverlay from './AvgOverlay.svelte'
   import StageSelect from './StageSelect.svelte'
   import StageResult from './StageResult.svelte'
   import SettingsPanel, { type GameSettings } from './SettingsPanel.svelte'
@@ -9,6 +10,8 @@
   import WorldSelect from './WorldSelect.svelte'
   import { IMAGE_ASSETS, PRELOAD_ASSETS, SFX_ASSETS, type MusicTrack } from './game/assets/assetManifest'
   import { createMusicController, type MusicController } from './game/audio/musicController'
+  import { getStageIntroSequence } from './game/avg/avgRegistry'
+  import type { AvgSequence } from './game/avg/avgTypes'
   import { createPlatformerGame } from './game/createGame'
   import { deleteSave, loadSave, recordStageClear, type SaveData } from './game/save/saveData'
   import { getNextStageId, type StageId } from './game/stages/stageRegistry'
@@ -61,6 +64,8 @@
   let deleteSaveConfirmOpen = false
   let deleteSaveConfirmSelection = 0
   let resultSelection = 0
+  let activeAvg: AvgSequence | undefined
+  let avgLineIndex = 0
   let saveData: SaveData = { version: 1, stageRecords: {} }
   let gamepadFrame = 0
   let gamepadPrevious = new Set<number>()
@@ -323,6 +328,8 @@
     music?.reset('result')
     syncMusic()
     await createStageGame()
+    resumeStageMusic()
+    beginStageIntro()
     await new Promise((resolve) => window.setTimeout(resolve, 420))
     resetGameLoopTiming()
     transitionPhase = 'reveal'
@@ -405,6 +412,7 @@
     hideVirtualControls()
     game?.destroy(true)
     game = undefined
+    activeAvg = undefined
     paused = false
     hud = { ...hud, coins: 0, damageTaken: 0, falls: 0, enemiesDefeated: 0, checkpointsReached: 0, time: '00:00.00', rank: '--', cleared: false }
     screen = 'select'
@@ -412,7 +420,7 @@
   }
 
   function pauseGame() {
-    if (!game || hud.cleared) return
+    if (!game || hud.cleared || activeAvg) return
     hideVirtualControls()
     playSfx('ui-confirm')
     game.scene.pause('GameplayScene')
@@ -446,6 +454,47 @@
     resetGameLoopTiming()
   }
 
+  function resumeStageMusic() {
+    syncMusic()
+    music?.nudge()
+  }
+
+  function beginStageIntro() {
+    const sequence = getStageIntroSequence(selectedStageId)
+    if (!sequence || !game) {
+      activeAvg = undefined
+      return
+    }
+
+    hideVirtualControls()
+    activeAvg = sequence
+    avgLineIndex = 0
+    window.dispatchEvent(new CustomEvent('projectrun:avg-state', { detail: { active: true } }))
+    window.requestAnimationFrame(() => {
+      if (activeAvg?.id === sequence.id) {
+        window.dispatchEvent(new CustomEvent('projectrun:avg-state', { detail: { active: true } }))
+      }
+    })
+  }
+
+  function advanceAvg() {
+    if (!activeAvg) return
+    playSfx('ui-confirm')
+    if (avgLineIndex < activeAvg.lines.length - 1) {
+      avgLineIndex += 1
+      return
+    }
+    finishAvg()
+  }
+
+  function finishAvg() {
+    if (!activeAvg) return
+    activeAvg = undefined
+    avgLineIndex = 0
+    window.dispatchEvent(new CustomEvent('projectrun:avg-state', { detail: { active: false } }))
+    resetGameLoopTiming()
+  }
+
   async function restartStage() {
     if (!game || transitionPhase !== 'idle') return
     hideVirtualControls()
@@ -461,6 +510,8 @@
     hud = { ...hud, coins: 0, damageTaken: 0, falls: 0, enemiesDefeated: 0, checkpointsReached: 0, time: '00:00.00', rank: '--', cleared: false }
     syncMusic()
     await createStageGame()
+    resumeStageMusic()
+    beginStageIntro()
     await new Promise((resolve) => window.setTimeout(resolve, 420))
     resetGameLoopTiming()
     transitionPhase = 'reveal'
@@ -487,6 +538,8 @@
     hud = { ...hud, coins: 0, damageTaken: 0, falls: 0, enemiesDefeated: 0, checkpointsReached: 0, time: '00:00.00', rank: '--', cleared: false }
     syncMusic()
     await createStageGame()
+    resumeStageMusic()
+    beginStageIntro()
     await new Promise((resolve) => window.setTimeout(resolve, 420))
     resetGameLoopTiming()
     transitionPhase = 'reveal'
@@ -558,6 +611,14 @@
     }
 
     if (screen !== 'game') return
+
+    if (activeAvg) {
+      event.preventDefault()
+      event.stopImmediatePropagation()
+      if (event.key === 'Escape') finishAvg()
+      else if (event.code === 'Space' || event.key === 'Enter') advanceAvg()
+      return
+    }
 
     if (hud.cleared) {
       if (event.key === 'Escape') {
@@ -642,7 +703,7 @@
   }
 
   function showVirtualControls() {
-    if (screen === 'game' && !paused && !hud.cleared) virtualControlsVisible = true
+    if (screen === 'game' && !paused && !hud.cleared && !activeAvg) virtualControlsVisible = true
   }
 
   function hideVirtualControls() {
@@ -691,6 +752,9 @@
         if (justPressed(15) || (horizontal > 0 && gamepadAxisReady)) dispatchGamepadKey('ArrowRight')
         if (justPressed(0)) dispatchGamepadKey('Enter')
         if (justPressed(1)) dispatchGamepadKey('Escape')
+      } else if (activeAvg) {
+        if (justPressed(0)) dispatchGamepadKey('Enter')
+        if (justPressed(1) || justPressed(9)) dispatchGamepadKey('Escape')
       } else if (hud.cleared) {
         if (justPressed(14) || (horizontal < 0 && gamepadAxisReady)) dispatchGamepadKey('ArrowLeft')
         if (justPressed(15) || (horizontal > 0 && gamepadAxisReady)) dispatchGamepadKey('ArrowRight')
@@ -983,6 +1047,15 @@
             />
           {/if}
 
+          {#if activeAvg}
+            <AvgOverlay
+              sequence={activeAvg}
+              lineIndex={avgLineIndex}
+              onAdvance={advanceAvg}
+              onSkip={finishAvg}
+            />
+          {/if}
+
           {#if paused}
             <div class="pause-overlay" role="presentation" onclick={settingsOpen ? closeSettingsFromBackdrop : undefined}>
               {#if settingsOpen}
@@ -1022,7 +1095,7 @@
             </div>
           {/if}
         </div>
-        {#if virtualControlsVisible && !paused && !hud.cleared}
+        {#if virtualControlsVisible && !paused && !hud.cleared && !activeAvg}
           <VirtualControls onPause={pauseGame} />
         {/if}
       </div>

@@ -1,6 +1,8 @@
 export const IMAGE_ASSETS = {
   aiNavigator: '/assets/hud/ai-navigator.png',
   playerPortrait: '/assets/hud/player-portrait.png',
+  yuutaDialogue: '/assets/avg/yuuta-dialogue.png',
+  whitePriestessDialogue: '/assets/avg/white-priestess-dialogue.png',
   palaceFarBackground: '/assets/maps/white_palace_far_bg.png',
   palaceMidBackground: '/assets/maps/white_palace_mid_bg_loop.png',
   palaceSky: '/assets/maps/white_palace_sky.png',

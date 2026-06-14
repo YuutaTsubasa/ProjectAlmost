@@ -45,6 +45,13 @@ const en = {
   'status.homingMiss': 'No target contact. Resume course.',
   'status.bossPattern': 'Boss phase {phase}/{max}. Evade the barrage.', 'status.bossVulnerable': 'Attack window open. Strike the Boss now.',
   'status.bossDefeated': 'Boss signal defeated. The exit is open.',
+  'avg.skip': 'Skip', 'avg.speaker.yuuta': 'Yuuta Tsubasa', 'avg.speaker.whitePriestess': 'White Priestess',
+  'avg.1-6.line1': 'So, you are the one who reached the High Spire.',
+  'avg.1-6.line2': 'If you are this palace’s guardian, please stand aside.',
+  'avg.1-6.line3': 'I cannot. The palace light no longer recognizes those who return.',
+  'avg.1-6.line4': 'Then I will prove I can pass through, in my own way.',
+  'avg.1-6.line5': 'Very well. Cross my celestial rings, and show me your resolve.',
+  'avg.1-6.line6': 'I will reach the exit behind you.',
 } as const
 
 type TranslationKey = keyof typeof en
@@ -88,6 +95,13 @@ const ja: Dictionary = {
   'status.homingHit': 'ホーミング攻撃成功。門へ進んでください。', 'status.homingMiss': 'ターゲット未接触。進路へ戻ってください。',
   'status.bossPattern': 'ボスフェーズ {phase}/{max}。弾幕を回避してください。', 'status.bossVulnerable': '攻撃チャンス。今すぐボスを攻撃してください。',
   'status.bossDefeated': 'ボスを撃破。出口が開きました。',
+  'avg.skip': 'スキップ', 'avg.speaker.yuuta': 'ユウタ・ツバサ', 'avg.speaker.whitePriestess': '白の祭司',
+  'avg.1-6.line1': '高き尖塔へ辿り着いたのは、あなたなのですね。',
+  'avg.1-6.line2': 'この宮殿の守護者なら、道を開けてください。',
+  'avg.1-6.line3': 'できません。宮殿の光は、帰還者を見分けられなくなりました。',
+  'avg.1-6.line4': 'ならば、自分のやり方で通れることを証明します。',
+  'avg.1-6.line5': 'よいでしょう。私の星環を越え、その決意を示してください。',
+  'avg.1-6.line6': 'あなたの背後にある出口へ、必ず辿り着きます。',
 }
 
 const zhTW: Dictionary = {
@@ -127,6 +141,13 @@ const zhTW: Dictionary = {
   'status.goal': '已抵達大門。{coins}  {time}', 'status.homingHit': '追蹤攻擊命中，繼續前往大門。', 'status.homingMiss': '未命中目標，繼續前進。',
   'status.bossPattern': 'Boss 階段 {phase}/{max}，閃避彈幕。', 'status.bossVulnerable': '攻擊窗口開啟，現在攻擊 Boss。',
   'status.bossDefeated': 'Boss 已擊敗，出口已開啟。',
+  'avg.skip': '跳過', 'avg.speaker.yuuta': 'Yuuta Tsubasa', 'avg.speaker.whitePriestess': '白之祭司',
+  'avg.1-6.line1': '所以，抵達高塔的人是你。',
+  'avg.1-6.line2': '如果你是守護這座宮殿的人，請讓開。',
+  'avg.1-6.line3': '我不能。宮殿的光，早已不再辨認誰是歸來者。',
+  'avg.1-6.line4': '那我就用自己的方式，證明我能通過。',
+  'avg.1-6.line5': '很好。穿過我的星環，讓我看看你的決意。',
+  'avg.1-6.line6': '我會抵達你身後的出口。',
 }
 
 const ko: Dictionary = {
@@ -166,6 +187,13 @@ const ko: Dictionary = {
   'status.goal': '문에 도달했습니다. {coins}  {time}', 'status.homingHit': '호밍 공격 성공. 문으로 이동하세요.', 'status.homingMiss': '대상 접촉 실패. 경로로 복귀하세요.',
   'status.bossPattern': '보스 페이즈 {phase}/{max}. 탄막을 피하세요.', 'status.bossVulnerable': '공격 기회가 열렸습니다. 지금 보스를 공격하세요.',
   'status.bossDefeated': '보스를 처치했습니다. 출구가 열렸습니다.',
+  'avg.skip': '건너뛰기', 'avg.speaker.yuuta': '유우타 츠바사', 'avg.speaker.whitePriestess': '백의 사제',
+  'avg.1-6.line1': '높은 첨탑에 도달한 자가 바로 당신이군요.',
+  'avg.1-6.line2': '이 궁전의 수호자라면 길을 비켜 주세요.',
+  'avg.1-6.line3': '그럴 수 없습니다. 궁전의 빛은 이제 귀환자를 구별하지 못합니다.',
+  'avg.1-6.line4': '그렇다면 제 방식으로 통과할 수 있음을 증명하겠습니다.',
+  'avg.1-6.line5': '좋습니다. 제 성환을 넘어 당신의 결의를 보여 주세요.',
+  'avg.1-6.line6': '당신 뒤의 출구까지 반드시 도달하겠습니다.',
 }
 
 const dictionaries: Record<Locale, Dictionary> = { en, ja, 'zh-TW': zhTW, ko }
