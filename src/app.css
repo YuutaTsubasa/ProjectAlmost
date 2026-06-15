@@ -39,6 +39,7 @@
 }
 
 :root {
+  --app-height: 100svh;
   --ink: #17324f;
   --muted: #5c7592;
   --panel: rgba(247, 252, 255, 0.78);
@@ -59,11 +60,20 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+@supports (height: 100dvh) {
+  :root {
+    --app-height: 100dvh;
+  }
+}
+
+html,
 body {
+  width: 100%;
+  height: var(--app-height);
   min-width: 320px;
-  min-height: 100svh;
   margin: 0;
   overflow: hidden;
+  overscroll-behavior: none;
   background: #05080f;
 }
 
@@ -73,7 +83,9 @@ input {
 }
 
 #app {
-  min-height: 100svh;
+  width: 100%;
+  height: var(--app-height);
+  overflow: hidden;
 }
 
 .page-transition {
@@ -82,7 +94,10 @@ input {
   left: 50%;
   z-index: 100;
   display: grid;
-  width: min(100vw, calc(100svh * 16 / 9));
+  width: min(
+    calc(100vw - env(safe-area-inset-left) - env(safe-area-inset-right)),
+    calc((var(--app-height) - env(safe-area-inset-top) - env(safe-area-inset-bottom)) * 16 / 9)
+  );
   aspect-ratio: 16 / 9;
   place-items: center;
   transform: translate(-50%, -50%);
@@ -191,18 +206,58 @@ input {
 
 .shell {
   position: relative;
+  isolation: isolate;
   box-sizing: border-box;
   display: grid;
   width: 100%;
-  min-height: 100svh;
+  height: var(--app-height);
   margin: 0 auto;
   place-items: center;
-  padding: 0;
+  padding:
+    env(safe-area-inset-top)
+    env(safe-area-inset-right)
+    env(safe-area-inset-bottom)
+    env(safe-area-inset-left);
+  overflow: hidden;
+  background: #c8e5f5;
+  touch-action: none;
+  overscroll-behavior: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.shell::before,
+.shell::after {
+  content: "";
+  position: absolute;
+  inset: -2%;
+  z-index: -2;
+  pointer-events: none;
+}
+
+.shell::before {
+  background: var(--shell-backdrop) center / cover no-repeat;
+  filter: saturate(0.7) brightness(0.82);
+  transform: scale(1.04);
+}
+
+.shell::after {
+  z-index: -1;
+  background: rgba(207, 237, 251, 0.54);
+  box-shadow: inset 0 0 18vw rgba(34, 91, 145, 0.34);
 }
 
 .game-panel {
   position: relative;
-  width: min(100vw, calc(100svh * 16 / 9));
+  z-index: 1;
+  width: min(
+    calc(100vw - env(safe-area-inset-left) - env(safe-area-inset-right)),
+    calc((var(--app-height) - env(safe-area-inset-top) - env(safe-area-inset-bottom)) * 16 / 9)
+  );
+  max-width: 100%;
+  max-height: 100%;
   aspect-ratio: 16 / 9;
   overflow: hidden;
   background: #bfe0f7;
@@ -217,7 +272,7 @@ input {
   color: #244f86;
   background:
     linear-gradient(rgba(235, 249, 255, 0.84), rgba(198, 230, 249, 0.94)),
-    url("/assets/maps/white_palace_stage_select.png") center / cover;
+    url("/assets/maps/white_palace_stage_select.webp") center / cover;
   font-family: Rajdhani, "Segoe UI", sans-serif;
   text-align: center;
 }
@@ -643,6 +698,11 @@ input {
   overflow: hidden;
   background: #cfeeff;
   container-type: size;
+  touch-action: none;
+  overscroll-behavior: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
 .play-surface .game-host {
@@ -2485,27 +2545,27 @@ input {
 }
 
 .select-world {
-  background: url("/assets/maps/white_palace_stage_select.png") center / cover no-repeat;
+  background: url("/assets/maps/white_palace_stage_select.webp") center / cover no-repeat;
 }
 
 .select-world.world-2 {
-  background-image: url("/assets/maps/emerald_sanctuary_stage_select.png");
+  background-image: url("/assets/maps/emerald_sanctuary_stage_select.webp");
 }
 
 .select-world.world-3 {
-  background-image: url("/assets/maps/cerulean_depths_stage_select.png");
+  background-image: url("/assets/maps/cerulean_depths_stage_select.webp");
 }
 
 .select-world.world-4 {
-  background-image: url("/assets/maps/frostveil_peaks_stage_select.png");
+  background-image: url("/assets/maps/frostveil_peaks_stage_select.webp");
 }
 
 .select-world.world-5 {
-  background-image: url("/assets/maps/emberfall_caldera_stage_select.png");
+  background-image: url("/assets/maps/emberfall_caldera_stage_select.webp");
 }
 
 .select-world.world-6 {
-  background-image: url("/assets/maps/abyssal_hollow_stage_select.png");
+  background-image: url("/assets/maps/abyssal_hollow_stage_select.webp");
 }
 
 .select-sky {
@@ -2613,8 +2673,8 @@ input {
   position: absolute;
   inset: 0;
   background:
-    url("/assets/maps/white_palace_mid_bg_loop.png") center bottom / auto 76% repeat-x,
-    url("/assets/maps/white_palace_sky.png") center / cover;
+    url("/assets/maps/white_palace_mid_bg_loop.webp") center bottom / auto 76% repeat-x,
+    url("/assets/maps/white_palace_sky.webp") center / cover;
 }
 
 .preview-lock {
@@ -3273,41 +3333,41 @@ input {
 .theme-volcano { --theme-color: #b54f35; --theme-surface: #d17a55; --theme-pattern: linear-gradient(145deg, rgba(255,205,132,.28), transparent 48%, rgba(91,26,24,.5)); }
 .theme-abyss { --theme-color: #5b467c; --theme-surface: #76618d; --theme-pattern: linear-gradient(145deg, rgba(201,174,231,.24), transparent 48%, rgba(27,19,48,.58)); }
 
-.world-select.theme-palace { --world-background: url("/assets/maps/white_palace_stage_select.png"); }
-.world-select.theme-forest { --world-background: url("/assets/maps/emerald_sanctuary_stage_select.png"); }
-.world-select.theme-ocean { --world-background: url("/assets/maps/cerulean_depths_stage_select.png"); }
-.world-select.theme-snow { --world-background: url("/assets/maps/frostveil_peaks_stage_select.png"); }
-.world-select.theme-volcano { --world-background: url("/assets/maps/emberfall_caldera_stage_select.png"); }
-.world-select.theme-abyss { --world-background: url("/assets/maps/abyssal_hollow_stage_select.png"); }
+.world-select.theme-palace { --world-background: url("/assets/maps/white_palace_stage_select.webp"); }
+.world-select.theme-forest { --world-background: url("/assets/maps/emerald_sanctuary_stage_select.webp"); }
+.world-select.theme-ocean { --world-background: url("/assets/maps/cerulean_depths_stage_select.webp"); }
+.world-select.theme-snow { --world-background: url("/assets/maps/frostveil_peaks_stage_select.webp"); }
+.world-select.theme-volcano { --world-background: url("/assets/maps/emberfall_caldera_stage_select.webp"); }
+.world-select.theme-abyss { --world-background: url("/assets/maps/abyssal_hollow_stage_select.webp"); }
 
 .world-preview.theme-palace,
 .world-card.theme-palace {
-  background: url("/assets/maps/white_palace_stage_select.png") center / cover no-repeat;
+  background: url("/assets/maps/white_palace_stage_select.webp") center / cover no-repeat;
 }
 
 .world-preview.theme-forest,
 .world-card.theme-forest {
-  background: url("/assets/maps/emerald_sanctuary_stage_select.png") center / cover no-repeat;
+  background: url("/assets/maps/emerald_sanctuary_stage_select.webp") center / cover no-repeat;
 }
 
 .world-preview.theme-ocean,
 .world-card.theme-ocean {
-  background: url("/assets/maps/cerulean_depths_stage_select.png") center / cover no-repeat;
+  background: url("/assets/maps/cerulean_depths_stage_select.webp") center / cover no-repeat;
 }
 
 .world-preview.theme-snow,
 .world-card.theme-snow {
-  background: url("/assets/maps/frostveil_peaks_stage_select.png") center / cover no-repeat;
+  background: url("/assets/maps/frostveil_peaks_stage_select.webp") center / cover no-repeat;
 }
 
 .world-preview.theme-volcano,
 .world-card.theme-volcano {
-  background: url("/assets/maps/emberfall_caldera_stage_select.png") center / cover no-repeat;
+  background: url("/assets/maps/emberfall_caldera_stage_select.webp") center / cover no-repeat;
 }
 
 .world-preview.theme-abyss,
 .world-card.theme-abyss {
-  background: url("/assets/maps/abyssal_hollow_stage_select.png") center / cover no-repeat;
+  background: url("/assets/maps/abyssal_hollow_stage_select.webp") center / cover no-repeat;
 }
 
 .world-controls {
@@ -3609,12 +3669,12 @@ input {
 .world-select.theme-volcano { --world-accent: #ff975d; }
 .world-select.theme-abyss { --world-accent: #ca89f5; }
 
-.world-thumb.theme-palace .world-thumb-art { background-image: url("/assets/maps/white_palace_stage_select.png"); }
-.world-thumb.theme-forest .world-thumb-art { background-image: url("/assets/maps/emerald_sanctuary_stage_select.png"); }
-.world-thumb.theme-ocean .world-thumb-art { background-image: url("/assets/maps/cerulean_depths_stage_select.png"); }
-.world-thumb.theme-snow .world-thumb-art { background-image: url("/assets/maps/frostveil_peaks_stage_select.png"); }
-.world-thumb.theme-volcano .world-thumb-art { background-image: url("/assets/maps/emberfall_caldera_stage_select.png"); }
-.world-thumb.theme-abyss .world-thumb-art { background-image: url("/assets/maps/abyssal_hollow_stage_select.png"); }
+.world-thumb.theme-palace .world-thumb-art { background-image: url("/assets/maps/white_palace_stage_select.webp"); }
+.world-thumb.theme-forest .world-thumb-art { background-image: url("/assets/maps/emerald_sanctuary_stage_select.webp"); }
+.world-thumb.theme-ocean .world-thumb-art { background-image: url("/assets/maps/cerulean_depths_stage_select.webp"); }
+.world-thumb.theme-snow .world-thumb-art { background-image: url("/assets/maps/frostveil_peaks_stage_select.webp"); }
+.world-thumb.theme-volcano .world-thumb-art { background-image: url("/assets/maps/emberfall_caldera_stage_select.webp"); }
+.world-thumb.theme-abyss .world-thumb-art { background-image: url("/assets/maps/abyssal_hollow_stage_select.webp"); }
 
 .world-select.confirming .world-cinematic-copy,
 .world-select.confirming .world-rail,
@@ -3965,7 +4025,11 @@ input {
 
 @media (max-width: 800px) {
   .shell {
-    padding: 18px;
+    padding:
+      env(safe-area-inset-top)
+      env(safe-area-inset-right)
+      env(safe-area-inset-bottom)
+      env(safe-area-inset-left);
   }
 
   .hero-panel {

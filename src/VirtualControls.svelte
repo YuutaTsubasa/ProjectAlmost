@@ -26,16 +26,19 @@
   }
 
   function startStick(event: PointerEvent) {
+    event.preventDefault()
     stickPointerId = event.pointerId
     ;(event.currentTarget as HTMLElement).setPointerCapture(event.pointerId)
     updateStick(event)
   }
 
   function moveStick(event: PointerEvent) {
+    event.preventDefault()
     if (event.pointerId === stickPointerId) updateStick(event)
   }
 
   function releaseStick(event: PointerEvent) {
+    event.preventDefault()
     if (event.pointerId !== stickPointerId) return
     stickPointerId = undefined
     stickX = 0

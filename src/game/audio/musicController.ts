@@ -200,7 +200,7 @@ export class MusicController {
     const startedAt = performance.now()
 
     const step = (now: number) => {
-      const progress = Math.min(1, (now - startedAt) / duration)
+      const progress = Math.max(0, Math.min(1, (now - startedAt) / duration))
       audio.volume = startVolume + (target - startVolume) * progress
       if (progress < 1) {
         this.fadeFrame = window.requestAnimationFrame(step)

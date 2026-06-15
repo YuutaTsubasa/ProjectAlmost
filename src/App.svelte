@@ -8,7 +8,8 @@
   import TitleScreen from './TitleScreen.svelte'
   import VirtualControls from './VirtualControls.svelte'
   import WorldSelect from './WorldSelect.svelte'
-  import { IMAGE_ASSETS, PRELOAD_ASSETS, SFX_ASSETS, type MusicTrack } from './game/assets/assetManifest'
+  import { IMAGE_ASSETS, SFX_ASSETS, type MusicTrack } from './game/assets/assetManifest'
+  import { bootAssets, getWorldAssets, preloadAssets, preloadInBackground, sharedGameplayAssets, worldSelectAssets } from './game/assets/preloader'
   import { createMusicController, type MusicController } from './game/audio/musicController'
   import { getStageIntroSequence } from './game/avg/avgRegistry'
   import type { AvgSequence } from './game/avg/avgTypes'
@@ -74,9 +75,7 @@
   let music: MusicController | undefined
   const sfx = new Map<string, HTMLAudioElement>()
   const BASE_MUSIC_VOLUME = 0.42
-  const ASSET_PRELOAD_TIMEOUT_MS = 8000
   const SETTINGS_KEY = 'project-almost:settings'
-  const IMAGE_ASSET_PATHS = new Set<string>(Object.values(IMAGE_ASSETS))
   const DEFAULT_SETTINGS: GameSettings = {
     masterVolume: 100,
     musicVolume: 80,
@@ -135,6 +134,19 @@
   function getStageMusicTrack(stageId = selectedStageId): MusicTrack {
     const world = stageId.split('-')[0].padStart(2, '0')
     return `world${world}${stageId.endsWith('-6') ? 'Boss' : 'Bgm'}` as MusicTrack
+  }
+
+  function getShellBackdrop() {
+    if (screen === 'title') return IMAGE_ASSETS.titleBackground
+    const worldBackdrops = [
+      IMAGE_ASSETS.stageSelectBackground,
+      IMAGE_ASSETS.emeraldSanctuaryStageSelect,
+      IMAGE_ASSETS.ceruleanDepthsStageSelect,
+      IMAGE_ASSETS.frostveilPeaksStageSelect,
+      IMAGE_ASSETS.emberfallCalderaStageSelect,
+      IMAGE_ASSETS.abyssalHollowStageSelect,
+    ]
+    return worldBackdrops[selectedWorldIndex - 1] ?? IMAGE_ASSETS.stageSelectBackground
   }
 
   function syncMusic() {
@@ -271,49 +283,14 @@
   }
 
   async function preloadGameAssets() {
-    let completed = 0
-    const reportComplete = () => {
-      completed += 1
-      bootProgress = Math.round((completed / (PRELOAD_ASSETS.length + 1)) * 100)
-    }
-
-    const assetLoads = PRELOAD_ASSETS.map(async (source) => {
-      let timeoutId: number | undefined
-      try {
-        await Promise.race([
-          (async () => {
-            const response = await fetch(source, { cache: 'force-cache' })
-            if (!response.ok) throw new Error(`${response.status} ${response.statusText}`)
-            await response.blob()
-
-            if (IMAGE_ASSET_PATHS.has(source)) {
-              const image = new Image()
-              image.src = source
-              await image.decode()
-            }
-          })(),
-          new Promise<never>((_, reject) => {
-            timeoutId = window.setTimeout(
-              () => reject(new Error(`Timed out after ${ASSET_PRELOAD_TIMEOUT_MS}ms`)),
-              ASSET_PRELOAD_TIMEOUT_MS,
-            )
-          }),
-        ])
-      } catch (error) {
-        console.warn(`Unable to preload ${source}`, error)
-      } finally {
-        if (timeoutId !== undefined) window.clearTimeout(timeoutId)
-        reportComplete()
-      }
+    await preloadAssets(bootAssets, (completed, total) => {
+      bootProgress = Math.round((completed / Math.max(1, total)) * 100)
     })
-
-    await Promise.all([
-      ...assetLoads,
-      document.fonts.ready.then(reportComplete),
-    ])
+    await document.fonts.ready
     bootProgress = 100
     await new Promise((resolve) => window.setTimeout(resolve, 180))
     bootReady = true
+    preloadInBackground([...worldSelectAssets, ...sharedGameplayAssets, ...getWorldAssets(1)])
   }
 
   async function enterStage(stageId: StageId) {
@@ -322,6 +299,7 @@
     selectedStageId = stageId
     transitionPhase = 'cover'
     await new Promise((resolve) => window.setTimeout(resolve, 260))
+    await preloadAssets([...sharedGameplayAssets, ...getWorldAssets(Number(stageId.split('-')[0]))])
     screen = 'game'
     paused = false
     resultSelection = 0
@@ -340,6 +318,7 @@
 
   async function enterStageSelect() {
     if (transitionPhase !== 'idle') return
+    preloadInBackground([...worldSelectAssets, ...getWorldAssets(selectedWorldIndex)])
     transitionStyle = 'world-stage-forward'
     transitionPhase = 'cover'
     await new Promise((resolve) => window.setTimeout(resolve, 300))
@@ -812,8 +791,13 @@
     const handleFullscreenChange = () => {
       settings = { ...settings, fullscreen: Boolean(document.fullscreenElement) }
     }
+    const preventBrowserGesture = (event: Event) => event.preventDefault()
     document.addEventListener('fullscreenchange', handleFullscreenChange)
     document.addEventListener('visibilitychange', handleVisibilityChange)
+    document.addEventListener('gesturestart', preventBrowserGesture, { passive: false })
+    document.addEventListener('gesturechange', preventBrowserGesture, { passive: false })
+    document.addEventListener('gestureend', preventBrowserGesture, { passive: false })
+    document.addEventListener('contextmenu', preventBrowserGesture)
     gamepadFrame = window.requestAnimationFrame(pollGamepad)
     void preloadGameAssets()
 
@@ -826,6 +810,10 @@
       window.removeEventListener('touchstart', unlockMusic)
       document.removeEventListener('fullscreenchange', handleFullscreenChange)
       document.removeEventListener('visibilitychange', handleVisibilityChange)
+      document.removeEventListener('gesturestart', preventBrowserGesture)
+      document.removeEventListener('gesturechange', preventBrowserGesture)
+      document.removeEventListener('gestureend', preventBrowserGesture)
+      document.removeEventListener('contextmenu', preventBrowserGesture)
       window.cancelAnimationFrame(gamepadFrame)
       music?.destroy()
       music = undefined
@@ -834,7 +822,7 @@
   })
 </script>
 
-<main class="shell">
+<main class="shell" style={`--shell-backdrop:url("${getShellBackdrop()}")`}>
   {#if !bootReady}
     <section class="game-panel boot-screen" aria-label="Loading game">
       <div class="boot-emblem">✦</div>
@@ -874,6 +862,7 @@
         onSelect={(worldIndex) => {
           selectedWorldIndex = worldIndex
           syncMusic()
+          preloadInBackground(getWorldAssets(worldIndex))
         }}
         onEnter={(worldIndex) => {
           selectedWorldIndex = worldIndex
