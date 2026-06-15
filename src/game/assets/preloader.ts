@@ -6,6 +6,7 @@ const IMAGE_EXTENSIONS = /\.webp$/i
 const AUDIO_EXTENSIONS = /\.(?:mp3|ogg|wav)$/i
 const FONT_EXTENSIONS = /\.woff2$/i
 const PRELOAD_CONCURRENCY = 4
+const ASSET_PRELOAD_TIMEOUT_MS = 8000
 
 const loadedAssets = new Set<string>()
 const pendingAssets = new Map<string, Promise<void>>()
@@ -49,12 +50,29 @@ async function fetchAndCache(source: string): Promise<void> {
   await response.blob()
 }
 
+async function withTimeout(source: string, promise: Promise<void>): Promise<void> {
+  let timeoutId: number | undefined
+  try {
+    await Promise.race([
+      promise,
+      new Promise<never>((_, reject) => {
+        timeoutId = window.setTimeout(
+          () => reject(new Error(`Timed out after ${ASSET_PRELOAD_TIMEOUT_MS}ms`)),
+          ASSET_PRELOAD_TIMEOUT_MS,
+        )
+      }),
+    ])
+  } finally {
+    if (timeoutId !== undefined) window.clearTimeout(timeoutId)
+  }
+}
+
 function loadAsset(source: string): Promise<void> {
   if (loadedAssets.has(source)) return Promise.resolve()
   const existing = pendingAssets.get(source)
   if (existing) return existing
 
-  const pending = (async () => {
+  const pending = withTimeout(source, (async () => {
     if (IMAGE_EXTENSIONS.test(source)) {
       const image = new Image()
       image.src = source
@@ -65,7 +83,7 @@ function loadAsset(source: string): Promise<void> {
       await fetchAndCache(source)
     }
     loadedAssets.add(source)
-  })().finally(() => pendingAssets.delete(source))
+  })()).finally(() => pendingAssets.delete(source))
 
   pendingAssets.set(source, pending)
   return pending

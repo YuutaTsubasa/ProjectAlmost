@@ -915,6 +915,9 @@ input {
 }
 
 .virtual-controls {
+  --touch-edge-inset: clamp(18px, 3cqh, 42px);
+  --touch-bottom-inset: max(19.5cqh, calc(env(safe-area-inset-bottom) + 17.5cqh));
+
   position: absolute;
   z-index: 52;
   inset: 0;
@@ -932,8 +935,8 @@ input {
 
 .virtual-stick {
   position: absolute;
-  bottom: max(19.5cqh, calc(env(safe-area-inset-bottom) + 17.5cqh));
-  left: max(3cqw, env(safe-area-inset-left));
+  bottom: var(--touch-bottom-inset);
+  left: calc(env(safe-area-inset-left) + var(--touch-edge-inset));
   width: clamp(104px, 11cqw, 176px);
   aspect-ratio: 1;
   border: 2px solid rgba(255, 255, 255, 0.72);
@@ -982,8 +985,8 @@ input {
 
 .virtual-actions {
   position: absolute;
-  right: max(3cqw, env(safe-area-inset-right));
-  bottom: max(19.5cqh, calc(env(safe-area-inset-bottom) + 17.5cqh));
+  right: calc(env(safe-area-inset-right) + var(--touch-edge-inset));
+  bottom: var(--touch-bottom-inset);
   display: flex;
   gap: clamp(12px, 1.2cqw, 22px);
   align-items: end;
