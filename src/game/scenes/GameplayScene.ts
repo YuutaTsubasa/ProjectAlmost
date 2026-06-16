@@ -4,6 +4,7 @@ import { groundedBottomY, groundedCenterY, groundedHazardCenterY, objectDefiniti
 import type { CoinPoint, EnemyPoint, GravityZone, HazardRect, MovingPlatformRect, PlatformRect, StageData, SurfaceZone } from '../stages/stageTypes'
 import type { TranslationKey, TranslationParams } from '../../i18n'
 import { calculateStageRank } from '../../domain/scoring/scoringRules'
+import type { ClearRank } from '../../domain/scoring/rank'
 
 type ArcadeSprite = Phaser.Types.Physics.Arcade.SpriteWithDynamicBody
 type TilemapLayer = Phaser.Tilemaps.TilemapLayer | Phaser.Tilemaps.TilemapGPULayer
@@ -2217,7 +2218,7 @@ export class GameplayScene extends Phaser.Scene {
     return `TIME ${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${String(centiseconds).padStart(2, '0')}`
   }
 
-  private getRank(): string {
+  private getRank(): ClearRank {
     return calculateStageRank({
       elapsedMs: this.stageTimeMs,
       rankTargets: this.stage.rankTargets,

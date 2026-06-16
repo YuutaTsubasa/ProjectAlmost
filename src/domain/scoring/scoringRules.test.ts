@@ -71,6 +71,10 @@ describe('calculateStageRank', () => {
 })
 
 describe('scoreStageResult', () => {
+  test('decays time score after the C time target', () => {
+    expect(scoreStageResult({ ...perfectResult, elapsedMs: 51_000 }).timeScore).toBe(97)
+  })
+
   test('gives full collection scores when a stage has no optional targets', () => {
     expect(scoreStageResult({
       ...perfectResult,

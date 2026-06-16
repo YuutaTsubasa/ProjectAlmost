@@ -1,3 +1,5 @@
+import type { RankTargets } from '../../domain/scoring/scoringRules'
+
 export type PlatformRect = {
   col: number
   row: number
@@ -99,12 +101,7 @@ export type StageData = {
   subtitle: string
   objective: string
   theme?: StageTheme
-  rankTargets: {
-    sTime: number
-    aTime: number
-    bTime: number
-    cTime: number
-  }
+  rankTargets: RankTargets
   world: {
     width: number
     height: number
