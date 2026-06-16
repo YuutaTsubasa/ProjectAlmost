@@ -6,6 +6,13 @@ import type { TranslationKey, TranslationParams } from '../../i18n'
 import { calculateStageRank } from '../../domain/scoring/scoringRules'
 import type { ClearRank } from '../../domain/scoring/rank'
 import { isOutOfBounds } from '../../domain/world/bounds'
+import {
+  enemyCountsForScore,
+  getEnemyRegenerationDecision,
+  getEnemyRespawnDelayMs,
+  getEnemyRespawnPolicy,
+  type EnemyRespawnPolicy,
+} from '../../domain/enemy/enemyRules'
 
 type ArcadeSprite = Phaser.Types.Physics.Arcade.SpriteWithDynamicBody
 type TilemapLayer = Phaser.Tilemaps.TilemapLayer | Phaser.Tilemaps.TilemapGPULayer
@@ -61,8 +68,6 @@ const ICE_IDLE_DRAG_X = 36
 const DEFAULT_DRAG_X = 1500
 const PLAYER_MAX_RUN_SPEED = 500
 const WORLD_GRAVITY_Y = 1500
-const DEFAULT_REGENERATE_DELAY_MS = 1400
-const ENEMY_REGENERATE_SAFE_DISTANCE = 140
 const BOSS_PHASE_COUNT = 4
 const BOSS_PROJECTILE_LIFETIME_MS = 7200
 const THEME = {
@@ -1645,24 +1650,31 @@ export class GameplayScene extends Phaser.Scene {
     }
   }
 
-  private enemyRespawnPolicy(point: EnemyPoint): 'persistent' | 'regenerate' {
-    return point.respawnPolicy ?? (point.type === 'azure-core' ? 'regenerate' : 'persistent')
+  private enemyRespawnPolicy(point: EnemyPoint): EnemyRespawnPolicy {
+    return getEnemyRespawnPolicy(point)
   }
 
   private enemyCountsForScore(point: EnemyPoint): boolean {
-    return point.countsForScore ?? point.type !== 'azure-core'
+    return enemyCountsForScore(point)
   }
 
   private scheduleEnemyRegeneration(enemy: EnemyRuntime): void {
-    const delay = enemy.point.respawnDelayMs ?? DEFAULT_REGENERATE_DELAY_MS
+    const delay = getEnemyRespawnDelayMs(enemy.point)
     this.time.delayedCall(delay, () => this.tryRegenerateEnemy(enemy))
   }
 
   private tryRegenerateEnemy(enemy: EnemyRuntime): void {
-    if (this.stageCleared || !enemy.defeated) return
     const spawnY = enemy.point.type === 'azure-core' ? enemy.point.y : groundedCenterY(enemy.point.surfaceY, 'guard')
     const playerDistance = Phaser.Math.Distance.Between(this.player.x, this.player.y, enemy.point.x, spawnY)
-    if (this.isDead || playerDistance < ENEMY_REGENERATE_SAFE_DISTANCE) {
+    const decision = getEnemyRegenerationDecision({
+      stageCleared: this.stageCleared,
+      enemyDefeated: enemy.defeated,
+      playerDead: this.isDead,
+      playerDistance,
+    })
+
+    if (decision === 'skip') return
+    if (decision === 'delay') {
       this.time.delayedCall(300, () => this.tryRegenerateEnemy(enemy))
       return
     }
