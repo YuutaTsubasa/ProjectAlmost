@@ -5,6 +5,7 @@ import type { CoinPoint, EnemyPoint, GravityZone, HazardRect, MovingPlatformRect
 import type { TranslationKey, TranslationParams } from '../../i18n'
 import { calculateStageRank } from '../../domain/scoring/scoringRules'
 import type { ClearRank } from '../../domain/scoring/rank'
+import { isOutOfBounds } from '../../domain/world/bounds'
 
 type ArcadeSprite = Phaser.Types.Physics.Arcade.SpriteWithDynamicBody
 type TilemapLayer = Phaser.Tilemaps.TilemapLayer | Phaser.Tilemaps.TilemapGPULayer
@@ -614,9 +615,11 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   private isPlayerOutOfBounds(): boolean {
-    return this.playerGravityDirection === 'down'
-      ? this.player.y > this.worldHeight + 80
-      : this.player.y < -80
+    return isOutOfBounds({
+      playerY: this.player.y,
+      worldHeight: this.worldHeight,
+      isDownGravity: this.playerGravityDirection === 'down',
+    })
   }
 
   private findSurfaceZone(type: SurfaceZone['type']): SurfaceZone | undefined {
