@@ -1,0 +1,372 @@
+{
+  "id": "2-4",
+  "subtitle": "Canopy Lift",
+  "objective": "Reach the Goal",
+  "theme": "emerald-sanctuary",
+  "rankTargets": {
+    "sTime": 42,
+    "aTime": 58,
+    "bTime": 82,
+    "cTime": 112
+  },
+  "world": {
+    "width": 10400,
+    "height": 1080,
+    "tileSize": 64
+  },
+  "playerSpawn": {
+    "x": 256,
+    "surfaceY": 704
+  },
+  "platforms": [
+    {
+      "col": 2,
+      "row": 11,
+      "width": 13,
+      "height": 1
+    },
+    {
+      "col": 22,
+      "row": 10,
+      "width": 5,
+      "height": 1
+    },
+    {
+      "col": 34,
+      "row": 8,
+      "width": 5,
+      "height": 1
+    },
+    {
+      "col": 46,
+      "row": 6,
+      "width": 5,
+      "height": 1
+    },
+    {
+      "col": 59,
+      "row": 8,
+      "width": 6,
+      "height": 1
+    },
+    {
+      "col": 76,
+      "row": 10,
+      "width": 7,
+      "height": 1
+    },
+    {
+      "col": 94,
+      "row": 7,
+      "width": 6,
+      "height": 1
+    },
+    {
+      "col": 112,
+      "row": 9,
+      "width": 7,
+      "height": 1
+    },
+    {
+      "col": 134,
+      "row": 10,
+      "width": 16,
+      "height": 1
+    },
+    {
+      "col": 154,
+      "row": 9,
+      "width": 7,
+      "height": 1
+    }
+  ],
+  "movingPlatforms": [
+    {
+      "id": "lift-a",
+      "col": 17,
+      "row": 10,
+      "width": 4,
+      "height": 1,
+      "axis": "y",
+      "distance": 82,
+      "durationMs": 2200
+    },
+    {
+      "id": "lift-b",
+      "col": 29,
+      "row": 9,
+      "width": 4,
+      "height": 1,
+      "axis": "y",
+      "distance": 82,
+      "durationMs": 2400,
+      "phase": 0.28
+    },
+    {
+      "id": "lift-c",
+      "col": 53,
+      "row": 7,
+      "width": 4,
+      "height": 1,
+      "axis": "y",
+      "distance": 82,
+      "durationMs": 2300,
+      "phase": 0.5
+    },
+    {
+      "id": "lift-d",
+      "col": 86,
+      "row": 9,
+      "width": 4,
+      "height": 1,
+      "axis": "x",
+      "distance": 110,
+      "durationMs": 2700,
+      "phase": 0.18
+    },
+    {
+      "id": "lift-e",
+      "col": 104,
+      "row": 8,
+      "width": 4,
+      "height": 1,
+      "axis": "y",
+      "distance": 82,
+      "durationMs": 2450,
+      "phase": 0.68
+    },
+    {
+      "id": "lift-f",
+      "col": 124,
+      "row": 9,
+      "width": 4,
+      "height": 1,
+      "axis": "x",
+      "distance": 110,
+      "durationMs": 2900,
+      "phase": 0.38
+    }
+  ],
+  "hazards": [
+    {
+      "id": "root-pit-a",
+      "type": "spikes",
+      "x": 760,
+      "surfaceY": 704,
+      "width": 190,
+      "height": 60,
+      "orientation": "floor"
+    },
+    {
+      "id": "root-pit-b",
+      "type": "spikes",
+      "x": 3120,
+      "surfaceY": 384,
+      "width": 160,
+      "height": 58,
+      "orientation": "floor"
+    },
+    {
+      "id": "root-pit-c",
+      "type": "spikes",
+      "x": 5080,
+      "surfaceY": 640,
+      "width": 200,
+      "height": 60,
+      "orientation": "floor"
+    },
+    {
+      "id": "root-pit-d",
+      "type": "spikes",
+      "x": 7420,
+      "surfaceY": 576,
+      "width": 190,
+      "height": 60,
+      "orientation": "floor"
+    },
+    {
+      "id": "exit-root-pit",
+      "type": "spikes",
+      "x": 9300,
+      "surfaceY": 640,
+      "width": 220,
+      "height": 62,
+      "orientation": "floor"
+    }
+  ],
+  "coins": [
+    {
+      "x": 430,
+      "y": 648
+    },
+    {
+      "x": 650,
+      "y": 648
+    },
+    {
+      "x": 1140,
+      "y": 596
+    },
+    {
+      "x": 1660,
+      "y": 520
+    },
+    {
+      "x": 2260,
+      "y": 520
+    },
+    {
+      "x": 2780,
+      "y": 420
+    },
+    {
+      "x": 3480,
+      "y": 392
+    },
+    {
+      "x": 4240,
+      "y": 264
+    },
+    {
+      "x": 4920,
+      "y": 300
+    },
+    {
+      "x": 5580,
+      "y": 392
+    },
+    {
+      "x": 6260,
+      "y": 520
+    },
+    {
+      "x": 6880,
+      "y": 584
+    },
+    {
+      "x": 7520,
+      "y": 520
+    },
+    {
+      "x": 8280,
+      "y": 330
+    },
+    {
+      "x": 9080,
+      "y": 456
+    },
+    {
+      "x": 9800,
+      "y": 584
+    }
+  ],
+  "enemies": [
+    {
+      "id": "canopy-guard-a",
+      "x": 570,
+      "surfaceY": 704,
+      "patrolMinX": 330,
+      "patrolMaxX": 820
+    },
+    {
+      "id": "canopy-core-a",
+      "type": "azure-core",
+      "respawnPolicy": "regenerate",
+      "countsForScore": false,
+      "x": 1660,
+      "y": 520,
+      "patrolMinX": 1660,
+      "patrolMaxX": 1660
+    },
+    {
+      "id": "canopy-core-b",
+      "type": "azure-core",
+      "respawnPolicy": "regenerate",
+      "countsForScore": false,
+      "x": 2780,
+      "y": 420,
+      "patrolMinX": 2780,
+      "patrolMaxX": 2780
+    },
+    {
+      "id": "canopy-guard-b",
+      "x": 3180,
+      "surfaceY": 384,
+      "patrolMinX": 2960,
+      "patrolMaxX": 3240
+    },
+    {
+      "id": "canopy-core-c",
+      "type": "azure-core",
+      "respawnPolicy": "regenerate",
+      "countsForScore": false,
+      "x": 5580,
+      "y": 392,
+      "patrolMinX": 5480,
+      "patrolMaxX": 5780
+    },
+    {
+      "id": "canopy-core-d",
+      "type": "azure-core",
+      "respawnPolicy": "regenerate",
+      "countsForScore": false,
+      "x": 8280,
+      "y": 330,
+      "patrolMinX": 8180,
+      "patrolMaxX": 8460
+    },
+    {
+      "id": "canopy-guard-c",
+      "x": 9040,
+      "surfaceY": 640,
+      "patrolMinX": 8640,
+      "patrolMaxX": 9450
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "high-canopy-check",
+      "x": 3100,
+      "surfaceY": 384,
+      "spawnX": 3110,
+      "spawnSurfaceY": 384
+    },
+    {
+      "id": "descent-check",
+      "x": 7200,
+      "surfaceY": 576,
+      "spawnX": 7220,
+      "spawnSurfaceY": 576
+    }
+  ],
+  "sections": [
+    {
+      "id": "ascending-lifts",
+      "startX": 0,
+      "endX": 3600,
+      "purpose": "Use vertical lifts to climb into the canopy."
+    },
+    {
+      "id": "canopy-cross",
+      "startX": 3600,
+      "endX": 6700,
+      "purpose": "Move across high platforms with Homing rescue points."
+    },
+    {
+      "id": "descent-lifts",
+      "startX": 6700,
+      "endX": 9100,
+      "purpose": "Descend across moving platforms over thorn pits."
+    },
+    {
+      "id": "canopy-exit",
+      "startX": 9100,
+      "endX": 10400,
+      "purpose": "Return to ground level and sprint into the goal."
+    }
+  ],
+  "goal": {
+    "x": 10040,
+    "surfaceY": 576
+  }
+}

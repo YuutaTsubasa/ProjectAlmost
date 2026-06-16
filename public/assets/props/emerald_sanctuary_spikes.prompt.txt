@@ -1,0 +1,8 @@
+Use case: stylized-concept
+Asset type: 2D platformer spike trap hazard sprite sheet for World 02 Emerald Sanctuary
+Primary request: Generate a clean HD spike trap asset sheet for a forest sanctuary platformer world. The traps should be thorny, wooden, and ancient-mechanical rather than white palace architecture.
+Sheet layout: a simple sprite sheet on a perfectly flat solid #FF00FF chroma-key background with generous padding. Include separate hazard pieces: floor thorn spike cluster, floor metal-and-thorn retractable spike strip, wall thorn spike cluster facing right, wall thorn spike cluster facing left, ceiling hanging thorn spike cluster, compact round bramble hazard.
+Style/medium: clean hand-painted HD game asset, side-view 2D platformer hazard sprites, crisp silhouettes, readable dangerous sharp shapes.
+Composition/framing: each hazard isolated, centered, fully contained, no touching edges. The floor spikes must have a clear flat base for placement on top of platforms.
+Color palette: dark bark brown, thorn black-brown, moss green, turquoise poison/magic highlights, small aged brass mechanical accents. Avoid white palace materials.
+Constraints: solid #FF00FF background only; do not use #FF00FF in the assets. No characters, enemies, UI, floor shadows, background gradients, or large white stone architecture.

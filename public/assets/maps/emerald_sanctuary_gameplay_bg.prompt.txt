@@ -1,0 +1,9 @@
+Use case: stylized-concept
+Asset type: scenery-only side-scroller parallax background layer for a Phaser 2D platformer
+Primary request: Generate a clean gameplay background for World 02, Emerald Sanctuary, using the visible reference image above as style direction. This is a scenery-only background, not the playable foreground.
+Scene/backdrop: a lush ancient magical forest sanctuary with huge tree trunks, layered canopies, misty forest depth, waterfalls in the distance, turquoise glowing pools far below, and small mossy ruined stone hints. Organic tree roots, vines, leaves, and soft glowing crystals dominate.
+Style/medium: high-quality anime fantasy game background, clean painterly HD, readable and not too noisy.
+Composition/framing: wide 16:9 side-view platformer background, 1920x1080 style framing, horizon around middle height, open foreground lane at the bottom for separate platform objects to be placed later. Keep major details in mid/far depth, not as solid foreground platforms.
+Lighting/mood: bright sunbeams through canopy, fresh emerald glow, adventurous, magical morning atmosphere.
+Color palette: emerald greens, moss, warm wood browns, turquoise water/crystal glow, soft sky/canopy light. Very little white stone, only small broken ruins as accents.
+Constraints: scenery only. Do not include playable platforms, character, enemies, spikes, pickups, UI, text, labels, white palace towers, large white buildings, or foreground collision objects. Avoid looking like a castle or palace world.

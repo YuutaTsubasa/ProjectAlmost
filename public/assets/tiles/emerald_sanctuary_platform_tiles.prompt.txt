@@ -1,0 +1,8 @@
+Use case: stylized-concept
+Asset type: 2D platformer reusable platform tileset for World 02 Emerald Sanctuary
+Primary request: Generate a clean HD platform tileset sheet for a side-scrolling platformer forest world. The tiles should match the Emerald Sanctuary style from the visible reference: lush forest, moss, roots, wood, turquoise glow, small mossy ruin details.
+Sheet layout: a clear horizontal tileset sheet on a perfectly flat solid #FF00FF chroma-key background. Include separate repeatable pieces arranged with generous padding: tree-root ground left cap, tree-root ground middle repeat tile, tree-root ground right cap, mossy stone ledge left cap, mossy stone ledge middle repeat tile, mossy stone ledge right cap, suspended wooden moving platform, vine rail / pulley rail segment.
+Style/medium: clean hand-painted HD game asset, side-view 2D platformer tiles, readable collision top edges, slightly pixel-inspired crispness but not retro pixel art.
+Composition/framing: all pieces shown side-view with flat horizontal walkable top surfaces. Keep each piece fully separated, centered, and not touching the image edges. No perspective floor plane.
+Color palette: moss green, bark brown, warm wood, dark roots, turquoise crystal glow, small pale-gold accents. Very little white stone.
+Constraints: solid #FF00FF background only; do not use #FF00FF in the assets. No characters, enemies, UI, shadows on the background, gradients in the background, or large white palace architecture. Make the top edge visually clear for platform collision.

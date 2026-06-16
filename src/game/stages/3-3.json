@@ -1,0 +1,77 @@
+{
+  "id": "3-3",
+  "subtitle": "Mirror Current",
+  "objective": "Reach the Goal",
+  "theme": "cerulean-depths",
+  "rankTargets": {
+    "sTime": 42,
+    "aTime": 58,
+    "bTime": 82,
+    "cTime": 112
+  },
+  "world": {
+    "width": 10400,
+    "height": 1080,
+    "tileSize": 64
+  },
+  "playerSpawn": {
+    "x": 256,
+    "surfaceY": 640
+  },
+  "platforms": [
+    { "col": 2, "row": 10, "width": 12, "height": 1 },
+    { "col": 20, "row": 5, "width": 5, "height": 1 },
+    { "col": 31, "row": 10, "width": 5, "height": 1 },
+    { "col": 43, "row": 5, "width": 5, "height": 1 },
+    { "col": 56, "row": 10, "width": 6, "height": 1 },
+    { "col": 70, "row": 5, "width": 6, "height": 1 },
+    { "col": 86, "row": 10, "width": 6, "height": 1 },
+    { "col": 102, "row": 5, "width": 6, "height": 1 },
+    { "col": 119, "row": 10, "width": 8, "height": 1 },
+    { "col": 140, "row": 10, "width": 18, "height": 1 }
+  ],
+  "gravityZones": [
+    { "id": "mirror-up-a", "x": 1300, "y": 0, "width": 1050, "height": 1080, "direction": "up" },
+    { "id": "mirror-down-a", "x": 2350, "y": 0, "width": 1050, "height": 1080, "direction": "down" },
+    { "id": "mirror-up-b", "x": 3400, "y": 0, "width": 1300, "height": 1080, "direction": "up" },
+    { "id": "mirror-down-b", "x": 4700, "y": 0, "width": 1450, "height": 1080, "direction": "down" },
+    { "id": "mirror-up-c", "x": 6150, "y": 0, "width": 1650, "height": 1080, "direction": "up" },
+    { "id": "mirror-down-c", "x": 7800, "y": 0, "width": 2600, "height": 1080, "direction": "down" }
+  ],
+  "coins": [
+    { "x": 420, "y": 584 },
+    { "x": 1160, "y": 520 },
+    { "x": 1480, "y": 430 },
+    { "x": 2050, "y": 420 },
+    { "x": 2580, "y": 584 },
+    { "x": 3260, "y": 584 },
+    { "x": 3880, "y": 430 },
+    { "x": 4560, "y": 420 },
+    { "x": 5400, "y": 584 },
+    { "x": 6100, "y": 584 },
+    { "x": 7000, "y": 430 },
+    { "x": 7800, "y": 420 },
+    { "x": 8700, "y": 584 },
+    { "x": 9500, "y": 584 }
+  ],
+  "enemies": [
+    { "id": "mirror-core-a", "type": "azure-core", "respawnPolicy": "regenerate", "countsForScore": false, "x": 2050, "y": 420, "patrolMinX": 2050, "patrolMaxX": 2050 },
+    { "id": "mirror-core-b", "type": "azure-core", "respawnPolicy": "regenerate", "countsForScore": false, "x": 4560, "y": 420, "patrolMinX": 4560, "patrolMaxX": 4560 },
+    { "id": "mirror-core-c", "type": "azure-core", "respawnPolicy": "regenerate", "countsForScore": false, "x": 7000, "y": 430, "patrolMinX": 7000, "patrolMaxX": 7000 },
+    { "id": "mirror-guard-a", "x": 9100, "surfaceY": 640, "patrolMinX": 8960, "patrolMaxX": 9900 }
+  ],
+  "checkpoints": [
+    { "id": "mirror-mid-check", "x": 5600, "surfaceY": 640, "spawnX": 5620, "spawnSurfaceY": 640 },
+    { "id": "mirror-exit-check", "x": 9300, "surfaceY": 640, "spawnX": 9320, "spawnSurfaceY": 640 }
+  ],
+  "sections": [
+    { "id": "short-flips", "startX": 0, "endX": 3400, "purpose": "Practice short alternating gravity windows." },
+    { "id": "homing-flips", "startX": 3400, "endX": 6150, "purpose": "Use Homing targets to stabilize after inversion." },
+    { "id": "long-ceiling", "startX": 6150, "endX": 7800, "purpose": "Stay inverted longer before resolving." },
+    { "id": "exit-normal", "startX": 7800, "endX": 10400, "purpose": "Return to normal gravity and finish." }
+  ],
+  "goal": {
+    "x": 9720,
+    "surfaceY": 640
+  }
+}

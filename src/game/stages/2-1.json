@@ -1,0 +1,335 @@
+{
+  "id": "2-1",
+  "subtitle": "Thornwake Steps",
+  "objective": "Reach the Goal",
+  "theme": "emerald-sanctuary",
+  "rankTargets": {
+    "sTime": 32,
+    "aTime": 44,
+    "bTime": 62,
+    "cTime": 86
+  },
+  "world": {
+    "width": 8600,
+    "height": 1080,
+    "tileSize": 64
+  },
+  "playerSpawn": {
+    "x": 256,
+    "surfaceY": 640
+  },
+  "platforms": [
+    {
+      "col": 2,
+      "row": 10,
+      "width": 12,
+      "height": 1
+    },
+    {
+      "col": 18,
+      "row": 10,
+      "width": 7,
+      "height": 1
+    },
+    {
+      "col": 31,
+      "row": 9,
+      "width": 6,
+      "height": 1
+    },
+    {
+      "col": 43,
+      "row": 10,
+      "width": 7,
+      "height": 1
+    },
+    {
+      "col": 58,
+      "row": 8,
+      "width": 5,
+      "height": 1
+    },
+    {
+      "col": 72,
+      "row": 10,
+      "width": 9,
+      "height": 1
+    },
+    {
+      "col": 88,
+      "row": 9,
+      "width": 6,
+      "height": 1
+    },
+    {
+      "col": 101,
+      "row": 10,
+      "width": 11,
+      "height": 1
+    },
+    {
+      "col": 120,
+      "row": 10,
+      "width": 12,
+      "height": 1
+    }
+  ],
+  "movingPlatforms": [
+    {
+      "id": "first-vine-lift",
+      "col": 26,
+      "row": 9,
+      "width": 4,
+      "height": 1,
+      "axis": "y",
+      "distance": 72,
+      "durationMs": 2100
+    },
+    {
+      "id": "thorn-gap-ferry",
+      "col": 52,
+      "row": 9,
+      "width": 4,
+      "height": 1,
+      "axis": "x",
+      "distance": 112,
+      "durationMs": 2600,
+      "phase": 0.35
+    },
+    {
+      "id": "canopy-ferry",
+      "col": 65,
+      "row": 7,
+      "width": 4,
+      "height": 1,
+      "axis": "x",
+      "distance": 112,
+      "durationMs": 2800,
+      "phase": 0.6
+    }
+  ],
+  "hazards": [
+    {
+      "id": "first-thorn-bed",
+      "type": "spikes",
+      "x": 760,
+      "surfaceY": 640,
+      "width": 180,
+      "height": 62,
+      "orientation": "floor"
+    },
+    {
+      "id": "lift-thorns",
+      "type": "spikes",
+      "x": 1420,
+      "surfaceY": 640,
+      "width": 160,
+      "height": 58,
+      "orientation": "floor"
+    },
+    {
+      "id": "ferry-thorn-bed",
+      "type": "spikes",
+      "x": 3040,
+      "surfaceY": 640,
+      "width": 170,
+      "height": 58,
+      "orientation": "floor"
+    },
+    {
+      "id": "canopy-thorn-bed",
+      "type": "spikes",
+      "x": 4920,
+      "surfaceY": 640,
+      "width": 220,
+      "height": 62,
+      "orientation": "floor"
+    },
+    {
+      "id": "final-thorn-bed",
+      "type": "spikes",
+      "x": 6900,
+      "surfaceY": 640,
+      "width": 220,
+      "height": 62,
+      "orientation": "floor"
+    }
+  ],
+  "coins": [
+    {
+      "x": 420,
+      "y": 584
+    },
+    {
+      "x": 560,
+      "y": 584
+    },
+    {
+      "x": 720,
+      "y": 584
+    },
+    {
+      "x": 1260,
+      "y": 540
+    },
+    {
+      "x": 1780,
+      "y": 488
+    },
+    {
+      "x": 2220,
+      "y": 520
+    },
+    {
+      "x": 2520,
+      "y": 456
+    },
+    {
+      "x": 3100,
+      "y": 456
+    },
+    {
+      "x": 3560,
+      "y": 520
+    },
+    {
+      "x": 4040,
+      "y": 456
+    },
+    {
+      "x": 4600,
+      "y": 392
+    },
+    {
+      "x": 4880,
+      "y": 392
+    },
+    {
+      "x": 5340,
+      "y": 584
+    },
+    {
+      "x": 5720,
+      "y": 584
+    },
+    {
+      "x": 6120,
+      "y": 520
+    },
+    {
+      "x": 6580,
+      "y": 584
+    },
+    {
+      "x": 7220,
+      "y": 520
+    },
+    {
+      "x": 7800,
+      "y": 584
+    },
+    {
+      "x": 8080,
+      "y": 584
+    }
+  ],
+  "enemies": [
+    {
+      "id": "sanctuary-guard-a",
+      "x": 620,
+      "surfaceY": 640,
+      "patrolMinX": 360,
+      "patrolMaxX": 790
+    },
+    {
+      "id": "thorn-core-a",
+      "type": "azure-core",
+      "respawnPolicy": "regenerate",
+      "countsForScore": false,
+      "x": 1780,
+      "y": 500,
+      "patrolMinX": 1780,
+      "patrolMaxX": 1780
+    },
+    {
+      "id": "sanctuary-guard-b",
+      "x": 1420,
+      "surfaceY": 640,
+      "patrolMinX": 1210,
+      "patrolMaxX": 1540
+    },
+    {
+      "id": "thorn-core-b",
+      "type": "azure-core",
+      "respawnPolicy": "regenerate",
+      "countsForScore": false,
+      "x": 3650,
+      "y": 500,
+      "patrolMinX": 3540,
+      "patrolMaxX": 3840
+    },
+    {
+      "id": "thorn-core-c",
+      "type": "azure-core",
+      "respawnPolicy": "regenerate",
+      "countsForScore": false,
+      "x": 4920,
+      "y": 390,
+      "patrolMinX": 4800,
+      "patrolMaxX": 5120
+    },
+    {
+      "id": "sanctuary-guard-c",
+      "x": 6800,
+      "surfaceY": 640,
+      "patrolMinX": 6500,
+      "patrolMaxX": 7060
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "moving-platform-check",
+      "x": 2850,
+      "surfaceY": 640,
+      "spawnX": 2860,
+      "spawnSurfaceY": 640
+    },
+    {
+      "id": "canopy-check",
+      "x": 5870,
+      "surfaceY": 576,
+      "spawnX": 5900,
+      "spawnSurfaceY": 576
+    }
+  ],
+  "sections": [
+    {
+      "id": "thorn-read",
+      "startX": 0,
+      "endX": 1700,
+      "purpose": "Introduce floor spikes as readable danger while keeping the route grounded."
+    },
+    {
+      "id": "lift-read",
+      "startX": 1700,
+      "endX": 3300,
+      "purpose": "Introduce the first vertical moving platform with a safe checkpoint after the lesson."
+    },
+    {
+      "id": "ferry-read",
+      "startX": 3300,
+      "endX": 5600,
+      "purpose": "Cross thorn pits with horizontal moving platforms and optional Homing stabilizers."
+    },
+    {
+      "id": "mixed-exit",
+      "startX": 5600,
+      "endX": 8600,
+      "purpose": "Combine grounded guards, spike beds, moving platforms, and a final sprint to the goal."
+    }
+  ],
+  "goal": {
+    "x": 8200,
+    "surfaceY": 640
+  }
+}

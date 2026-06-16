@@ -1,0 +1,290 @@
+{
+  "id": "6-2",
+  "subtitle": "Inverted Thorns",
+  "objective": "Reach the Goal",
+  "theme": "abyssal-hollow",
+  "rankTargets": {
+    "sTime": 48,
+    "aTime": 66,
+    "bTime": 94,
+    "cTime": 128
+  },
+  "world": {
+    "width": 10600,
+    "height": 1080,
+    "tileSize": 64
+  },
+  "playerSpawn": {
+    "x": 256,
+    "surfaceY": 704
+  },
+  "platforms": [
+    {
+      "col": 2,
+      "row": 11,
+      "width": 13,
+      "height": 1
+    },
+    {
+      "col": 22,
+      "row": 10,
+      "width": 7,
+      "height": 1
+    },
+    {
+      "col": 38,
+      "row": 8,
+      "width": 7,
+      "height": 1
+    },
+    {
+      "col": 56,
+      "row": 7,
+      "width": 7,
+      "height": 1
+    },
+    {
+      "col": 74,
+      "row": 9,
+      "width": 7,
+      "height": 1
+    },
+    {
+      "col": 92,
+      "row": 11,
+      "width": 8,
+      "height": 1
+    },
+    {
+      "col": 112,
+      "row": 9,
+      "width": 7,
+      "height": 1
+    },
+    {
+      "col": 132,
+      "row": 10,
+      "width": 24,
+      "height": 1
+    }
+  ],
+  "movingPlatforms": [],
+  "hazards": [
+    {
+      "id": "inverted-spike-a",
+      "type": "spikes",
+      "x": 1500,
+      "surfaceY": 704,
+      "width": 220,
+      "height": 72,
+      "orientation": "floor"
+    },
+    {
+      "id": "inverted-spike-b",
+      "type": "spikes",
+      "x": 2700,
+      "surfaceY": 640,
+      "width": 220,
+      "height": 72,
+      "orientation": "floor"
+    },
+    {
+      "id": "inverted-lava-a",
+      "type": "lava",
+      "x": 4000,
+      "surfaceY": 512,
+      "width": 260,
+      "height": 78
+    },
+    {
+      "id": "inverted-spike-c",
+      "type": "spikes",
+      "x": 6100,
+      "surfaceY": 448,
+      "width": 220,
+      "height": 72,
+      "orientation": "floor"
+    },
+    {
+      "id": "inverted-lava-b",
+      "type": "lava",
+      "x": 7700,
+      "surfaceY": 704,
+      "width": 260,
+      "height": 78
+    },
+    {
+      "id": "inverted-spike-d",
+      "type": "spikes",
+      "x": 9300,
+      "surfaceY": 640,
+      "width": 220,
+      "height": 72,
+      "orientation": "floor"
+    }
+  ],
+  "gravityZones": [
+    {
+      "id": "invert-a",
+      "x": 2350,
+      "y": 0,
+      "width": 2300,
+      "height": 1080,
+      "direction": "up"
+    },
+    {
+      "id": "restore-a",
+      "x": 4650,
+      "y": 0,
+      "width": 1800,
+      "height": 1080,
+      "direction": "down"
+    },
+    {
+      "id": "invert-b",
+      "x": 6450,
+      "y": 0,
+      "width": 2100,
+      "height": 1080,
+      "direction": "up"
+    },
+    {
+      "id": "restore-b",
+      "x": 8550,
+      "y": 0,
+      "width": 2100,
+      "height": 1080,
+      "direction": "down"
+    }
+  ],
+  "surfaceZones": [],
+  "coins": [
+    {
+      "x": 430,
+      "y": 648
+    },
+    {
+      "x": 1150,
+      "y": 620
+    },
+    {
+      "x": 1900,
+      "y": 550
+    },
+    {
+      "x": 2850,
+      "y": 500
+    },
+    {
+      "x": 3900,
+      "y": 390
+    },
+    {
+      "x": 5150,
+      "y": 330
+    },
+    {
+      "x": 6400,
+      "y": 500
+    },
+    {
+      "x": 7600,
+      "y": 620
+    },
+    {
+      "x": 9000,
+      "y": 500
+    },
+    {
+      "x": 9900,
+      "y": 584
+    }
+  ],
+  "enemies": [
+    {
+      "id": "inverted-guard-a",
+      "x": 600,
+      "surfaceY": 704,
+      "patrolMinX": 340,
+      "patrolMaxX": 780
+    },
+    {
+      "id": "inverted-core-a",
+      "type": "azure-core",
+      "respawnPolicy": "regenerate",
+      "countsForScore": false,
+      "x": 3000,
+      "y": 430,
+      "patrolMinX": 3000,
+      "patrolMaxX": 3000
+    },
+    {
+      "id": "inverted-core-b",
+      "type": "azure-core",
+      "respawnPolicy": "regenerate",
+      "countsForScore": false,
+      "x": 5600,
+      "y": 330,
+      "patrolMinX": 5600,
+      "patrolMaxX": 5600
+    },
+    {
+      "id": "inverted-guard-b",
+      "x": 6100,
+      "surfaceY": 704,
+      "patrolMinX": 5880,
+      "patrolMaxX": 6350
+    },
+    {
+      "id": "inverted-core-c",
+      "type": "azure-core",
+      "respawnPolicy": "regenerate",
+      "countsForScore": false,
+      "x": 9150,
+      "y": 500,
+      "patrolMinX": 9150,
+      "patrolMaxX": 9150
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "inverted-high-check",
+      "x": 3900,
+      "surfaceY": 448,
+      "spawnX": 3920,
+      "spawnSurfaceY": 448,
+      "spawnGravity": "up"
+    },
+    {
+      "id": "inverted-exit-check",
+      "x": 9100,
+      "surfaceY": 640,
+      "spawnX": 9120,
+      "spawnSurfaceY": 640
+    }
+  ],
+  "sections": [
+    {
+      "id": "gravity-entry",
+      "startX": 0,
+      "endX": 3600,
+      "purpose": "Enter inverted gravity with traps."
+    },
+    {
+      "id": "ceiling-route",
+      "startX": 3600,
+      "endX": 7600,
+      "purpose": "Use upside-down movement and Homing."
+    },
+    {
+      "id": "restore-route",
+      "startX": 7600,
+      "endX": 10600,
+      "purpose": "Return to normal gravity before goal."
+    }
+  ],
+  "goal": {
+    "x": 9800,
+    "surfaceY": 640
+  }
+}

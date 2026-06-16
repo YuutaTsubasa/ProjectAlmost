@@ -3,7 +3,7 @@ import { GameplayScene } from './scenes/GameplayScene'
 import { selectStage, type StageId } from './stages/stageRegistry'
 
 export function createPlatformerGame(parent: HTMLElement, stageId: StageId = '1-1'): Phaser.Game {
-  selectStage(stageId)
+  const stage = selectStage(stageId)
   return new Phaser.Game({
     type: Phaser.AUTO,
     parent,
@@ -21,6 +21,6 @@ export function createPlatformerGame(parent: HTMLElement, stageId: StageId = '1-
       mode: Phaser.Scale.FIT,
       autoCenter: Phaser.Scale.CENTER_BOTH,
     },
-    scene: [GameplayScene],
+    scene: [new GameplayScene(stage)],
   })
 }

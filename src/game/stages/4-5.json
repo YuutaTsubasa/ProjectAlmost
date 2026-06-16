@@ -1,0 +1,389 @@
+{
+  "id": "4-5",
+  "subtitle": "Frozen Gauntlet",
+  "objective": "Reach the Goal",
+  "theme": "frostveil-peaks",
+  "rankTargets": {
+    "sTime": 92,
+    "aTime": 124,
+    "bTime": 166,
+    "cTime": 224
+  },
+  "world": {
+    "width": 17400,
+    "height": 1080,
+    "tileSize": 64
+  },
+  "playerSpawn": {
+    "x": 256,
+    "surfaceY": 640
+  },
+  "platforms": [
+    {
+      "col": 2,
+      "row": 10,
+      "width": 14,
+      "height": 1
+    },
+    {
+      "col": 24,
+      "row": 10,
+      "width": 7,
+      "height": 1
+    },
+    {
+      "col": 39,
+      "row": 9,
+      "width": 6,
+      "height": 1
+    },
+    {
+      "col": 54,
+      "row": 8,
+      "width": 6,
+      "height": 1
+    },
+    {
+      "col": 70,
+      "row": 10,
+      "width": 8,
+      "height": 1
+    },
+    {
+      "col": 91,
+      "row": 10,
+      "width": 8,
+      "height": 1
+    },
+    {
+      "col": 112,
+      "row": 9,
+      "width": 7,
+      "height": 1
+    },
+    {
+      "col": 132,
+      "row": 8,
+      "width": 7,
+      "height": 1
+    },
+    {
+      "col": 154,
+      "row": 10,
+      "width": 9,
+      "height": 1
+    },
+    {
+      "col": 177,
+      "row": 10,
+      "width": 8,
+      "height": 1
+    },
+    {
+      "col": 199,
+      "row": 8,
+      "width": 7,
+      "height": 1
+    },
+    {
+      "col": 221,
+      "row": 10,
+      "width": 9,
+      "height": 1
+    },
+    {
+      "col": 244,
+      "row": 9,
+      "width": 8,
+      "height": 1
+    },
+    {
+      "col": 260,
+      "row": 10,
+      "width": 10,
+      "height": 1
+    }
+  ],
+  "movingPlatforms": [
+    {
+      "id": "frozen-ferry-a",
+      "col": 17,
+      "row": 10,
+      "width": 4,
+      "height": 1,
+      "axis": "x",
+      "distance": 320,
+      "durationMs": 2600,
+      "phase": 0.2
+    },
+    {
+      "id": "frozen-lift-a",
+      "col": 63,
+      "row": 9,
+      "width": 4,
+      "height": 1,
+      "axis": "y",
+      "distance": 150,
+      "durationMs": 2400,
+      "phase": 0.5
+    },
+    {
+      "id": "frozen-ferry-b",
+      "col": 103,
+      "row": 10,
+      "width": 4,
+      "height": 1,
+      "axis": "x",
+      "distance": 380,
+      "durationMs": 2850,
+      "phase": 0.3
+    },
+    {
+      "id": "frozen-lift-b",
+      "col": 143,
+      "row": 9,
+      "width": 4,
+      "height": 1,
+      "axis": "y",
+      "distance": 160,
+      "durationMs": 2500,
+      "phase": 0.65
+    },
+    {
+      "id": "frozen-ferry-c",
+      "col": 233,
+      "row": 10,
+      "width": 4,
+      "height": 1,
+      "axis": "x",
+      "distance": 420,
+      "durationMs": 3000,
+      "phase": 0.45
+    }
+  ],
+  "surfaceZones": [
+    {
+      "id": "gauntlet-ice-a",
+      "type": "ice",
+      "x": 850,
+      "y": 0,
+      "width": 3000,
+      "height": 1080
+    },
+    {
+      "id": "gauntlet-ice-b",
+      "type": "ice",
+      "x": 3800,
+      "y": 0,
+      "width": 3200,
+      "height": 1080
+    },
+    {
+      "id": "gauntlet-ice-c",
+      "type": "ice",
+      "x": 7000,
+      "y": 0,
+      "width": 3200,
+      "height": 1080
+    },
+    {
+      "id": "gauntlet-ice-d",
+      "type": "ice",
+      "x": 10200,
+      "y": 0,
+      "width": 3300,
+      "height": 1080
+    },
+    {
+      "id": "gauntlet-ice-e",
+      "type": "ice",
+      "x": 13500,
+      "y": 0,
+      "width": 3600,
+      "height": 1080
+    }
+  ],
+  "coins": [
+    {
+      "x": 420,
+      "y": 584
+    },
+    {
+      "x": 1100,
+      "y": 584
+    },
+    {
+      "x": 1900,
+      "y": 520
+    },
+    {
+      "x": 2700,
+      "y": 520
+    },
+    {
+      "x": 3500,
+      "y": 500
+    },
+    {
+      "x": 4400,
+      "y": 440
+    },
+    {
+      "x": 5400,
+      "y": 392
+    },
+    {
+      "x": 6400,
+      "y": 584
+    },
+    {
+      "x": 7600,
+      "y": 584
+    },
+    {
+      "x": 8800,
+      "y": 520
+    },
+    {
+      "x": 10000,
+      "y": 500
+    },
+    {
+      "x": 11200,
+      "y": 440
+    },
+    {
+      "x": 12400,
+      "y": 392
+    },
+    {
+      "x": 13700,
+      "y": 584
+    },
+    {
+      "x": 14900,
+      "y": 520
+    },
+    {
+      "x": 16100,
+      "y": 584
+    },
+    {
+      "x": 16800,
+      "y": 584
+    }
+  ],
+  "enemies": [
+    {
+      "id": "frozen-guard-a",
+      "x": 620,
+      "surfaceY": 640,
+      "patrolMinX": 340,
+      "patrolMaxX": 900
+    },
+    {
+      "id": "frozen-core-a",
+      "type": "azure-core",
+      "respawnPolicy": "regenerate",
+      "countsForScore": false,
+      "x": 2700,
+      "y": 500,
+      "patrolMinX": 2700,
+      "patrolMaxX": 2700
+    },
+    {
+      "id": "frozen-guard-b",
+      "x": 4700,
+      "surfaceY": 640,
+      "patrolMinX": 4500,
+      "patrolMaxX": 4980
+    },
+    {
+      "id": "frozen-core-b",
+      "type": "azure-core",
+      "respawnPolicy": "regenerate",
+      "countsForScore": false,
+      "x": 8800,
+      "y": 500,
+      "patrolMinX": 8800,
+      "patrolMaxX": 8800
+    },
+    {
+      "id": "frozen-guard-c",
+      "x": 10100,
+      "surfaceY": 640,
+      "patrolMinX": 9850,
+      "patrolMaxX": 10350
+    },
+    {
+      "id": "frozen-core-c",
+      "type": "azure-core",
+      "respawnPolicy": "regenerate",
+      "countsForScore": false,
+      "x": 12400,
+      "y": 392,
+      "patrolMinX": 12400,
+      "patrolMaxX": 12400
+    },
+    {
+      "id": "frozen-guard-d",
+      "x": 16000,
+      "surfaceY": 576,
+      "patrolMinX": 15650,
+      "patrolMaxX": 16100
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "frozen-check-a",
+      "x": 4600,
+      "surfaceY": 640,
+      "spawnX": 4620,
+      "spawnSurfaceY": 640
+    },
+    {
+      "id": "frozen-check-b",
+      "x": 10100,
+      "surfaceY": 640,
+      "spawnX": 10120,
+      "spawnSurfaceY": 640
+    },
+    {
+      "id": "frozen-check-c",
+      "x": 15700,
+      "surfaceY": 576,
+      "spawnX": 15720,
+      "spawnSurfaceY": 576
+    }
+  ],
+  "sections": [
+    {
+      "id": "first-remix",
+      "startX": 0,
+      "endX": 4300,
+      "purpose": "Repeat 4-1 ice braking."
+    },
+    {
+      "id": "second-remix",
+      "startX": 4300,
+      "endX": 8600,
+      "purpose": "Repeat 4-2 stepped ice slopes."
+    },
+    {
+      "id": "third-remix",
+      "startX": 8600,
+      "endX": 12900,
+      "purpose": "Repeat 4-3 Homing on ice."
+    },
+    {
+      "id": "final-remix",
+      "startX": 12900,
+      "endX": 17400,
+      "purpose": "Repeat 4-4 lifts and long slide."
+    }
+  ],
+  "goal": {
+    "x": 16880,
+    "surfaceY": 640
+  }
+}

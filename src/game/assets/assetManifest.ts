@@ -8,6 +8,10 @@ export const IMAGE_ASSETS = {
   palaceSky: '/assets/maps/white_palace_sky.webp',
   stageSelectBackground: '/assets/maps/white_palace_stage_select.webp',
   emeraldSanctuaryStageSelect: '/assets/maps/emerald_sanctuary_stage_select.webp',
+  emeraldSanctuaryGameplayBg: '/assets/maps/emerald_sanctuary_gameplay_bg.webp',
+  emeraldSanctuarySky: '/assets/maps/emerald_sanctuary_sky.webp',
+  emeraldSanctuaryFarBackground: '/assets/maps/emerald_sanctuary_far_bg.webp',
+  emeraldSanctuaryMidBackground: '/assets/maps/emerald_sanctuary_mid_bg_loop.webp',
   ceruleanDepthsStageSelect: '/assets/maps/cerulean_depths_stage_select.webp',
   frostveilPeaksStageSelect: '/assets/maps/frostveil_peaks_stage_select.webp',
   emberfallCalderaStageSelect: '/assets/maps/emberfall_caldera_stage_select.webp',
@@ -29,6 +33,8 @@ export const IMAGE_ASSETS = {
   playerJump: '/assets/sprites/player_jump/sheet-transparent.webp',
   playerRun: '/assets/sprites/player_run/sheet-transparent.webp',
   palaceTiles: '/assets/tiles/white_palace_platform_tiles.webp',
+  emeraldSanctuaryTiles: '/assets/tiles/emerald_sanctuary_platform_tiles.webp',
+  emeraldSanctuarySpikes: '/assets/props/emerald_sanctuary_spikes.webp',
 } as const
 
 export const MUSIC_ASSETS = {

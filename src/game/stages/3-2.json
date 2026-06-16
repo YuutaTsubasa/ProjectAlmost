@@ -1,0 +1,78 @@
+{
+  "id": "3-2",
+  "subtitle": "Undertide Steps",
+  "objective": "Reach the Goal",
+  "theme": "cerulean-depths",
+  "rankTargets": {
+    "sTime": 38,
+    "aTime": 54,
+    "bTime": 76,
+    "cTime": 104
+  },
+  "world": {
+    "width": 9800,
+    "height": 1080,
+    "tileSize": 64
+  },
+  "playerSpawn": {
+    "x": 256,
+    "surfaceY": 640
+  },
+  "platforms": [
+    { "col": 2, "row": 10, "width": 14, "height": 1 },
+    { "col": 25, "row": 5, "width": 6, "height": 1 },
+    { "col": 38, "row": 5, "width": 6, "height": 1 },
+    { "col": 52, "row": 10, "width": 7, "height": 1 },
+    { "col": 67, "row": 10, "width": 7, "height": 1 },
+    { "col": 84, "row": 5, "width": 6, "height": 1 },
+    { "col": 99, "row": 5, "width": 6, "height": 1 },
+    { "col": 116, "row": 10, "width": 9, "height": 1 },
+    { "col": 135, "row": 10, "width": 14, "height": 1 }
+  ],
+  "movingPlatforms": [
+    { "id": "undertide-ferry-a", "col": 18, "row": 8, "width": 4, "height": 1, "axis": "x", "distance": 300, "durationMs": 2500 },
+    { "id": "undertide-ferry-b", "col": 76, "row": 7, "width": 4, "height": 1, "axis": "x", "distance": 340, "durationMs": 2650, "phase": 0.5 }
+  ],
+  "gravityZones": [
+    { "id": "ceiling-chain-a", "x": 1500, "y": 0, "width": 2100, "height": 1080, "direction": "up" },
+    { "id": "floor-chain-a", "x": 3600, "y": 0, "width": 1850, "height": 1080, "direction": "down" },
+    { "id": "ceiling-chain-b", "x": 5450, "y": 0, "width": 2300, "height": 1080, "direction": "up" },
+    { "id": "floor-chain-b", "x": 7750, "y": 0, "width": 2050, "height": 1080, "direction": "down" }
+  ],
+  "coins": [
+    { "x": 430, "y": 584 },
+    { "x": 800, "y": 584 },
+    { "x": 1700, "y": 450 },
+    { "x": 2140, "y": 400 },
+    { "x": 2700, "y": 420 },
+    { "x": 3380, "y": 420 },
+    { "x": 4200, "y": 584 },
+    { "x": 4880, "y": 584 },
+    { "x": 5600, "y": 430 },
+    { "x": 6220, "y": 410 },
+    { "x": 6900, "y": 430 },
+    { "x": 7700, "y": 460 },
+    { "x": 8420, "y": 584 },
+    { "x": 9060, "y": 584 }
+  ],
+  "enemies": [
+    { "id": "undertide-core-a", "type": "azure-core", "respawnPolicy": "regenerate", "countsForScore": false, "x": 2140, "y": 410, "patrolMinX": 2140, "patrolMaxX": 2140 },
+    { "id": "undertide-core-b", "type": "azure-core", "respawnPolicy": "regenerate", "countsForScore": false, "x": 6220, "y": 410, "patrolMinX": 6220, "patrolMaxX": 6220 },
+    { "id": "undertide-guard-a", "x": 4450, "surfaceY": 640, "patrolMinX": 3420, "patrolMaxX": 3740 },
+    { "id": "undertide-guard-b", "x": 9020, "surfaceY": 640, "patrolMinX": 8700, "patrolMaxX": 9340 }
+  ],
+  "checkpoints": [
+    { "id": "undertide-mid-check", "x": 4400, "surfaceY": 640, "spawnX": 4420, "spawnSurfaceY": 640 },
+    { "id": "undertide-exit-check", "x": 8700, "surfaceY": 640, "spawnX": 8720, "spawnSurfaceY": 640 }
+  ],
+  "sections": [
+    { "id": "ceiling-ferry", "startX": 0, "endX": 3600, "purpose": "Use moving platforms to enter a ceiling-walk section." },
+    { "id": "floor-recovery", "startX": 3600, "endX": 5450, "purpose": "Return to floor gravity with enemy pressure." },
+    { "id": "ceiling-chain", "startX": 5450, "endX": 7750, "purpose": "Chain inverted platforms and Azure Core targets." },
+    { "id": "exit-run", "startX": 7750, "endX": 9800, "purpose": "Resolve back to normal gravity before the goal." }
+  ],
+  "goal": {
+    "x": 9180,
+    "surfaceY": 640
+  }
+}

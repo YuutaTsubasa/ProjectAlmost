@@ -1,0 +1,513 @@
+{
+  "id": "2-5",
+  "subtitle": "Sanctuary Gauntlet",
+  "objective": "Reach the Goal",
+  "theme": "emerald-sanctuary",
+  "rankTargets": {
+    "sTime": 86,
+    "aTime": 116,
+    "bTime": 156,
+    "cTime": 210
+  },
+  "world": {
+    "width": 16800,
+    "height": 1080,
+    "tileSize": 64
+  },
+  "playerSpawn": {
+    "x": 256,
+    "surfaceY": 640
+  },
+  "platforms": [
+    {
+      "col": 2,
+      "row": 10,
+      "width": 13,
+      "height": 1
+    },
+    {
+      "col": 22,
+      "row": 10,
+      "width": 6,
+      "height": 1
+    },
+    {
+      "col": 36,
+      "row": 9,
+      "width": 5,
+      "height": 1
+    },
+    {
+      "col": 51,
+      "row": 10,
+      "width": 7,
+      "height": 1
+    },
+    {
+      "col": 68,
+      "row": 8,
+      "width": 5,
+      "height": 1
+    },
+    {
+      "col": 82,
+      "row": 10,
+      "width": 9,
+      "height": 1
+    },
+    {
+      "col": 103,
+      "row": 9,
+      "width": 6,
+      "height": 1
+    },
+    {
+      "col": 120,
+      "row": 7,
+      "width": 6,
+      "height": 1
+    },
+    {
+      "col": 139,
+      "row": 10,
+      "width": 9,
+      "height": 1
+    },
+    {
+      "col": 161,
+      "row": 9,
+      "width": 7,
+      "height": 1
+    },
+    {
+      "col": 181,
+      "row": 10,
+      "width": 8,
+      "height": 1
+    },
+    {
+      "col": 202,
+      "row": 8,
+      "width": 6,
+      "height": 1
+    },
+    {
+      "col": 225,
+      "row": 10,
+      "width": 12,
+      "height": 1
+    },
+    {
+      "col": 244,
+      "row": 9,
+      "width": 7,
+      "height": 1
+    },
+    {
+      "col": 255,
+      "row": 10,
+      "width": 7,
+      "height": 1
+    }
+  ],
+  "movingPlatforms": [
+    {
+      "id": "gauntlet-ferry-a",
+      "col": 16,
+      "row": 10,
+      "width": 4,
+      "height": 1,
+      "axis": "x",
+      "distance": 60,
+      "durationMs": 2450
+    },
+    {
+      "id": "gauntlet-lift-a",
+      "col": 30,
+      "row": 10,
+      "width": 4,
+      "height": 1,
+      "axis": "y",
+      "distance": 82,
+      "durationMs": 2250,
+      "phase": 0.2
+    },
+    {
+      "id": "gauntlet-ferry-b",
+      "col": 61,
+      "row": 9,
+      "width": 4,
+      "height": 1,
+      "axis": "x",
+      "distance": 110,
+      "durationMs": 2700,
+      "phase": 0.42
+    },
+    {
+      "id": "gauntlet-lift-b",
+      "col": 94,
+      "row": 10,
+      "width": 4,
+      "height": 1,
+      "axis": "y",
+      "distance": 82,
+      "durationMs": 2350,
+      "phase": 0.58
+    },
+    {
+      "id": "gauntlet-ferry-c",
+      "col": 129,
+      "row": 9,
+      "width": 4,
+      "height": 1,
+      "axis": "x",
+      "distance": 110,
+      "durationMs": 3000,
+      "phase": 0.18
+    },
+    {
+      "id": "gauntlet-lift-c",
+      "col": 152,
+      "row": 10,
+      "width": 4,
+      "height": 1,
+      "axis": "y",
+      "distance": 82,
+      "durationMs": 2500,
+      "phase": 0.35
+    },
+    {
+      "id": "gauntlet-ferry-d",
+      "col": 192,
+      "row": 9,
+      "width": 4,
+      "height": 1,
+      "axis": "x",
+      "distance": 110,
+      "durationMs": 2950,
+      "phase": 0.66
+    },
+    {
+      "id": "gauntlet-lift-d",
+      "col": 214,
+      "row": 9,
+      "width": 4,
+      "height": 1,
+      "axis": "y",
+      "distance": 82,
+      "durationMs": 2400,
+      "phase": 0.1
+    }
+  ],
+  "hazards": [
+    {
+      "id": "gauntlet-thorns-a",
+      "type": "spikes",
+      "x": 760,
+      "surfaceY": 640,
+      "width": 190,
+      "height": 60,
+      "orientation": "floor"
+    },
+    {
+      "id": "gauntlet-thorns-b",
+      "type": "spikes",
+      "x": 2440,
+      "surfaceY": 576,
+      "width": 170,
+      "height": 58,
+      "orientation": "floor"
+    },
+    {
+      "id": "gauntlet-thorns-c",
+      "type": "spikes",
+      "x": 3540,
+      "surfaceY": 640,
+      "width": 210,
+      "height": 60,
+      "orientation": "floor"
+    },
+    {
+      "id": "gauntlet-thorns-d",
+      "type": "spikes",
+      "x": 5580,
+      "surfaceY": 640,
+      "width": 240,
+      "height": 62,
+      "orientation": "floor"
+    },
+    {
+      "id": "gauntlet-thorns-e",
+      "type": "spikes",
+      "x": 9300,
+      "surfaceY": 640,
+      "width": 240,
+      "height": 62,
+      "orientation": "floor"
+    },
+    {
+      "id": "gauntlet-thorns-f",
+      "type": "spikes",
+      "x": 10540,
+      "surfaceY": 576,
+      "width": 190,
+      "height": 60,
+      "orientation": "floor"
+    },
+    {
+      "id": "gauntlet-thorns-g",
+      "type": "spikes",
+      "x": 14800,
+      "surfaceY": 640,
+      "width": 260,
+      "height": 64,
+      "orientation": "floor"
+    },
+    {
+      "id": "gauntlet-thorns-h",
+      "type": "spikes",
+      "x": 16540,
+      "surfaceY": 640,
+      "width": 190,
+      "height": 60,
+      "orientation": "floor"
+    }
+  ],
+  "coins": [
+    {
+      "x": 430,
+      "y": 584
+    },
+    {
+      "x": 650,
+      "y": 584
+    },
+    {
+      "x": 1140,
+      "y": 520
+    },
+    {
+      "x": 1780,
+      "y": 520
+    },
+    {
+      "x": 2350,
+      "y": 456
+    },
+    {
+      "x": 2940,
+      "y": 520
+    },
+    {
+      "x": 3740,
+      "y": 520
+    },
+    {
+      "x": 4380,
+      "y": 392
+    },
+    {
+      "x": 5060,
+      "y": 584
+    },
+    {
+      "x": 5800,
+      "y": 520
+    },
+    {
+      "x": 6560,
+      "y": 392
+    },
+    {
+      "x": 7240,
+      "y": 584
+    },
+    {
+      "x": 8060,
+      "y": 520
+    },
+    {
+      "x": 8840,
+      "y": 456
+    },
+    {
+      "x": 9640,
+      "y": 392
+    },
+    {
+      "x": 10460,
+      "y": 584
+    },
+    {
+      "x": 11280,
+      "y": 392
+    },
+    {
+      "x": 12120,
+      "y": 456
+    },
+    {
+      "x": 13020,
+      "y": 584
+    },
+    {
+      "x": 13860,
+      "y": 392
+    },
+    {
+      "x": 14740,
+      "y": 520
+    },
+    {
+      "x": 15640,
+      "y": 520
+    },
+    {
+      "x": 16220,
+      "y": 584
+    }
+  ],
+  "enemies": [
+    {
+      "id": "gauntlet-guard-a",
+      "x": 590,
+      "surfaceY": 640,
+      "patrolMinX": 320,
+      "patrolMaxX": 850
+    },
+    {
+      "id": "gauntlet-core-a",
+      "type": "azure-core",
+      "respawnPolicy": "regenerate",
+      "countsForScore": false,
+      "x": 1780,
+      "y": 520,
+      "patrolMinX": 1780,
+      "patrolMaxX": 1780
+    },
+    {
+      "id": "gauntlet-core-b",
+      "type": "azure-core",
+      "respawnPolicy": "regenerate",
+      "countsForScore": false,
+      "x": 4380,
+      "y": 392,
+      "patrolMinX": 4280,
+      "patrolMaxX": 4560
+    },
+    {
+      "id": "gauntlet-guard-b",
+      "x": 5380,
+      "surfaceY": 640,
+      "patrolMinX": 5100,
+      "patrolMaxX": 5800
+    },
+    {
+      "id": "gauntlet-core-c",
+      "type": "azure-core",
+      "respawnPolicy": "regenerate",
+      "countsForScore": false,
+      "x": 6560,
+      "y": 392,
+      "patrolMinX": 6460,
+      "patrolMaxX": 6760
+    },
+    {
+      "id": "gauntlet-core-d",
+      "type": "azure-core",
+      "respawnPolicy": "regenerate",
+      "countsForScore": false,
+      "x": 8840,
+      "y": 456,
+      "patrolMinX": 8740,
+      "patrolMaxX": 9040
+    },
+    {
+      "id": "gauntlet-guard-c",
+      "x": 10480,
+      "surfaceY": 576,
+      "patrolMinX": 10320,
+      "patrolMaxX": 10740
+    },
+    {
+      "id": "gauntlet-core-e",
+      "type": "azure-core",
+      "respawnPolicy": "regenerate",
+      "countsForScore": false,
+      "x": 12120,
+      "y": 456,
+      "patrolMinX": 12120,
+      "patrolMaxX": 12120
+    },
+    {
+      "id": "gauntlet-core-f",
+      "type": "azure-core",
+      "respawnPolicy": "regenerate",
+      "countsForScore": false,
+      "x": 14740,
+      "y": 520,
+      "patrolMinX": 14620,
+      "patrolMaxX": 14960
+    },
+    {
+      "id": "gauntlet-guard-d",
+      "x": 16400,
+      "surfaceY": 640,
+      "patrolMinX": 16340,
+      "patrolMaxX": 16740
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "gauntlet-check-a",
+      "x": 3420,
+      "surfaceY": 640,
+      "spawnX": 3440,
+      "spawnSurfaceY": 640
+    },
+    {
+      "id": "gauntlet-check-b",
+      "x": 6720,
+      "surfaceY": 576,
+      "spawnX": 6740,
+      "spawnSurfaceY": 576
+    },
+    {
+      "id": "gauntlet-check-c",
+      "x": 13200,
+      "surfaceY": 512,
+      "spawnX": 13220,
+      "spawnSurfaceY": 512
+    }
+  ],
+  "sections": [
+    {
+      "id": "first-remix",
+      "startX": 0,
+      "endX": 4200,
+      "purpose": "Repeat 2-1 style spike reads and basic moving platforms."
+    },
+    {
+      "id": "second-remix",
+      "startX": 4200,
+      "endX": 8400,
+      "purpose": "Repeat 2-2 ferry timing with longer gaps."
+    },
+    {
+      "id": "third-remix",
+      "startX": 8400,
+      "endX": 12600,
+      "purpose": "Repeat 2-3 Homing over brambles with lift support."
+    },
+    {
+      "id": "final-remix",
+      "startX": 12600,
+      "endX": 16800,
+      "purpose": "Repeat 2-4 canopy lifts under late-stage pressure."
+    }
+  ],
+  "goal": {
+    "x": 16440,
+    "surfaceY": 640
+  }
+}

@@ -1,0 +1,258 @@
+{
+  "id": "2-6",
+  "subtitle": "Heartroot Duel",
+  "objective": "Defeat the Boss",
+  "theme": "emerald-sanctuary",
+  "rankTargets": {
+    "sTime": 82,
+    "aTime": 110,
+    "bTime": 146,
+    "cTime": 198
+  },
+  "world": {
+    "width": 7200,
+    "height": 1080,
+    "tileSize": 64
+  },
+  "playerSpawn": {
+    "x": 256,
+    "surfaceY": 640
+  },
+  "platforms": [
+    {
+      "col": 2,
+      "row": 10,
+      "width": 14,
+      "height": 1
+    },
+    {
+      "col": 22,
+      "row": 9,
+      "width": 7,
+      "height": 1
+    },
+    {
+      "col": 36,
+      "row": 8,
+      "width": 6,
+      "height": 1
+    },
+    {
+      "col": 50,
+      "row": 9,
+      "width": 7,
+      "height": 1
+    },
+    {
+      "col": 66,
+      "row": 10,
+      "width": 8,
+      "height": 1
+    },
+    {
+      "col": 82,
+      "row": 8,
+      "width": 8,
+      "height": 1
+    },
+    {
+      "col": 96,
+      "row": 10,
+      "width": 14,
+      "height": 1
+    },
+    {
+      "col": 102,
+      "row": 9,
+      "width": 6,
+      "height": 1
+    }
+  ],
+  "movingPlatforms": [
+    {
+      "id": "boss-approach-ferry-a",
+      "col": 17,
+      "row": 10,
+      "width": 4,
+      "height": 1,
+      "axis": "x",
+      "distance": 60,
+      "durationMs": 2500
+    },
+    {
+      "id": "boss-approach-lift-a",
+      "col": 31,
+      "row": 9,
+      "width": 4,
+      "height": 1,
+      "axis": "y",
+      "distance": 82,
+      "durationMs": 2300,
+      "phase": 0.25
+    },
+    {
+      "id": "boss-approach-ferry-b",
+      "col": 59,
+      "row": 9,
+      "width": 4,
+      "height": 1,
+      "axis": "x",
+      "distance": 110,
+      "durationMs": 2700,
+      "phase": 0.5
+    },
+    {
+      "id": "boss-approach-lift-b",
+      "col": 76,
+      "row": 9,
+      "width": 4,
+      "height": 1,
+      "axis": "y",
+      "distance": 82,
+      "durationMs": 2400,
+      "phase": 0.7
+    }
+  ],
+  "hazards": [
+    {
+      "id": "boss-thorn-a",
+      "type": "spikes",
+      "x": 760,
+      "surfaceY": 640,
+      "width": 190,
+      "height": 60,
+      "orientation": "floor"
+    },
+    {
+      "id": "boss-thorn-b",
+      "type": "spikes",
+      "x": 2500,
+      "surfaceY": 512,
+      "width": 170,
+      "height": 58,
+      "orientation": "floor"
+    },
+    {
+      "id": "boss-thorn-c",
+      "type": "spikes",
+      "x": 4500,
+      "surfaceY": 640,
+      "width": 210,
+      "height": 60,
+      "orientation": "floor"
+    },
+    {
+      "id": "boss-thorn-d",
+      "type": "spikes",
+      "x": 6760,
+      "surfaceY": 640,
+      "width": 190,
+      "height": 60,
+      "orientation": "floor"
+    }
+  ],
+  "coins": [],
+  "enemies": [
+    {
+      "id": "boss-prototype",
+      "type": "azure-core",
+      "respawnPolicy": "persistent",
+      "countsForScore": true,
+      "x": 6540,
+      "y": 384,
+      "patrolMinX": 6540,
+      "patrolMaxX": 6540
+    },
+    {
+      "id": "heartroot-core-a",
+      "type": "azure-core",
+      "respawnDelayMs": 650,
+      "x": 1240,
+      "y": 440,
+      "patrolMinX": 1240,
+      "patrolMaxX": 1240
+    },
+    {
+      "id": "heartroot-core-b",
+      "type": "azure-core",
+      "respawnDelayMs": 650,
+      "x": 2100,
+      "y": 360,
+      "patrolMinX": 2100,
+      "patrolMaxX": 2100
+    },
+    {
+      "id": "heartroot-core-c",
+      "type": "azure-core",
+      "respawnDelayMs": 650,
+      "x": 2860,
+      "y": 410,
+      "patrolMinX": 2860,
+      "patrolMaxX": 2860
+    },
+    {
+      "id": "heartroot-core-d",
+      "type": "azure-core",
+      "respawnDelayMs": 650,
+      "x": 3700,
+      "y": 320,
+      "patrolMinX": 3700,
+      "patrolMaxX": 3700
+    },
+    {
+      "id": "heartroot-core-e",
+      "type": "azure-core",
+      "respawnDelayMs": 650,
+      "x": 4680,
+      "y": 420,
+      "patrolMinX": 4680,
+      "patrolMaxX": 4680
+    },
+    {
+      "id": "heartroot-core-f",
+      "type": "azure-core",
+      "respawnDelayMs": 650,
+      "x": 5600,
+      "y": 370,
+      "patrolMinX": 5600,
+      "patrolMaxX": 5600
+    }
+  ],
+  "checkpoints": [],
+  "sections": [
+    {
+      "id": "heartroot-arena",
+      "startX": 128,
+      "endX": 7100,
+      "purpose": "Four boss approach phases using World 02 spike and moving-platform pressure."
+    },
+    {
+      "id": "phase-1",
+      "startX": 0,
+      "endX": 7200,
+      "purpose": "Simple aimed shots while moving platforms teach timing."
+    },
+    {
+      "id": "phase-2",
+      "startX": 0,
+      "endX": 7200,
+      "purpose": "Sweeping volleys push the player toward spike beds."
+    },
+    {
+      "id": "phase-3",
+      "startX": 0,
+      "endX": 7200,
+      "purpose": "Alternating high-low barrages require jumping, crouching, and platform reads."
+    },
+    {
+      "id": "phase-4",
+      "startX": 0,
+      "endX": 7200,
+      "purpose": "Dense radial fire with Homing approach windows across the arena."
+    }
+  ],
+  "goal": {
+    "x": 6800,
+    "surfaceY": 640
+  }
+}

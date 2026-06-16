@@ -1,0 +1,70 @@
+{
+  "id": "3-6",
+  "subtitle": "Leviathan Mirror",
+  "objective": "Defeat the Boss",
+  "theme": "cerulean-depths",
+  "rankTargets": {
+    "sTime": 86,
+    "aTime": 116,
+    "bTime": 154,
+    "cTime": 210
+  },
+  "world": {
+    "width": 7600,
+    "height": 1080,
+    "tileSize": 64
+  },
+  "playerSpawn": {
+    "x": 256,
+    "surfaceY": 640
+  },
+  "platforms": [
+    { "col": 2, "row": 10, "width": 14, "height": 1 },
+    { "col": 24, "row": 5, "width": 8, "height": 1 },
+    { "col": 42, "row": 10, "width": 8, "height": 1 },
+    { "col": 62, "row": 5, "width": 8, "height": 1 },
+    { "col": 82, "row": 10, "width": 8, "height": 1 },
+    { "col": 99, "row": 10, "width": 17, "height": 1 },
+    { "col": 106, "row": 9, "width": 6, "height": 1 }
+  ],
+  "gravityZones": [
+    { "id": "boss-up-a", "x": 1300, "y": 0, "width": 1800, "height": 1080, "direction": "up" },
+    { "id": "boss-down-a", "x": 3100, "y": 0, "width": 1700, "height": 1080, "direction": "down" },
+    { "id": "boss-up-b", "x": 4800, "y": 0, "width": 1400, "height": 1080, "direction": "up" },
+    { "id": "boss-down-b", "x": 6200, "y": 0, "width": 1400, "height": 1080, "direction": "down" }
+  ],
+  "movingPlatforms": [
+    { "id": "leviathan-ferry-a", "col": 17, "row": 8, "width": 4, "height": 1, "axis": "x", "distance": 300, "durationMs": 2550 },
+    { "id": "leviathan-ferry-b", "col": 53, "row": 8, "width": 4, "height": 1, "axis": "x", "distance": 360, "durationMs": 2800, "phase": 0.45 }
+  ],
+  "coins": [],
+  "enemies": [
+    {
+      "id": "boss-prototype",
+      "type": "azure-core",
+      "respawnPolicy": "persistent",
+      "countsForScore": true,
+      "x": 7000,
+      "y": 384,
+      "patrolMinX": 7000,
+      "patrolMaxX": 7000
+    },
+    { "id": "leviathan-core-a", "type": "azure-core", "respawnDelayMs": 650, "x": 1480, "y": 420, "patrolMinX": 1480, "patrolMaxX": 1480 },
+    { "id": "leviathan-core-b", "type": "azure-core", "respawnDelayMs": 650, "x": 2650, "y": 420, "patrolMinX": 2650, "patrolMaxX": 2650 },
+    { "id": "leviathan-core-c", "type": "azure-core", "respawnDelayMs": 650, "x": 3950, "y": 430, "patrolMinX": 3950, "patrolMaxX": 3950 },
+    { "id": "leviathan-core-d", "type": "azure-core", "respawnDelayMs": 650, "x": 5350, "y": 420, "patrolMinX": 5350, "patrolMaxX": 5350 },
+    { "id": "leviathan-core-e", "type": "azure-core", "respawnDelayMs": 650, "x": 6260, "y": 410, "patrolMinX": 6260, "patrolMaxX": 6260 }
+  ],
+  "checkpoints": [],
+  "sections": [
+    { "id": "leviathan-arena", "startX": 128, "endX": 7500, "purpose": "Four boss approach phases that mix bullet dodging with gravity inversion." },
+    { "id": "phase-1", "startX": 0, "endX": 7600, "purpose": "Aimed shots while the player learns inverted approach routes." },
+    { "id": "phase-2", "startX": 0, "endX": 7600, "purpose": "Sweeping shots force floor-to-ceiling route choices." },
+    { "id": "phase-3", "startX": 0, "endX": 7600, "purpose": "Alternating high-low shots punish wrong gravity state." },
+    { "id": "phase-4", "startX": 0, "endX": 7600, "purpose": "Radial fire with Homing windows across mirrored platforms." }
+  ],
+  "goal": {
+    "x": 7240,
+    "surfaceY": 640
+  }
+}

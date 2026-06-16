@@ -1,0 +1,95 @@
+{
+  "id": "3-5",
+  "subtitle": "Abyss Current",
+  "objective": "Reach the Goal",
+  "theme": "cerulean-depths",
+  "rankTargets": {
+    "sTime": 92,
+    "aTime": 124,
+    "bTime": 166,
+    "cTime": 224
+  },
+  "world": {
+    "width": 17200,
+    "height": 1080,
+    "tileSize": 64
+  },
+  "playerSpawn": {
+    "x": 256,
+    "surfaceY": 640
+  },
+  "platforms": [
+    { "col": 2, "row": 10, "width": 13, "height": 1 },
+    { "col": 22, "row": 5, "width": 6, "height": 1 },
+    { "col": 36, "row": 10, "width": 7, "height": 1 },
+    { "col": 54, "row": 5, "width": 7, "height": 1 },
+    { "col": 72, "row": 10, "width": 8, "height": 1 },
+    { "col": 94, "row": 5, "width": 7, "height": 1 },
+    { "col": 112, "row": 10, "width": 8, "height": 1 },
+    { "col": 134, "row": 5, "width": 8, "height": 1 },
+    { "col": 154, "row": 10, "width": 9, "height": 1 },
+    { "col": 177, "row": 5, "width": 8, "height": 1 },
+    { "col": 199, "row": 10, "width": 9, "height": 1 },
+    { "col": 223, "row": 5, "width": 7, "height": 1 },
+    { "col": 242, "row": 10, "width": 12, "height": 1 },
+    { "col": 260, "row": 10, "width": 8, "height": 1 }
+  ],
+  "movingPlatforms": [
+    { "id": "abyss-ferry-a", "col": 16, "row": 8, "width": 4, "height": 1, "axis": "x", "distance": 300, "durationMs": 2500 },
+    { "id": "abyss-lift-a", "col": 45, "row": 8, "width": 4, "height": 1, "axis": "y", "distance": 150, "durationMs": 2350, "phase": 0.25 },
+    { "id": "abyss-ferry-b", "col": 84, "row": 8, "width": 4, "height": 1, "axis": "x", "distance": 380, "durationMs": 2800, "phase": 0.5 },
+    { "id": "abyss-lift-b", "col": 124, "row": 8, "width": 4, "height": 1, "axis": "y", "distance": 150, "durationMs": 2500, "phase": 0.7 },
+    { "id": "abyss-ferry-c", "col": 166, "row": 8, "width": 4, "height": 1, "axis": "x", "distance": 420, "durationMs": 3000, "phase": 0.35 },
+    { "id": "abyss-lift-c", "col": 212, "row": 8, "width": 4, "height": 1, "axis": "y", "distance": 150, "durationMs": 2450, "phase": 0.1 }
+  ],
+  "gravityZones": [
+    { "id": "remix-up-a", "x": 1400, "y": 0, "width": 2300, "height": 1080, "direction": "up" },
+    { "id": "remix-down-a", "x": 3700, "y": 0, "width": 2500, "height": 1080, "direction": "down" },
+    { "id": "remix-up-b", "x": 6200, "y": 0, "width": 3100, "height": 1080, "direction": "up" },
+    { "id": "remix-down-b", "x": 9300, "y": 0, "width": 2500, "height": 1080, "direction": "down" },
+    { "id": "remix-up-c", "x": 11800, "y": 0, "width": 3000, "height": 1080, "direction": "up" },
+    { "id": "remix-down-c", "x": 14800, "y": 0, "width": 2400, "height": 1080, "direction": "down" }
+  ],
+  "coins": [
+    { "x": 440, "y": 584 },
+    { "x": 1120, "y": 584 },
+    { "x": 1860, "y": 430 },
+    { "x": 2540, "y": 420 },
+    { "x": 3300, "y": 584 },
+    { "x": 4200, "y": 584 },
+    { "x": 5200, "y": 430 },
+    { "x": 6280, "y": 584 },
+    { "x": 7200, "y": 430 },
+    { "x": 8300, "y": 420 },
+    { "x": 9400, "y": 584 },
+    { "x": 10600, "y": 584 },
+    { "x": 11800, "y": 430 },
+    { "x": 13000, "y": 430 },
+    { "x": 14200, "y": 420 },
+    { "x": 15300, "y": 584 },
+    { "x": 16400, "y": 584 }
+  ],
+  "enemies": [
+    { "id": "abyss-core-a", "type": "azure-core", "respawnPolicy": "regenerate", "countsForScore": false, "x": 2540, "y": 420, "patrolMinX": 2540, "patrolMaxX": 2540 },
+    { "id": "abyss-guard-a", "x": 4620, "surfaceY": 640, "patrolMinX": 4200, "patrolMaxX": 5020 },
+    { "id": "abyss-core-b", "type": "azure-core", "respawnPolicy": "regenerate", "countsForScore": false, "x": 8300, "y": 420, "patrolMinX": 8300, "patrolMaxX": 8300 },
+    { "id": "abyss-guard-b", "x": 10100, "surfaceY": 640, "patrolMinX": 9760, "patrolMaxX": 10800 },
+    { "id": "abyss-core-c", "type": "azure-core", "respawnPolicy": "regenerate", "countsForScore": false, "x": 13000, "y": 430, "patrolMinX": 13000, "patrolMaxX": 13000 },
+    { "id": "abyss-guard-c", "x": 16100, "surfaceY": 640, "patrolMinX": 15500, "patrolMaxX": 16600 }
+  ],
+  "checkpoints": [
+    { "id": "abyss-check-a", "x": 4700, "surfaceY": 640, "spawnX": 4720, "spawnSurfaceY": 640 },
+    { "id": "abyss-check-b", "x": 10000, "surfaceY": 640, "spawnX": 10020, "spawnSurfaceY": 640 },
+    { "id": "abyss-check-c", "x": 15620, "surfaceY": 640, "spawnX": 15640, "spawnSurfaceY": 640 }
+  ],
+  "sections": [
+    { "id": "first-remix", "startX": 0, "endX": 4300, "purpose": "Repeat 3-1 inversion basics." },
+    { "id": "second-remix", "startX": 4300, "endX": 8600, "purpose": "Repeat 3-2 moving platform inversion." },
+    { "id": "third-remix", "startX": 8600, "endX": 12900, "purpose": "Repeat 3-3 short flip chains." },
+    { "id": "final-remix", "startX": 12900, "endX": 17200, "purpose": "Repeat 3-4 vortex lifts and finish." }
+  ],
+  "goal": {
+    "x": 16680,
+    "surfaceY": 640
+  }
+}

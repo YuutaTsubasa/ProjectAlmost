@@ -1,0 +1,281 @@
+{
+  "id": "6-6",
+  "subtitle": "Abyss Queen Duel",
+  "objective": "Defeat the Boss",
+  "theme": "abyssal-hollow",
+  "rankTargets": {
+    "sTime": 96,
+    "aTime": 130,
+    "bTime": 174,
+    "cTime": 232
+  },
+  "world": {
+    "width": 8600,
+    "height": 1080,
+    "tileSize": 64
+  },
+  "playerSpawn": {
+    "x": 256,
+    "surfaceY": 640
+  },
+  "platforms": [
+    {
+      "col": 2,
+      "row": 10,
+      "width": 14,
+      "height": 1
+    },
+    {
+      "col": 24,
+      "row": 9,
+      "width": 8,
+      "height": 1
+    },
+    {
+      "col": 43,
+      "row": 10,
+      "width": 8,
+      "height": 1
+    },
+    {
+      "col": 62,
+      "row": 8,
+      "width": 8,
+      "height": 1
+    },
+    {
+      "col": 82,
+      "row": 10,
+      "width": 10,
+      "height": 1
+    },
+    {
+      "col": 100,
+      "row": 10,
+      "width": 22,
+      "height": 1
+    },
+    {
+      "col": 109,
+      "row": 9,
+      "width": 7,
+      "height": 1
+    }
+  ],
+  "movingPlatforms": [
+    {
+      "id": "queen-ferry-a",
+      "col": 17,
+      "row": 10,
+      "width": 4,
+      "height": 1,
+      "axis": "x",
+      "distance": 320,
+      "durationMs": 2600,
+      "phase": 0.2
+    },
+    {
+      "id": "queen-lift-a",
+      "col": 53,
+      "row": 9,
+      "width": 4,
+      "height": 1,
+      "axis": "y",
+      "distance": 170,
+      "durationMs": 2500,
+      "phase": 0.55
+    },
+    {
+      "id": "queen-ferry-b",
+      "col": 74,
+      "row": 9,
+      "width": 4,
+      "height": 1,
+      "axis": "x",
+      "distance": 380,
+      "durationMs": 2850,
+      "phase": 0.4
+    }
+  ],
+  "hazards": [
+    {
+      "id": "queen-spike-a",
+      "type": "spikes",
+      "x": 1500,
+      "surfaceY": 640,
+      "width": 220,
+      "height": 72,
+      "orientation": "floor"
+    },
+    {
+      "id": "queen-lava-a",
+      "type": "lava",
+      "x": 2900,
+      "surfaceY": 576,
+      "width": 260,
+      "height": 78
+    },
+    {
+      "id": "queen-spike-b",
+      "type": "spikes",
+      "x": 4200,
+      "surfaceY": 640,
+      "width": 220,
+      "height": 72,
+      "orientation": "floor"
+    },
+    {
+      "id": "queen-lava-b",
+      "type": "lava",
+      "x": 5450,
+      "surfaceY": 512,
+      "width": 260,
+      "height": 78
+    },
+    {
+      "id": "queen-spike-c",
+      "type": "spikes",
+      "x": 6500,
+      "surfaceY": 640,
+      "width": 220,
+      "height": 72,
+      "orientation": "floor"
+    }
+  ],
+  "gravityZones": [
+    {
+      "id": "queen-up-a",
+      "x": 2400,
+      "y": 0,
+      "width": 2100,
+      "height": 1080,
+      "direction": "up"
+    },
+    {
+      "id": "queen-down-a",
+      "x": 4500,
+      "y": 0,
+      "width": 2000,
+      "height": 1080,
+      "direction": "down"
+    },
+    {
+      "id": "queen-up-b",
+      "x": 6500,
+      "y": 0,
+      "width": 1000,
+      "height": 1080,
+      "direction": "up"
+    }
+  ],
+  "surfaceZones": [
+    {
+      "id": "queen-ice",
+      "type": "ice",
+      "x": 4700,
+      "y": 0,
+      "width": 2200,
+      "height": 1080
+    }
+  ],
+  "coins": [],
+  "enemies": [
+    {
+      "id": "boss-prototype",
+      "type": "azure-core",
+      "respawnPolicy": "persistent",
+      "countsForScore": true,
+      "x": 7900,
+      "y": 384,
+      "patrolMinX": 7900,
+      "patrolMaxX": 7900
+    },
+    {
+      "id": "queen-core-a",
+      "type": "azure-core",
+      "respawnPolicy": "regenerate",
+      "countsForScore": false,
+      "x": 1500,
+      "y": 430,
+      "patrolMinX": 1500,
+      "patrolMaxX": 1500
+    },
+    {
+      "id": "queen-core-b",
+      "type": "azure-core",
+      "respawnPolicy": "regenerate",
+      "countsForScore": false,
+      "x": 2820,
+      "y": 390,
+      "patrolMinX": 2820,
+      "patrolMaxX": 2820
+    },
+    {
+      "id": "queen-core-c",
+      "type": "azure-core",
+      "respawnPolicy": "regenerate",
+      "countsForScore": false,
+      "x": 3980,
+      "y": 430,
+      "patrolMinX": 3980,
+      "patrolMaxX": 3980
+    },
+    {
+      "id": "queen-core-d",
+      "type": "azure-core",
+      "respawnPolicy": "regenerate",
+      "countsForScore": false,
+      "x": 5320,
+      "y": 360,
+      "patrolMinX": 5320,
+      "patrolMaxX": 5320
+    },
+    {
+      "id": "queen-core-e",
+      "type": "azure-core",
+      "respawnPolicy": "regenerate",
+      "countsForScore": false,
+      "x": 6500,
+      "y": 410,
+      "patrolMinX": 6500,
+      "patrolMaxX": 6500
+    }
+  ],
+  "checkpoints": [],
+  "sections": [
+    {
+      "id": "abyss-queen-arena",
+      "startX": 128,
+      "endX": 8500,
+      "purpose": "World 06 boss prototype combining all mechanics."
+    },
+    {
+      "id": "phase-1",
+      "startX": 0,
+      "endX": 8600,
+      "purpose": "Spikes and aimed bullet approach."
+    },
+    {
+      "id": "phase-2",
+      "startX": 0,
+      "endX": 8600,
+      "purpose": "Gravity inversion during sweep bullets."
+    },
+    {
+      "id": "phase-3",
+      "startX": 0,
+      "endX": 8600,
+      "purpose": "Ice and moving platform bullet avoidance."
+    },
+    {
+      "id": "phase-4",
+      "startX": 0,
+      "endX": 8600,
+      "purpose": "Lava, Homing windows, and radial barrage."
+    }
+  ],
+  "goal": {
+    "x": 7600,
+    "surfaceY": 640
+  }
+}

@@ -1,0 +1,270 @@
+{
+  "id": "4-2",
+  "subtitle": "Crystal Slope",
+  "objective": "Reach the Goal",
+  "theme": "frostveil-peaks",
+  "rankTargets": {
+    "sTime": 38,
+    "aTime": 54,
+    "bTime": 76,
+    "cTime": 104
+  },
+  "world": {
+    "width": 9800,
+    "height": 1080,
+    "tileSize": 64
+  },
+  "playerSpawn": {
+    "x": 256,
+    "surfaceY": 704
+  },
+  "platforms": [
+    {
+      "col": 2,
+      "row": 11,
+      "width": 13,
+      "height": 1
+    },
+    {
+      "col": 20,
+      "row": 10,
+      "width": 7,
+      "height": 1
+    },
+    {
+      "col": 31,
+      "row": 9,
+      "width": 6,
+      "height": 1
+    },
+    {
+      "col": 42,
+      "row": 8,
+      "width": 6,
+      "height": 1
+    },
+    {
+      "col": 54,
+      "row": 7,
+      "width": 7,
+      "height": 1
+    },
+    {
+      "col": 68,
+      "row": 8,
+      "width": 7,
+      "height": 1
+    },
+    {
+      "col": 82,
+      "row": 9,
+      "width": 7,
+      "height": 1
+    },
+    {
+      "col": 96,
+      "row": 10,
+      "width": 8,
+      "height": 1
+    },
+    {
+      "col": 114,
+      "row": 9,
+      "width": 8,
+      "height": 1
+    },
+    {
+      "col": 132,
+      "row": 10,
+      "width": 18,
+      "height": 1
+    }
+  ],
+  "movingPlatforms": [
+    {
+      "id": "slope-ferry-a",
+      "col": 108,
+      "row": 10,
+      "width": 4,
+      "height": 1,
+      "axis": "x",
+      "distance": 320,
+      "durationMs": 2600,
+      "phase": 0.35
+    }
+  ],
+  "surfaceZones": [
+    {
+      "id": "slope-up-ice",
+      "type": "ice",
+      "x": 900,
+      "y": 0,
+      "width": 3000,
+      "height": 1080
+    },
+    {
+      "id": "crest-ice",
+      "type": "ice",
+      "x": 3600,
+      "y": 0,
+      "width": 1700,
+      "height": 1080
+    },
+    {
+      "id": "slope-down-ice",
+      "type": "ice",
+      "x": 5200,
+      "y": 0,
+      "width": 3000,
+      "height": 1080
+    },
+    {
+      "id": "exit-ice",
+      "type": "ice",
+      "x": 8200,
+      "y": 0,
+      "width": 1400,
+      "height": 1080
+    }
+  ],
+  "coins": [
+    {
+      "x": 430,
+      "y": 648
+    },
+    {
+      "x": 1050,
+      "y": 600
+    },
+    {
+      "x": 1480,
+      "y": 560
+    },
+    {
+      "x": 2020,
+      "y": 500
+    },
+    {
+      "x": 2620,
+      "y": 450
+    },
+    {
+      "x": 3240,
+      "y": 400
+    },
+    {
+      "x": 3900,
+      "y": 340
+    },
+    {
+      "x": 4600,
+      "y": 330
+    },
+    {
+      "x": 5400,
+      "y": 390
+    },
+    {
+      "x": 6160,
+      "y": 450
+    },
+    {
+      "x": 6900,
+      "y": 520
+    },
+    {
+      "x": 7700,
+      "y": 584
+    },
+    {
+      "x": 8500,
+      "y": 520
+    },
+    {
+      "x": 9200,
+      "y": 584
+    }
+  ],
+  "enemies": [
+    {
+      "id": "slope-guard-a",
+      "x": 520,
+      "surfaceY": 704,
+      "patrolMinX": 320,
+      "patrolMaxX": 780
+    },
+    {
+      "id": "slope-core-a",
+      "type": "azure-core",
+      "respawnPolicy": "regenerate",
+      "countsForScore": false,
+      "x": 3300,
+      "y": 390,
+      "patrolMinX": 3300,
+      "patrolMaxX": 3300
+    },
+    {
+      "id": "slope-guard-b",
+      "x": 6300,
+      "surfaceY": 640,
+      "patrolMinX": 6160,
+      "patrolMaxX": 6620
+    },
+    {
+      "id": "slope-core-b",
+      "type": "azure-core",
+      "respawnPolicy": "regenerate",
+      "countsForScore": false,
+      "x": 8500,
+      "y": 500,
+      "patrolMinX": 8500,
+      "patrolMaxX": 8500
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "slope-crest-check",
+      "x": 3720,
+      "surfaceY": 448,
+      "spawnX": 3740,
+      "spawnSurfaceY": 448
+    },
+    {
+      "id": "slope-exit-check",
+      "x": 8760,
+      "surfaceY": 640,
+      "spawnX": 8780,
+      "spawnSurfaceY": 640
+    }
+  ],
+  "sections": [
+    {
+      "id": "climb-slope",
+      "startX": 0,
+      "endX": 3500,
+      "purpose": "Climb a stepped icy slope."
+    },
+    {
+      "id": "crest-control",
+      "startX": 3500,
+      "endX": 5600,
+      "purpose": "Control momentum near the crest."
+    },
+    {
+      "id": "descent-slope",
+      "startX": 5600,
+      "endX": 8200,
+      "purpose": "Descend without overshooting jumps."
+    },
+    {
+      "id": "exit-ferry",
+      "startX": 8200,
+      "endX": 9800,
+      "purpose": "Combine ice with one moving platform."
+    }
+  ],
+  "goal": {
+    "x": 9200,
+    "surfaceY": 640
+  }
+}

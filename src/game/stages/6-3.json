@@ -1,0 +1,309 @@
+{
+  "id": "6-3",
+  "subtitle": "Abyssal Conveyor",
+  "objective": "Reach the Goal",
+  "theme": "abyssal-hollow",
+  "rankTargets": {
+    "sTime": 50,
+    "aTime": 70,
+    "bTime": 98,
+    "cTime": 136
+  },
+  "world": {
+    "width": 11200,
+    "height": 1080,
+    "tileSize": 64
+  },
+  "playerSpawn": {
+    "x": 256,
+    "surfaceY": 640
+  },
+  "platforms": [
+    {
+      "col": 2,
+      "row": 10,
+      "width": 12,
+      "height": 1
+    },
+    {
+      "col": 22,
+      "row": 10,
+      "width": 6,
+      "height": 1
+    },
+    {
+      "col": 38,
+      "row": 9,
+      "width": 6,
+      "height": 1
+    },
+    {
+      "col": 55,
+      "row": 10,
+      "width": 6,
+      "height": 1
+    },
+    {
+      "col": 72,
+      "row": 8,
+      "width": 6,
+      "height": 1
+    },
+    {
+      "col": 90,
+      "row": 10,
+      "width": 7,
+      "height": 1
+    },
+    {
+      "col": 110,
+      "row": 9,
+      "width": 7,
+      "height": 1
+    },
+    {
+      "col": 132,
+      "row": 10,
+      "width": 8,
+      "height": 1
+    },
+    {
+      "col": 154,
+      "row": 10,
+      "width": 15,
+      "height": 1
+    }
+  ],
+  "movingPlatforms": [
+    {
+      "id": "abyssal-ferry-a",
+      "col": 16,
+      "row": 10,
+      "width": 4,
+      "height": 1,
+      "axis": "x",
+      "distance": 340,
+      "durationMs": 2600,
+      "phase": 0.15
+    },
+    {
+      "id": "abyssal-lift-a",
+      "col": 47,
+      "row": 9,
+      "width": 4,
+      "height": 1,
+      "axis": "y",
+      "distance": 170,
+      "durationMs": 2450,
+      "phase": 0.5
+    },
+    {
+      "id": "abyssal-ferry-b",
+      "col": 122,
+      "row": 9,
+      "width": 4,
+      "height": 1,
+      "axis": "x",
+      "distance": 420,
+      "durationMs": 3100,
+      "phase": 0.35
+    }
+  ],
+  "hazards": [
+    {
+      "id": "conveyor-lava-a",
+      "type": "lava",
+      "x": 1650,
+      "surfaceY": 640,
+      "width": 260,
+      "height": 78
+    },
+    {
+      "id": "conveyor-spike-a",
+      "type": "spikes",
+      "x": 2800,
+      "surfaceY": 640,
+      "width": 220,
+      "height": 72,
+      "orientation": "floor"
+    },
+    {
+      "id": "conveyor-lava-b",
+      "type": "lava",
+      "x": 4800,
+      "surfaceY": 640,
+      "width": 260,
+      "height": 78
+    },
+    {
+      "id": "conveyor-spike-b",
+      "type": "spikes",
+      "x": 6700,
+      "surfaceY": 512,
+      "width": 220,
+      "height": 72,
+      "orientation": "floor"
+    },
+    {
+      "id": "conveyor-lava-c",
+      "type": "lava",
+      "x": 8500,
+      "surfaceY": 640,
+      "width": 260,
+      "height": 78
+    },
+    {
+      "id": "conveyor-spike-c",
+      "type": "spikes",
+      "x": 10000,
+      "surfaceY": 640,
+      "width": 220,
+      "height": 72,
+      "orientation": "floor"
+    }
+  ],
+  "gravityZones": [],
+  "surfaceZones": [
+    {
+      "id": "conveyor-ice-a",
+      "type": "ice",
+      "x": 3000,
+      "y": 0,
+      "width": 2600,
+      "height": 1080
+    },
+    {
+      "id": "conveyor-ice-b",
+      "type": "ice",
+      "x": 7600,
+      "y": 0,
+      "width": 2200,
+      "height": 1080
+    }
+  ],
+  "coins": [
+    {
+      "x": 420,
+      "y": 584
+    },
+    {
+      "x": 1100,
+      "y": 584
+    },
+    {
+      "x": 1900,
+      "y": 520
+    },
+    {
+      "x": 2900,
+      "y": 520
+    },
+    {
+      "x": 3950,
+      "y": 500
+    },
+    {
+      "x": 5100,
+      "y": 520
+    },
+    {
+      "x": 6400,
+      "y": 390
+    },
+    {
+      "x": 7800,
+      "y": 560
+    },
+    {
+      "x": 9000,
+      "y": 500
+    },
+    {
+      "x": 10300,
+      "y": 584
+    }
+  ],
+  "enemies": [
+    {
+      "id": "conveyor-guard-a",
+      "x": 580,
+      "surfaceY": 640,
+      "patrolMinX": 320,
+      "patrolMaxX": 780
+    },
+    {
+      "id": "conveyor-core-a",
+      "type": "azure-core",
+      "respawnPolicy": "regenerate",
+      "countsForScore": false,
+      "x": 2800,
+      "y": 500,
+      "patrolMinX": 2800,
+      "patrolMaxX": 2800
+    },
+    {
+      "id": "conveyor-guard-b",
+      "x": 3600,
+      "surfaceY": 640,
+      "patrolMinX": 3540,
+      "patrolMaxX": 3880
+    },
+    {
+      "id": "conveyor-core-b",
+      "type": "azure-core",
+      "respawnPolicy": "regenerate",
+      "countsForScore": false,
+      "x": 6400,
+      "y": 390,
+      "patrolMinX": 6400,
+      "patrolMaxX": 6400
+    },
+    {
+      "id": "conveyor-guard-c",
+      "x": 10100,
+      "surfaceY": 640,
+      "patrolMinX": 9900,
+      "patrolMaxX": 10700
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "conveyor-mid-check",
+      "x": 3650,
+      "surfaceY": 640,
+      "spawnX": 3670,
+      "spawnSurfaceY": 640
+    },
+    {
+      "id": "conveyor-exit-check",
+      "x": 10100,
+      "surfaceY": 640,
+      "spawnX": 10120,
+      "spawnSurfaceY": 640
+    }
+  ],
+  "sections": [
+    {
+      "id": "moving-trap-entry",
+      "startX": 0,
+      "endX": 3600,
+      "purpose": "Moving platform plus floor traps."
+    },
+    {
+      "id": "icy-chain",
+      "startX": 3600,
+      "endX": 7800,
+      "purpose": "Ice recovery into Homing chain."
+    },
+    {
+      "id": "exit-conveyor",
+      "startX": 7800,
+      "endX": 11200,
+      "purpose": "Fast final moving platform route."
+    }
+  ],
+  "goal": {
+    "x": 10300,
+    "surfaceY": 640
+  }
+}

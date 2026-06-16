@@ -1,0 +1,264 @@
+{
+  "id": "5-3",
+  "subtitle": "Eruption Chain",
+  "objective": "Reach the Goal",
+  "theme": "emberfall-caldera",
+  "rankTargets": {
+    "sTime": 44,
+    "aTime": 62,
+    "bTime": 88,
+    "cTime": 120
+  },
+  "world": {
+    "width": 10800,
+    "height": 1080,
+    "tileSize": 64
+  },
+  "playerSpawn": {
+    "x": 256,
+    "surfaceY": 640
+  },
+  "platforms": [
+    {
+      "col": 2,
+      "row": 10,
+      "width": 12,
+      "height": 1
+    },
+    {
+      "col": 22,
+      "row": 10,
+      "width": 5,
+      "height": 1
+    },
+    {
+      "col": 36,
+      "row": 9,
+      "width": 5,
+      "height": 1
+    },
+    {
+      "col": 50,
+      "row": 10,
+      "width": 5,
+      "height": 1
+    },
+    {
+      "col": 65,
+      "row": 8,
+      "width": 5,
+      "height": 1
+    },
+    {
+      "col": 80,
+      "row": 10,
+      "width": 6,
+      "height": 1
+    },
+    {
+      "col": 98,
+      "row": 9,
+      "width": 6,
+      "height": 1
+    },
+    {
+      "col": 116,
+      "row": 10,
+      "width": 7,
+      "height": 1
+    },
+    {
+      "col": 138,
+      "row": 10,
+      "width": 22,
+      "height": 1
+    }
+  ],
+  "movingPlatforms": [],
+  "hazards": [
+    {
+      "id": "eruption-a",
+      "type": "lava",
+      "x": 1650,
+      "surfaceY": 640,
+      "width": 300,
+      "height": 78
+    },
+    {
+      "id": "eruption-b",
+      "type": "lava",
+      "x": 2600,
+      "surfaceY": 640,
+      "width": 320,
+      "height": 78
+    },
+    {
+      "id": "eruption-c",
+      "type": "lava",
+      "x": 3700,
+      "surfaceY": 576,
+      "width": 300,
+      "height": 78
+    },
+    {
+      "id": "eruption-d",
+      "type": "lava",
+      "x": 5200,
+      "surfaceY": 640,
+      "width": 320,
+      "height": 78
+    },
+    {
+      "id": "eruption-e",
+      "type": "lava",
+      "x": 6400,
+      "surfaceY": 512,
+      "width": 280,
+      "height": 78
+    },
+    {
+      "id": "eruption-f",
+      "type": "lava",
+      "x": 7600,
+      "surfaceY": 640,
+      "width": 340,
+      "height": 78
+    }
+  ],
+  "coins": [
+    {
+      "x": 420,
+      "y": 584
+    },
+    {
+      "x": 1120,
+      "y": 584
+    },
+    {
+      "x": 1880,
+      "y": 520
+    },
+    {
+      "x": 2480,
+      "y": 500
+    },
+    {
+      "x": 3160,
+      "y": 480
+    },
+    {
+      "x": 3860,
+      "y": 500
+    },
+    {
+      "x": 4580,
+      "y": 540
+    },
+    {
+      "x": 5400,
+      "y": 430
+    },
+    {
+      "x": 6280,
+      "y": 390
+    },
+    {
+      "x": 7200,
+      "y": 560
+    },
+    {
+      "x": 8350,
+      "y": 500
+    },
+    {
+      "x": 9300,
+      "y": 584
+    }
+  ],
+  "enemies": [
+    {
+      "id": "eruption-guard-a",
+      "x": 580,
+      "surfaceY": 640,
+      "patrolMinX": 320,
+      "patrolMaxX": 780
+    },
+    {
+      "id": "eruption-core-a",
+      "type": "azure-core",
+      "respawnPolicy": "regenerate",
+      "countsForScore": false,
+      "x": 2280,
+      "y": 500,
+      "patrolMinX": 2280,
+      "patrolMaxX": 2280
+    },
+    {
+      "id": "eruption-core-b",
+      "type": "azure-core",
+      "respawnPolicy": "regenerate",
+      "countsForScore": false,
+      "x": 3820,
+      "y": 440,
+      "patrolMinX": 3820,
+      "patrolMaxX": 3820
+    },
+    {
+      "id": "eruption-core-c",
+      "type": "azure-core",
+      "respawnPolicy": "regenerate",
+      "countsForScore": false,
+      "x": 5400,
+      "y": 430,
+      "patrolMinX": 5400,
+      "patrolMaxX": 5400
+    },
+    {
+      "id": "eruption-guard-b",
+      "x": 9000,
+      "surfaceY": 640,
+      "patrolMinX": 8820,
+      "patrolMaxX": 9600
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "eruption-mid-check",
+      "x": 3320,
+      "surfaceY": 640,
+      "spawnX": 3340,
+      "spawnSurfaceY": 640
+    },
+    {
+      "id": "eruption-exit-check",
+      "x": 9020,
+      "surfaceY": 640,
+      "spawnX": 9040,
+      "spawnSurfaceY": 640
+    }
+  ],
+  "sections": [
+    {
+      "id": "chain-over-lava",
+      "startX": 0,
+      "endX": 3600,
+      "purpose": "Homing chain over wide vents."
+    },
+    {
+      "id": "falling-rock-line",
+      "startX": 3600,
+      "endX": 7600,
+      "purpose": "Pretend eruption rocks with lava hazard lanes."
+    },
+    {
+      "id": "brake-to-goal",
+      "startX": 7600,
+      "endX": 10800,
+      "purpose": "Land safely after fast Homing."
+    }
+  ],
+  "goal": {
+    "x": 9400,
+    "surfaceY": 640
+  }
+}

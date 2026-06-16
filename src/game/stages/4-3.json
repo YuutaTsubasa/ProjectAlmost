@@ -1,0 +1,288 @@
+{
+  "id": "4-3",
+  "subtitle": "Frost Chain",
+  "objective": "Reach the Goal",
+  "theme": "frostveil-peaks",
+  "rankTargets": {
+    "sTime": 40,
+    "aTime": 56,
+    "bTime": 80,
+    "cTime": 110
+  },
+  "world": {
+    "width": 10000,
+    "height": 1080,
+    "tileSize": 64
+  },
+  "playerSpawn": {
+    "x": 256,
+    "surfaceY": 640
+  },
+  "platforms": [
+    {
+      "col": 2,
+      "row": 10,
+      "width": 12,
+      "height": 1
+    },
+    {
+      "col": 20,
+      "row": 10,
+      "width": 6,
+      "height": 1
+    },
+    {
+      "col": 35,
+      "row": 9,
+      "width": 5,
+      "height": 1
+    },
+    {
+      "col": 49,
+      "row": 10,
+      "width": 6,
+      "height": 1
+    },
+    {
+      "col": 65,
+      "row": 8,
+      "width": 5,
+      "height": 1
+    },
+    {
+      "col": 80,
+      "row": 10,
+      "width": 7,
+      "height": 1
+    },
+    {
+      "col": 98,
+      "row": 9,
+      "width": 6,
+      "height": 1
+    },
+    {
+      "col": 116,
+      "row": 10,
+      "width": 8,
+      "height": 1
+    },
+    {
+      "col": 137,
+      "row": 10,
+      "width": 16,
+      "height": 1
+    }
+  ],
+  "movingPlatforms": [
+    {
+      "id": "frost-chain-ferry-a",
+      "col": 28,
+      "row": 10,
+      "width": 4,
+      "height": 1,
+      "axis": "x",
+      "distance": 320,
+      "durationMs": 2600,
+      "phase": 0.2
+    },
+    {
+      "id": "frost-chain-ferry-b",
+      "col": 88,
+      "row": 9,
+      "width": 4,
+      "height": 1,
+      "axis": "x",
+      "distance": 360,
+      "durationMs": 2800,
+      "phase": 0.55
+    }
+  ],
+  "surfaceZones": [
+    {
+      "id": "chain-ice-a",
+      "type": "ice",
+      "x": 900,
+      "y": 0,
+      "width": 1800,
+      "height": 1080
+    },
+    {
+      "id": "chain-ice-b",
+      "type": "ice",
+      "x": 3300,
+      "y": 0,
+      "width": 1900,
+      "height": 1080
+    },
+    {
+      "id": "chain-ice-c",
+      "type": "ice",
+      "x": 5900,
+      "y": 0,
+      "width": 2200,
+      "height": 1080
+    },
+    {
+      "id": "chain-ice-d",
+      "type": "ice",
+      "x": 8000,
+      "y": 0,
+      "width": 1700,
+      "height": 1080
+    }
+  ],
+  "coins": [
+    {
+      "x": 420,
+      "y": 584
+    },
+    {
+      "x": 1100,
+      "y": 584
+    },
+    {
+      "x": 1700,
+      "y": 520
+    },
+    {
+      "x": 2320,
+      "y": 520
+    },
+    {
+      "x": 3060,
+      "y": 500
+    },
+    {
+      "x": 3780,
+      "y": 440
+    },
+    {
+      "x": 4560,
+      "y": 584
+    },
+    {
+      "x": 5400,
+      "y": 440
+    },
+    {
+      "x": 6200,
+      "y": 390
+    },
+    {
+      "x": 7040,
+      "y": 584
+    },
+    {
+      "x": 7920,
+      "y": 520
+    },
+    {
+      "x": 8800,
+      "y": 584
+    },
+    {
+      "x": 9400,
+      "y": 584
+    }
+  ],
+  "enemies": [
+    {
+      "id": "chain-guard-a",
+      "x": 600,
+      "surfaceY": 640,
+      "patrolMinX": 320,
+      "patrolMaxX": 820
+    },
+    {
+      "id": "chain-core-a",
+      "type": "azure-core",
+      "respawnPolicy": "regenerate",
+      "countsForScore": false,
+      "x": 2320,
+      "y": 500,
+      "patrolMinX": 2320,
+      "patrolMaxX": 2320
+    },
+    {
+      "id": "chain-core-b",
+      "type": "azure-core",
+      "respawnPolicy": "regenerate",
+      "countsForScore": false,
+      "x": 3820,
+      "y": 430,
+      "patrolMinX": 3820,
+      "patrolMaxX": 3820
+    },
+    {
+      "id": "chain-guard-b",
+      "x": 5380,
+      "surfaceY": 640,
+      "patrolMinX": 5080,
+      "patrolMaxX": 5600
+    },
+    {
+      "id": "chain-core-c",
+      "type": "azure-core",
+      "respawnPolicy": "regenerate",
+      "countsForScore": false,
+      "x": 6200,
+      "y": 390,
+      "patrolMinX": 6200,
+      "patrolMaxX": 6200
+    },
+    {
+      "id": "chain-guard-c",
+      "x": 9000,
+      "surfaceY": 640,
+      "patrolMinX": 8800,
+      "patrolMaxX": 9600
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "chain-mid-check",
+      "x": 3300,
+      "surfaceY": 640,
+      "spawnX": 3320,
+      "spawnSurfaceY": 640
+    },
+    {
+      "id": "chain-exit-check",
+      "x": 8920,
+      "surfaceY": 640,
+      "spawnX": 8940,
+      "spawnSurfaceY": 640
+    }
+  ],
+  "sections": [
+    {
+      "id": "slide-to-core",
+      "startX": 0,
+      "endX": 3000,
+      "purpose": "Slide into first Homing chain."
+    },
+    {
+      "id": "core-recovery",
+      "startX": 3000,
+      "endX": 5600,
+      "purpose": "Recover from Homing onto icy ground."
+    },
+    {
+      "id": "long-chain",
+      "startX": 5600,
+      "endX": 8100,
+      "purpose": "Longer ice plus Homing crossing."
+    },
+    {
+      "id": "exit-control",
+      "startX": 8100,
+      "endX": 10000,
+      "purpose": "Brake before the goal."
+    }
+  ],
+  "goal": {
+    "x": 9480,
+    "surfaceY": 640
+  }
+}

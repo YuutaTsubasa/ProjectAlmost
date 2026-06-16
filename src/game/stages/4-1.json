@@ -1,0 +1,238 @@
+{
+  "id": "4-1",
+  "subtitle": "Icebound Run",
+  "objective": "Reach the Goal",
+  "theme": "frostveil-peaks",
+  "rankTargets": {
+    "sTime": 34,
+    "aTime": 48,
+    "bTime": 68,
+    "cTime": 94
+  },
+  "world": {
+    "width": 9000,
+    "height": 1080,
+    "tileSize": 64
+  },
+  "playerSpawn": {
+    "x": 256,
+    "surfaceY": 640
+  },
+  "platforms": [
+    {
+      "col": 2,
+      "row": 10,
+      "width": 17,
+      "height": 1
+    },
+    {
+      "col": 23,
+      "row": 10,
+      "width": 12,
+      "height": 1
+    },
+    {
+      "col": 39,
+      "row": 10,
+      "width": 10,
+      "height": 1
+    },
+    {
+      "col": 54,
+      "row": 9,
+      "width": 8,
+      "height": 1
+    },
+    {
+      "col": 68,
+      "row": 10,
+      "width": 12,
+      "height": 1
+    },
+    {
+      "col": 86,
+      "row": 10,
+      "width": 10,
+      "height": 1
+    },
+    {
+      "col": 101,
+      "row": 9,
+      "width": 8,
+      "height": 1
+    },
+    {
+      "col": 116,
+      "row": 10,
+      "width": 20,
+      "height": 1
+    }
+  ],
+  "surfaceZones": [
+    {
+      "id": "first-ice",
+      "type": "ice",
+      "x": 900,
+      "y": 0,
+      "width": 1400,
+      "height": 1080
+    },
+    {
+      "id": "long-ice",
+      "type": "ice",
+      "x": 2500,
+      "y": 0,
+      "width": 2100,
+      "height": 1080
+    },
+    {
+      "id": "step-ice",
+      "type": "ice",
+      "x": 4750,
+      "y": 0,
+      "width": 1400,
+      "height": 1080
+    },
+    {
+      "id": "exit-ice",
+      "type": "ice",
+      "x": 6900,
+      "y": 0,
+      "width": 1600,
+      "height": 1080
+    }
+  ],
+  "coins": [
+    {
+      "x": 430,
+      "y": 584
+    },
+    {
+      "x": 700,
+      "y": 584
+    },
+    {
+      "x": 1180,
+      "y": 584
+    },
+    {
+      "x": 1680,
+      "y": 584
+    },
+    {
+      "x": 2280,
+      "y": 584
+    },
+    {
+      "x": 2920,
+      "y": 584
+    },
+    {
+      "x": 3560,
+      "y": 584
+    },
+    {
+      "x": 4300,
+      "y": 584
+    },
+    {
+      "x": 5200,
+      "y": 520
+    },
+    {
+      "x": 5900,
+      "y": 520
+    },
+    {
+      "x": 6900,
+      "y": 584
+    },
+    {
+      "x": 7600,
+      "y": 584
+    },
+    {
+      "x": 8300,
+      "y": 584
+    }
+  ],
+  "enemies": [
+    {
+      "id": "ice-guard-a",
+      "x": 650,
+      "surfaceY": 640,
+      "patrolMinX": 340,
+      "patrolMaxX": 1000
+    },
+    {
+      "id": "ice-guard-b",
+      "x": 2920,
+      "surfaceY": 640,
+      "patrolMinX": 2580,
+      "patrolMaxX": 3340
+    },
+    {
+      "id": "ice-core-a",
+      "type": "azure-core",
+      "respawnPolicy": "regenerate",
+      "countsForScore": false,
+      "x": 5580,
+      "y": 480,
+      "patrolMinX": 5580,
+      "patrolMaxX": 5580
+    },
+    {
+      "id": "ice-guard-c",
+      "x": 7520,
+      "surfaceY": 640,
+      "patrolMinX": 7040,
+      "patrolMaxX": 8100
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "ice-mid-check",
+      "x": 3600,
+      "surfaceY": 576,
+      "spawnX": 3620,
+      "spawnSurfaceY": 576
+    },
+    {
+      "id": "ice-exit-check",
+      "x": 7480,
+      "surfaceY": 640,
+      "spawnX": 7500,
+      "spawnSurfaceY": 640
+    }
+  ],
+  "sections": [
+    {
+      "id": "first-slide",
+      "startX": 0,
+      "endX": 2400,
+      "purpose": "Introduce low-friction ice with wide safe platforms."
+    },
+    {
+      "id": "stop-control",
+      "startX": 2400,
+      "endX": 4800,
+      "purpose": "Practice braking and jump timing after sliding."
+    },
+    {
+      "id": "ice-steps",
+      "startX": 4800,
+      "endX": 6600,
+      "purpose": "Step-like icy slope using staggered platforms."
+    },
+    {
+      "id": "exit-slide",
+      "startX": 6600,
+      "endX": 9000,
+      "purpose": "Final slide with enemy pressure into the goal."
+    }
+  ],
+  "goal": {
+    "x": 8580,
+    "surfaceY": 640
+  }
+}

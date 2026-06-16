@@ -1,0 +1,355 @@
+{
+  "id": "2-3",
+  "subtitle": "Bramble Run",
+  "objective": "Reach the Goal",
+  "theme": "emerald-sanctuary",
+  "rankTargets": {
+    "sTime": 38,
+    "aTime": 52,
+    "bTime": 74,
+    "cTime": 102
+  },
+  "world": {
+    "width": 9800,
+    "height": 1080,
+    "tileSize": 64
+  },
+  "playerSpawn": {
+    "x": 256,
+    "surfaceY": 640
+  },
+  "platforms": [
+    {
+      "col": 2,
+      "row": 10,
+      "width": 14,
+      "height": 1
+    },
+    {
+      "col": 24,
+      "row": 10,
+      "width": 5,
+      "height": 1
+    },
+    {
+      "col": 36,
+      "row": 9,
+      "width": 4,
+      "height": 1
+    },
+    {
+      "col": 47,
+      "row": 8,
+      "width": 4,
+      "height": 1
+    },
+    {
+      "col": 58,
+      "row": 10,
+      "width": 7,
+      "height": 1
+    },
+    {
+      "col": 76,
+      "row": 9,
+      "width": 5,
+      "height": 1
+    },
+    {
+      "col": 92,
+      "row": 8,
+      "width": 6,
+      "height": 1
+    },
+    {
+      "col": 110,
+      "row": 10,
+      "width": 8,
+      "height": 1
+    },
+    {
+      "col": 131,
+      "row": 10,
+      "width": 18,
+      "height": 1
+    }
+  ],
+  "movingPlatforms": [
+    {
+      "id": "bramble-lift-a",
+      "col": 18,
+      "row": 10,
+      "width": 4,
+      "height": 1,
+      "axis": "y",
+      "distance": 82,
+      "durationMs": 2300
+    },
+    {
+      "id": "bramble-lift-b",
+      "col": 67,
+      "row": 9,
+      "width": 4,
+      "height": 1,
+      "axis": "x",
+      "distance": 112,
+      "durationMs": 2700,
+      "phase": 0.3
+    },
+    {
+      "id": "bramble-lift-c",
+      "col": 102,
+      "row": 9,
+      "width": 4,
+      "height": 1,
+      "axis": "y",
+      "distance": 82,
+      "durationMs": 2400,
+      "phase": 0.5
+    }
+  ],
+  "hazards": [
+    {
+      "id": "readable-floor-thorns",
+      "type": "spikes",
+      "x": 820,
+      "surfaceY": 640,
+      "width": 190,
+      "height": 60,
+      "orientation": "floor"
+    },
+    {
+      "id": "homing-platform-thorns-a",
+      "type": "spikes",
+      "x": 1690,
+      "surfaceY": 640,
+      "width": 160,
+      "height": 58,
+      "orientation": "floor"
+    },
+    {
+      "id": "homing-platform-thorns-b",
+      "type": "spikes",
+      "x": 3920,
+      "surfaceY": 640,
+      "width": 190,
+      "height": 60,
+      "orientation": "floor"
+    },
+    {
+      "id": "homing-platform-thorns-c",
+      "type": "spikes",
+      "x": 5020,
+      "surfaceY": 576,
+      "width": 170,
+      "height": 58,
+      "orientation": "floor"
+    },
+    {
+      "id": "late-bramble-floor",
+      "type": "spikes",
+      "x": 9000,
+      "surfaceY": 640,
+      "width": 240,
+      "height": 62,
+      "orientation": "floor"
+    }
+  ],
+  "coins": [
+    {
+      "x": 410,
+      "y": 584
+    },
+    {
+      "x": 620,
+      "y": 584
+    },
+    {
+      "x": 1000,
+      "y": 520
+    },
+    {
+      "x": 1490,
+      "y": 504
+    },
+    {
+      "x": 1980,
+      "y": 430
+    },
+    {
+      "x": 2400,
+      "y": 430
+    },
+    {
+      "x": 2850,
+      "y": 430
+    },
+    {
+      "x": 3340,
+      "y": 404
+    },
+    {
+      "x": 3830,
+      "y": 340
+    },
+    {
+      "x": 4420,
+      "y": 584
+    },
+    {
+      "x": 4920,
+      "y": 520
+    },
+    {
+      "x": 5430,
+      "y": 448
+    },
+    {
+      "x": 5940,
+      "y": 448
+    },
+    {
+      "x": 6460,
+      "y": 520
+    },
+    {
+      "x": 7150,
+      "y": 392
+    },
+    {
+      "x": 7740,
+      "y": 584
+    },
+    {
+      "x": 8340,
+      "y": 520
+    },
+    {
+      "x": 8960,
+      "y": 584
+    },
+    {
+      "x": 9320,
+      "y": 584
+    }
+  ],
+  "enemies": [
+    {
+      "id": "bramble-guard-a",
+      "x": 560,
+      "surfaceY": 640,
+      "patrolMinX": 340,
+      "patrolMaxX": 840
+    },
+    {
+      "id": "bramble-core-a",
+      "type": "azure-core",
+      "respawnPolicy": "regenerate",
+      "countsForScore": false,
+      "x": 1980,
+      "y": 430,
+      "patrolMinX": 1980,
+      "patrolMaxX": 1980
+    },
+    {
+      "id": "bramble-core-b",
+      "type": "azure-core",
+      "respawnPolicy": "regenerate",
+      "countsForScore": false,
+      "x": 2400,
+      "y": 430,
+      "patrolMinX": 2400,
+      "patrolMaxX": 2400
+    },
+    {
+      "id": "bramble-core-c",
+      "type": "azure-core",
+      "respawnPolicy": "regenerate",
+      "countsForScore": false,
+      "x": 2850,
+      "y": 430,
+      "patrolMinX": 2850,
+      "patrolMaxX": 2850
+    },
+    {
+      "id": "bramble-guard-b",
+      "x": 2440,
+      "surfaceY": 576,
+      "patrolMinX": 2320,
+      "patrolMaxX": 2540
+    },
+    {
+      "id": "bramble-core-d",
+      "type": "azure-core",
+      "respawnPolicy": "regenerate",
+      "countsForScore": false,
+      "x": 5430,
+      "y": 448,
+      "patrolMinX": 5430,
+      "patrolMaxX": 5430
+    },
+    {
+      "id": "bramble-core-e",
+      "type": "azure-core",
+      "respawnPolicy": "regenerate",
+      "countsForScore": false,
+      "x": 5940,
+      "y": 448,
+      "patrolMinX": 5940,
+      "patrolMaxX": 5940
+    },
+    {
+      "id": "bramble-guard-c",
+      "x": 9020,
+      "surfaceY": 640,
+      "patrolMinX": 8480,
+      "patrolMaxX": 9300
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "chain-check",
+      "x": 3100,
+      "surfaceY": 512,
+      "spawnX": 3120,
+      "spawnSurfaceY": 512
+    },
+    {
+      "id": "bramble-exit-check",
+      "x": 7520,
+      "surfaceY": 640,
+      "spawnX": 7540,
+      "spawnSurfaceY": 640
+    }
+  ],
+  "sections": [
+    {
+      "id": "bramble-floor",
+      "startX": 0,
+      "endX": 1900,
+      "purpose": "Teach that spike floors require either spacing or jumps."
+    },
+    {
+      "id": "homing-over-thorns",
+      "startX": 1900,
+      "endX": 4200,
+      "purpose": "Use Azure Core chains over thorn pits."
+    },
+    {
+      "id": "mixed-homing-platforms",
+      "startX": 4200,
+      "endX": 7500,
+      "purpose": "Alternate moving platforms and Homing targets over long hazards."
+    },
+    {
+      "id": "bramble-exit",
+      "startX": 7500,
+      "endX": 9800,
+      "purpose": "A grounded sprint with final spike pressure."
+    }
+  ],
+  "goal": {
+    "x": 9340,
+    "surfaceY": 640
+  }
+}

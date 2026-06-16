@@ -1,0 +1,517 @@
+{
+  "id": "6-5",
+  "subtitle": "Final Synthesis",
+  "objective": "Reach the Goal",
+  "theme": "abyssal-hollow",
+  "rankTargets": {
+    "sTime": 118,
+    "aTime": 156,
+    "bTime": 208,
+    "cTime": 276
+  },
+  "world": {
+    "width": 19600,
+    "height": 1080,
+    "tileSize": 64
+  },
+  "playerSpawn": {
+    "x": 256,
+    "surfaceY": 640
+  },
+  "platforms": [
+    {
+      "col": 2,
+      "row": 10,
+      "width": 14,
+      "height": 1
+    },
+    {
+      "col": 25,
+      "row": 10,
+      "width": 6,
+      "height": 1
+    },
+    {
+      "col": 40,
+      "row": 9,
+      "width": 6,
+      "height": 1
+    },
+    {
+      "col": 56,
+      "row": 10,
+      "width": 7,
+      "height": 1
+    },
+    {
+      "col": 74,
+      "row": 8,
+      "width": 6,
+      "height": 1
+    },
+    {
+      "col": 92,
+      "row": 10,
+      "width": 8,
+      "height": 1
+    },
+    {
+      "col": 114,
+      "row": 10,
+      "width": 7,
+      "height": 1
+    },
+    {
+      "col": 135,
+      "row": 8,
+      "width": 7,
+      "height": 1
+    },
+    {
+      "col": 158,
+      "row": 10,
+      "width": 8,
+      "height": 1
+    },
+    {
+      "col": 181,
+      "row": 11,
+      "width": 8,
+      "height": 1
+    },
+    {
+      "col": 204,
+      "row": 9,
+      "width": 7,
+      "height": 1
+    },
+    {
+      "col": 226,
+      "row": 10,
+      "width": 8,
+      "height": 1
+    },
+    {
+      "col": 250,
+      "row": 8,
+      "width": 7,
+      "height": 1
+    },
+    {
+      "col": 272,
+      "row": 10,
+      "width": 8,
+      "height": 1
+    },
+    {
+      "col": 292,
+      "row": 10,
+      "width": 12,
+      "height": 1
+    }
+  ],
+  "movingPlatforms": [
+    {
+      "id": "synthesis-ferry-a",
+      "col": 18,
+      "row": 10,
+      "width": 4,
+      "height": 1,
+      "axis": "x",
+      "distance": 340,
+      "durationMs": 2700,
+      "phase": 0.15
+    },
+    {
+      "id": "synthesis-lift-a",
+      "col": 66,
+      "row": 9,
+      "width": 4,
+      "height": 1,
+      "axis": "y",
+      "distance": 170,
+      "durationMs": 2450,
+      "phase": 0.5
+    },
+    {
+      "id": "synthesis-ferry-b",
+      "col": 104,
+      "row": 10,
+      "width": 4,
+      "height": 1,
+      "axis": "x",
+      "distance": 390,
+      "durationMs": 2900,
+      "phase": 0.35
+    },
+    {
+      "id": "synthesis-lift-b",
+      "col": 145,
+      "row": 9,
+      "width": 4,
+      "height": 1,
+      "axis": "y",
+      "distance": 180,
+      "durationMs": 2600,
+      "phase": 0.7
+    },
+    {
+      "id": "synthesis-ferry-c",
+      "col": 238,
+      "row": 10,
+      "width": 4,
+      "height": 1,
+      "axis": "x",
+      "distance": 450,
+      "durationMs": 3200,
+      "phase": 0.45
+    }
+  ],
+  "hazards": [
+    {
+      "id": "synthesis-spike-a",
+      "type": "spikes",
+      "x": 1400,
+      "surfaceY": 640,
+      "width": 220,
+      "height": 72,
+      "orientation": "floor"
+    },
+    {
+      "id": "synthesis-lava-a",
+      "type": "lava",
+      "x": 2200,
+      "surfaceY": 640,
+      "width": 260,
+      "height": 78
+    },
+    {
+      "id": "synthesis-spike-b",
+      "type": "spikes",
+      "x": 3500,
+      "surfaceY": 576,
+      "width": 220,
+      "height": 72,
+      "orientation": "floor"
+    },
+    {
+      "id": "synthesis-lava-b",
+      "type": "lava",
+      "x": 5200,
+      "surfaceY": 640,
+      "width": 260,
+      "height": 78
+    },
+    {
+      "id": "synthesis-spike-c",
+      "type": "spikes",
+      "x": 6650,
+      "surfaceY": 512,
+      "width": 220,
+      "height": 72,
+      "orientation": "floor"
+    },
+    {
+      "id": "synthesis-lava-c",
+      "type": "lava",
+      "x": 8000,
+      "surfaceY": 640,
+      "width": 260,
+      "height": 78
+    },
+    {
+      "id": "synthesis-spike-d",
+      "type": "spikes",
+      "x": 9850,
+      "surfaceY": 640,
+      "width": 220,
+      "height": 72,
+      "orientation": "floor"
+    },
+    {
+      "id": "synthesis-lava-d",
+      "type": "lava",
+      "x": 11600,
+      "surfaceY": 512,
+      "width": 260,
+      "height": 78
+    },
+    {
+      "id": "synthesis-spike-e",
+      "type": "spikes",
+      "x": 13750,
+      "surfaceY": 640,
+      "width": 220,
+      "height": 72,
+      "orientation": "floor"
+    },
+    {
+      "id": "synthesis-lava-e",
+      "type": "lava",
+      "x": 15200,
+      "surfaceY": 704,
+      "width": 260,
+      "height": 78
+    },
+    {
+      "id": "synthesis-spike-f",
+      "type": "spikes",
+      "x": 17000,
+      "surfaceY": 512,
+      "width": 220,
+      "height": 72,
+      "orientation": "floor"
+    },
+    {
+      "id": "synthesis-lava-f",
+      "type": "lava",
+      "x": 18400,
+      "surfaceY": 640,
+      "width": 260,
+      "height": 78
+    }
+  ],
+  "gravityZones": [
+    {
+      "id": "synthesis-up-a",
+      "x": 4200,
+      "y": 0,
+      "width": 2800,
+      "height": 1080,
+      "direction": "up"
+    },
+    {
+      "id": "synthesis-down-a",
+      "x": 7000,
+      "y": 0,
+      "width": 3200,
+      "height": 1080,
+      "direction": "down"
+    },
+    {
+      "id": "synthesis-up-b",
+      "x": 12800,
+      "y": 0,
+      "width": 2800,
+      "height": 1080,
+      "direction": "up"
+    },
+    {
+      "id": "synthesis-down-b",
+      "x": 15600,
+      "y": 0,
+      "width": 4000,
+      "height": 1080,
+      "direction": "down"
+    }
+  ],
+  "surfaceZones": [
+    {
+      "id": "synthesis-ice-a",
+      "type": "ice",
+      "x": 2400,
+      "y": 0,
+      "width": 2800,
+      "height": 1080
+    },
+    {
+      "id": "synthesis-ice-b",
+      "type": "ice",
+      "x": 9600,
+      "y": 0,
+      "width": 3400,
+      "height": 1080
+    },
+    {
+      "id": "synthesis-ice-c",
+      "type": "ice",
+      "x": 15600,
+      "y": 0,
+      "width": 3000,
+      "height": 1080
+    }
+  ],
+  "coins": [
+    {
+      "x": 420,
+      "y": 584
+    },
+    {
+      "x": 1120,
+      "y": 584
+    },
+    {
+      "x": 1900,
+      "y": 520
+    },
+    {
+      "x": 2700,
+      "y": 520
+    },
+    {
+      "x": 3500,
+      "y": 500
+    },
+    {
+      "x": 4520,
+      "y": 520
+    },
+    {
+      "x": 5600,
+      "y": 500
+    },
+    {
+      "x": 6800,
+      "y": 390
+    },
+    {
+      "x": 7900,
+      "y": 560
+    },
+    {
+      "x": 9100,
+      "y": 584
+    },
+    {
+      "x": 10300,
+      "y": 520
+    },
+    {
+      "x": 11600,
+      "y": 390
+    },
+    {
+      "x": 13000,
+      "y": 584
+    },
+    {
+      "x": 14400,
+      "y": 620
+    },
+    {
+      "x": 15600,
+      "y": 500
+    },
+    {
+      "x": 17000,
+      "y": 390
+    },
+    {
+      "x": 18400,
+      "y": 584
+    }
+  ],
+  "enemies": [
+    {
+      "id": "synthesis-guard-a",
+      "x": 620,
+      "surfaceY": 640,
+      "patrolMinX": 340,
+      "patrolMaxX": 900
+    },
+    {
+      "id": "synthesis-core-a",
+      "type": "azure-core",
+      "respawnPolicy": "regenerate",
+      "countsForScore": false,
+      "x": 2700,
+      "y": 500,
+      "patrolMinX": 2700,
+      "patrolMaxX": 2700
+    },
+    {
+      "id": "synthesis-guard-b",
+      "x": 3700,
+      "surfaceY": 640,
+      "patrolMinX": 3600,
+      "patrolMaxX": 4000
+    },
+    {
+      "id": "synthesis-core-b",
+      "type": "azure-core",
+      "respawnPolicy": "regenerate",
+      "countsForScore": false,
+      "x": 6800,
+      "y": 390,
+      "patrolMinX": 6800,
+      "patrolMaxX": 6800
+    },
+    {
+      "id": "synthesis-guard-c",
+      "x": 10200,
+      "surfaceY": 640,
+      "patrolMinX": 10130,
+      "patrolMaxX": 10500
+    },
+    {
+      "id": "synthesis-core-c",
+      "type": "azure-core",
+      "respawnPolicy": "regenerate",
+      "countsForScore": false,
+      "x": 11600,
+      "y": 392,
+      "patrolMinX": 11600,
+      "patrolMaxX": 11600
+    },
+    {
+      "id": "synthesis-guard-d",
+      "x": 17500,
+      "surfaceY": 640,
+      "patrolMinX": 17440,
+      "patrolMaxX": 17820
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "synthesis-check-a",
+      "x": 3700,
+      "surfaceY": 640,
+      "spawnX": 3720,
+      "spawnSurfaceY": 640
+    },
+    {
+      "id": "synthesis-check-b",
+      "x": 10200,
+      "surfaceY": 640,
+      "spawnX": 10220,
+      "spawnSurfaceY": 640
+    },
+    {
+      "id": "synthesis-check-c",
+      "x": 17500,
+      "surfaceY": 640,
+      "spawnX": 17520,
+      "spawnSurfaceY": 640
+    }
+  ],
+  "sections": [
+    {
+      "id": "world2-remix",
+      "startX": 0,
+      "endX": 4600,
+      "purpose": "Spikes and moving platform remix."
+    },
+    {
+      "id": "world3-remix",
+      "startX": 4600,
+      "endX": 9200,
+      "purpose": "Gravity inversion with Homing."
+    },
+    {
+      "id": "world4-remix",
+      "startX": 9200,
+      "endX": 13800,
+      "purpose": "Ice recovery and precise braking."
+    },
+    {
+      "id": "world5-remix",
+      "startX": 13800,
+      "endX": 19600,
+      "purpose": "Lava and all mechanics combined."
+    }
+  ],
+  "goal": {
+    "x": 18800,
+    "surfaceY": 640
+  }
+}

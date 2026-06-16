@@ -4,6 +4,16 @@ Project Almost is a browser-based 2D action platformer built with Svelte, TypeSc
 
 This README is also the handoff document for humans and coding agents collaborating on the project.
 
+## Agent Workflow
+
+Before changing code in a new session, read `AGENTS.md`, then follow `docs/PROJECT_WORKFLOW.md`.
+
+For larger features, write a short brief using `docs/templates/FEATURE_BRIEF.md` before editing. The brief should identify which boundaries are touched: Svelte UI, Phaser gameplay, stage JSON, assets/preload, save data, localization, and responsive CSS.
+
+Use `docs/ARCHITECTURE_MAP.md` to decide where behavior belongs. In particular, avoid mutable module-level runtime state for individual stages, platforms, hazards, enemies, bosses, or asset variants.
+
+For the longer-term architecture direction, read `docs/ARCHITECTURE_REVIEW_TDD_DDD.md`. New systems should move toward TDD-driven pure domain rules with Svelte and Phaser acting as adapters.
+
 ## Current State
 
 The game currently includes:

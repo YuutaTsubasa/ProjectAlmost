@@ -14,7 +14,7 @@
   import { getStageIntroSequence } from './game/avg/avgRegistry'
   import type { AvgSequence } from './game/avg/avgTypes'
   import { createPlatformerGame } from './game/createGame'
-  import { deleteSave, loadSave, recordStageClear, type SaveData } from './game/save/saveData'
+  import { deleteSave, isDebugUnlockAllStagesEnabled, loadSave, recordStageClear, type SaveData } from './game/save/saveData'
   import { getNextStageId, type StageId } from './game/stages/stageRegistry'
   import { nextLocale, setLocale, translator, type TranslationKey, type TranslationParams } from './i18n'
 
@@ -42,6 +42,8 @@
     mapPlatforms: Array<{ x: number; y: number; width: number }>
     checkpointMarkers: Array<{ x: number; y: number }>
     activeCheckpointIndex: number
+    bossPhase: number
+    bossPhaseMax: number
     cleared: boolean
   }
 
@@ -111,6 +113,8 @@
     mapPlatforms: [],
     checkpointMarkers: [],
     activeCheckpointIndex: -1,
+    bossPhase: 0,
+    bossPhaseMax: 0,
     cleared: false,
   }
 
@@ -134,6 +138,18 @@
   function getStageMusicTrack(stageId = selectedStageId): MusicTrack {
     const world = stageId.split('-')[0].padStart(2, '0')
     return `world${world}${stageId.endsWith('-6') ? 'Boss' : 'Bgm'}` as MusicTrack
+  }
+
+  function getStageWorldIndex(stageId = selectedStageId): number {
+    return Number(stageId.split('-')[0])
+  }
+
+  function getStageWorldNameKey(stageId = selectedStageId): TranslationKey {
+    return `world.${getStageWorldIndex(stageId)}.name` as TranslationKey
+  }
+
+  function isBossStageId(stageId = selectedStageId): boolean {
+    return stageId.endsWith('-6')
   }
 
   function getShellBackdrop() {
@@ -290,13 +306,14 @@
     bootProgress = 100
     await new Promise((resolve) => window.setTimeout(resolve, 180))
     bootReady = true
-    preloadInBackground([...worldSelectAssets, ...sharedGameplayAssets, ...getWorldAssets(1)])
+    preloadInBackground([...worldSelectAssets, ...getWorldAssets(1)])
   }
 
   async function enterStage(stageId: StageId) {
     if (transitionPhase !== 'idle') return
     hideVirtualControls()
     selectedStageId = stageId
+    selectedWorldIndex = getStageWorldIndex(stageId)
     transitionPhase = 'cover'
     await new Promise((resolve) => window.setTimeout(resolve, 260))
     await preloadAssets([...sharedGameplayAssets, ...getWorldAssets(Number(stageId.split('-')[0]))])
@@ -425,6 +442,11 @@
     game?.loop.resetDelta()
   }
 
+  function recoverRuntimeTiming() {
+    resetGameLoopTiming()
+    music?.nudge()
+  }
+
   async function createStageGame() {
     await tick()
     await nextAnimationFrame()
@@ -501,7 +523,7 @@
 
   async function enterNextStage() {
     const nextStageId = getNextStageId(selectedStageId)
-    if (!game || !nextStageId || !saveData.stageRecords[selectedStageId]?.cleared || transitionPhase !== 'idle') return
+    if (!game || !nextStageId || (!saveData.stageRecords[selectedStageId]?.cleared && !isDebugUnlockAllStagesEnabled()) || transitionPhase !== 'idle') return
 
     hideVirtualControls()
     music?.reset(getStageMusicTrack())
@@ -510,6 +532,7 @@
     game.destroy(true)
     game = undefined
     selectedStageId = nextStageId
+    selectedWorldIndex = getStageWorldIndex(nextStageId)
     music?.prepare(getStageMusicTrack(nextStageId))
     paused = false
     resultSelection = 0
@@ -574,7 +597,7 @@
         else if (event.key === 'ArrowLeft' || event.code === 'KeyA') adjustSettings(settingsSelection, -1)
         else if (event.key === 'ArrowRight' || event.code === 'KeyD') adjustSettings(settingsSelection, 1)
         else if (event.code === 'Space' || event.key === 'Enter') activateSettingsItem()
-      } else if (!titleMenuOpen) {
+      } else if (!titleMenuOpen && !event.repeat) {
         openTitleMenu()
       } else if (event.key === 'ArrowUp' || event.key === 'ArrowDown' || event.code === 'KeyW' || event.code === 'KeyS') {
         playSfx('ui-move')
@@ -714,7 +737,7 @@
           if (justPressed(15) || (horizontal > 0 && gamepadAxisReady)) dispatchGamepadKey('ArrowRight')
           if (justPressed(0)) dispatchGamepadKey('Enter')
           if (justPressed(1)) dispatchGamepadKey('Escape')
-        } else if (!titleMenuOpen && pressed.size > 0) {
+        } else if (!titleMenuOpen && Array.from(pressed).some((index) => justPressed(index))) {
           dispatchGamepadKey('Enter')
         } else {
           if (justPressed(12) || (vertical < 0 && gamepadAxisReady)) dispatchGamepadKey('ArrowUp')
@@ -785,13 +808,16 @@
     window.addEventListener('keydown', unlockMusic)
     window.addEventListener('pointerdown', unlockMusic)
     window.addEventListener('touchstart', unlockMusic)
+    const handleRuntimeResume = () => recoverRuntimeTiming()
     const handleVisibilityChange = () => {
-      if (!document.hidden) music?.nudge()
+      if (!document.hidden) recoverRuntimeTiming()
     }
     const handleFullscreenChange = () => {
       settings = { ...settings, fullscreen: Boolean(document.fullscreenElement) }
     }
     const preventBrowserGesture = (event: Event) => event.preventDefault()
+    window.addEventListener('focus', handleRuntimeResume)
+    window.addEventListener('pageshow', handleRuntimeResume)
     document.addEventListener('fullscreenchange', handleFullscreenChange)
     document.addEventListener('visibilitychange', handleVisibilityChange)
     document.addEventListener('gesturestart', preventBrowserGesture, { passive: false })
@@ -808,6 +834,8 @@
       window.removeEventListener('keydown', unlockMusic)
       window.removeEventListener('pointerdown', unlockMusic)
       window.removeEventListener('touchstart', unlockMusic)
+      window.removeEventListener('focus', handleRuntimeResume)
+      window.removeEventListener('pageshow', handleRuntimeResume)
       document.removeEventListener('fullscreenchange', handleFullscreenChange)
       document.removeEventListener('visibilitychange', handleVisibilityChange)
       document.removeEventListener('gesturestart', preventBrowserGesture)
@@ -878,12 +906,12 @@
       <StageSelect onEnter={enterStage} onBack={enterWorldSelect} {saveData} initialStageId={selectedStageId} worldIndex={selectedWorldIndex} />
     </section>
   {:else}
-  <section class="game-panel game-enter" aria-label={`White Palace ${selectedStageId} gameplay`}>
+  <section class="game-panel game-enter" aria-label={`${$translator(getStageWorldNameKey())} ${selectedStageId} gameplay`}>
     <div class="game-frame">
       <div class="play-surface" role="application" aria-label="Gameplay touch area" onpointerdown={showVirtualControls}>
         <div bind:this={gameHost} class="game-host"></div>
 
-        <div class="hud-layer" aria-label="White Palace HUD">
+        <div class="hud-layer" aria-label={`${$translator(getStageWorldNameKey())} HUD`}>
           <section class="hud-panel status-hud">
             <span class="corner tl"></span>
             <span class="corner tr"></span>
@@ -917,7 +945,7 @@
                 </svg>
               </span>
               <div>
-                <strong>White Palace {selectedStageId}</strong>
+                <strong>{$translator(getStageWorldNameKey())} {selectedStageId}</strong>
                 <span>{$translator(`stage.${selectedStageId}.subtitle`)}</span>
               </div>
               <span class="emblem flip" aria-hidden="true">
@@ -959,8 +987,18 @@
             <span class="corner tl"></span>
             <span class="corner br"></span>
             <div class="hud-label"><span></span>{$translator('hud.objective')}</div>
-            <p>{$translator(selectedStageId === '1-6' ? 'stage.objective.defeatBoss' : 'stage.objective.reachGoal')}</p>
+            <p>{$translator(isBossStageId() ? 'stage.objective.defeatBoss' : 'stage.objective.reachGoal')}</p>
           </section>
+
+          {#if isBossStageId() && !hud.cleared}
+            <section class="hud-panel boss-phase-hud">
+              <span class="corner tr"></span>
+              <span class="corner bl"></span>
+              <div class="hud-label"><span></span>{$translator('hud.bossPhase')}</div>
+              <strong>{Math.max(1, hud.bossPhase)} <small>/ {Math.max(1, hud.bossPhaseMax)}</small></strong>
+              <p>{$translator('hud.bossPhaseHint')}</p>
+            </section>
+          {/if}
 
           <section class="bottom-hud">
             <div class="bottom-fill">
@@ -972,13 +1010,6 @@
                   <div><b>↓ / S</b><span>{$translator('hud.crouch')}</span></div>
                   <div><b>J</b><span>{$translator('hud.attack')}</span></div>
                   <div><b>Air + J</b><span>{$translator('hud.homing')}</span></div>
-                </div>
-              </div>
-              <div class="ai-callout">
-                <img class="ai-face" src={IMAGE_ASSETS.aiNavigator} alt="Palace navigator AI" />
-                <div>
-                  <span>{$translator('hud.navigator')}</span>
-                  <p>› {$translator(hud.statusMessage as TranslationKey, hud.statusParams)}</p>
                 </div>
               </div>
               <div class="readouts">
@@ -1030,7 +1061,7 @@
               onRetry={restartStage}
               onStageSelect={returnToStageSelect}
               onNextStage={enterNextStage}
-              nextStageAvailable={Boolean(getNextStageId(selectedStageId) && saveData.stageRecords[selectedStageId]?.cleared)}
+              nextStageAvailable={Boolean(getNextStageId(selectedStageId) && (saveData.stageRecords[selectedStageId]?.cleared || isDebugUnlockAllStagesEnabled()))}
               selectedAction={resultSelection}
               onSelectAction={(index) => resultSelection = index}
             />

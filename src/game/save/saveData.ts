@@ -1,29 +1,24 @@
+import {
+  createEmptyStageRecords,
+  isStageUnlockedByRecords,
+  mergeStageClearRecord,
+  type StageClearResult,
+  type StageRecord,
+} from '../../domain/progression/progressionRules'
 import { stages, type StageId } from '../stages/stageRegistry'
 
-export type StageRecord = {
-  cleared: boolean
-  bestTimeMs: number
-  bestTime: string
-  bestRank: string
-  maxCoins: number
-}
+export type { StageClearResult, StageRecord }
 
 export type SaveData = {
   version: 1
   stageRecords: Partial<Record<StageId, StageRecord>>
 }
 
-export type StageClearResult = {
-  time: string
-  rank: string
-  coins: number
-}
-
 const SAVE_KEY = 'project-almost:save'
-const RANK_ORDER = ['--', 'D', 'C', 'B', 'A', 'S']
+const DEBUG_UNLOCK_KEY = 'project-almost:debugUnlockAllStages'
 
 export function createEmptySave(): SaveData {
-  return { version: 1, stageRecords: {} }
+  return { version: 1, stageRecords: createEmptyStageRecords<StageId>() }
 }
 
 export function loadSave(): SaveData {
@@ -38,16 +33,7 @@ export function loadSave(): SaveData {
 }
 
 export function recordStageClear(save: SaveData, stageId: StageId, result: StageClearResult): SaveData {
-  const previous = save.stageRecords[stageId]
-  const timeMs = parseTime(result.time)
-  const nextRecord: StageRecord = {
-    cleared: true,
-    bestTimeMs: previous ? Math.min(previous.bestTimeMs, timeMs) : timeMs,
-    bestTime: previous && previous.bestTimeMs <= timeMs ? previous.bestTime : result.time,
-    bestRank: previous && rankValue(previous.bestRank) >= rankValue(result.rank) ? previous.bestRank : result.rank,
-    maxCoins: Math.max(previous?.maxCoins ?? 0, result.coins),
-  }
-  const next = { ...save, stageRecords: { ...save.stageRecords, [stageId]: nextRecord } }
+  const next = { ...save, stageRecords: mergeStageClearRecord(save.stageRecords, stageId, result) }
   localStorage.setItem(SAVE_KEY, JSON.stringify(next))
   return next
 }
@@ -58,17 +44,27 @@ export function deleteSave(): SaveData {
 }
 
 export function isStageUnlocked(save: SaveData, stageId: StageId): boolean {
+  if (isDebugUnlockAllStagesEnabled()) return true
+
   const ids = Object.keys(stages) as StageId[]
-  const index = ids.indexOf(stageId)
-  return index === 0 || Boolean(save.stageRecords[ids[index - 1]]?.cleared)
+  return isStageUnlockedByRecords(save.stageRecords, ids, stageId)
 }
 
-function parseTime(time: string): number {
-  const [minutes, rest] = time.split(':')
-  const [seconds, hundredths] = rest.split('.')
-  return Number(minutes) * 60_000 + Number(seconds) * 1_000 + Number(hundredths) * 10
-}
+export function isDebugUnlockAllStagesEnabled(): boolean {
+  if (!import.meta.env.DEV || typeof window === 'undefined') return false
 
-function rankValue(rank: string): number {
-  return RANK_ORDER.indexOf(rank)
+  try {
+    const params = new URLSearchParams(window.location.search)
+    const debugParam = params.get('debugUnlock') ?? params.get('debugUnlockStages')
+
+    if (debugParam === '1' || debugParam === 'true') {
+      localStorage.setItem(DEBUG_UNLOCK_KEY, '1')
+    } else if (debugParam === '0' || debugParam === 'false') {
+      localStorage.removeItem(DEBUG_UNLOCK_KEY)
+    }
+
+    return localStorage.getItem(DEBUG_UNLOCK_KEY) === '1'
+  } catch {
+    return false
+  }
 }

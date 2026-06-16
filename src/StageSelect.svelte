@@ -23,15 +23,74 @@
   }
 
   const placeholderPositions = [{ x: 35, y: 70 }, { x: 49, y: 59 }, { x: 61, y: 42 }, { x: 73, y: 54 }, { x: 83, y: 34 }, { x: 91, y: 17 }]
-  const stageOptions: StageOption[] = worldIndex === 1
-    ? [
-        { id: '1-1', subtitle: stageData['1-1'].subtitle, objective: stageData['1-1'].objective, coins: stageData['1-1'].coins.length, x: 35, y: 70, unlocked: isStageUnlocked(saveData, '1-1'), cleared: Boolean(saveData.stageRecords['1-1']?.cleared) },
-        { id: '1-2', subtitle: stageData['1-2'].subtitle, objective: isStageUnlocked(saveData, '1-2') ? stageData['1-2'].objective : 'Locked', coins: stageData['1-2'].coins.length, x: 49, y: 59, unlocked: isStageUnlocked(saveData, '1-2'), cleared: Boolean(saveData.stageRecords['1-2']?.cleared) },
-        { id: '1-3', subtitle: stageData['1-3'].subtitle, objective: isStageUnlocked(saveData, '1-3') ? stageData['1-3'].objective : 'Locked', coins: stageData['1-3'].coins.length, x: 61, y: 42, unlocked: isStageUnlocked(saveData, '1-3'), cleared: Boolean(saveData.stageRecords['1-3']?.cleared) },
-        { id: '1-4', subtitle: stageData['1-4'].subtitle, objective: isStageUnlocked(saveData, '1-4') ? stageData['1-4'].objective : 'Locked', coins: stageData['1-4'].coins.length, x: 73, y: 54, unlocked: isStageUnlocked(saveData, '1-4'), cleared: Boolean(saveData.stageRecords['1-4']?.cleared) },
-        { id: '1-5', subtitle: stageData['1-5'].subtitle, objective: isStageUnlocked(saveData, '1-5') ? stageData['1-5'].objective : 'Locked', coins: stageData['1-5'].coins.length, x: 83, y: 34, unlocked: isStageUnlocked(saveData, '1-5'), cleared: Boolean(saveData.stageRecords['1-5']?.cleared) },
-        { id: '1-6', subtitle: stageData['1-6'].subtitle, objective: isStageUnlocked(saveData, '1-6') ? stageData['1-6'].objective : 'Locked', coins: stageData['1-6'].coins.length, x: 91, y: 17, unlocked: isStageUnlocked(saveData, '1-6'), cleared: Boolean(saveData.stageRecords['1-6']?.cleared) },
-      ]
+  const worldOnePositions: Record<string, { x: number; y: number }> = {
+    '1-1': { x: 34, y: 82 },
+    '1-2': { x: 81, y: 86 },
+    '1-3': { x: 74, y: 50 },
+    '1-4': { x: 55, y: 39 },
+    '1-5': { x: 70, y: 27 },
+    '1-6': { x: 73, y: 6 },
+  }
+  const worldTwoPositions: Record<string, { x: number; y: number }> = {
+    '2-1': { x: 31, y: 67 },
+    '2-2': { x: 45, y: 58 },
+    '2-3': { x: 58, y: 42 },
+    '2-4': { x: 70, y: 50 },
+    '2-5': { x: 82, y: 32 },
+    '2-6': { x: 91, y: 18 },
+  }
+  const worldThreePositions: Record<string, { x: number; y: number }> = {
+    '3-1': { x: 30, y: 72 },
+    '3-2': { x: 44, y: 56 },
+    '3-3': { x: 58, y: 66 },
+    '3-4': { x: 70, y: 42 },
+    '3-5': { x: 82, y: 28 },
+    '3-6': { x: 91, y: 16 },
+  }
+  const worldFourPositions: Record<string, { x: number; y: number }> = {
+    '4-1': { x: 29, y: 70 },
+    '4-2': { x: 42, y: 58 },
+    '4-3': { x: 56, y: 44 },
+    '4-4': { x: 70, y: 55 },
+    '4-5': { x: 83, y: 34 },
+    '4-6': { x: 91, y: 18 },
+  }
+  const worldFivePositions: Record<string, { x: number; y: number }> = {
+    '5-1': { x: 28, y: 72 },
+    '5-2': { x: 43, y: 57 },
+    '5-3': { x: 58, y: 67 },
+    '5-4': { x: 71, y: 45 },
+    '5-5': { x: 82, y: 30 },
+    '5-6': { x: 91, y: 16 },
+  }
+  const worldSixPositions: Record<string, { x: number; y: number }> = {
+    '6-1': { x: 30, y: 74 },
+    '6-2': { x: 45, y: 60 },
+    '6-3': { x: 58, y: 43 },
+    '6-4': { x: 72, y: 56 },
+    '6-5': { x: 83, y: 32 },
+    '6-6': { x: 91, y: 15 },
+  }
+  const stagePositions = worldIndex === 1 ? worldOnePositions : worldIndex === 2 ? worldTwoPositions : worldIndex === 3 ? worldThreePositions : worldIndex === 4 ? worldFourPositions : worldIndex === 5 ? worldFivePositions : worldIndex === 6 ? worldSixPositions : {}
+  const registeredStages = (Object.keys(stageData) as StageId[])
+    .filter((id) => id.startsWith(`${worldIndex}-`))
+    .sort((a, b) => Number(a.split('-')[1]) - Number(b.split('-')[1]))
+
+  const stageOptions: StageOption[] = registeredStages.length > 0
+    ? registeredStages.map((id, index) => {
+        const stage = stageData[id]
+        const position = stagePositions[id] ?? placeholderPositions[index] ?? placeholderPositions[placeholderPositions.length - 1]
+        const unlocked = isStageUnlocked(saveData, id)
+        return {
+          id,
+          subtitle: stage.subtitle,
+          objective: unlocked ? stage.objective : 'Locked',
+          coins: stage.coins.length,
+          ...position,
+          unlocked,
+          cleared: Boolean(saveData.stageRecords[id]?.cleared),
+        }
+      })
     : placeholderPositions.map((position, index) => ({
         id: `${worldIndex}-${index + 1}`,
         subtitle: 'Locked',
@@ -48,11 +107,15 @@
   let inputReady = false
 
   function stageSubtitleKey(id: string): TranslationKey {
-    return worldIndex === 1 ? `stage.${id}.subtitle` as TranslationKey : 'common.locked'
+    return selected.unlocked || stageData[id as StageId] ? `stage.${id}.subtitle` as TranslationKey : 'common.locked'
   }
 
   function worldNameKey(): TranslationKey {
     return `world.${worldIndex}.name` as TranslationKey
+  }
+
+  function isBossStageId(id: string): boolean {
+    return id.endsWith('-6')
   }
 
   function selectStage(index: number) {
@@ -135,7 +198,7 @@
 
     <div class="select-rule"></div>
     <span class="select-label">{$translator('stageSelect.objective')}</span>
-    <p class="select-objective">{selected.unlocked ? $translator(selected.id === '1-6' ? 'stage.objective.defeatBoss' : 'stage.objective.reachGoal') : $translator('common.locked')}</p>
+    <p class="select-objective">{selected.unlocked ? $translator(isBossStageId(selected.id) ? 'stage.objective.defeatBoss' : 'stage.objective.reachGoal') : $translator('common.locked')}</p>
 
     <span class="select-label">{$translator('stageSelect.collectibles')}</span>
     <div class="select-collectible">

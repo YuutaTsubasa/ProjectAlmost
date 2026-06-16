@@ -1,0 +1,305 @@
+{
+  "id": "4-4",
+  "subtitle": "Blizzard Lifts",
+  "objective": "Reach the Goal",
+  "theme": "frostveil-peaks",
+  "rankTargets": {
+    "sTime": 44,
+    "aTime": 62,
+    "bTime": 88,
+    "cTime": 120
+  },
+  "world": {
+    "width": 10800,
+    "height": 1080,
+    "tileSize": 64
+  },
+  "playerSpawn": {
+    "x": 256,
+    "surfaceY": 704
+  },
+  "platforms": [
+    {
+      "col": 2,
+      "row": 11,
+      "width": 12,
+      "height": 1
+    },
+    {
+      "col": 21,
+      "row": 10,
+      "width": 6,
+      "height": 1
+    },
+    {
+      "col": 34,
+      "row": 8,
+      "width": 6,
+      "height": 1
+    },
+    {
+      "col": 49,
+      "row": 7,
+      "width": 6,
+      "height": 1
+    },
+    {
+      "col": 64,
+      "row": 9,
+      "width": 7,
+      "height": 1
+    },
+    {
+      "col": 82,
+      "row": 11,
+      "width": 8,
+      "height": 1
+    },
+    {
+      "col": 101,
+      "row": 9,
+      "width": 7,
+      "height": 1
+    },
+    {
+      "col": 119,
+      "row": 8,
+      "width": 7,
+      "height": 1
+    },
+    {
+      "col": 139,
+      "row": 10,
+      "width": 8,
+      "height": 1
+    },
+    {
+      "col": 156,
+      "row": 10,
+      "width": 10,
+      "height": 1
+    }
+  ],
+  "movingPlatforms": [
+    {
+      "id": "blizzard-lift-a",
+      "col": 16,
+      "row": 10,
+      "width": 4,
+      "height": 1,
+      "axis": "y",
+      "distance": 150,
+      "durationMs": 2300
+    },
+    {
+      "id": "blizzard-ferry-a",
+      "col": 42,
+      "row": 8,
+      "width": 4,
+      "height": 1,
+      "axis": "x",
+      "distance": 330,
+      "durationMs": 2700,
+      "phase": 0.4
+    },
+    {
+      "id": "blizzard-lift-b",
+      "col": 74,
+      "row": 10,
+      "width": 4,
+      "height": 1,
+      "axis": "y",
+      "distance": 160,
+      "durationMs": 2500,
+      "phase": 0.65
+    },
+    {
+      "id": "blizzard-ferry-b",
+      "col": 130,
+      "row": 9,
+      "width": 4,
+      "height": 1,
+      "axis": "x",
+      "distance": 380,
+      "durationMs": 2900,
+      "phase": 0.25
+    }
+  ],
+  "surfaceZones": [
+    {
+      "id": "lift-ice-a",
+      "type": "ice",
+      "x": 900,
+      "y": 0,
+      "width": 2300,
+      "height": 1080
+    },
+    {
+      "id": "lift-ice-b",
+      "type": "ice",
+      "x": 3500,
+      "y": 0,
+      "width": 2200,
+      "height": 1080
+    },
+    {
+      "id": "lift-ice-c",
+      "type": "ice",
+      "x": 6200,
+      "y": 0,
+      "width": 2600,
+      "height": 1080
+    },
+    {
+      "id": "exit-ice",
+      "type": "ice",
+      "x": 9000,
+      "y": 0,
+      "width": 1500,
+      "height": 1080
+    }
+  ],
+  "coins": [
+    {
+      "x": 420,
+      "y": 648
+    },
+    {
+      "x": 1150,
+      "y": 620
+    },
+    {
+      "x": 1700,
+      "y": 560
+    },
+    {
+      "x": 2360,
+      "y": 500
+    },
+    {
+      "x": 3100,
+      "y": 430
+    },
+    {
+      "x": 3900,
+      "y": 330
+    },
+    {
+      "x": 4750,
+      "y": 330
+    },
+    {
+      "x": 5600,
+      "y": 460
+    },
+    {
+      "x": 6500,
+      "y": 610
+    },
+    {
+      "x": 7250,
+      "y": 610
+    },
+    {
+      "x": 8100,
+      "y": 500
+    },
+    {
+      "x": 9000,
+      "y": 520
+    },
+    {
+      "x": 9950,
+      "y": 584
+    }
+  ],
+  "enemies": [
+    {
+      "id": "blizzard-guard-a",
+      "x": 560,
+      "surfaceY": 704,
+      "patrolMinX": 320,
+      "patrolMaxX": 780
+    },
+    {
+      "id": "blizzard-core-a",
+      "type": "azure-core",
+      "respawnPolicy": "regenerate",
+      "countsForScore": false,
+      "x": 3100,
+      "y": 430,
+      "patrolMinX": 3100,
+      "patrolMaxX": 3100
+    },
+    {
+      "id": "blizzard-guard-b",
+      "x": 3320,
+      "surfaceY": 448,
+      "patrolMinX": 3180,
+      "patrolMaxX": 3580
+    },
+    {
+      "id": "blizzard-core-b",
+      "type": "azure-core",
+      "respawnPolicy": "regenerate",
+      "countsForScore": false,
+      "x": 8100,
+      "y": 500,
+      "patrolMinX": 8100,
+      "patrolMaxX": 8100
+    },
+    {
+      "id": "blizzard-guard-c",
+      "x": 9300,
+      "surfaceY": 640,
+      "patrolMinX": 8980,
+      "patrolMaxX": 9600
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "blizzard-high-check",
+      "x": 3340,
+      "surfaceY": 448,
+      "spawnX": 3360,
+      "spawnSurfaceY": 448
+    },
+    {
+      "id": "blizzard-exit-check",
+      "x": 9240,
+      "surfaceY": 640,
+      "spawnX": 9260,
+      "spawnSurfaceY": 640
+    }
+  ],
+  "sections": [
+    {
+      "id": "lift-entry",
+      "startX": 0,
+      "endX": 3300,
+      "purpose": "Ice into vertical lifts."
+    },
+    {
+      "id": "high-ferry",
+      "startX": 3300,
+      "endX": 5800,
+      "purpose": "Cross high platforms with icy momentum."
+    },
+    {
+      "id": "descent-lifts",
+      "startX": 5800,
+      "endX": 9000,
+      "purpose": "Drop through moving lifts while sliding."
+    },
+    {
+      "id": "exit-slide",
+      "startX": 9000,
+      "endX": 10800,
+      "purpose": "Final slide to goal."
+    }
+  ],
+  "goal": {
+    "x": 10140,
+    "surfaceY": 640
+  }
+}

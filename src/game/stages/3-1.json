@@ -1,0 +1,75 @@
+{
+  "id": "3-1",
+  "subtitle": "Tide Inversion",
+  "objective": "Reach the Goal",
+  "theme": "cerulean-depths",
+  "rankTargets": {
+    "sTime": 34,
+    "aTime": 48,
+    "bTime": 68,
+    "cTime": 94
+  },
+  "world": {
+    "width": 9000,
+    "height": 1080,
+    "tileSize": 64
+  },
+  "playerSpawn": {
+    "x": 256,
+    "surfaceY": 640
+  },
+  "platforms": [
+    { "col": 2, "row": 10, "width": 15, "height": 1 },
+    { "col": 22, "row": 10, "width": 8, "height": 1 },
+    { "col": 36, "row": 5, "width": 9, "height": 1 },
+    { "col": 51, "row": 5, "width": 8, "height": 1 },
+    { "col": 65, "row": 10, "width": 8, "height": 1 },
+    { "col": 80, "row": 10, "width": 8, "height": 1 },
+    { "col": 96, "row": 5, "width": 8, "height": 1 },
+    { "col": 113, "row": 10, "width": 16, "height": 1 },
+    { "col": 134, "row": 10, "width": 6, "height": 1 }
+  ],
+  "gravityZones": [
+    { "id": "first-invert", "x": 2200, "y": 0, "width": 1850, "height": 1080, "direction": "up" },
+    { "id": "return-down", "x": 4100, "y": 0, "width": 2100, "height": 1080, "direction": "down" },
+    { "id": "final-invert", "x": 6200, "y": 0, "width": 1400, "height": 1080, "direction": "up" },
+    { "id": "exit-down", "x": 7600, "y": 0, "width": 1400, "height": 1080, "direction": "down" }
+  ],
+  "coins": [
+    { "x": 440, "y": 584 },
+    { "x": 650, "y": 584 },
+    { "x": 1080, "y": 584 },
+    { "x": 1680, "y": 584 },
+    { "x": 2440, "y": 450 },
+    { "x": 2920, "y": 410 },
+    { "x": 3500, "y": 430 },
+    { "x": 4300, "y": 584 },
+    { "x": 4980, "y": 584 },
+    { "x": 5740, "y": 584 },
+    { "x": 6440, "y": 430 },
+    { "x": 7000, "y": 420 },
+    { "x": 7860, "y": 584 },
+    { "x": 8360, "y": 584 }
+  ],
+  "enemies": [
+    { "id": "tide-guard-a", "x": 620, "surfaceY": 640, "patrolMinX": 350, "patrolMaxX": 920 },
+    { "id": "tide-core-a", "type": "azure-core", "respawnPolicy": "regenerate", "countsForScore": false, "x": 2920, "y": 420, "patrolMinX": 2920, "patrolMaxX": 2920 },
+    { "id": "tide-guard-b", "x": 4560, "surfaceY": 640, "patrolMinX": 4200, "patrolMaxX": 4960 },
+    { "id": "tide-core-b", "type": "azure-core", "respawnPolicy": "regenerate", "countsForScore": false, "x": 6900, "y": 420, "patrolMinX": 6900, "patrolMaxX": 6900 },
+    { "id": "tide-guard-c", "x": 8200, "surfaceY": 640, "patrolMinX": 7800, "patrolMaxX": 8500 }
+  ],
+  "checkpoints": [
+    { "id": "first-inversion-check", "x": 4300, "surfaceY": 640, "spawnX": 4320, "spawnSurfaceY": 640 },
+    { "id": "exit-inversion-check", "x": 7900, "surfaceY": 640, "spawnX": 7920, "spawnSurfaceY": 640 }
+  ],
+  "sections": [
+    { "id": "normal-run", "startX": 0, "endX": 2200, "purpose": "Introduce normal movement before the first inversion." },
+    { "id": "first-ceiling-walk", "startX": 2200, "endX": 4100, "purpose": "Walk on the underside of platforms with inverted gravity." },
+    { "id": "return-down", "startX": 4100, "endX": 6200, "purpose": "Return to normal gravity and recover route reading." },
+    { "id": "final-inversion", "startX": 6200, "endX": 9000, "purpose": "A short final inversion before the goal." }
+  ],
+  "goal": {
+    "x": 8650,
+    "surfaceY": 640
+  }
+}

@@ -21,7 +21,7 @@ export const bootAssets = runtimeAssets.filter((source) =>
 )
 
 export const sharedGameplayAssets = runtimeAssets.filter((source) =>
-  source.startsWith('/assets/hud/')
+  (source.startsWith('/assets/hud/') && !source.endsWith('/ai-navigator.webp'))
   || source.startsWith('/assets/props/')
   || source.startsWith('/assets/results/')
   || source.startsWith('/assets/sprites/')
@@ -33,12 +33,18 @@ export const sharedGameplayAssets = runtimeAssets.filter((source) =>
 
 export function getWorldAssets(worldIndex: number): string[] {
   const world = String(worldIndex).padStart(2, '0')
+  const worldNamePrefixes: Record<number, string[]> = {
+    1: ['white_palace_', 'white-palace'],
+    2: ['emerald_sanctuary_'],
+    3: ['cerulean_depths_'],
+    4: ['frostveil_peaks_'],
+    5: ['emberfall_caldera_'],
+    6: ['abyssal_hollow_'],
+  }
+  const prefixes = worldNamePrefixes[worldIndex] ?? []
   return runtimeAssets.filter((source) =>
     source.includes(`world${world}_`)
-    || (worldIndex === 1 && (
-      source.startsWith('/assets/maps/white_palace_')
-      || source.includes('white-palace')
-    )),
+    || prefixes.some((prefix) => source.includes(prefix)),
   )
 }
 

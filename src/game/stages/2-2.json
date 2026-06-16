@@ -1,0 +1,357 @@
+{
+  "id": "2-2",
+  "subtitle": "Vine Ferry",
+  "objective": "Reach the Goal",
+  "theme": "emerald-sanctuary",
+  "rankTargets": {
+    "sTime": 36,
+    "aTime": 50,
+    "bTime": 70,
+    "cTime": 96
+  },
+  "world": {
+    "width": 9600,
+    "height": 1080,
+    "tileSize": 64
+  },
+  "playerSpawn": {
+    "x": 256,
+    "surfaceY": 640
+  },
+  "platforms": [
+    {
+      "col": 2,
+      "row": 10,
+      "width": 11,
+      "height": 1
+    },
+    {
+      "col": 20,
+      "row": 9,
+      "width": 5,
+      "height": 1
+    },
+    {
+      "col": 34,
+      "row": 10,
+      "width": 7,
+      "height": 1
+    },
+    {
+      "col": 49,
+      "row": 8,
+      "width": 5,
+      "height": 1
+    },
+    {
+      "col": 64,
+      "row": 10,
+      "width": 8,
+      "height": 1
+    },
+    {
+      "col": 82,
+      "row": 9,
+      "width": 7,
+      "height": 1
+    },
+    {
+      "col": 101,
+      "row": 10,
+      "width": 7,
+      "height": 1
+    },
+    {
+      "col": 118,
+      "row": 8,
+      "width": 6,
+      "height": 1
+    },
+    {
+      "col": 136,
+      "row": 10,
+      "width": 12,
+      "height": 1
+    }
+  ],
+  "movingPlatforms": [
+    {
+      "id": "ferry-a",
+      "col": 14,
+      "row": 10,
+      "width": 4,
+      "height": 1,
+      "axis": "x",
+      "distance": 60,
+      "durationMs": 2400
+    },
+    {
+      "id": "ferry-b",
+      "col": 27,
+      "row": 9,
+      "width": 4,
+      "height": 1,
+      "axis": "x",
+      "distance": 110,
+      "durationMs": 2500,
+      "phase": 0.45
+    },
+    {
+      "id": "ferry-c",
+      "col": 44,
+      "row": 9,
+      "width": 4,
+      "height": 1,
+      "axis": "y",
+      "distance": 80,
+      "durationMs": 2200,
+      "phase": 0.2
+    },
+    {
+      "id": "ferry-d",
+      "col": 75,
+      "row": 10,
+      "width": 4,
+      "height": 1,
+      "axis": "x",
+      "distance": 110,
+      "durationMs": 2800,
+      "phase": 0.25
+    },
+    {
+      "id": "ferry-e",
+      "col": 111,
+      "row": 9,
+      "width": 4,
+      "height": 1,
+      "axis": "y",
+      "distance": 80,
+      "durationMs": 2500,
+      "phase": 0.6
+    },
+    {
+      "id": "ferry-f",
+      "col": 128,
+      "row": 9,
+      "width": 4,
+      "height": 1,
+      "axis": "x",
+      "distance": 110,
+      "durationMs": 2600,
+      "phase": 0.1
+    }
+  ],
+  "hazards": [
+    {
+      "id": "start-ferry-thorns",
+      "type": "spikes",
+      "x": 600,
+      "surfaceY": 640,
+      "width": 180,
+      "height": 60,
+      "orientation": "floor"
+    },
+    {
+      "id": "mid-ferry-thorns",
+      "type": "spikes",
+      "x": 2400,
+      "surfaceY": 640,
+      "width": 190,
+      "height": 60,
+      "orientation": "floor"
+    },
+    {
+      "id": "timing-thorns",
+      "type": "spikes",
+      "x": 4400,
+      "surfaceY": 640,
+      "width": 220,
+      "height": 62,
+      "orientation": "floor"
+    },
+    {
+      "id": "late-ferry-thorns",
+      "type": "spikes",
+      "x": 6760,
+      "surfaceY": 640,
+      "width": 180,
+      "height": 60,
+      "orientation": "floor"
+    },
+    {
+      "id": "exit-thorns",
+      "type": "spikes",
+      "x": 9140,
+      "surfaceY": 640,
+      "width": 240,
+      "height": 62,
+      "orientation": "floor"
+    }
+  ],
+  "coins": [
+    {
+      "x": 430,
+      "y": 584
+    },
+    {
+      "x": 620,
+      "y": 584
+    },
+    {
+      "x": 1090,
+      "y": 520
+    },
+    {
+      "x": 1460,
+      "y": 500
+    },
+    {
+      "x": 1900,
+      "y": 500
+    },
+    {
+      "x": 2380,
+      "y": 456
+    },
+    {
+      "x": 2920,
+      "y": 520
+    },
+    {
+      "x": 3500,
+      "y": 584
+    },
+    {
+      "x": 4240,
+      "y": 392
+    },
+    {
+      "x": 4810,
+      "y": 456
+    },
+    {
+      "x": 5420,
+      "y": 584
+    },
+    {
+      "x": 5860,
+      "y": 584
+    },
+    {
+      "x": 6540,
+      "y": 520
+    },
+    {
+      "x": 7060,
+      "y": 520
+    },
+    {
+      "x": 7580,
+      "y": 520
+    },
+    {
+      "x": 8160,
+      "y": 392
+    },
+    {
+      "x": 8750,
+      "y": 584
+    },
+    {
+      "x": 9140,
+      "y": 584
+    }
+  ],
+  "enemies": [
+    {
+      "id": "ferry-guard-a",
+      "x": 520,
+      "surfaceY": 640,
+      "patrolMinX": 320,
+      "patrolMaxX": 760
+    },
+    {
+      "id": "ferry-core-a",
+      "type": "azure-core",
+      "respawnPolicy": "regenerate",
+      "countsForScore": false,
+      "x": 2050,
+      "y": 420,
+      "patrolMinX": 2050,
+      "patrolMaxX": 2050
+    },
+    {
+      "id": "ferry-core-b",
+      "type": "azure-core",
+      "respawnPolicy": "regenerate",
+      "countsForScore": false,
+      "x": 4830,
+      "y": 430,
+      "patrolMinX": 4720,
+      "patrolMaxX": 5040
+    },
+    {
+      "id": "ferry-guard-b",
+      "x": 5600,
+      "surfaceY": 576,
+      "patrolMinX": 5300,
+      "patrolMaxX": 5680
+    },
+    {
+      "id": "ferry-core-c",
+      "type": "azure-core",
+      "respawnPolicy": "regenerate",
+      "countsForScore": false,
+      "x": 8170,
+      "y": 395,
+      "patrolMinX": 8060,
+      "patrolMaxX": 8320
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "first-ferry-check",
+      "x": 2220,
+      "surfaceY": 640,
+      "spawnX": 2230,
+      "spawnSurfaceY": 640
+    },
+    {
+      "id": "late-ferry-check",
+      "x": 6720,
+      "surfaceY": 640,
+      "spawnX": 6740,
+      "spawnSurfaceY": 640
+    }
+  ],
+  "sections": [
+    {
+      "id": "single-ferry",
+      "startX": 0,
+      "endX": 2600,
+      "purpose": "Learn to wait for a horizontal moving platform."
+    },
+    {
+      "id": "vertical-ferry",
+      "startX": 2600,
+      "endX": 4600,
+      "purpose": "Read a vertical lift and avoid spike beds below."
+    },
+    {
+      "id": "chain-ferry",
+      "startX": 4600,
+      "endX": 7600,
+      "purpose": "Chain multiple moving platforms with optional Homing safety targets."
+    },
+    {
+      "id": "exit-ferry",
+      "startX": 7600,
+      "endX": 9600,
+      "purpose": "Final moving-platform timing into a grounded goal."
+    }
+  ],
+  "goal": {
+    "x": 9250,
+    "surfaceY": 640
+  }
+}

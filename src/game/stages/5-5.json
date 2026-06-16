@@ -1,0 +1,437 @@
+{
+  "id": "5-5",
+  "subtitle": "Inferno Gauntlet",
+  "objective": "Reach the Goal",
+  "theme": "emberfall-caldera",
+  "rankTargets": {
+    "sTime": 104,
+    "aTime": 138,
+    "bTime": 184,
+    "cTime": 244
+  },
+  "world": {
+    "width": 18200,
+    "height": 1080,
+    "tileSize": 64
+  },
+  "playerSpawn": {
+    "x": 256,
+    "surfaceY": 640
+  },
+  "platforms": [
+    {
+      "col": 2,
+      "row": 10,
+      "width": 14,
+      "height": 1
+    },
+    {
+      "col": 25,
+      "row": 10,
+      "width": 6,
+      "height": 1
+    },
+    {
+      "col": 40,
+      "row": 9,
+      "width": 6,
+      "height": 1
+    },
+    {
+      "col": 56,
+      "row": 10,
+      "width": 7,
+      "height": 1
+    },
+    {
+      "col": 74,
+      "row": 8,
+      "width": 6,
+      "height": 1
+    },
+    {
+      "col": 92,
+      "row": 10,
+      "width": 8,
+      "height": 1
+    },
+    {
+      "col": 114,
+      "row": 10,
+      "width": 7,
+      "height": 1
+    },
+    {
+      "col": 135,
+      "row": 8,
+      "width": 7,
+      "height": 1
+    },
+    {
+      "col": 158,
+      "row": 10,
+      "width": 8,
+      "height": 1
+    },
+    {
+      "col": 181,
+      "row": 10,
+      "width": 8,
+      "height": 1
+    },
+    {
+      "col": 204,
+      "row": 9,
+      "width": 7,
+      "height": 1
+    },
+    {
+      "col": 226,
+      "row": 10,
+      "width": 8,
+      "height": 1
+    },
+    {
+      "col": 250,
+      "row": 8,
+      "width": 7,
+      "height": 1
+    },
+    {
+      "col": 268,
+      "row": 10,
+      "width": 12,
+      "height": 1
+    }
+  ],
+  "movingPlatforms": [
+    {
+      "id": "inferno-ferry-a",
+      "col": 18,
+      "row": 10,
+      "width": 4,
+      "height": 1,
+      "axis": "x",
+      "distance": 340,
+      "durationMs": 2700,
+      "phase": 0.15
+    },
+    {
+      "id": "inferno-lift-a",
+      "col": 66,
+      "row": 9,
+      "width": 4,
+      "height": 1,
+      "axis": "y",
+      "distance": 170,
+      "durationMs": 2450,
+      "phase": 0.5
+    },
+    {
+      "id": "inferno-ferry-b",
+      "col": 104,
+      "row": 10,
+      "width": 4,
+      "height": 1,
+      "axis": "x",
+      "distance": 390,
+      "durationMs": 2900,
+      "phase": 0.35
+    },
+    {
+      "id": "inferno-lift-b",
+      "col": 145,
+      "row": 9,
+      "width": 4,
+      "height": 1,
+      "axis": "y",
+      "distance": 180,
+      "durationMs": 2600,
+      "phase": 0.7
+    },
+    {
+      "id": "inferno-ferry-c",
+      "col": 238,
+      "row": 10,
+      "width": 4,
+      "height": 1,
+      "axis": "x",
+      "distance": 450,
+      "durationMs": 3200,
+      "phase": 0.45
+    }
+  ],
+  "hazards": [
+    {
+      "id": "inferno-a",
+      "type": "lava",
+      "x": 1400,
+      "surfaceY": 640,
+      "width": 300,
+      "height": 78
+    },
+    {
+      "id": "inferno-b",
+      "type": "lava",
+      "x": 2100,
+      "surfaceY": 640,
+      "width": 320,
+      "height": 78
+    },
+    {
+      "id": "inferno-c",
+      "type": "lava",
+      "x": 3500,
+      "surfaceY": 576,
+      "width": 320,
+      "height": 78
+    },
+    {
+      "id": "inferno-d",
+      "type": "lava",
+      "x": 5200,
+      "surfaceY": 640,
+      "width": 340,
+      "height": 78
+    },
+    {
+      "id": "inferno-e",
+      "type": "lava",
+      "x": 6650,
+      "surfaceY": 512,
+      "width": 300,
+      "height": 78
+    },
+    {
+      "id": "inferno-f",
+      "type": "lava",
+      "x": 8000,
+      "surfaceY": 640,
+      "width": 360,
+      "height": 78
+    },
+    {
+      "id": "inferno-g",
+      "type": "lava",
+      "x": 9850,
+      "surfaceY": 640,
+      "width": 360,
+      "height": 78
+    },
+    {
+      "id": "inferno-h",
+      "type": "lava",
+      "x": 11600,
+      "surfaceY": 512,
+      "width": 320,
+      "height": 78
+    },
+    {
+      "id": "inferno-i",
+      "type": "lava",
+      "x": 13750,
+      "surfaceY": 640,
+      "width": 420,
+      "height": 78
+    },
+    {
+      "id": "inferno-j",
+      "type": "lava",
+      "x": 15200,
+      "surfaceY": 640,
+      "width": 360,
+      "height": 78
+    },
+    {
+      "id": "inferno-k",
+      "type": "lava",
+      "x": 16600,
+      "surfaceY": 512,
+      "width": 320,
+      "height": 78
+    }
+  ],
+  "coins": [
+    {
+      "x": 420,
+      "y": 584
+    },
+    {
+      "x": 1120,
+      "y": 584
+    },
+    {
+      "x": 1900,
+      "y": 520
+    },
+    {
+      "x": 2700,
+      "y": 520
+    },
+    {
+      "x": 3500,
+      "y": 500
+    },
+    {
+      "x": 4520,
+      "y": 520
+    },
+    {
+      "x": 5600,
+      "y": 500
+    },
+    {
+      "x": 6800,
+      "y": 390
+    },
+    {
+      "x": 7900,
+      "y": 560
+    },
+    {
+      "x": 9100,
+      "y": 584
+    },
+    {
+      "x": 10300,
+      "y": 520
+    },
+    {
+      "x": 11600,
+      "y": 390
+    },
+    {
+      "x": 13000,
+      "y": 584
+    },
+    {
+      "x": 14400,
+      "y": 584
+    },
+    {
+      "x": 15600,
+      "y": 500
+    },
+    {
+      "x": 17000,
+      "y": 390
+    },
+    {
+      "x": 17600,
+      "y": 584
+    }
+  ],
+  "enemies": [
+    {
+      "id": "inferno-guard-a",
+      "x": 620,
+      "surfaceY": 640,
+      "patrolMinX": 340,
+      "patrolMaxX": 900
+    },
+    {
+      "id": "inferno-core-a",
+      "type": "azure-core",
+      "respawnPolicy": "regenerate",
+      "countsForScore": false,
+      "x": 2700,
+      "y": 500,
+      "patrolMinX": 2700,
+      "patrolMaxX": 2700
+    },
+    {
+      "id": "inferno-guard-b",
+      "x": 3700,
+      "surfaceY": 640,
+      "patrolMinX": 3600,
+      "patrolMaxX": 4000
+    },
+    {
+      "id": "inferno-core-b",
+      "type": "azure-core",
+      "respawnPolicy": "regenerate",
+      "countsForScore": false,
+      "x": 6800,
+      "y": 390,
+      "patrolMinX": 6800,
+      "patrolMaxX": 6800
+    },
+    {
+      "id": "inferno-guard-c",
+      "x": 10200,
+      "surfaceY": 640,
+      "patrolMinX": 10130,
+      "patrolMaxX": 10500
+    },
+    {
+      "id": "inferno-core-c",
+      "type": "azure-core",
+      "respawnPolicy": "regenerate",
+      "countsForScore": false,
+      "x": 11600,
+      "y": 392,
+      "patrolMinX": 11600,
+      "patrolMaxX": 11600
+    },
+    {
+      "id": "inferno-guard-d",
+      "x": 17400,
+      "surfaceY": 640,
+      "patrolMinX": 17180,
+      "patrolMaxX": 17820
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "inferno-check-a",
+      "x": 3700,
+      "surfaceY": 640,
+      "spawnX": 3720,
+      "spawnSurfaceY": 640
+    },
+    {
+      "id": "inferno-check-b",
+      "x": 10200,
+      "surfaceY": 640,
+      "spawnX": 10220,
+      "spawnSurfaceY": 640
+    },
+    {
+      "id": "inferno-check-c",
+      "x": 17400,
+      "surfaceY": 640,
+      "spawnX": 17420,
+      "spawnSurfaceY": 640
+    }
+  ],
+  "sections": [
+    {
+      "id": "run-remix",
+      "startX": 0,
+      "endX": 4600,
+      "purpose": "Repeat 5-1 vent timing."
+    },
+    {
+      "id": "lift-remix",
+      "startX": 4600,
+      "endX": 9200,
+      "purpose": "Repeat 5-2 moving platform lava crossing."
+    },
+    {
+      "id": "chain-remix",
+      "startX": 9200,
+      "endX": 13800,
+      "purpose": "Repeat 5-3 Homing over eruptions."
+    },
+    {
+      "id": "caldera-remix",
+      "startX": 13800,
+      "endX": 18200,
+      "purpose": "Repeat 5-4 longer platform sequence."
+    }
+  ],
+  "goal": {
+    "x": 17600,
+    "surfaceY": 640
+  }
+}

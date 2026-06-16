@@ -1,0 +1,252 @@
+{
+  "id": "6-1",
+  "subtitle": "Hollow Threshold",
+  "objective": "Reach the Goal",
+  "theme": "abyssal-hollow",
+  "rankTargets": {
+    "sTime": 42,
+    "aTime": 58,
+    "bTime": 82,
+    "cTime": 112
+  },
+  "world": {
+    "width": 9800,
+    "height": 1080,
+    "tileSize": 64
+  },
+  "playerSpawn": {
+    "x": 256,
+    "surfaceY": 640
+  },
+  "platforms": [
+    {
+      "col": 2,
+      "row": 10,
+      "width": 14,
+      "height": 1
+    },
+    {
+      "col": 22,
+      "row": 10,
+      "width": 7,
+      "height": 1
+    },
+    {
+      "col": 38,
+      "row": 9,
+      "width": 7,
+      "height": 1
+    },
+    {
+      "col": 55,
+      "row": 10,
+      "width": 7,
+      "height": 1
+    },
+    {
+      "col": 72,
+      "row": 8,
+      "width": 7,
+      "height": 1
+    },
+    {
+      "col": 90,
+      "row": 10,
+      "width": 8,
+      "height": 1
+    },
+    {
+      "col": 112,
+      "row": 10,
+      "width": 26,
+      "height": 1
+    }
+  ],
+  "movingPlatforms": [
+    {
+      "id": "hollow-ferry-a",
+      "col": 64,
+      "row": 9,
+      "width": 4,
+      "height": 1,
+      "axis": "x",
+      "distance": 360,
+      "durationMs": 2800,
+      "phase": 0.35
+    }
+  ],
+  "hazards": [
+    {
+      "id": "threshold-spike-a",
+      "type": "spikes",
+      "x": 1280,
+      "surfaceY": 640,
+      "width": 220,
+      "height": 72,
+      "orientation": "floor"
+    },
+    {
+      "id": "threshold-lava-a",
+      "type": "lava",
+      "x": 2500,
+      "surfaceY": 640,
+      "width": 260,
+      "height": 78
+    },
+    {
+      "id": "threshold-spike-b",
+      "type": "spikes",
+      "x": 3600,
+      "surfaceY": 576,
+      "width": 220,
+      "height": 72,
+      "orientation": "floor"
+    },
+    {
+      "id": "threshold-lava-b",
+      "type": "lava",
+      "x": 5850,
+      "surfaceY": 640,
+      "width": 260,
+      "height": 78
+    },
+    {
+      "id": "threshold-spike-c",
+      "type": "spikes",
+      "x": 7900,
+      "surfaceY": 640,
+      "width": 220,
+      "height": 72,
+      "orientation": "floor"
+    }
+  ],
+  "gravityZones": [],
+  "surfaceZones": [
+    {
+      "id": "threshold-ice",
+      "type": "ice",
+      "x": 4000,
+      "y": 0,
+      "width": 2600,
+      "height": 1080
+    }
+  ],
+  "coins": [
+    {
+      "x": 430,
+      "y": 584
+    },
+    {
+      "x": 1080,
+      "y": 584
+    },
+    {
+      "x": 1850,
+      "y": 530
+    },
+    {
+      "x": 2680,
+      "y": 520
+    },
+    {
+      "x": 3540,
+      "y": 500
+    },
+    {
+      "x": 4500,
+      "y": 520
+    },
+    {
+      "x": 5450,
+      "y": 500
+    },
+    {
+      "x": 6500,
+      "y": 390
+    },
+    {
+      "x": 7600,
+      "y": 584
+    },
+    {
+      "x": 8800,
+      "y": 584
+    }
+  ],
+  "enemies": [
+    {
+      "id": "threshold-guard-a",
+      "x": 620,
+      "surfaceY": 640,
+      "patrolMinX": 340,
+      "patrolMaxX": 850
+    },
+    {
+      "id": "threshold-core-a",
+      "type": "azure-core",
+      "respawnPolicy": "regenerate",
+      "countsForScore": false,
+      "x": 3300,
+      "y": 470,
+      "patrolMinX": 3300,
+      "patrolMaxX": 3300
+    },
+    {
+      "id": "threshold-guard-b",
+      "x": 6000,
+      "surfaceY": 640,
+      "patrolMinX": 5600,
+      "patrolMaxX": 6200
+    },
+    {
+      "id": "threshold-core-b",
+      "type": "azure-core",
+      "respawnPolicy": "regenerate",
+      "countsForScore": false,
+      "x": 7600,
+      "y": 500,
+      "patrolMinX": 7600,
+      "patrolMaxX": 7600
+    }
+  ],
+  "checkpoints": [
+    {
+      "id": "threshold-mid-check",
+      "x": 3740,
+      "surfaceY": 640,
+      "spawnX": 3760,
+      "spawnSurfaceY": 640
+    },
+    {
+      "id": "threshold-exit-check",
+      "x": 7800,
+      "surfaceY": 640,
+      "spawnX": 7820,
+      "spawnSurfaceY": 640
+    }
+  ],
+  "sections": [
+    {
+      "id": "mixed-intro",
+      "startX": 0,
+      "endX": 3400,
+      "purpose": "Mix spikes and lava in a basic run."
+    },
+    {
+      "id": "ice-ferry",
+      "startX": 3400,
+      "endX": 6800,
+      "purpose": "Add icy landing after moving platform."
+    },
+    {
+      "id": "homing-exit",
+      "startX": 6800,
+      "endX": 9800,
+      "purpose": "Use Homing to clear final traps."
+    }
+  ],
+  "goal": {
+    "x": 8500,
+    "surfaceY": 640
+  }
+}

@@ -1,8 +1,7 @@
 import * as Phaser from 'phaser'
 import { IMAGE_ASSETS } from '../assets/assetManifest'
-import { groundedBottomY, groundedCenterY, objectDefinitions } from '../objects/objectDefinitions'
-import { activeStage } from '../stages/stageRegistry'
-import type { CoinPoint, EnemyPoint, PlatformRect } from '../stages/stageTypes'
+import { groundedBottomY, groundedCenterY, groundedHazardCenterY, objectDefinitions } from '../objects/objectDefinitions'
+import type { CoinPoint, EnemyPoint, GravityZone, HazardRect, MovingPlatformRect, PlatformRect, StageData, SurfaceZone } from '../stages/stageTypes'
 import type { TranslationKey, TranslationParams } from '../../i18n'
 
 type ArcadeSprite = Phaser.Types.Physics.Arcade.SpriteWithDynamicBody
@@ -18,6 +17,20 @@ type EnemyRuntime = {
   defeated: boolean
   direction: number
 }
+type HazardRuntime = {
+  sprite: Phaser.Types.Physics.Arcade.ImageWithStaticBody
+  point: HazardRect
+}
+type MovingPlatformSprite = Phaser.GameObjects.TileSprite & { body: Phaser.Physics.Arcade.Body }
+type MovingPlatformRuntime = {
+  sprite: MovingPlatformSprite
+  point: MovingPlatformRect
+  startX: number
+  startY: number
+  previousX: number
+  previousY: number
+}
+type GravityDirection = GravityZone['direction']
 type BossProjectile = ArcadeSprite
 
 const SOLID_TILE_INDEXES = [0, 1, 2]
@@ -40,10 +53,13 @@ const JUMP_BUFFER_MS = 140
 const COYOTE_TIME_MS = 120
 const GROUND_ACCELERATION = 950
 const AIR_ACCELERATION = 720
+const ICE_GROUND_ACCELERATION = 520
+const ICE_IDLE_DRAG_X = 36
+const DEFAULT_DRAG_X = 1500
 const PLAYER_MAX_RUN_SPEED = 500
+const WORLD_GRAVITY_Y = 1500
 const DEFAULT_REGENERATE_DELAY_MS = 1400
 const ENEMY_REGENERATE_SAFE_DISTANCE = 140
-const BOSS_STAGE_ID = '1-6'
 const BOSS_PHASE_COUNT = 4
 const BOSS_PROJECTILE_LIFETIME_MS = 7200
 const THEME = {
@@ -51,6 +67,11 @@ const THEME = {
   cyan: 0x33b5ff,
   gold: 0xd7a84f,
   white: 0xf8fdff,
+}
+
+function playerCenterY(surfaceY: number, gravity: GravityDirection = 'down'): number {
+  const distance = objectDefinitions.player.centerAboveSurface
+  return gravity === 'down' ? surfaceY - distance : surfaceY + distance
 }
 
 export class GameplayScene extends Phaser.Scene {
@@ -62,6 +83,8 @@ export class GameplayScene extends Phaser.Scene {
   private terrainLayer!: TilemapLayer
   private farBackground!: Phaser.GameObjects.TileSprite
   private midBackground!: Phaser.GameObjects.TileSprite
+  private hazards: HazardRuntime[] = []
+  private movingPlatforms: MovingPlatformRuntime[] = []
   private checkpointSprites: Phaser.GameObjects.Image[] = []
   private checkpointGlows: Phaser.GameObjects.Ellipse[] = []
   private checkpointRings: Phaser.GameObjects.Ellipse[] = []
@@ -104,28 +127,39 @@ export class GameplayScene extends Phaser.Scene {
   private bossPatternGeneration = 0
   private bossShotIndex = 0
   private bossPatternEvent?: Phaser.Time.TimerEvent
-  private statusMessage = this.getInitialStatusMessage()
+  private statusMessage: TranslationKey = 'status.initial'
   private statusParams: TranslationParams = {}
+  private playerGravityDirection: GravityDirection = 'down'
   private activeCheckpointIndex = -1
   private respawnPoint = {
-    x: activeStage.playerSpawn.x,
-    y: groundedCenterY(activeStage.playerSpawn.surfaceY, 'player'),
+    x: 0,
+    y: 0,
+    gravity: 'down' as GravityDirection,
   }
+  private readonly stage: StageData
 
-  constructor() {
+  constructor(stage: StageData) {
     super('GameplayScene')
+    this.stage = stage
+    this.statusMessage = this.getInitialStatusMessage()
+    this.playerGravityDirection = this.stage.playerSpawn.gravity ?? 'down'
+    this.respawnPoint = {
+      x: this.stage.playerSpawn.x,
+      y: playerCenterY(this.stage.playerSpawn.surfaceY, this.stage.playerSpawn.gravity ?? 'down'),
+      gravity: this.stage.playerSpawn.gravity ?? 'down',
+    }
   }
 
   private get worldWidth(): number {
-    return activeStage.world.width
+    return this.stage.world.width
   }
 
   private get worldHeight(): number {
-    return activeStage.world.height
+    return this.stage.world.height
   }
 
   private get tileSize(): number {
-    return activeStage.world.tileSize
+    return this.stage.world.tileSize
   }
 
   private get tileColumns(): number {
@@ -136,12 +170,40 @@ export class GameplayScene extends Phaser.Scene {
     return Math.ceil(this.worldHeight / this.tileSize)
   }
 
+  private get stageTheme(): string {
+    return this.stage.theme ?? 'white-palace'
+  }
+
+  private get terrainTilesKey(): string {
+    return this.stageTheme === 'emerald-sanctuary' ? 'emerald-sanctuary-tiles' : 'palace-tiles'
+  }
+
+  private get guardTextureKey(): string {
+    return this.stageTheme === 'emerald-sanctuary' ? 'forest-guardian' : 'enemy-guard-walk'
+  }
+
+  private get guardDeathTextureKey(): string {
+    return this.stageTheme === 'emerald-sanctuary' ? 'forest-guardian-defeated' : 'enemy-guard-death'
+  }
+
+  private get gravitySign(): 1 | -1 {
+    return this.playerGravityDirection === 'down' ? 1 : -1
+  }
+
+  private get isOnIce(): boolean {
+    return this.findSurfaceZone('ice') !== undefined
+  }
+
   private get coinTargetCount(): number {
-    return activeStage.coins.length
+    return this.stage.coins.length
   }
 
   private get scoreEnemyTargetCount(): number {
-    return activeStage.enemies.filter((enemy) => this.enemyCountsForScore(enemy)).length
+    return this.stage.enemies.filter((enemy) => this.enemyCountsForScore(enemy)).length
+  }
+
+  private get isBossStage(): boolean {
+    return this.stage.id.endsWith('-6') && this.stage.enemies.some((enemy) => enemy.id === 'boss-prototype')
   }
 
   preload(): void {
@@ -149,6 +211,19 @@ export class GameplayScene extends Phaser.Scene {
     this.load.image('white-palace-far-bg', IMAGE_ASSETS.palaceFarBackground)
     this.load.image('white-palace-mid-bg', IMAGE_ASSETS.palaceMidBackground)
     this.load.image('palace-tiles', IMAGE_ASSETS.palaceTiles)
+    this.load.image('emerald-sanctuary-bg', IMAGE_ASSETS.emeraldSanctuaryGameplayBg)
+    this.load.image('emerald-sanctuary-sky', IMAGE_ASSETS.emeraldSanctuarySky)
+    this.load.image('emerald-sanctuary-far-bg', IMAGE_ASSETS.emeraldSanctuaryFarBackground)
+    this.load.image('emerald-sanctuary-mid-bg', IMAGE_ASSETS.emeraldSanctuaryMidBackground)
+    this.load.image('emerald-sanctuary-tiles', IMAGE_ASSETS.emeraldSanctuaryTiles)
+    this.load.image('cerulean-depths-bg', IMAGE_ASSETS.ceruleanDepthsStageSelect)
+    this.load.image('frostveil-peaks-bg', IMAGE_ASSETS.frostveilPeaksStageSelect)
+    this.load.image('emberfall-caldera-bg', IMAGE_ASSETS.emberfallCalderaStageSelect)
+    this.load.image('abyssal-hollow-bg', IMAGE_ASSETS.abyssalHollowStageSelect)
+    this.load.spritesheet('emerald-sanctuary-spikes', IMAGE_ASSETS.emeraldSanctuarySpikes, {
+      frameWidth: 512,
+      frameHeight: 512,
+    })
     this.load.image('checkpoint-beacon', IMAGE_ASSETS.checkpoint)
     this.load.spritesheet('stage-goal', IMAGE_ASSETS.goalIdle, {
       frameWidth: 256,
@@ -210,32 +285,35 @@ export class GameplayScene extends Phaser.Scene {
     this.createAnimations()
 
     this.physics.world.setBounds(0, 0, this.worldWidth, this.worldHeight)
-    this.physics.world.setBoundsCollision(true, true, true, false)
+    this.physics.world.setBoundsCollision(true, true, false, false)
     this.cameras.main.setBounds(0, 0, this.worldWidth, this.worldHeight)
 
     this.createParallaxBackground()
     this.terrainLayer = this.createTerrainLayer()
+    this.createMovingPlatforms()
+    this.createHazards()
     this.createCoins()
     this.createEnemies()
     this.createCheckpoints()
 
     const playerDefinition = objectDefinitions.player
     this.player = this.physics.add.sprite(
-      activeStage.playerSpawn.x,
-      groundedCenterY(activeStage.playerSpawn.surfaceY, 'player'),
+      this.stage.playerSpawn.x,
+      playerCenterY(this.stage.playerSpawn.surfaceY, this.stage.playerSpawn.gravity ?? 'down'),
       'player-idle',
     )
     this.player.setOrigin(playerDefinition.origin.x, playerDefinition.origin.y)
     this.player.setCollideWorldBounds(true)
     this.player.setDragX(1500)
     this.player.setMaxVelocity(PLAYER_MAX_RUN_SPEED, 900)
+    this.applyPlayerGravityDirection(this.stage.playerSpawn.gravity ?? 'down', false)
     this.setPlayerVisualState('normal')
     this.player.play('player-idle')
 
     const goalDefinition = objectDefinitions.goal
     this.goal = this.physics.add.staticSprite(
-      activeStage.goal.x,
-      groundedBottomY(activeStage.goal.surfaceY, 'goal'),
+      this.stage.goal.x,
+      groundedBottomY(this.stage.goal.surfaceY, 'goal'),
       'stage-goal',
     )
     this.goal.setOrigin(goalDefinition.origin.x, goalDefinition.origin.y)
@@ -247,9 +325,18 @@ export class GameplayScene extends Phaser.Scene {
     this.goal.play('stage-goal-idle')
 
     this.physics.add.collider(this.player, this.terrainLayer)
+    for (const platform of this.movingPlatforms) {
+      this.physics.add.collider(this.player, platform.sprite)
+    }
+    for (const hazard of this.hazards) {
+      this.physics.add.overlap(this.player, hazard.sprite, () => this.hurtPlayerFromHazard(hazard.sprite.x))
+    }
     for (const enemy of this.enemies) {
       if (enemy.point.type !== 'azure-core') {
         this.physics.add.collider(enemy.sprite, this.terrainLayer)
+        for (const platform of this.movingPlatforms) {
+          this.physics.add.collider(enemy.sprite, platform.sprite)
+        }
       }
       this.physics.add.collider(this.player, enemy.sprite, () => this.hurtPlayer(enemy.sprite))
     }
@@ -322,6 +409,8 @@ export class GameplayScene extends Phaser.Scene {
     this.hurtTween = undefined
     this.playerVisualYOffset = 0
     this.coins = []
+    this.hazards = []
+    this.movingPlatforms = []
     this.collectedCoins = 0
     this.damageTaken = 0
     this.falls = 0
@@ -349,10 +438,12 @@ export class GameplayScene extends Phaser.Scene {
     this.bossPatternEvent = undefined
     this.statusMessage = this.getInitialStatusMessage()
     this.statusParams = {}
+    this.playerGravityDirection = this.stage.playerSpawn.gravity ?? 'down'
     this.activeCheckpointIndex = -1
     this.respawnPoint = {
-      x: activeStage.playerSpawn.x,
-      y: groundedCenterY(activeStage.playerSpawn.surfaceY, 'player'),
+      x: this.stage.playerSpawn.x,
+      y: playerCenterY(this.stage.playerSpawn.surfaceY, this.stage.playerSpawn.gravity ?? 'down'),
+      gravity: this.stage.playerSpawn.gravity ?? 'down',
     }
   }
 
@@ -392,7 +483,11 @@ export class GameplayScene extends Phaser.Scene {
       this.startStageAction()
     }
 
-    const grounded = this.player.body.blocked.down || this.player.body.touching.down
+    if (this.timerStarted) {
+      this.updateMovingPlatforms()
+    }
+    this.updateGravityZones()
+    const grounded = this.isPlayerGrounded()
     if (grounded) {
       this.lastGroundedAt = this.time.now
       this.remainingAirJumps = 1
@@ -413,19 +508,22 @@ export class GameplayScene extends Phaser.Scene {
 
     const shouldCrouch = crouchHeld && grounded && !this.isAttacking && !this.isHurting
     this.setCrouching(shouldCrouch)
+    const onIce = grounded && this.isOnIce
+    const groundAcceleration = onIce ? ICE_GROUND_ACCELERATION : GROUND_ACCELERATION
+    this.player.setDragX(onIce && !left && !right ? ICE_IDLE_DRAG_X : DEFAULT_DRAG_X)
 
     if (this.isCrouching) {
       this.player.setAccelerationX(0)
-      this.player.setVelocityX(0)
+      if (!onIce) this.player.setVelocityX(0)
     } else if (left) {
       this.timerStarted = true
-      this.player.setAccelerationX(-(grounded ? GROUND_ACCELERATION : AIR_ACCELERATION))
+      this.player.setAccelerationX(-(grounded ? groundAcceleration : AIR_ACCELERATION))
       if (!this.isHurting) {
         this.player.setFlipX(true)
       }
     } else if (right) {
       this.timerStarted = true
-      this.player.setAccelerationX(grounded ? GROUND_ACCELERATION : AIR_ACCELERATION)
+      this.player.setAccelerationX(grounded ? groundAcceleration : AIR_ACCELERATION)
       if (!this.isHurting) {
         this.player.setFlipX(false)
       }
@@ -443,7 +541,7 @@ export class GameplayScene extends Phaser.Scene {
         this.setPlayerVisualState('normal')
         this.playPlayerAnimation('player-jump')
       }
-      this.player.setVelocityY(-640)
+      this.player.setVelocityY(-640 * this.gravitySign)
       if (canUseAirJump) this.remainingAirJumps -= 1
       this.jumpBufferedUntil = 0
       this.lastGroundedAt = 0
@@ -474,9 +572,59 @@ export class GameplayScene extends Phaser.Scene {
     this.updateTimer()
     this.updateParallaxBackground()
 
-    if (this.player.y > this.worldHeight + 80) {
+    if (this.isPlayerOutOfBounds()) {
       this.defeatPlayer('fall')
     }
+  }
+
+  private isPlayerGrounded(): boolean {
+    return this.playerGravityDirection === 'down'
+      ? this.player.body.blocked.down || this.player.body.touching.down
+      : this.player.body.blocked.up || this.player.body.touching.up
+  }
+
+  private updateGravityZones(): void {
+    if (!this.stage.gravityZones || this.isDead || this.stageCleared) return
+
+    const zone = this.stage.gravityZones.find((candidate) =>
+      this.player.x >= candidate.x
+      && this.player.x <= candidate.x + candidate.width
+      && this.player.y >= candidate.y
+      && this.player.y <= candidate.y + candidate.height,
+    )
+
+    if (zone && zone.direction !== this.playerGravityDirection) {
+      this.applyPlayerGravityDirection(zone.direction)
+    }
+  }
+
+  private applyPlayerGravityDirection(direction: GravityDirection, preserveVelocity = true): void {
+    this.playerGravityDirection = direction
+    if (!this.player) return
+
+    const bodyGravityY = direction === 'down' ? 0 : -WORLD_GRAVITY_Y * 2
+    this.player.body.setGravityY(bodyGravityY)
+    this.player.setFlipY(direction === 'up')
+    if (!preserveVelocity) this.player.setVelocityY(0)
+    this.setCrouching(false)
+    this.remainingAirJumps = 1
+    this.lastGroundedAt = this.time.now
+  }
+
+  private isPlayerOutOfBounds(): boolean {
+    return this.playerGravityDirection === 'down'
+      ? this.player.y > this.worldHeight + 80
+      : this.player.y < -80
+  }
+
+  private findSurfaceZone(type: SurfaceZone['type']): SurfaceZone | undefined {
+    return this.stage.surfaceZones?.find((zone) =>
+      zone.type === type
+      && this.player.x >= zone.x
+      && this.player.x <= zone.x + zone.width
+      && this.player.y >= zone.y
+      && this.player.y <= zone.y + zone.height,
+    )
   }
 
   private createTextures(): void {
@@ -485,6 +633,8 @@ export class GameplayScene extends Phaser.Scene {
     this.makeCoinTexture()
     this.makeAzureCoreTexture()
     this.makeBossProjectileTexture()
+    this.makeLavaHazardTexture()
+    this.makeForestGuardianTextures()
   }
 
   private createAnimations(): void {
@@ -681,7 +831,199 @@ export class GameplayScene extends Phaser.Scene {
     graphics.destroy()
   }
 
+  private makeLavaHazardTexture(): void {
+    const graphics = this.make.graphics()
+    graphics.fillStyle(0x5d160b, 0.92)
+    graphics.fillRoundedRect(0, 16, 96, 64, 12)
+    graphics.fillStyle(0xff4d18, 0.95)
+    graphics.fillRoundedRect(7, 22, 82, 48, 10)
+    graphics.fillStyle(0xffd36a, 0.92)
+    graphics.fillEllipse(28, 38, 34, 18)
+    graphics.fillEllipse(68, 52, 30, 14)
+    graphics.lineStyle(4, 0xfff0a6, 0.7)
+    graphics.lineBetween(10, 18, 20, 2)
+    graphics.lineBetween(45, 18, 54, 0)
+    graphics.lineBetween(80, 20, 88, 5)
+    graphics.generateTexture('lava-hazard', 96, 96)
+    graphics.destroy()
+  }
+
+  private makeForestGuardianTextures(): void {
+    this.drawForestGuardianTexture('forest-guardian', false)
+    this.drawForestGuardianTexture('forest-guardian-defeated', true)
+  }
+
+  private drawForestGuardianTexture(key: string, defeated: boolean): void {
+    const graphics = this.make.graphics()
+    const alpha = defeated ? 0.62 : 1
+    const bark = defeated ? 0x2b241a : 0x4b321f
+    const leaf = defeated ? 0x405335 : 0x8dcc4b
+    const moss = defeated ? 0x526743 : 0xbfe36a
+    const crystal = defeated ? 0x336773 : 0x36e8ff
+
+    graphics.fillStyle(0x000000, defeated ? 0.22 : 0.18)
+    graphics.fillEllipse(48, 92, 58, 12)
+    graphics.lineStyle(10, bark, alpha)
+    graphics.beginPath()
+    graphics.moveTo(34, 86)
+    graphics.lineTo(38, 60)
+    graphics.lineTo(32, 40)
+    graphics.strokePath()
+    graphics.beginPath()
+    graphics.moveTo(62, 86)
+    graphics.lineTo(58, 60)
+    graphics.lineTo(66, 38)
+    graphics.strokePath()
+    graphics.fillStyle(bark, alpha)
+    graphics.fillRoundedRect(24, 28, 48, 48, 16)
+    graphics.fillRoundedRect(18, 44, 14, 30, 8)
+    graphics.fillRoundedRect(64, 44, 14, 30, 8)
+    graphics.lineStyle(5, moss, alpha)
+    graphics.beginPath()
+    graphics.moveTo(18, 52)
+    graphics.lineTo(36, 34)
+    graphics.lineTo(58, 54)
+    graphics.lineTo(78, 36)
+    graphics.strokePath()
+    graphics.fillStyle(leaf, alpha)
+    graphics.fillEllipse(28, 24, 28, 14)
+    graphics.fillEllipse(48, 18, 36, 16)
+    graphics.fillEllipse(69, 26, 26, 14)
+    graphics.fillStyle(crystal, defeated ? 0.55 : 0.95)
+    graphics.fillTriangle(48, 36, 35, 60, 48, 76)
+    graphics.fillTriangle(48, 36, 61, 60, 48, 76)
+    graphics.lineStyle(3, defeated ? 0x86a6aa : 0xe6ffff, defeated ? 0.5 : 0.85)
+    graphics.strokeTriangle(48, 36, 35, 60, 48, 76)
+    graphics.strokeTriangle(48, 36, 61, 60, 48, 76)
+    graphics.lineStyle(3, leaf, alpha)
+    graphics.lineBetween(26, 76, 16, 90)
+    graphics.lineBetween(70, 76, 82, 90)
+    graphics.generateTexture(key, 96, 104)
+    graphics.destroy()
+  }
+
   private createParallaxBackground(): void {
+    if (this.stageTheme === 'abyssal-hollow') {
+      this.add
+        .tileSprite(0, 0, 1920, this.worldHeight, 'abyssal-hollow-bg')
+        .setOrigin(0)
+        .setScrollFactor(0)
+        .setDepth(-30)
+
+      this.farBackground = this.add
+        .tileSprite(0, 0, 1920, this.worldHeight, 'abyssal-hollow-bg')
+        .setOrigin(0)
+        .setScrollFactor(0)
+        .setDepth(-20)
+        .setAlpha(0.34)
+        .setTint(0xb58cff)
+
+      this.midBackground = this.add
+        .tileSprite(0, 0, 1920, this.worldHeight, 'abyssal-hollow-bg')
+        .setOrigin(0)
+        .setScrollFactor(0)
+        .setDepth(-10)
+        .setAlpha(0.22)
+        .setTint(0xff8ee8)
+      return
+    }
+
+    if (this.stageTheme === 'emberfall-caldera') {
+      this.add
+        .tileSprite(0, 0, 1920, this.worldHeight, 'emberfall-caldera-bg')
+        .setOrigin(0)
+        .setScrollFactor(0)
+        .setDepth(-30)
+
+      this.farBackground = this.add
+        .tileSprite(0, 0, 1920, this.worldHeight, 'emberfall-caldera-bg')
+        .setOrigin(0)
+        .setScrollFactor(0)
+        .setDepth(-20)
+        .setAlpha(0.35)
+        .setTint(0xff8a4b)
+
+      this.midBackground = this.add
+        .tileSprite(0, 0, 1920, this.worldHeight, 'emberfall-caldera-bg')
+        .setOrigin(0)
+        .setScrollFactor(0)
+        .setDepth(-10)
+        .setAlpha(0.22)
+        .setTint(0xffd19b)
+      return
+    }
+
+    if (this.stageTheme === 'frostveil-peaks') {
+      this.add
+        .tileSprite(0, 0, 1920, this.worldHeight, 'frostveil-peaks-bg')
+        .setOrigin(0)
+        .setScrollFactor(0)
+        .setDepth(-30)
+
+      this.farBackground = this.add
+        .tileSprite(0, 0, 1920, this.worldHeight, 'frostveil-peaks-bg')
+        .setOrigin(0)
+        .setScrollFactor(0)
+        .setDepth(-20)
+        .setAlpha(0.32)
+        .setTint(0xccefff)
+
+      this.midBackground = this.add
+        .tileSprite(0, 0, 1920, this.worldHeight, 'frostveil-peaks-bg')
+        .setOrigin(0)
+        .setScrollFactor(0)
+        .setDepth(-10)
+        .setAlpha(0.2)
+        .setTint(0xf3fbff)
+      return
+    }
+
+    if (this.stageTheme === 'cerulean-depths') {
+      this.add
+        .tileSprite(0, 0, 1920, this.worldHeight, 'cerulean-depths-bg')
+        .setOrigin(0)
+        .setScrollFactor(0)
+        .setDepth(-30)
+
+      this.farBackground = this.add
+        .tileSprite(0, 0, 1920, this.worldHeight, 'cerulean-depths-bg')
+        .setOrigin(0)
+        .setScrollFactor(0)
+        .setDepth(-20)
+        .setAlpha(0.32)
+        .setTint(0x8be7ff)
+
+      this.midBackground = this.add
+        .tileSprite(0, 0, 1920, this.worldHeight, 'cerulean-depths-bg')
+        .setOrigin(0)
+        .setScrollFactor(0)
+        .setDepth(-10)
+        .setAlpha(0.2)
+        .setTint(0xdff8ff)
+      return
+    }
+
+    if (this.stageTheme === 'emerald-sanctuary') {
+      this.add
+        .tileSprite(0, 0, 1920, this.worldHeight, 'emerald-sanctuary-sky')
+        .setOrigin(0)
+        .setScrollFactor(0)
+        .setDepth(-30)
+
+      this.farBackground = this.add
+        .tileSprite(0, 0, 1920, this.worldHeight, 'emerald-sanctuary-far-bg')
+        .setOrigin(0)
+        .setScrollFactor(0)
+        .setDepth(-20)
+
+      this.midBackground = this.add
+        .tileSprite(0, 0, 3840, this.worldHeight, 'emerald-sanctuary-mid-bg')
+        .setOrigin(0)
+        .setScrollFactor(0)
+        .setDepth(-10)
+      return
+    }
+
     this.add
       .tileSprite(0, 0, 1920, this.worldHeight, 'white-palace-sky')
       .setOrigin(0)
@@ -712,7 +1054,7 @@ export class GameplayScene extends Phaser.Scene {
       tileWidth: this.tileSize,
       tileHeight: this.tileSize,
     })
-    const tileset = map.addTilesetImage('palace-tiles', undefined, this.tileSize, this.tileSize, 0, 0)
+    const tileset = map.addTilesetImage(this.terrainTilesKey, undefined, this.tileSize, this.tileSize, 0, 0)
     const layer = map.createLayer(0, tileset!, 0, 0)
 
     if (!layer) {
@@ -725,8 +1067,65 @@ export class GameplayScene extends Phaser.Scene {
     return layer
   }
 
+  private createMovingPlatforms(): void {
+    this.movingPlatforms = (this.stage.movingPlatforms ?? []).map((point) => {
+      const x = (point.col + point.width / 2) * this.tileSize
+      const y = (point.row + point.height / 2) * this.tileSize
+      const width = point.width * this.tileSize
+      const height = point.height * this.tileSize
+      const sprite = this.add.tileSprite(x, y, width, height, this.terrainTilesKey) as MovingPlatformSprite
+      sprite.setDepth(7)
+
+      this.physics.add.existing(sprite)
+      sprite.body.allowGravity = false
+      sprite.body.immovable = true
+      sprite.body.moves = true
+      sprite.body.setSize(width, height)
+      sprite.body.setOffset(0, 0)
+
+      return {
+        sprite,
+        point,
+        startX: x,
+        startY: y,
+        previousX: x,
+        previousY: y,
+      }
+    })
+  }
+
+  private createHazards(): void {
+    this.hazards = (this.stage.hazards ?? []).map((point) => {
+      const frame = this.getHazardFrame(point)
+      const texture = point.type === 'lava' ? 'lava-hazard' : 'emerald-sanctuary-spikes'
+      const centerY = groundedHazardCenterY(point.surfaceY, point.height, point.type)
+      const sprite = point.type === 'lava'
+        ? this.physics.add.staticImage(point.x, centerY, texture)
+        : this.physics.add.staticImage(point.x, centerY, texture, frame)
+      sprite.setDisplaySize(point.width, point.height)
+      sprite.setDepth(8)
+      sprite.refreshBody()
+      if (point.type === 'lava') {
+        sprite.body.setSize(point.width * 0.88, point.height * 0.68)
+        sprite.body.setOffset(point.width * 0.06, point.height * 0.22)
+      } else {
+        sprite.body.setSize(point.width * 0.86, point.height * 0.56)
+        sprite.body.setOffset(point.width * 0.07, point.height * 0.36)
+      }
+
+      return { sprite, point }
+    })
+  }
+
+  private getHazardFrame(point: HazardRect): number {
+    if (point.orientation === 'ceiling') return 4
+    if (point.orientation === 'left-wall') return 3
+    if (point.orientation === 'right-wall') return 2
+    return 0
+  }
+
   private createCoins(): void {
-    this.coins = activeStage.coins.map((point, index) => {
+    this.coins = this.stage.coins.map((point, index) => {
       const sprite = this.add.image(point.x, point.y, 'coin')
       sprite.setDepth(12)
       sprite.setData('baseY', point.y)
@@ -749,21 +1148,25 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   private createEnemies(): void {
-    this.enemies = activeStage.enemies.map((point) => {
+    this.enemies = this.stage.enemies.map((point) => {
       const isCore = point.type === 'azure-core'
       const definition = isCore ? objectDefinitions['azure-core'] : objectDefinitions.guard
       const spawnY = isCore ? point.y : groundedCenterY(point.surfaceY, 'guard')
-      const sprite = this.physics.add.sprite(point.x, spawnY, isCore ? 'azure-core' : 'enemy-guard-walk')
+      const sprite = this.physics.add.sprite(point.x, spawnY, isCore ? 'azure-core' : this.guardTextureKey)
       sprite.setOrigin(definition.origin.x, definition.origin.y)
       sprite.setCollideWorldBounds(true)
       if (isCore) {
         this.configureAzureCore(sprite, spawnY)
       } else {
-        sprite.setScale(0.82)
+        sprite.setScale(this.stageTheme === 'emerald-sanctuary' ? 0.9 : 0.82)
         sprite.setVelocityX(-80)
         sprite.body.setSize(definition.body.width, definition.body.height)
         sprite.body.setOffset(definition.body.offsetX, definition.body.offsetY)
-        sprite.play('enemy-guard-walk')
+        if (this.stageTheme === 'emerald-sanctuary') {
+          sprite.setTexture('forest-guardian')
+        } else {
+          sprite.play('enemy-guard-walk')
+        }
       }
 
       return {
@@ -800,7 +1203,7 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   private initializeBossPrototype(): void {
-    if (activeStage.id !== BOSS_STAGE_ID) return
+    if (!this.isBossStage) return
 
     this.bossPrototype = this.enemies.find((enemy) => enemy.point.id === 'boss-prototype')
     if (!this.bossPrototype) return
@@ -824,7 +1227,7 @@ export class GameplayScene extends Phaser.Scene {
     this.player.body.enable = true
     this.cameras.main.startFollow(this.player, true, 0.12, 0.12)
     this.cameras.main.centerOn(this.player.x, this.player.y)
-    if (activeStage.id === BOSS_STAGE_ID) {
+    if (this.isBossStage) {
       this.startBossPattern()
     }
   }
@@ -979,6 +1382,7 @@ export class GameplayScene extends Phaser.Scene {
     this.dispatchSfx('hit')
     this.clearBossProjectiles()
     this.bossPhase += 1
+    this.dispatchHudState()
     boss.defeated = true
     boss.sprite.body.enable = false
 
@@ -1004,7 +1408,8 @@ export class GameplayScene extends Phaser.Scene {
     this.homingReticle?.setVisible(false)
     this.setPlayerHomingCollision(true)
     this.setPlayerVisualState('normal')
-    this.player.setPosition(activeStage.playerSpawn.x, groundedCenterY(activeStage.playerSpawn.surfaceY, 'player'))
+    this.applyPlayerGravityDirection(this.stage.playerSpawn.gravity ?? 'down', false)
+    this.player.setPosition(this.stage.playerSpawn.x, playerCenterY(this.stage.playerSpawn.surfaceY, this.stage.playerSpawn.gravity ?? 'down'))
     this.player.setVelocity(0, 0)
     this.cameras.main.centerOn(this.player.x, this.player.y)
     this.cameras.main.flash(180, 245, 250, 255)
@@ -1015,7 +1420,7 @@ export class GameplayScene extends Phaser.Scene {
     const definition = objectDefinitions.checkpoint
     this.checkpointGlows = []
     this.checkpointRings = []
-    this.checkpointSprites = activeStage.checkpoints.map((checkpoint, index) => {
+    this.checkpointSprites = this.stage.checkpoints.map((checkpoint, index) => {
       const bottomY = groundedBottomY(checkpoint.surfaceY, 'checkpoint')
       const glow = this.add.ellipse(checkpoint.x, bottomY - 3, 92, 20, THEME.cyan, 0.24)
       glow.setDepth(6)
@@ -1052,7 +1457,7 @@ export class GameplayScene extends Phaser.Scene {
   private buildTerrainData(): number[][] {
     const data = Array.from({ length: this.tileRows }, () => Array.from({ length: this.tileColumns }, () => -1))
 
-    for (const rect of activeStage.platforms) {
+    for (const rect of this.stage.platforms) {
       this.writePlatformTiles(data, rect.col, rect.row, rect.width, rect.height)
     }
 
@@ -1128,6 +1533,14 @@ export class GameplayScene extends Phaser.Scene {
     this.applyPlayerHit(enemy.x)
   }
 
+  private hurtPlayerFromHazard(sourceX: number): void {
+    if (this.isInvulnerable || this.isHurting || this.isHomingAttacking || this.isDead || this.stageCleared) {
+      return
+    }
+
+    this.applyPlayerHit(sourceX)
+  }
+
   private applyPlayerHit(sourceX: number): void {
     if (this.isInvulnerable || this.isHurting || this.isHomingAttacking || this.isCrouching || this.isDead) {
       return
@@ -1155,7 +1568,7 @@ export class GameplayScene extends Phaser.Scene {
     this.attackReady = false
 
     const knockbackDirection = this.player.x < sourceX ? -1 : 1
-    this.player.setVelocity(knockbackDirection * 360, -360)
+    this.player.setVelocity(knockbackDirection * 360, -360 * this.gravitySign)
     this.playPlayerAnimation('player-hurt')
     this.setStatusMessage('status.hurt', { hp: this.playerHealth, max: PLAYER_MAX_HEALTH })
 
@@ -1210,7 +1623,11 @@ export class GameplayScene extends Phaser.Scene {
         ease: 'Quad.easeOut',
       })
     } else {
-      enemy.sprite.play('enemy-guard-death')
+      if (this.stageTheme === 'emerald-sanctuary') {
+        enemy.sprite.setTexture(this.guardDeathTextureKey)
+      } else {
+        enemy.sprite.play('enemy-guard-death')
+      }
     }
     this.setStatusMessage('status.enemyCleared')
 
@@ -1269,7 +1686,11 @@ export class GameplayScene extends Phaser.Scene {
       enemy.sprite.setVisible(true)
       enemy.sprite.setAlpha(1)
       enemy.sprite.body.enable = true
-      enemy.sprite.play('enemy-guard-walk')
+      if (this.stageTheme === 'emerald-sanctuary') {
+        enemy.sprite.setTexture(this.guardTextureKey)
+      } else {
+        enemy.sprite.play('enemy-guard-walk')
+      }
     }
   }
 
@@ -1293,23 +1714,64 @@ export class GameplayScene extends Phaser.Scene {
     }
   }
 
+  private updateMovingPlatforms(): void {
+    if (this.isDead || this.stageCleared) {
+      for (const platform of this.movingPlatforms) platform.sprite.body.setVelocity(0, 0)
+      return
+    }
+
+    for (const platform of this.movingPlatforms) {
+      const phase = platform.point.phase ?? 0
+      const carryingPlayer = this.isPlayerRidingMovingPlatform(platform)
+      const t = (this.time.now / platform.point.durationMs + phase) * Math.PI * 2
+      const offset = Math.sin(t) * platform.point.distance
+      const nextX = platform.point.axis === 'x' ? platform.startX + offset : platform.startX
+      const nextY = platform.point.axis === 'y' ? platform.startY + offset : platform.startY
+      const deltaSeconds = Math.max(this.game.loop.delta / 1000, 0.001)
+      const deltaX = nextX - platform.previousX
+      const deltaY = nextY - platform.previousY
+
+      platform.sprite.body.setVelocity(deltaX / deltaSeconds, deltaY / deltaSeconds)
+      platform.sprite.setPosition(nextX, nextY)
+      platform.sprite.body.updateFromGameObject()
+      if (carryingPlayer) {
+        this.player.x += deltaX
+        this.player.y += deltaY
+        this.player.body.updateFromGameObject()
+      }
+      platform.previousX = nextX
+      platform.previousY = nextY
+    }
+  }
+
+  private isPlayerRidingMovingPlatform(platform: MovingPlatformRuntime): boolean {
+    if (!this.player?.body || !platform.sprite.body || this.playerGravityDirection !== 'down') return false
+
+    const playerBody = this.player.body
+    const platformBody = platform.sprite.body
+    const horizontalOverlap = playerBody.right > platformBody.left + 8 && playerBody.left < platformBody.right - 8
+    const closeToTop = Math.abs(playerBody.bottom - platformBody.top) <= 12
+    return horizontalOverlap && (closeToTop || playerBody.touching.down || playerBody.blocked.down)
+  }
+
   private isEnemyDefeated(sprite: ArcadeSprite): boolean {
     return this.enemies.find((enemy) => enemy.sprite === sprite)?.defeated ?? true
   }
 
   private updateCheckpoint(): void {
-    const nextCheckpointIndex = activeStage.checkpoints.findIndex((checkpoint, index) => index > this.activeCheckpointIndex && this.player.x >= checkpoint.x)
+    const nextCheckpointIndex = this.stage.checkpoints.findIndex((checkpoint, index) => index > this.activeCheckpointIndex && this.player.x >= checkpoint.x)
 
     if (nextCheckpointIndex === -1) {
       return
     }
 
-    const checkpoint = activeStage.checkpoints[nextCheckpointIndex]
+    const checkpoint = this.stage.checkpoints[nextCheckpointIndex]
     this.activeCheckpointIndex = nextCheckpointIndex
     this.dispatchSfx('checkpoint')
     this.respawnPoint = {
       x: checkpoint.spawnX,
-      y: groundedCenterY(checkpoint.spawnSurfaceY, 'player'),
+      y: playerCenterY(checkpoint.spawnSurfaceY, checkpoint.spawnGravity ?? this.playerGravityDirection),
+      gravity: checkpoint.spawnGravity ?? this.playerGravityDirection,
     }
     const sprite = this.checkpointSprites[nextCheckpointIndex]
     const glow = this.checkpointGlows[nextCheckpointIndex]
@@ -1351,13 +1813,14 @@ export class GameplayScene extends Phaser.Scene {
     this.stopPlayerHurtBlink()
     this.setPlayerHomingCollision(true)
     this.setPlayerVisualState('normal')
+    this.applyPlayerGravityDirection(this.respawnPoint.gravity, false)
     this.player.setPosition(this.respawnPoint.x, this.respawnPoint.y)
     this.player.setVelocity(0, 0)
     this.player.body.enable = true
     this.playPlayerAnimation('player-idle')
     this.setEnemiesFrozen(false)
     this.setStatusMessage('status.restored')
-    if (activeStage.id === BOSS_STAGE_ID && this.bossPhase < BOSS_PHASE_COUNT) {
+    if (this.isBossStage && this.bossPhase < BOSS_PHASE_COUNT) {
       this.time.delayedCall(500, () => this.startBossPattern())
     }
   }
@@ -1380,7 +1843,7 @@ export class GameplayScene extends Phaser.Scene {
     this.attackReady = false
     this.homingTarget = undefined
     this.homingReticle?.setVisible(false)
-    if (activeStage.id === BOSS_STAGE_ID) {
+    if (this.isBossStage) {
       this.bossPatternGeneration += 1
       this.bossPatternEvent?.remove(false)
       this.bossPatternEvent = undefined
@@ -1390,7 +1853,7 @@ export class GameplayScene extends Phaser.Scene {
     this.setPlayerHomingCollision(true)
     this.setPlayerVisualState('normal')
     this.player.setAccelerationX(0)
-    this.player.setVelocity(0, reason === 'fall' ? 0 : -160)
+    this.player.setVelocity(0, reason === 'fall' ? 0 : -160 * this.gravitySign)
     this.setEnemiesFrozen(true)
     this.playPlayerAnimation('player-death')
     this.setStatusMessage(reason === 'fall' ? 'status.fall' : 'status.critical')
@@ -1584,7 +2047,7 @@ export class GameplayScene extends Phaser.Scene {
 
     if (hit) {
       this.remainingAirJumps = 1
-      this.player.setVelocity(0, HOMING_ATTACK_BOUNCE_Y)
+      this.player.setVelocity(0, HOMING_ATTACK_BOUNCE_Y * this.gravitySign)
       this.setStatusMessage('status.homingHit')
     } else {
       this.player.setVelocity(0, 0)
@@ -1651,6 +2114,7 @@ export class GameplayScene extends Phaser.Scene {
 
   private setPlayerHomingCollision(enabled: boolean): void {
     this.player.body.allowGravity = enabled
+    this.player.body.setGravityY(enabled && this.playerGravityDirection === 'up' ? -WORLD_GRAVITY_Y * 2 : 0)
     this.player.body.checkCollision.none = !enabled
   }
 
@@ -1754,7 +2218,7 @@ export class GameplayScene extends Phaser.Scene {
 
   private getRank(): string {
     const elapsedSeconds = this.stageTimeMs / 1000
-    const { sTime, aTime, bTime, cTime } = activeStage.rankTargets
+    const { sTime, aTime, bTime, cTime } = this.stage.rankTargets
 
     let timeScore = 300
     if (elapsedSeconds > sTime && elapsedSeconds <= aTime) timeScore = 240
@@ -1765,8 +2229,8 @@ export class GameplayScene extends Phaser.Scene {
     const coinScore = this.coinTargetCount > 0 ? (this.collectedCoins / this.coinTargetCount) * 200 : 200
     const enemyTarget = this.scoreEnemyTargetCount
     const enemyScore = enemyTarget > 0 ? (this.enemiesDefeated / enemyTarget) * 150 : 150
-    const checkpointScore = activeStage.checkpoints.length > 0
-      ? ((this.activeCheckpointIndex + 1) / activeStage.checkpoints.length) * 50
+    const checkpointScore = this.stage.checkpoints.length > 0
+      ? ((this.activeCheckpointIndex + 1) / this.stage.checkpoints.length) * 50
       : 50
     const score = 300 + timeScore + coinScore + enemyScore + checkpointScore - this.damageTaken * 80 - this.falls * 180
 
@@ -1795,30 +2259,32 @@ export class GameplayScene extends Phaser.Scene {
         enemiesDefeated: this.enemiesDefeated,
         enemyTarget: this.scoreEnemyTargetCount,
         checkpointsReached: this.activeCheckpointIndex + 1,
-        checkpointTarget: activeStage.checkpoints.length,
+        checkpointTarget: this.stage.checkpoints.length,
         rank: this.getRank(),
         time: this.getTimerValue(),
-        objective: activeStage.objective,
+        objective: this.stage.objective,
         statusMessage: this.statusMessage,
         statusParams: this.statusParams,
         playerProgress: Phaser.Math.Clamp(this.player.x / this.worldWidth, 0, 1),
         playerProgressY: Phaser.Math.Clamp(this.player.y / this.worldHeight, 0, 1),
-        goalProgress: activeStage.goal.x / this.worldWidth,
+        goalProgress: this.stage.goal.x / this.worldWidth,
         enemyActive: this.enemies.some((enemy) => !enemy.defeated),
         enemyMarkers: this.enemies.filter((enemy) => !enemy.defeated).map((enemy) => ({
           x: enemy.sprite.x / this.worldWidth,
           y: enemy.sprite.y / this.worldHeight,
         })),
-        mapPlatforms: activeStage.platforms.map((platform) => ({
+        mapPlatforms: this.stage.platforms.map((platform) => ({
           x: platform.col / this.tileColumns,
           y: (platform.row * this.tileSize) / this.worldHeight,
           width: platform.width / this.tileColumns,
         })),
-        checkpointMarkers: activeStage.checkpoints.map((checkpoint) => ({
+        checkpointMarkers: this.stage.checkpoints.map((checkpoint) => ({
           x: checkpoint.x / this.worldWidth,
           y: checkpoint.surfaceY / this.worldHeight,
         })),
         activeCheckpointIndex: this.activeCheckpointIndex,
+        bossPhase: this.isBossStage ? Math.min(this.bossPhase + 1, BOSS_PHASE_COUNT) : 0,
+        bossPhaseMax: this.isBossStage ? BOSS_PHASE_COUNT : 0,
         cleared: this.stageCleared,
         ...overrides,
       },
@@ -1830,7 +2296,7 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   private getInitialStatusMessage(): TranslationKey {
-    return activeStage.enemies.some((enemy) => enemy.type === 'azure-core')
+    return this.stage.enemies.some((enemy) => enemy.type === 'azure-core')
       ? 'status.azureDetected'
       : 'status.initial'
   }

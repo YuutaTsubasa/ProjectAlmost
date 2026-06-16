@@ -1,0 +1,80 @@
+{
+  "id": "3-4",
+  "subtitle": "Pearl Vortex",
+  "objective": "Reach the Goal",
+  "theme": "cerulean-depths",
+  "rankTargets": {
+    "sTime": 46,
+    "aTime": 64,
+    "bTime": 90,
+    "cTime": 122
+  },
+  "world": {
+    "width": 11000,
+    "height": 1080,
+    "tileSize": 64
+  },
+  "playerSpawn": {
+    "x": 256,
+    "surfaceY": 704
+  },
+  "platforms": [
+    { "col": 2, "row": 11, "width": 12, "height": 1 },
+    { "col": 21, "row": 8, "width": 6, "height": 1 },
+    { "col": 34, "row": 5, "width": 6, "height": 1 },
+    { "col": 50, "row": 5, "width": 6, "height": 1 },
+    { "col": 66, "row": 8, "width": 7, "height": 1 },
+    { "col": 84, "row": 11, "width": 8, "height": 1 },
+    { "col": 103, "row": 8, "width": 6, "height": 1 },
+    { "col": 121, "row": 5, "width": 6, "height": 1 },
+    { "col": 141, "row": 10, "width": 9, "height": 1 },
+    { "col": 158, "row": 10, "width": 12, "height": 1 }
+  ],
+  "movingPlatforms": [
+    { "id": "vortex-lift-a", "col": 16, "row": 10, "width": 4, "height": 1, "axis": "y", "distance": 160, "durationMs": 2300 },
+    { "id": "vortex-ferry-a", "col": 42, "row": 7, "width": 4, "height": 1, "axis": "x", "distance": 340, "durationMs": 2700, "phase": 0.4 },
+    { "id": "vortex-lift-b", "col": 76, "row": 9, "width": 4, "height": 1, "axis": "y", "distance": 160, "durationMs": 2450, "phase": 0.55 },
+    { "id": "vortex-ferry-b", "col": 113, "row": 7, "width": 4, "height": 1, "axis": "x", "distance": 360, "durationMs": 2850, "phase": 0.2 },
+    { "id": "vortex-lift-c", "col": 132, "row": 8, "width": 4, "height": 1, "axis": "y", "distance": 140, "durationMs": 2400, "phase": 0.7 }
+  ],
+  "gravityZones": [
+    { "id": "vortex-up-a", "x": 1700, "y": 0, "width": 2300, "height": 1080, "direction": "up" },
+    { "id": "vortex-down-a", "x": 4000, "y": 0, "width": 2100, "height": 1080, "direction": "down" },
+    { "id": "vortex-up-b", "x": 6100, "y": 0, "width": 2450, "height": 1080, "direction": "up" },
+    { "id": "vortex-down-b", "x": 8550, "y": 0, "width": 2450, "height": 1080, "direction": "down" }
+  ],
+  "coins": [
+    { "x": 430, "y": 648 },
+    { "x": 1120, "y": 596 },
+    { "x": 1780, "y": 520 },
+    { "x": 2320, "y": 392 },
+    { "x": 3100, "y": 430 },
+    { "x": 3880, "y": 420 },
+    { "x": 4800, "y": 430 },
+    { "x": 5600, "y": 584 },
+    { "x": 6600, "y": 520 },
+    { "x": 7420, "y": 520 },
+    { "x": 8240, "y": 648 },
+    { "x": 9240, "y": 584 },
+    { "x": 10100, "y": 584 }
+  ],
+  "enemies": [
+    { "id": "vortex-core-a", "type": "azure-core", "respawnPolicy": "regenerate", "countsForScore": false, "x": 2320, "y": 392, "patrolMinX": 2320, "patrolMaxX": 2320 },
+    { "id": "vortex-core-b", "type": "azure-core", "respawnPolicy": "regenerate", "countsForScore": false, "x": 7420, "y": 520, "patrolMinX": 7420, "patrolMaxX": 7420 },
+    { "id": "vortex-guard-a", "x": 9300, "surfaceY": 640, "patrolMinX": 9080, "patrolMaxX": 9600 }
+  ],
+  "checkpoints": [
+    { "id": "vortex-high-check", "x": 3320, "surfaceY": 320, "spawnX": 3340, "spawnSurfaceY": 320, "spawnGravity": "up" },
+    { "id": "vortex-exit-check", "x": 9300, "surfaceY": 640, "spawnX": 9320, "spawnSurfaceY": 640 }
+  ],
+  "sections": [
+    { "id": "lift-into-vortex", "startX": 0, "endX": 4000, "purpose": "Combine lifts with the first long inversion." },
+    { "id": "floor-current", "startX": 4000, "endX": 6100, "purpose": "Use normal gravity across mid-height platforms." },
+    { "id": "ceiling-current", "startX": 6100, "endX": 8550, "purpose": "Cross an inverted section with moving platforms." },
+    { "id": "normal-exit", "startX": 8550, "endX": 11000, "purpose": "Finish with enemy pressure after returning to normal." }
+  ],
+  "goal": {
+    "x": 10340,
+    "surfaceY": 640
+  }
+}
