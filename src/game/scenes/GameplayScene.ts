@@ -3,6 +3,7 @@ import { IMAGE_ASSETS } from '../assets/assetManifest'
 import { groundedBottomY, groundedCenterY, groundedHazardCenterY, objectDefinitions } from '../objects/objectDefinitions'
 import type { CoinPoint, EnemyPoint, GravityZone, HazardRect, MovingPlatformRect, PlatformRect, StageData, SurfaceZone } from '../stages/stageTypes'
 import type { TranslationKey, TranslationParams } from '../../i18n'
+import { calculateStageRank } from '../../domain/scoring/scoringRules'
 
 type ArcadeSprite = Phaser.Types.Physics.Arcade.SpriteWithDynamicBody
 type TilemapLayer = Phaser.Tilemaps.TilemapLayer | Phaser.Tilemaps.TilemapGPULayer
@@ -2217,28 +2218,18 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   private getRank(): string {
-    const elapsedSeconds = this.stageTimeMs / 1000
-    const { sTime, aTime, bTime, cTime } = this.stage.rankTargets
-
-    let timeScore = 300
-    if (elapsedSeconds > sTime && elapsedSeconds <= aTime) timeScore = 240
-    else if (elapsedSeconds > aTime && elapsedSeconds <= bTime) timeScore = 170
-    else if (elapsedSeconds > bTime && elapsedSeconds <= cTime) timeScore = 100
-    else if (elapsedSeconds > cTime) timeScore = Math.max(0, 100 - (elapsedSeconds - cTime) * 3)
-
-    const coinScore = this.coinTargetCount > 0 ? (this.collectedCoins / this.coinTargetCount) * 200 : 200
-    const enemyTarget = this.scoreEnemyTargetCount
-    const enemyScore = enemyTarget > 0 ? (this.enemiesDefeated / enemyTarget) * 150 : 150
-    const checkpointScore = this.stage.checkpoints.length > 0
-      ? ((this.activeCheckpointIndex + 1) / this.stage.checkpoints.length) * 50
-      : 50
-    const score = 300 + timeScore + coinScore + enemyScore + checkpointScore - this.damageTaken * 80 - this.falls * 180
-
-    if (score >= 850) return 'S'
-    if (score >= 700) return 'A'
-    if (score >= 550) return 'B'
-    if (score >= 400) return 'C'
-    return 'D'
+    return calculateStageRank({
+      elapsedMs: this.stageTimeMs,
+      rankTargets: this.stage.rankTargets,
+      coins: this.collectedCoins,
+      coinTarget: this.coinTargetCount,
+      enemiesDefeated: this.enemiesDefeated,
+      enemyTarget: this.scoreEnemyTargetCount,
+      checkpointsReached: this.activeCheckpointIndex + 1,
+      checkpointTarget: this.stage.checkpoints.length,
+      damageTaken: this.damageTaken,
+      falls: this.falls,
+    })
   }
 
   private setStatusMessage(message: TranslationKey, params: TranslationParams = {}): void {

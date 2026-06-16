@@ -1,20 +1,20 @@
+import { rankValue, type Rank } from '../scoring/rank'
+
 export type StageRecord = {
   cleared: boolean
   bestTimeMs: number
   bestTime: string
-  bestRank: string
+  bestRank: Rank
   maxCoins: number
 }
 
 export type StageClearResult = {
   time: string
-  rank: string
+  rank: Rank
   coins: number
 }
 
 export type StageRecordMap<TStageId extends string> = Partial<Record<TStageId, StageRecord>>
-
-const RANK_ORDER = ['--', 'D', 'C', 'B', 'A', 'S']
 
 export function createEmptyStageRecords<TStageId extends string>(): StageRecordMap<TStageId> {
   return {}
@@ -26,9 +26,7 @@ export function parseStageTimeMs(time: string): number {
   return Number(minutes) * 60_000 + Number(seconds) * 1_000 + Number(hundredths) * 10
 }
 
-export function rankValue(rank: string): number {
-  return RANK_ORDER.indexOf(rank)
-}
+export { rankValue }
 
 export function mergeStageClearRecord<TStageId extends string>(
   records: StageRecordMap<TStageId>,

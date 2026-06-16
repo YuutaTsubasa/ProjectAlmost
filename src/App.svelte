@@ -16,6 +16,7 @@
   import { createPlatformerGame } from './game/createGame'
   import { deleteSave, isDebugUnlockAllStagesEnabled, loadSave, recordStageClear, type SaveData } from './game/save/saveData'
   import { getNextStageId, type StageId } from './game/stages/stageRegistry'
+  import type { Rank } from './domain/scoring/rank'
   import { nextLocale, setLocale, translator, type TranslationKey, type TranslationParams } from './i18n'
 
   type HudState = {
@@ -29,7 +30,7 @@
     enemyTarget: number
     checkpointsReached: number
     checkpointTarget: number
-    rank: string
+    rank: Rank
     time: string
     objective: string
     statusMessage: TranslationKey
