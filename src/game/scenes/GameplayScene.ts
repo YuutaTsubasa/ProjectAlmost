@@ -30,6 +30,7 @@ import {
   COYOTE_TIME_MS,
   getJumpDecision,
 } from '../../domain/player/jumpRules'
+import { canCrouch } from '../../domain/player/crouchRules'
 
 type ArcadeSprite = Phaser.Types.Physics.Arcade.SpriteWithDynamicBody
 type TilemapLayer = Phaser.Tilemaps.TilemapLayer | Phaser.Tilemaps.TilemapGPULayer
@@ -528,7 +529,12 @@ export class GameplayScene extends Phaser.Scene {
       return
     }
 
-    const shouldCrouch = crouchHeld && grounded && !this.isAttacking && !this.isHurting
+    const shouldCrouch = canCrouch({
+      crouchHeld,
+      grounded,
+      attacking: this.isAttacking,
+      hurting: this.isHurting,
+    })
     this.setCrouching(shouldCrouch)
     const onIce = grounded && this.isOnIce
     const groundAcceleration = onIce ? ICE_GROUND_ACCELERATION : GROUND_ACCELERATION
