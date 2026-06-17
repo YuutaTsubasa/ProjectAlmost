@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { getHudCheckpointMarker, getHudEnemyMarker, getHudGoalProgress, getHudPlatformMarker } from './hudMapRules'
+import {
+  getHudCheckpointMarker,
+  getHudEnemyMarker,
+  getHudEnemyMarkers,
+  getHudGoalProgress,
+  getHudPlatformMarker,
+} from './hudMapRules'
 
 describe('getHudPlatformMarker', () => {
   it('projects a platform from tile space into normalized map coordinates', () => {
@@ -82,6 +88,42 @@ describe('getHudEnemyMarker', () => {
       worldWidth: 1000,
       worldHeight: 500,
     })).toEqual({ x: 1.2, y: 1.2 })
+  })
+})
+
+describe('getHudEnemyMarkers', () => {
+  it('returns no markers when no enemies exist', () => {
+    expect(getHudEnemyMarkers({
+      enemies: [],
+      worldWidth: 1000,
+      worldHeight: 500,
+    })).toEqual([])
+  })
+
+  it('filters out defeated enemies', () => {
+    expect(getHudEnemyMarkers({
+      enemies: [
+        { x: 100, y: 50, defeated: true },
+        { x: 250, y: 125, defeated: false },
+        { x: 750, y: 375, defeated: true },
+      ],
+      worldWidth: 1000,
+      worldHeight: 500,
+    })).toEqual([{ x: 0.25, y: 0.25 }])
+  })
+
+  it('projects every undefeated enemy without clamping', () => {
+    expect(getHudEnemyMarkers({
+      enemies: [
+        { x: 250, y: 125, defeated: false },
+        { x: 1200, y: 600, defeated: false },
+      ],
+      worldWidth: 1000,
+      worldHeight: 500,
+    })).toEqual([
+      { x: 0.25, y: 0.25 },
+      { x: 1.2, y: 1.2 },
+    ])
   })
 })
 

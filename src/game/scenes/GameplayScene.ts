@@ -5,7 +5,7 @@ import type { CoinPoint, EnemyPoint, GravityZone, HazardRect, MovingPlatformRect
 import type { TranslationKey, TranslationParams } from '../../i18n'
 import { getReachedCheckpointCount } from '../../domain/stage/checkpointRules'
 import { formatCoinLabel, formatHealthLabel } from '../../domain/stage/hudLabelRules'
-import { getHudCheckpointMarker, getHudEnemyMarker, getHudGoalProgress, getHudPlatformMarker } from '../../domain/stage/hudMapRules'
+import { getHudCheckpointMarker, getHudEnemyMarkers, getHudGoalProgress, getHudPlatformMarker } from '../../domain/stage/hudMapRules'
 import { getHudProgress } from '../../domain/stage/hudProgressRules'
 import { formatStageTimer, shouldAdvanceStageTimer } from '../../domain/stage/timerRules'
 import { calculateStageRank } from '../../domain/scoring/scoringRules'
@@ -2405,12 +2405,15 @@ export class GameplayScene extends Phaser.Scene {
         playerProgressY: getHudProgress({ position: this.player.y, worldSize: this.worldHeight }),
         goalProgress: getHudGoalProgress({ goalX: this.stage.goal.x, worldWidth: this.worldWidth }),
         enemyActive: hasActiveEnemy({ enemies: this.enemies }),
-        enemyMarkers: this.enemies.filter((enemy) => !enemy.defeated).map((enemy) => getHudEnemyMarker({
-          enemyX: enemy.sprite.x,
-          enemyY: enemy.sprite.y,
+        enemyMarkers: getHudEnemyMarkers({
+          enemies: this.enemies.map((enemy) => ({
+            x: enemy.sprite.x,
+            y: enemy.sprite.y,
+            defeated: enemy.defeated,
+          })),
           worldWidth: this.worldWidth,
           worldHeight: this.worldHeight,
-        })),
+        }),
         mapPlatforms: this.stage.platforms.map((platform) => getHudPlatformMarker({
           platform,
           tileColumns: this.tileColumns,

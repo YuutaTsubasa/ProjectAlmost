@@ -51,6 +51,25 @@ export function getHudEnemyMarker(input: {
   }
 }
 
+export function getHudEnemyMarkers(input: {
+  enemies: readonly {
+    x: number
+    y: number
+    defeated: boolean
+  }[]
+  worldWidth: number
+  worldHeight: number
+}): { x: number; y: number }[] {
+  return input.enemies
+    .filter((enemy) => !enemy.defeated)
+    .map((enemy) => getHudEnemyMarker({
+      enemyX: enemy.x,
+      enemyY: enemy.y,
+      worldWidth: input.worldWidth,
+      worldHeight: input.worldHeight,
+    }))
+}
+
 export function getHudGoalProgress(input: {
   goalX: number
   worldWidth: number
