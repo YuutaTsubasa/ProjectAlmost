@@ -32,6 +32,7 @@ import {
 } from '../../domain/player/jumpRules'
 import { canCrouch } from '../../domain/player/crouchRules'
 import { canPlayerPickUpCoin } from '../../domain/player/coinPickupRules'
+import { getHorizontalMovementDecision } from '../../domain/player/movementRules'
 import {
   HOMING_ATTACK_CONTACT_DISTANCE,
   HOMING_ATTACK_RANGE,
@@ -85,11 +86,6 @@ const HOMING_ATTACK_FRAME = 2
 const HOMING_TRAIL_HOLD_MS = 70
 const HOMING_TRAIL_FADE_MS = 260
 const JUMP_BUFFER_MS = 140
-const GROUND_ACCELERATION = 950
-const AIR_ACCELERATION = 720
-const ICE_GROUND_ACCELERATION = 520
-const ICE_IDLE_DRAG_X = 36
-const DEFAULT_DRAG_X = 1500
 const PLAYER_MAX_RUN_SPEED = 500
 const WORLD_GRAVITY_Y = 1500
 const THEME = {
@@ -544,26 +540,28 @@ export class GameplayScene extends Phaser.Scene {
     })
     this.setCrouching(shouldCrouch)
     const onIce = grounded && this.isOnIce
-    const groundAcceleration = onIce ? ICE_GROUND_ACCELERATION : GROUND_ACCELERATION
-    this.player.setDragX(onIce && !left && !right ? ICE_IDLE_DRAG_X : DEFAULT_DRAG_X)
-
-    if (this.isCrouching) {
-      this.player.setAccelerationX(0)
-      if (!onIce) this.player.setVelocityX(0)
-    } else if (left) {
+    const horizontalMovement = getHorizontalMovementDecision({
+      left,
+      right,
+      grounded,
+      crouching: this.isCrouching,
+      onIce,
+    })
+    this.player.setDragX(horizontalMovement.dragX)
+    this.player.setAccelerationX(horizontalMovement.accelerationX)
+    if (horizontalMovement.stopVelocityX) {
+      this.player.setVelocityX(0)
+    }
+    if (horizontalMovement.direction === 'left') {
       this.timerStarted = true
-      this.player.setAccelerationX(-(grounded ? groundAcceleration : AIR_ACCELERATION))
       if (!this.isHurting) {
         this.player.setFlipX(true)
       }
-    } else if (right) {
+    } else if (horizontalMovement.direction === 'right') {
       this.timerStarted = true
-      this.player.setAccelerationX(grounded ? groundAcceleration : AIR_ACCELERATION)
       if (!this.isHurting) {
         this.player.setFlipX(false)
       }
-    } else {
-      this.player.setAccelerationX(0)
     }
 
     const jumpDecision = getJumpDecision({
