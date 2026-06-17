@@ -10,3 +10,10 @@ export function canPlayerPickUpCoin(input: {
   const radius = input.radius ?? PLAYER_COIN_PICKUP_RADIUS
   return Math.hypot(input.coinX - input.playerX, input.coinY - input.playerY) < radius
 }
+
+export function shouldScanPlayerCoins(input: {
+  stageCleared: boolean
+  dead: boolean
+}): boolean {
+  return !input.stageCleared && !input.dead
+}

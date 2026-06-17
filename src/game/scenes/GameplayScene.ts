@@ -41,7 +41,10 @@ import {
   getMeleeHitboxGeometry,
 } from '../../domain/player/attackRules'
 import { canCrouch } from '../../domain/player/crouchRules'
-import { canPlayerPickUpCoin } from '../../domain/player/coinPickupRules'
+import {
+  canPlayerPickUpCoin,
+  shouldScanPlayerCoins,
+} from '../../domain/player/coinPickupRules'
 import {
   getHorizontalMovementDecision,
   getMovementFootstepDecision,
@@ -2256,7 +2259,10 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   private updateCoins(): void {
-    if (this.stageCleared || this.isDead) {
+    if (!shouldScanPlayerCoins({
+      stageCleared: this.stageCleared,
+      dead: this.isDead,
+    })) {
       return
     }
 
