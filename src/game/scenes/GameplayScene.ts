@@ -11,6 +11,10 @@ import {
   isBossProjectileOutOfBounds,
 } from '../../domain/boss/projectileRules'
 import {
+  BOSS_PHASE_COUNT,
+  getBossHitOutcome,
+} from '../../domain/boss/bossRules'
+import {
   INITIAL_PATROL_DIRECTION,
   enemyCountsForScore,
   getEnemyRegenerationDecision,
@@ -75,7 +79,6 @@ const ICE_IDLE_DRAG_X = 36
 const DEFAULT_DRAG_X = 1500
 const PLAYER_MAX_RUN_SPEED = 500
 const WORLD_GRAVITY_Y = 1500
-const BOSS_PHASE_COUNT = 4
 const THEME = {
   royalBlue: 0x2f6fb4,
   cyan: 0x33b5ff,
@@ -1405,12 +1408,13 @@ export class GameplayScene extends Phaser.Scene {
     this.bossPatternEvent = undefined
     this.dispatchSfx('hit')
     this.clearBossProjectiles()
-    this.bossPhase += 1
+    const outcome = getBossHitOutcome({ currentPhase: this.bossPhase })
+    this.bossPhase = outcome.nextPhase
     this.dispatchHudState()
     boss.defeated = true
     boss.sprite.body.enable = false
 
-    if (this.bossPhase >= BOSS_PHASE_COUNT) {
+    if (outcome.type === 'defeated') {
       this.enemiesDefeated = 1
       boss.sprite.play('boss-priestess-death', true)
       this.time.delayedCall(800, () => {
