@@ -12,6 +12,7 @@ import { formatStageTimer, shouldAdvanceStageTimer } from '../../domain/stage/ti
 import { calculateStageRank } from '../../domain/scoring/scoringRules'
 import type { ClearRank } from '../../domain/scoring/rank'
 import { isOutOfBounds } from '../../domain/world/bounds'
+import { getVerticalGravitySign } from '../../domain/world/gravityRules'
 import {
   getMovingPlatformPosition,
   isMovingPlatformRider,
@@ -248,7 +249,7 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   private get gravitySign(): 1 | -1 {
-    return this.playerGravityDirection === 'down' ? 1 : -1
+    return getVerticalGravitySign({ direction: this.playerGravityDirection })
   }
 
   private get isOnIce(): boolean {
