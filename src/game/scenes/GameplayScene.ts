@@ -41,6 +41,7 @@ import {
   getMovementFootstepDecision,
 } from '../../domain/player/movementRules'
 import {
+  canApplyPlayerDamage,
   canApplyPlayerEnemyHit,
   canApplyPlayerHazardHit,
 } from '../../domain/player/hurtRules'
@@ -1626,7 +1627,13 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   private applyPlayerHit(sourceX: number): void {
-    if (this.isInvulnerable || this.isHurting || this.isHomingAttacking || this.isCrouching || this.isDead) {
+    if (!canApplyPlayerDamage({
+      invulnerable: this.isInvulnerable,
+      hurting: this.isHurting,
+      homingAttacking: this.isHomingAttacking,
+      crouching: this.isCrouching,
+      dead: this.isDead,
+    })) {
       return
     }
 

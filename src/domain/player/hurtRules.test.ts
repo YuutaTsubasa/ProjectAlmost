@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { canApplyPlayerEnemyHit, canApplyPlayerHazardHit } from './hurtRules'
+import {
+  canApplyPlayerDamage,
+  canApplyPlayerEnemyHit,
+  canApplyPlayerHazardHit,
+} from './hurtRules'
 
 describe('canApplyPlayerEnemyHit', () => {
   it('allows enemy contact damage when no blocking state is active', () => {
@@ -121,6 +125,68 @@ describe('canApplyPlayerHazardHit', () => {
       homingAttacking: false,
       dead: false,
       stageCleared: true,
+    })).toBe(false)
+  })
+})
+
+describe('canApplyPlayerDamage', () => {
+  it('allows damage when no blocking state is active', () => {
+    expect(canApplyPlayerDamage({
+      invulnerable: false,
+      hurting: false,
+      homingAttacking: false,
+      crouching: false,
+      dead: false,
+    })).toBe(true)
+  })
+
+  it('blocks damage while invulnerable', () => {
+    expect(canApplyPlayerDamage({
+      invulnerable: true,
+      hurting: false,
+      homingAttacking: false,
+      crouching: false,
+      dead: false,
+    })).toBe(false)
+  })
+
+  it('blocks damage while already hurting', () => {
+    expect(canApplyPlayerDamage({
+      invulnerable: false,
+      hurting: true,
+      homingAttacking: false,
+      crouching: false,
+      dead: false,
+    })).toBe(false)
+  })
+
+  it('blocks damage during Homing Attack', () => {
+    expect(canApplyPlayerDamage({
+      invulnerable: false,
+      hurting: false,
+      homingAttacking: true,
+      crouching: false,
+      dead: false,
+    })).toBe(false)
+  })
+
+  it('blocks damage while crouching', () => {
+    expect(canApplyPlayerDamage({
+      invulnerable: false,
+      hurting: false,
+      homingAttacking: false,
+      crouching: true,
+      dead: false,
+    })).toBe(false)
+  })
+
+  it('blocks damage after player death', () => {
+    expect(canApplyPlayerDamage({
+      invulnerable: false,
+      hurting: false,
+      homingAttacking: false,
+      crouching: false,
+      dead: true,
     })).toBe(false)
   })
 })

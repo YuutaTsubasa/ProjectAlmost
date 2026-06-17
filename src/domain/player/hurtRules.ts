@@ -25,3 +25,17 @@ export function canApplyPlayerHazardHit(input: {
     && !input.dead
     && !input.stageCleared
 }
+
+export function canApplyPlayerDamage(input: {
+  invulnerable: boolean
+  hurting: boolean
+  homingAttacking: boolean
+  crouching: boolean
+  dead: boolean
+}): boolean {
+  return !input.invulnerable
+    && !input.hurting
+    && !input.homingAttacking
+    && !input.crouching
+    && !input.dead
+}
