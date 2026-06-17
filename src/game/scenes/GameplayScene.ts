@@ -40,7 +40,10 @@ import {
   getHorizontalMovementDecision,
   getMovementFootstepDecision,
 } from '../../domain/player/movementRules'
-import { getPlayerAnimationDecision } from '../../domain/player/animationRules'
+import {
+  getPlayerAnimationDecision,
+  shouldPlayPlayerAnimation,
+} from '../../domain/player/animationRules'
 import {
   canApplyPlayerDamage,
   canApplyPlayerEnemyHit,
@@ -808,11 +811,14 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   private playPlayerAnimation(key: string, respectAttackLock = false): void {
-    if (respectAttackLock && (this.isAttacking || this.isHurting)) {
-      return
-    }
-
-    if (this.player.anims.currentAnim?.key !== key || this.player.texture.key !== key) {
+    if (shouldPlayPlayerAnimation({
+      key,
+      currentAnimationKey: this.player.anims.currentAnim?.key,
+      currentTextureKey: this.player.texture.key,
+      respectAttackLock,
+      attacking: this.isAttacking,
+      hurting: this.isHurting,
+    })) {
       this.player.play(key)
     }
   }

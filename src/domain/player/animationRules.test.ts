@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { getPlayerAnimationDecision } from './animationRules'
+import {
+  getPlayerAnimationDecision,
+  shouldPlayPlayerAnimation,
+} from './animationRules'
 
 describe('getPlayerAnimationDecision', () => {
   it('preserves animation while attacking', () => {
@@ -127,5 +130,84 @@ describe('getPlayerAnimationDecision', () => {
       animation: 'player-idle',
       visualState: 'normal',
     })
+  })
+})
+
+describe('shouldPlayPlayerAnimation', () => {
+  it('blocks playback while attack locked and attacking', () => {
+    expect(shouldPlayPlayerAnimation({
+      key: 'player-run',
+      currentAnimationKey: 'player-idle',
+      currentTextureKey: 'player-idle',
+      respectAttackLock: true,
+      attacking: true,
+      hurting: false,
+    })).toBe(false)
+  })
+
+  it('blocks playback while attack locked and hurting', () => {
+    expect(shouldPlayPlayerAnimation({
+      key: 'player-run',
+      currentAnimationKey: 'player-idle',
+      currentTextureKey: 'player-idle',
+      respectAttackLock: true,
+      attacking: false,
+      hurting: true,
+    })).toBe(false)
+  })
+
+  it('allows playback while attacking when attack lock is not respected', () => {
+    expect(shouldPlayPlayerAnimation({
+      key: 'player-run',
+      currentAnimationKey: 'player-idle',
+      currentTextureKey: 'player-idle',
+      respectAttackLock: false,
+      attacking: true,
+      hurting: false,
+    })).toBe(true)
+  })
+
+  it('allows playback when animation key differs', () => {
+    expect(shouldPlayPlayerAnimation({
+      key: 'player-run',
+      currentAnimationKey: 'player-idle',
+      currentTextureKey: 'player-run',
+      respectAttackLock: true,
+      attacking: false,
+      hurting: false,
+    })).toBe(true)
+  })
+
+  it('allows playback when texture key differs', () => {
+    expect(shouldPlayPlayerAnimation({
+      key: 'player-run',
+      currentAnimationKey: 'player-run',
+      currentTextureKey: 'player-idle',
+      respectAttackLock: true,
+      attacking: false,
+      hurting: false,
+    })).toBe(true)
+  })
+
+  it('allows playback when current animation key is missing', () => {
+    expect(shouldPlayPlayerAnimation({
+      key: 'player-run',
+      currentAnimationKey: undefined,
+      currentTextureKey: 'player-run',
+      respectAttackLock: true,
+      attacking: false,
+      hurting: false,
+    })).toBe(true)
+  })
+
+  it('skips playback when animation and texture already match', () => {
+    expect(shouldPlayPlayerAnimation({
+      key: 'player-run',
+      currentAnimationKey: 'player-run',
+      currentTextureKey: 'player-run',
+      respectAttackLock: true,
+      attacking: false,
+      hurting: false,
+    })).toBe(false)
   })
 })
