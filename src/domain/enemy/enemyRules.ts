@@ -48,6 +48,12 @@ export function enemyCountsForScore(input: EnemyRuleInput): boolean {
   return input.countsForScore ?? enemyDefinitions[getEnemyType(input.type)].countsForScore
 }
 
+export function getScoreEnemyTargetCount(input: {
+  enemies: readonly EnemyRuleInput[]
+}): number {
+  return input.enemies.filter((enemy) => enemyCountsForScore(enemy)).length
+}
+
 export function getEnemyRespawnDelayMs(input: Pick<EnemyRuleInput, 'respawnDelayMs'>): number {
   return input.respawnDelayMs ?? DEFAULT_ENEMY_REGENERATE_DELAY_MS
 }

@@ -35,6 +35,7 @@ import {
   getNextPatrolDirection,
   getEnemyRespawnDelayMs,
   getEnemyRespawnPolicy,
+  getScoreEnemyTargetCount,
   hasActiveEnemy,
   type EnemyRespawnPolicy,
   type PatrolDirection,
@@ -258,7 +259,7 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   private get scoreEnemyTargetCount(): number {
-    return this.stage.enemies.filter((enemy) => this.enemyCountsForScore(enemy)).length
+    return getScoreEnemyTargetCount({ enemies: this.stage.enemies })
   }
 
   private get isBossStage(): boolean {

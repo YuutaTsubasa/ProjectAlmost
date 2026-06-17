@@ -8,6 +8,7 @@ import {
   getNextPatrolDirection,
   getEnemyRespawnDelayMs,
   getEnemyRespawnPolicy,
+  getScoreEnemyTargetCount,
   hasActiveEnemy,
 } from './enemyRules'
 
@@ -34,6 +35,24 @@ describe('enemyCountsForScore', () => {
     expect(enemyCountsForScore({ type: 'azure-core' })).toBe(false)
     expect(enemyCountsForScore({ type: 'guard' })).toBe(true)
     expect(enemyCountsForScore({})).toBe(true)
+  })
+})
+
+describe('getScoreEnemyTargetCount', () => {
+  test('returns zero when a stage has no enemies', () => {
+    expect(getScoreEnemyTargetCount({ enemies: [] })).toBe(0)
+  })
+
+  test('counts only enemies that count for score by definition or override', () => {
+    expect(getScoreEnemyTargetCount({
+      enemies: [
+        { type: 'guard' },
+        { type: 'azure-core' },
+        { type: 'azure-core', countsForScore: true },
+        { type: 'guard', countsForScore: false },
+        {},
+      ],
+    })).toBe(3)
   })
 })
 
