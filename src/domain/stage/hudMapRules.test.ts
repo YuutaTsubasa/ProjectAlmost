@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { getHudCheckpointMarker, getHudEnemyMarker, getHudPlatformMarker } from './hudMapRules'
+import { getHudCheckpointMarker, getHudEnemyMarker, getHudGoalProgress, getHudPlatformMarker } from './hudMapRules'
 
 describe('getHudPlatformMarker', () => {
   it('projects a platform from tile space into normalized map coordinates', () => {
@@ -82,5 +82,28 @@ describe('getHudEnemyMarker', () => {
       worldWidth: 1000,
       worldHeight: 500,
     })).toEqual({ x: 1.2, y: 1.2 })
+  })
+})
+
+describe('getHudGoalProgress', () => {
+  it('projects goal origin into normalized map progress', () => {
+    expect(getHudGoalProgress({
+      goalX: 0,
+      worldWidth: 1000,
+    })).toBe(0)
+  })
+
+  it('projects goal x position into normalized map progress', () => {
+    expect(getHudGoalProgress({
+      goalX: 250,
+      worldWidth: 1000,
+    })).toBe(0.25)
+  })
+
+  it('preserves raw normalized values without clamping', () => {
+    expect(getHudGoalProgress({
+      goalX: 1200,
+      worldWidth: 1000,
+    })).toBe(1.2)
   })
 })

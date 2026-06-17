@@ -50,3 +50,10 @@ export function getHudEnemyMarker(input: {
     y: input.enemyY / input.worldHeight,
   }
 }
+
+export function getHudGoalProgress(input: {
+  goalX: number
+  worldWidth: number
+}): number {
+  return input.goalX / input.worldWidth
+}
