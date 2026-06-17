@@ -1,7 +1,31 @@
+export const MELEE_HITBOX_FORWARD_OFFSET_X = 48
+export const MELEE_HITBOX_OFFSET_Y = -4
+
+export type MeleeHitboxGeometry = {
+  x: number
+  y: number
+  direction: -1 | 1
+  flipX: boolean
+}
+
 export function canStartMeleeAttack(input: {
   attackReady: boolean
   hurting: boolean
   homingAttacking: boolean
 }): boolean {
   return input.attackReady && !input.hurting && !input.homingAttacking
+}
+
+export function getMeleeHitboxGeometry(input: {
+  playerX: number
+  playerY: number
+  playerFlipX: boolean
+}): MeleeHitboxGeometry {
+  const direction = input.playerFlipX ? -1 : 1
+  return {
+    x: input.playerX + direction * MELEE_HITBOX_FORWARD_OFFSET_X,
+    y: input.playerY + MELEE_HITBOX_OFFSET_Y,
+    direction,
+    flipX: direction < 0,
+  }
 }

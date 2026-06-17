@@ -30,7 +30,10 @@ import {
   COYOTE_TIME_MS,
   getJumpDecision,
 } from '../../domain/player/jumpRules'
-import { canStartMeleeAttack } from '../../domain/player/attackRules'
+import {
+  canStartMeleeAttack,
+  getMeleeHitboxGeometry,
+} from '../../domain/player/attackRules'
 import { canCrouch } from '../../domain/player/crouchRules'
 import { canPlayerPickUpCoin } from '../../domain/player/coinPickupRules'
 import {
@@ -1561,9 +1564,13 @@ export class GameplayScene extends Phaser.Scene {
     this.setPlayerVisualState('attack')
     this.playPlayerAnimation('player-attack')
 
-    const direction = this.player.flipX ? -1 : 1
-    const hitbox = this.add.image(this.player.x + direction * 48, this.player.y - 4, 'attack')
-    hitbox.setFlipX(direction < 0)
+    const hitboxGeometry = getMeleeHitboxGeometry({
+      playerX: this.player.x,
+      playerY: this.player.y,
+      playerFlipX: this.player.flipX,
+    })
+    const hitbox = this.add.image(hitboxGeometry.x, hitboxGeometry.y, 'attack')
+    hitbox.setFlipX(hitboxGeometry.flipX)
     hitbox.setVisible(false)
 
     const hitEnemy = this.enemies.find((enemy) => !enemy.defeated && Phaser.Geom.Intersects.RectangleToRectangle(hitbox.getBounds(), enemy.sprite.getBounds()))
