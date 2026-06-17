@@ -5,7 +5,7 @@ import type { CoinPoint, EnemyPoint, GravityZone, HazardRect, MovingPlatformRect
 import type { TranslationKey, TranslationParams } from '../../i18n'
 import { getReachedCheckpointCount } from '../../domain/stage/checkpointRules'
 import { formatCoinLabel, formatHealthLabel } from '../../domain/stage/hudLabelRules'
-import { getHudCheckpointMarker, getHudEnemyMarkers, getHudGoalProgress, getHudPlatformMarkers } from '../../domain/stage/hudMapRules'
+import { getHudCheckpointMarkers, getHudEnemyMarkers, getHudGoalProgress, getHudPlatformMarkers } from '../../domain/stage/hudMapRules'
 import { getHudProgress } from '../../domain/stage/hudProgressRules'
 import { formatStageTimer, shouldAdvanceStageTimer } from '../../domain/stage/timerRules'
 import { calculateStageRank } from '../../domain/scoring/scoringRules'
@@ -2420,11 +2420,11 @@ export class GameplayScene extends Phaser.Scene {
           tileSize: this.tileSize,
           worldHeight: this.worldHeight,
         }),
-        checkpointMarkers: this.stage.checkpoints.map((checkpoint) => getHudCheckpointMarker({
-          checkpoint,
+        checkpointMarkers: getHudCheckpointMarkers({
+          checkpoints: this.stage.checkpoints,
           worldWidth: this.worldWidth,
           worldHeight: this.worldHeight,
-        })),
+        }),
         activeCheckpointIndex: this.activeCheckpointIndex,
         bossPhase: bossHudPhase.phase,
         bossPhaseMax: bossHudPhase.max,

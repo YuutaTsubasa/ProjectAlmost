@@ -54,6 +54,21 @@ export function getHudCheckpointMarker(input: {
   }
 }
 
+export function getHudCheckpointMarkers(input: {
+  checkpoints: readonly {
+    x: number
+    surfaceY: number
+  }[]
+  worldWidth: number
+  worldHeight: number
+}): { x: number; y: number }[] {
+  return input.checkpoints.map((checkpoint) => getHudCheckpointMarker({
+    checkpoint,
+    worldWidth: input.worldWidth,
+    worldHeight: input.worldHeight,
+  }))
+}
+
 export function getHudEnemyMarker(input: {
   enemyX: number
   enemyY: number

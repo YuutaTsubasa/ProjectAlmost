@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   getHudCheckpointMarker,
+  getHudCheckpointMarkers,
   getHudEnemyMarker,
   getHudEnemyMarkers,
   getHudGoalProgress,
@@ -97,6 +98,40 @@ describe('getHudCheckpointMarker', () => {
       worldWidth: 1000,
       worldHeight: 500,
     })).toEqual({ x: 1.2, y: 1.2 })
+  })
+})
+
+describe('getHudCheckpointMarkers', () => {
+  it('returns no markers when no checkpoints exist', () => {
+    expect(getHudCheckpointMarkers({
+      checkpoints: [],
+      worldWidth: 1000,
+      worldHeight: 500,
+    })).toEqual([])
+  })
+
+  it('projects every checkpoint in input order', () => {
+    expect(getHudCheckpointMarkers({
+      checkpoints: [
+        { x: 0, surfaceY: 0 },
+        { x: 250, surfaceY: 125 },
+      ],
+      worldWidth: 1000,
+      worldHeight: 500,
+    })).toEqual([
+      { x: 0, y: 0 },
+      { x: 0.25, y: 0.25 },
+    ])
+  })
+
+  it('preserves raw normalized values without clamping', () => {
+    expect(getHudCheckpointMarkers({
+      checkpoints: [
+        { x: 1200, surfaceY: 600 },
+      ],
+      worldWidth: 1000,
+      worldHeight: 500,
+    })).toEqual([{ x: 1.2, y: 1.2 }])
   })
 })
 
