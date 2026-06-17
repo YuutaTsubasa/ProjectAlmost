@@ -32,8 +32,10 @@ import {
 } from '../../domain/player/jumpRules'
 import { canCrouch } from '../../domain/player/crouchRules'
 import {
+  HOMING_ATTACK_CONTACT_DISTANCE,
   HOMING_ATTACK_RANGE,
   canStartHomingAttack,
+  getHomingContactPoint,
   selectNearestHomingTarget,
 } from '../../domain/player/homingRules'
 
@@ -76,7 +78,6 @@ const PLAYER_CROUCH_VISUAL_Y_OFFSET = 10
 const HOMING_ATTACK_RECOVERY_MS = 220
 const HOMING_ATTACK_BOUNCE_Y = -420
 const HOMING_RETICLE_Y_OFFSET = -8
-const HOMING_ATTACK_CONTACT_DISTANCE = 34
 const HOMING_ATTACK_FRAME = 2
 const HOMING_TRAIL_SPACING = 28
 const HOMING_TRAIL_HOLD_MS = 70
@@ -2089,9 +2090,13 @@ export class GameplayScene extends Phaser.Scene {
   private resolveHomingAttack(target: ArcadeSprite): void {
     const startX = this.player.x
     const startY = this.player.y
-    const angle = Phaser.Math.Angle.Between(startX, startY, target.x, target.y)
-    const contactX = target.x - Math.cos(angle) * HOMING_ATTACK_CONTACT_DISTANCE
-    const contactY = target.y - Math.sin(angle) * HOMING_ATTACK_CONTACT_DISTANCE
+    const { x: contactX, y: contactY } = getHomingContactPoint({
+      startX,
+      startY,
+      targetX: target.x,
+      targetY: target.y,
+      contactDistance: HOMING_ATTACK_CONTACT_DISTANCE,
+    })
 
     this.player.setFlipX(target.x < startX)
     this.emitHomingTrail(startX, startY, contactX, contactY)

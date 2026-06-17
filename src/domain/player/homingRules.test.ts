@@ -1,8 +1,10 @@
 import { describe, expect, test } from 'vitest'
 import {
+  HOMING_ATTACK_CONTACT_DISTANCE,
   HOMING_ATTACK_RANGE,
   HOMING_TARGET_REVERSE_TOLERANCE_X,
   canStartHomingAttack,
+  getHomingContactPoint,
   isHomingTargetEligible,
   selectNearestHomingTarget,
 } from './homingRules'
@@ -218,5 +220,76 @@ describe('selectNearestHomingTarget', () => {
         { target: 'second', targetX: 190, distance: 120 },
       ],
     })).toBe('first')
+  })
+})
+
+describe('getHomingContactPoint', () => {
+  test('keeps the contact distance explicit', () => {
+    expect(HOMING_ATTACK_CONTACT_DISTANCE).toBe(34)
+  })
+
+  test('places contact point behind a target to the right', () => {
+    expect(getHomingContactPoint({
+      startX: 0,
+      startY: 0,
+      targetX: 100,
+      targetY: 0,
+    })).toEqual({ x: 66, y: 0 })
+  })
+
+  test('places contact point behind a target to the left', () => {
+    const contact = getHomingContactPoint({
+      startX: 100,
+      startY: 0,
+      targetX: 0,
+      targetY: 0,
+    })
+
+    expect(contact.x).toBeCloseTo(34)
+    expect(contact.y).toBeCloseTo(0)
+  })
+
+  test('places contact point behind vertical targets', () => {
+    const lowerContact = getHomingContactPoint({
+      startX: 0,
+      startY: 0,
+      targetX: 0,
+      targetY: 100,
+    })
+    const upperContact = getHomingContactPoint({
+      startX: 0,
+      startY: 100,
+      targetX: 0,
+      targetY: 0,
+    })
+
+    expect(lowerContact.x).toBeCloseTo(0)
+    expect(lowerContact.y).toBeCloseTo(66)
+    expect(upperContact.x).toBeCloseTo(0)
+    expect(upperContact.y).toBeCloseTo(34)
+  })
+
+  test('places contact point behind diagonal targets', () => {
+    const contact = getHomingContactPoint({
+      startX: 0,
+      startY: 0,
+      targetX: 100,
+      targetY: 100,
+      contactDistance: 10,
+    })
+
+    const offset = Math.SQRT1_2 * 10
+    expect(contact.x).toBeCloseTo(100 - offset)
+    expect(contact.y).toBeCloseTo(100 - offset)
+  })
+
+  test('supports overriding contact distance', () => {
+    expect(getHomingContactPoint({
+      startX: 0,
+      startY: 0,
+      targetX: 100,
+      targetY: 0,
+      contactDistance: 10,
+    })).toEqual({ x: 90, y: 0 })
   })
 })
