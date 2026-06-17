@@ -12,3 +12,9 @@ export function getPlayerBodyGravityY(input: {
 }): number {
   return input.direction === 'down' ? 0 : -input.worldGravityY * 2
 }
+
+export function shouldFlipPlayerYForGravity(input: {
+  direction: VerticalGravityDirection
+}): boolean {
+  return input.direction === 'up'
+}

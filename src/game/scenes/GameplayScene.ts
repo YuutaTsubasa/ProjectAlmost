@@ -12,7 +12,11 @@ import { formatStageTimer, shouldAdvanceStageTimer } from '../../domain/stage/ti
 import { calculateStageRank } from '../../domain/scoring/scoringRules'
 import type { ClearRank } from '../../domain/scoring/rank'
 import { isOutOfBounds } from '../../domain/world/bounds'
-import { getPlayerBodyGravityY, getVerticalGravitySign } from '../../domain/world/gravityRules'
+import {
+  getPlayerBodyGravityY,
+  getVerticalGravitySign,
+  shouldFlipPlayerYForGravity,
+} from '../../domain/world/gravityRules'
 import {
   getMovingPlatformPosition,
   isMovingPlatformRider,
@@ -686,7 +690,7 @@ export class GameplayScene extends Phaser.Scene {
 
     const bodyGravityY = getPlayerBodyGravityY({ direction, worldGravityY: WORLD_GRAVITY_Y })
     this.player.body.setGravityY(bodyGravityY)
-    this.player.setFlipY(direction === 'up')
+    this.player.setFlipY(shouldFlipPlayerYForGravity({ direction }))
     if (!preserveVelocity) this.player.setVelocityY(0)
     this.setCrouching(false)
     this.remainingAirJumps = 1
