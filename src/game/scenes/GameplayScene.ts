@@ -40,6 +40,7 @@ import {
   getHorizontalMovementDecision,
   getMovementFootstepDecision,
 } from '../../domain/player/movementRules'
+import { canApplyPlayerEnemyHit } from '../../domain/player/hurtRules'
 import {
   HOMING_ATTACK_CONTACT_DISTANCE,
   HOMING_ATTACK_RANGE,
@@ -1594,7 +1595,13 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   private hurtPlayer(enemy: ArcadeSprite): void {
-    if (this.isInvulnerable || this.isHurting || this.isEnemyDefeated(enemy) || this.isHomingAttacking || this.isDead) {
+    if (!canApplyPlayerEnemyHit({
+      invulnerable: this.isInvulnerable,
+      hurting: this.isHurting,
+      enemyDefeated: this.isEnemyDefeated(enemy),
+      homingAttacking: this.isHomingAttacking,
+      dead: this.isDead,
+    })) {
       return
     }
 
