@@ -26,6 +26,10 @@ import {
   type EnemyRespawnPolicy,
   type PatrolDirection,
 } from '../../domain/enemy/enemyRules'
+import {
+  COYOTE_TIME_MS,
+  getJumpDecision,
+} from '../../domain/player/jumpRules'
 
 type ArcadeSprite = Phaser.Types.Physics.Arcade.SpriteWithDynamicBody
 type TilemapLayer = Phaser.Tilemaps.TilemapLayer | Phaser.Tilemaps.TilemapGPULayer
@@ -73,7 +77,6 @@ const HOMING_TRAIL_SPACING = 28
 const HOMING_TRAIL_HOLD_MS = 70
 const HOMING_TRAIL_FADE_MS = 260
 const JUMP_BUFFER_MS = 140
-const COYOTE_TIME_MS = 120
 const GROUND_ACCELERATION = 950
 const AIR_ACCELERATION = 720
 const ICE_GROUND_ACCELERATION = 520
@@ -550,18 +553,23 @@ export class GameplayScene extends Phaser.Scene {
       this.player.setAccelerationX(0)
     }
 
-    const canUseGroundJump = grounded || this.time.now - this.lastGroundedAt <= COYOTE_TIME_MS
-    const canUseAirJump = !canUseGroundJump && this.remainingAirJumps > 0
-    if (this.jumpBufferedUntil >= this.time.now && (canUseGroundJump || canUseAirJump)) {
+    const jumpDecision = getJumpDecision({
+      now: this.time.now,
+      grounded,
+      lastGroundedAt: this.lastGroundedAt,
+      jumpBufferedUntil: this.jumpBufferedUntil,
+      remainingAirJumps: this.remainingAirJumps,
+    })
+    if (jumpDecision.type !== 'none') {
       this.timerStarted = true
       this.setCrouching(false)
-      if (canUseAirJump) {
+      if (jumpDecision.type === 'air-jump') {
         this.isAttacking = false
         this.setPlayerVisualState('normal')
         this.playPlayerAnimation('player-jump')
       }
       this.player.setVelocityY(-640 * this.gravitySign)
-      if (canUseAirJump) this.remainingAirJumps -= 1
+      if (jumpDecision.type === 'air-jump') this.remainingAirJumps -= 1
       this.jumpBufferedUntil = 0
       this.lastGroundedAt = 0
       this.dispatchSfx('armor-step')
