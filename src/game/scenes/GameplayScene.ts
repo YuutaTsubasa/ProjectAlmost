@@ -27,6 +27,7 @@ import {
   getBossHudPhaseDisplay,
   getBossPatternDelayMs,
   getBossHitOutcome,
+  isBossStageDefinition,
 } from '../../domain/boss/bossRules'
 import {
   INITIAL_PATROL_DIRECTION,
@@ -263,7 +264,10 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   private get isBossStage(): boolean {
-    return this.stage.id.endsWith('-6') && this.stage.enemies.some((enemy) => enemy.id === 'boss-prototype')
+    return isBossStageDefinition({
+      stageId: this.stage.id,
+      enemies: this.stage.enemies,
+    })
   }
 
   preload(): void {

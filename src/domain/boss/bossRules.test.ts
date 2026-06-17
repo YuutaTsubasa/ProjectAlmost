@@ -7,6 +7,7 @@ import {
   getBossHudPhaseDisplay,
   getBossPatternDelayMs,
   getBossHitOutcome,
+  isBossStageDefinition,
 } from './bossRules'
 
 describe('getBossHitOutcome', () => {
@@ -83,5 +84,28 @@ describe('getBossHudPhaseDisplay', () => {
       bossPhase: 2,
       phaseCount: 3,
     })).toEqual({ phase: 3, max: 3 })
+  })
+})
+
+describe('isBossStageDefinition', () => {
+  test('requires both a sixth stage id and a boss prototype enemy', () => {
+    expect(isBossStageDefinition({
+      stageId: '1-6',
+      enemies: [{ id: 'boss-prototype' }],
+    })).toBe(true)
+  })
+
+  test('rejects non-sixth stages even when a boss prototype enemy exists', () => {
+    expect(isBossStageDefinition({
+      stageId: '1-5',
+      enemies: [{ id: 'boss-prototype' }],
+    })).toBe(false)
+  })
+
+  test('rejects sixth stages without a boss prototype enemy', () => {
+    expect(isBossStageDefinition({
+      stageId: '1-6',
+      enemies: [{ id: 'guard-1' }, {}],
+    })).toBe(false)
   })
 })

@@ -2,10 +2,20 @@ export const BOSS_PHASE_COUNT = 4
 export const BOSS_PATTERN_BASE_DELAY_MS = 980
 export const BOSS_PATTERN_PHASE_DELAY_STEP_MS = 90
 export const BOSS_PATTERN_MIN_DELAY_MS = 540
+export const BOSS_STAGE_ID_SUFFIX = '-6'
+export const BOSS_PROTOTYPE_ENEMY_ID = 'boss-prototype'
 
 export type BossHitOutcome =
   | { type: 'advance-phase'; nextPhase: number }
   | { type: 'defeated'; nextPhase: number }
+
+export function isBossStageDefinition(input: {
+  stageId: string
+  enemies: readonly { id?: string }[]
+}): boolean {
+  return input.stageId.endsWith(BOSS_STAGE_ID_SUFFIX)
+    && input.enemies.some((enemy) => enemy.id === BOSS_PROTOTYPE_ENEMY_ID)
+}
 
 export function getBossHitOutcome(input: {
   currentPhase: number
