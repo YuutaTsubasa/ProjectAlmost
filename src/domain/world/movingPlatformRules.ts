@@ -17,3 +17,22 @@ export function getMovingPlatformPosition(input: {
     y: input.axis === 'y' ? input.startY + offset : input.startY,
   }
 }
+
+export function isMovingPlatformRider(input: {
+  playerGravityDown: boolean
+  playerLeft: number
+  playerRight: number
+  playerBottom: number
+  platformLeft: number
+  platformRight: number
+  platformTop: number
+  touchingDown: boolean
+  blockedDown: boolean
+}): boolean {
+  if (!input.playerGravityDown) return false
+
+  const horizontalOverlap = input.playerRight > input.platformLeft + 8
+    && input.playerLeft < input.platformRight - 8
+  const closeToTop = Math.abs(input.playerBottom - input.platformTop) <= 12
+  return horizontalOverlap && (closeToTop || input.touchingDown || input.blockedDown)
+}

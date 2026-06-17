@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { getMovingPlatformPosition } from './movingPlatformRules'
+import {
+  getMovingPlatformPosition,
+  isMovingPlatformRider,
+} from './movingPlatformRules'
 
 describe('getMovingPlatformPosition', () => {
   it('keeps x-axis platform at start position at the beginning of its cycle', () => {
@@ -56,5 +59,79 @@ describe('getMovingPlatformPosition', () => {
       durationMs: 1000,
       nowMs: 750,
     })).toEqual({ x: 100, y: 120 })
+  })
+})
+
+describe('isMovingPlatformRider', () => {
+  const baseInput = {
+    playerGravityDown: true,
+    playerLeft: 100,
+    playerRight: 160,
+    playerBottom: 200,
+    platformLeft: 80,
+    platformRight: 220,
+    platformTop: 204,
+    touchingDown: false,
+    blockedDown: false,
+  }
+
+  it('allows riding when horizontally overlapping and close to platform top', () => {
+    expect(isMovingPlatformRider(baseInput)).toBe(true)
+  })
+
+  it('blocks riding while gravity is not down', () => {
+    expect(isMovingPlatformRider({
+      ...baseInput,
+      playerGravityDown: false,
+    })).toBe(false)
+  })
+
+  it('requires strict overlap past the left platform inset', () => {
+    expect(isMovingPlatformRider({
+      ...baseInput,
+      playerRight: baseInput.platformLeft + 8,
+    })).toBe(false)
+    expect(isMovingPlatformRider({
+      ...baseInput,
+      playerRight: baseInput.platformLeft + 9,
+    })).toBe(true)
+  })
+
+  it('requires strict overlap before the right platform inset', () => {
+    expect(isMovingPlatformRider({
+      ...baseInput,
+      playerLeft: baseInput.platformRight - 8,
+    })).toBe(false)
+    expect(isMovingPlatformRider({
+      ...baseInput,
+      playerLeft: baseInput.platformRight - 9,
+    })).toBe(true)
+  })
+
+  it('keeps the top tolerance inclusive', () => {
+    expect(isMovingPlatformRider({
+      ...baseInput,
+      playerBottom: baseInput.platformTop - 12,
+    })).toBe(true)
+    expect(isMovingPlatformRider({
+      ...baseInput,
+      playerBottom: baseInput.platformTop - 13,
+    })).toBe(false)
+  })
+
+  it('allows touching down to count as riding outside top tolerance', () => {
+    expect(isMovingPlatformRider({
+      ...baseInput,
+      playerBottom: baseInput.platformTop - 20,
+      touchingDown: true,
+    })).toBe(true)
+  })
+
+  it('allows blocked down to count as riding outside top tolerance', () => {
+    expect(isMovingPlatformRider({
+      ...baseInput,
+      playerBottom: baseInput.platformTop - 20,
+      blockedDown: true,
+    })).toBe(true)
   })
 })

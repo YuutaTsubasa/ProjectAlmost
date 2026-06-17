@@ -6,7 +6,10 @@ import type { TranslationKey, TranslationParams } from '../../i18n'
 import { calculateStageRank } from '../../domain/scoring/scoringRules'
 import type { ClearRank } from '../../domain/scoring/rank'
 import { isOutOfBounds } from '../../domain/world/bounds'
-import { getMovingPlatformPosition } from '../../domain/world/movingPlatformRules'
+import {
+  getMovingPlatformPosition,
+  isMovingPlatformRider,
+} from '../../domain/world/movingPlatformRules'
 import {
   getBossProjectileHitDecision,
   isBossProjectileExpired,
@@ -1865,9 +1868,17 @@ export class GameplayScene extends Phaser.Scene {
 
     const playerBody = this.player.body
     const platformBody = platform.sprite.body
-    const horizontalOverlap = playerBody.right > platformBody.left + 8 && playerBody.left < platformBody.right - 8
-    const closeToTop = Math.abs(playerBody.bottom - platformBody.top) <= 12
-    return horizontalOverlap && (closeToTop || playerBody.touching.down || playerBody.blocked.down)
+    return isMovingPlatformRider({
+      playerGravityDown: this.playerGravityDirection === 'down',
+      playerLeft: playerBody.left,
+      playerRight: playerBody.right,
+      playerBottom: playerBody.bottom,
+      platformLeft: platformBody.left,
+      platformRight: platformBody.right,
+      platformTop: platformBody.top,
+      touchingDown: playerBody.touching.down,
+      blockedDown: playerBody.blocked.down,
+    })
   }
 
   private isEnemyDefeated(sprite: ArcadeSprite): boolean {
