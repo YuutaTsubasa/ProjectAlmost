@@ -3,7 +3,7 @@ import { IMAGE_ASSETS } from '../assets/assetManifest'
 import { getEnemySpawnY, groundedBottomY, groundedHazardCenterY, objectDefinitions } from '../objects/objectDefinitions'
 import type { CoinPoint, EnemyPoint, GravityZone, HazardRect, MovingPlatformRect, PlatformRect, StageData, SurfaceZone } from '../stages/stageTypes'
 import type { TranslationKey, TranslationParams } from '../../i18n'
-import { shouldAdvanceStageTimer } from '../../domain/stage/timerRules'
+import { formatStageTimer, shouldAdvanceStageTimer } from '../../domain/stage/timerRules'
 import { calculateStageRank } from '../../domain/scoring/scoringRules'
 import type { ClearRank } from '../../domain/scoring/rank'
 import { isOutOfBounds } from '../../domain/world/bounds'
@@ -2344,12 +2344,7 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   private getTimerLabel(): string {
-    const totalCentiseconds = Math.floor(this.stageTimeMs / 10)
-    const minutes = Math.floor(totalCentiseconds / 6000)
-    const seconds = Math.floor((totalCentiseconds % 6000) / 100)
-    const centiseconds = totalCentiseconds % 100
-
-    return `TIME ${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${String(centiseconds).padStart(2, '0')}`
+    return `TIME ${formatStageTimer({ elapsedMs: this.stageTimeMs })}`
   }
 
   private getRank(): ClearRank {
