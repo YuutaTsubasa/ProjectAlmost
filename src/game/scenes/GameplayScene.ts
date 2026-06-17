@@ -30,6 +30,7 @@ import {
   COYOTE_TIME_MS,
   getJumpDecision,
 } from '../../domain/player/jumpRules'
+import { canStartMeleeAttack } from '../../domain/player/attackRules'
 import { canCrouch } from '../../domain/player/crouchRules'
 import { canPlayerPickUpCoin } from '../../domain/player/coinPickupRules'
 import {
@@ -1545,7 +1546,11 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   private tryAttack(): void {
-    if (!this.attackReady || this.isHurting || this.isHomingAttacking) {
+    if (!canStartMeleeAttack({
+      attackReady: this.attackReady,
+      hurting: this.isHurting,
+      homingAttacking: this.isHomingAttacking,
+    })) {
       return
     }
 
