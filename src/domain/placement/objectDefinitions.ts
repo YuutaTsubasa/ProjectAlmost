@@ -93,3 +93,13 @@ export function groundedBottomY(surfaceY: number, definitionId: 'checkpoint' | '
 export function groundedHazardCenterY(surfaceY: number, height: number, definitionId: 'spikes' | 'lava'): number {
   return surfaceY - height / 2 + objectDefinitions[definitionId].visualBottomInset
 }
+
+export function getEnemySpawnY(
+  enemy:
+    | { type: 'azure-core'; y: number }
+    | { type?: 'guard'; surfaceY: number },
+): number {
+  return enemy.type === 'azure-core'
+    ? enemy.y
+    : groundedCenterY(enemy.surfaceY, 'guard')
+}

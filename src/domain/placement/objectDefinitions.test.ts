@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { groundedBottomY, groundedCenterY, groundedHazardCenterY, objectDefinitions } from './objectDefinitions'
+import { getEnemySpawnY, groundedBottomY, groundedCenterY, groundedHazardCenterY, objectDefinitions } from './objectDefinitions'
 
 describe('groundedCenterY', () => {
   test('places the player center above the surface using the player definition', () => {
@@ -20,5 +20,19 @@ describe('groundedBottomY', () => {
 describe('groundedHazardCenterY', () => {
   test('places floor spikes on a platform surface with visual inset', () => {
     expect(groundedHazardCenterY(704, 32, 'spikes')).toBe(704 - 16 + objectDefinitions.spikes.visualBottomInset)
+  })
+})
+
+describe('getEnemySpawnY', () => {
+  test('uses authored y for airborne Azure Cores', () => {
+    expect(getEnemySpawnY({ type: 'azure-core', y: 420 })).toBe(420)
+  })
+
+  test('uses guard grounded center for explicit guards', () => {
+    expect(getEnemySpawnY({ type: 'guard', surfaceY: 704 })).toBe(groundedCenterY(704, 'guard'))
+  })
+
+  test('uses guard grounded center when enemy type is omitted', () => {
+    expect(getEnemySpawnY({ surfaceY: 640 })).toBe(groundedCenterY(640, 'guard'))
   })
 })

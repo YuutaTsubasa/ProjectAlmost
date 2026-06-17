@@ -1,6 +1,6 @@
 import * as Phaser from 'phaser'
 import { IMAGE_ASSETS } from '../assets/assetManifest'
-import { groundedBottomY, groundedCenterY, groundedHazardCenterY, objectDefinitions } from '../objects/objectDefinitions'
+import { getEnemySpawnY, groundedBottomY, groundedHazardCenterY, objectDefinitions } from '../objects/objectDefinitions'
 import type { CoinPoint, EnemyPoint, GravityZone, HazardRect, MovingPlatformRect, PlatformRect, StageData, SurfaceZone } from '../stages/stageTypes'
 import type { TranslationKey, TranslationParams } from '../../i18n'
 import { calculateStageRank } from '../../domain/scoring/scoringRules'
@@ -1161,7 +1161,7 @@ export class GameplayScene extends Phaser.Scene {
     this.enemies = this.stage.enemies.map((point) => {
       const isCore = point.type === 'azure-core'
       const definition = isCore ? objectDefinitions['azure-core'] : objectDefinitions.guard
-      const spawnY = isCore ? point.y : groundedCenterY(point.surfaceY, 'guard')
+      const spawnY = getEnemySpawnY(point)
       const sprite = this.physics.add.sprite(point.x, spawnY, isCore ? 'azure-core' : this.guardTextureKey)
       sprite.setOrigin(definition.origin.x, definition.origin.y)
       sprite.setCollideWorldBounds(true)
@@ -1664,7 +1664,7 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   private tryRegenerateEnemy(enemy: EnemyRuntime): void {
-    const spawnY = enemy.point.type === 'azure-core' ? enemy.point.y : groundedCenterY(enemy.point.surfaceY, 'guard')
+    const spawnY = getEnemySpawnY(enemy.point)
     const playerDistance = Phaser.Math.Distance.Between(this.player.x, this.player.y, enemy.point.x, spawnY)
     const decision = getEnemyRegenerationDecision({
       stageCleared: this.stageCleared,
