@@ -31,7 +31,11 @@ import {
   getJumpDecision,
 } from '../../domain/player/jumpRules'
 import { canCrouch } from '../../domain/player/crouchRules'
-import { canStartHomingAttack } from '../../domain/player/homingRules'
+import {
+  HOMING_ATTACK_RANGE,
+  canStartHomingAttack,
+  isHomingTargetEligible,
+} from '../../domain/player/homingRules'
 
 type ArcadeSprite = Phaser.Types.Physics.Arcade.SpriteWithDynamicBody
 type TilemapLayer = Phaser.Tilemaps.TilemapLayer | Phaser.Tilemaps.TilemapGPULayer
@@ -69,7 +73,6 @@ const PLAYER_SCALE = 0.78
 const PLAYER_ATTACK_SCALE = 0.98
 const PLAYER_ATTACK_VISUAL_Y_OFFSET = -10
 const PLAYER_CROUCH_VISUAL_Y_OFFSET = 10
-const HOMING_ATTACK_RANGE = 360
 const HOMING_ATTACK_RECOVERY_MS = 220
 const HOMING_ATTACK_BOUNCE_Y = -420
 const HOMING_RETICLE_Y_OFFSET = -8
@@ -2040,10 +2043,12 @@ export class GameplayScene extends Phaser.Scene {
         sprite: enemy.sprite,
         distance: Phaser.Math.Distance.Between(this.player.x, this.player.y, enemy.sprite.x, enemy.sprite.y),
       }))
-      .filter(({ sprite, distance }) => {
-        const targetDirection = Math.sign(sprite.x - this.player.x) || facing
-        return distance <= HOMING_ATTACK_RANGE && (targetDirection === facing || Math.abs(sprite.x - this.player.x) <= 48)
-      })
+      .filter(({ sprite, distance }) => isHomingTargetEligible({
+        playerX: this.player.x,
+        targetX: sprite.x,
+        facing,
+        distance,
+      }))
       .sort((a, b) => a.distance - b.distance)[0]?.sprite
   }
 
