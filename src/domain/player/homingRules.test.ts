@@ -2,9 +2,11 @@ import { describe, expect, test } from 'vitest'
 import {
   HOMING_ATTACK_CONTACT_DISTANCE,
   HOMING_ATTACK_RANGE,
+  HOMING_LINE_COIN_COLLECTION_RADIUS,
   HOMING_TARGET_REVERSE_TOLERANCE_X,
   canStartHomingAttack,
   getHomingContactPoint,
+  isPointCollectableByHomingLine,
   isHomingTargetEligible,
   selectNearestHomingTarget,
 } from './homingRules'
@@ -291,5 +293,111 @@ describe('getHomingContactPoint', () => {
       targetY: 0,
       contactDistance: 10,
     })).toEqual({ x: 90, y: 0 })
+  })
+})
+
+describe('isPointCollectableByHomingLine', () => {
+  test('keeps the homing line coin collection radius explicit', () => {
+    expect(HOMING_LINE_COIN_COLLECTION_RADIUS).toBe(52)
+  })
+
+  test('collects points on the homing line segment', () => {
+    expect(isPointCollectableByHomingLine({
+      startX: 0,
+      startY: 0,
+      endX: 100,
+      endY: 0,
+      pointX: 50,
+      pointY: 0,
+    })).toBe(true)
+  })
+
+  test('collects points on the exact radius boundary', () => {
+    expect(isPointCollectableByHomingLine({
+      startX: 0,
+      startY: 0,
+      endX: 100,
+      endY: 0,
+      pointX: 50,
+      pointY: 52,
+    })).toBe(true)
+  })
+
+  test('rejects points outside the collection radius', () => {
+    expect(isPointCollectableByHomingLine({
+      startX: 0,
+      startY: 0,
+      endX: 100,
+      endY: 0,
+      pointX: 50,
+      pointY: 53,
+    })).toBe(false)
+  })
+
+  test('uses clamped segment endpoints for points before the start and after the end', () => {
+    expect(isPointCollectableByHomingLine({
+      startX: 0,
+      startY: 0,
+      endX: 100,
+      endY: 0,
+      pointX: -20,
+      pointY: 20,
+    })).toBe(true)
+    expect(isPointCollectableByHomingLine({
+      startX: 0,
+      startY: 0,
+      endX: 100,
+      endY: 0,
+      pointX: 120,
+      pointY: 20,
+    })).toBe(true)
+    expect(isPointCollectableByHomingLine({
+      startX: 0,
+      startY: 0,
+      endX: 100,
+      endY: 0,
+      pointX: -60,
+      pointY: 0,
+    })).toBe(false)
+  })
+
+  test('supports diagonal homing lines', () => {
+    expect(isPointCollectableByHomingLine({
+      startX: 0,
+      startY: 0,
+      endX: 100,
+      endY: 100,
+      pointX: 55,
+      pointY: 45,
+      radius: 8,
+    })).toBe(true)
+    expect(isPointCollectableByHomingLine({
+      startX: 0,
+      startY: 0,
+      endX: 100,
+      endY: 100,
+      pointX: 70,
+      pointY: 30,
+      radius: 8,
+    })).toBe(false)
+  })
+
+  test('treats zero-length lines as a point at the start', () => {
+    expect(isPointCollectableByHomingLine({
+      startX: 10,
+      startY: 10,
+      endX: 10,
+      endY: 10,
+      pointX: 10,
+      pointY: 62,
+    })).toBe(true)
+    expect(isPointCollectableByHomingLine({
+      startX: 10,
+      startY: 10,
+      endX: 10,
+      endY: 10,
+      pointX: 10,
+      pointY: 63,
+    })).toBe(false)
   })
 })

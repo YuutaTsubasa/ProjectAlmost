@@ -36,6 +36,7 @@ import {
   HOMING_ATTACK_RANGE,
   canStartHomingAttack,
   getHomingContactPoint,
+  isPointCollectableByHomingLine,
   selectNearestHomingTarget,
 } from '../../domain/player/homingRules'
 
@@ -2164,20 +2165,17 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   private collectCoinsAlongLine(startX: number, startY: number, endX: number, endY: number): void {
-    const dx = endX - startX
-    const dy = endY - startY
-    const lengthSquared = dx * dx + dy * dy
-
     for (const coin of this.coins) {
       if (coin.collected) continue
 
-      const projection = lengthSquared === 0
-        ? 0
-        : Phaser.Math.Clamp(((coin.sprite.x - startX) * dx + (coin.sprite.y - startY) * dy) / lengthSquared, 0, 1)
-      const closestX = startX + dx * projection
-      const closestY = startY + dy * projection
-
-      if (Phaser.Math.Distance.Between(closestX, closestY, coin.sprite.x, coin.sprite.y) <= 52) {
+      if (isPointCollectableByHomingLine({
+        startX,
+        startY,
+        endX,
+        endY,
+        pointX: coin.sprite.x,
+        pointY: coin.sprite.y,
+      })) {
         this.collectCoin(coin)
       }
     }

@@ -1,6 +1,7 @@
 export const HOMING_ATTACK_RANGE = 360
 export const HOMING_TARGET_REVERSE_TOLERANCE_X = 48
 export const HOMING_ATTACK_CONTACT_DISTANCE = 34
+export const HOMING_LINE_COIN_COLLECTION_RADIUS = 52
 
 export type HomingTargetCandidate<T> = {
   target: T
@@ -65,4 +66,29 @@ export function getHomingContactPoint(input: {
     x: input.targetX - Math.cos(angle) * contactDistance,
     y: input.targetY - Math.sin(angle) * contactDistance,
   }
+}
+
+export function isPointCollectableByHomingLine(input: {
+  startX: number
+  startY: number
+  endX: number
+  endY: number
+  pointX: number
+  pointY: number
+  radius?: number
+}): boolean {
+  const radius = input.radius ?? HOMING_LINE_COIN_COLLECTION_RADIUS
+  const dx = input.endX - input.startX
+  const dy = input.endY - input.startY
+  const lengthSquared = dx * dx + dy * dy
+  const projection = lengthSquared === 0
+    ? 0
+    : Math.max(0, Math.min(
+      1,
+      ((input.pointX - input.startX) * dx + (input.pointY - input.startY) * dy) / lengthSquared,
+    ))
+  const closestX = input.startX + dx * projection
+  const closestY = input.startY + dy * projection
+  const distance = Math.hypot(closestX - input.pointX, closestY - input.pointY)
+  return distance <= radius
 }
