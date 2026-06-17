@@ -2,11 +2,19 @@ export const HOMING_ATTACK_RANGE = 360
 export const HOMING_TARGET_REVERSE_TOLERANCE_X = 48
 export const HOMING_ATTACK_CONTACT_DISTANCE = 34
 export const HOMING_LINE_COIN_COLLECTION_RADIUS = 52
+export const HOMING_TRAIL_SPACING = 28
 
 export type HomingTargetCandidate<T> = {
   target: T
   targetX: number
   distance: number
+}
+
+export type HomingTrailSample = {
+  x: number
+  y: number
+  progress: number
+  alpha: number
 }
 
 export function canStartHomingAttack(input: {
@@ -91,4 +99,25 @@ export function isPointCollectableByHomingLine(input: {
   const closestY = input.startY + dy * projection
   const distance = Math.hypot(closestX - input.pointX, closestY - input.pointY)
   return distance <= radius
+}
+
+export function getHomingTrailSamples(input: {
+  startX: number
+  startY: number
+  endX: number
+  endY: number
+  spacing?: number
+}): HomingTrailSample[] {
+  const spacing = input.spacing ?? HOMING_TRAIL_SPACING
+  const distance = Math.hypot(input.endX - input.startX, input.endY - input.startY)
+  const trailCount = Math.max(2, Math.ceil(distance / spacing))
+  return Array.from({ length: trailCount }, (_, index) => {
+    const progress = index / trailCount
+    return {
+      x: input.startX + (input.endX - input.startX) * progress,
+      y: input.startY + (input.endY - input.startY) * progress,
+      progress,
+      alpha: 0.42 * (1 - progress * 0.35),
+    }
+  })
 }

@@ -4,8 +4,10 @@ import {
   HOMING_ATTACK_RANGE,
   HOMING_LINE_COIN_COLLECTION_RADIUS,
   HOMING_TARGET_REVERSE_TOLERANCE_X,
+  HOMING_TRAIL_SPACING,
   canStartHomingAttack,
   getHomingContactPoint,
+  getHomingTrailSamples,
   isPointCollectableByHomingLine,
   isHomingTargetEligible,
   selectNearestHomingTarget,
@@ -399,5 +401,69 @@ describe('isPointCollectableByHomingLine', () => {
       pointX: 10,
       pointY: 63,
     })).toBe(false)
+  })
+})
+
+describe('getHomingTrailSamples', () => {
+  test('keeps homing trail spacing explicit', () => {
+    expect(HOMING_TRAIL_SPACING).toBe(28)
+  })
+
+  test('creates at least two samples for a zero-length trail', () => {
+    expect(getHomingTrailSamples({
+      startX: 10,
+      startY: 20,
+      endX: 10,
+      endY: 20,
+    })).toEqual([
+      { x: 10, y: 20, progress: 0, alpha: 0.42 },
+      { x: 10, y: 20, progress: 0.5, alpha: 0.42 * (1 - 0.5 * 0.35) },
+    ])
+  })
+
+  test('uses ceil distance over spacing for sample count', () => {
+    const samples = getHomingTrailSamples({
+      startX: 0,
+      startY: 0,
+      endX: 100,
+      endY: 0,
+      spacing: 28,
+    })
+
+    expect(samples).toHaveLength(4)
+    expect(samples.map((sample) => sample.progress)).toEqual([0, 0.25, 0.5, 0.75])
+    expect(samples.map((sample) => sample.x)).toEqual([0, 25, 50, 75])
+    expect(samples.map((sample) => sample.y)).toEqual([0, 0, 0, 0])
+  })
+
+  test('interpolates diagonal sample positions', () => {
+    const samples = getHomingTrailSamples({
+      startX: 10,
+      startY: 20,
+      endX: 50,
+      endY: 100,
+      spacing: 40,
+    })
+
+    expect(samples).toHaveLength(3)
+    expect(samples[1]?.x).toBeCloseTo(10 + 40 / 3)
+    expect(samples[1]?.y).toBeCloseTo(20 + 80 / 3)
+    expect(samples[2]?.x).toBeCloseTo(10 + 80 / 3)
+    expect(samples[2]?.y).toBeCloseTo(20 + 160 / 3)
+  })
+
+  test('calculates alpha from each sample progress', () => {
+    const samples = getHomingTrailSamples({
+      startX: 0,
+      startY: 0,
+      endX: 100,
+      endY: 0,
+      spacing: 28,
+    })
+
+    expect(samples[0]?.alpha).toBeCloseTo(0.42)
+    expect(samples[1]?.alpha).toBeCloseTo(0.42 * (1 - 0.25 * 0.35))
+    expect(samples[2]?.alpha).toBeCloseTo(0.42 * (1 - 0.5 * 0.35))
+    expect(samples[3]?.alpha).toBeCloseTo(0.42 * (1 - 0.75 * 0.35))
   })
 })

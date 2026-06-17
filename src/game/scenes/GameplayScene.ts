@@ -37,6 +37,7 @@ import {
   HOMING_ATTACK_RANGE,
   canStartHomingAttack,
   getHomingContactPoint,
+  getHomingTrailSamples,
   isPointCollectableByHomingLine,
   selectNearestHomingTarget,
 } from '../../domain/player/homingRules'
@@ -81,7 +82,6 @@ const HOMING_ATTACK_RECOVERY_MS = 220
 const HOMING_ATTACK_BOUNCE_Y = -420
 const HOMING_RETICLE_Y_OFFSET = -8
 const HOMING_ATTACK_FRAME = 2
-const HOMING_TRAIL_SPACING = 28
 const HOMING_TRAIL_HOLD_MS = 70
 const HOMING_TRAIL_FADE_MS = 260
 const JUMP_BUFFER_MS = 140
@@ -2136,14 +2136,10 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   private emitHomingTrail(startX: number, startY: number, endX: number, endY: number): void {
-    const distance = Phaser.Math.Distance.Between(startX, startY, endX, endY)
-    const trailCount = Math.max(2, Math.ceil(distance / HOMING_TRAIL_SPACING))
-
-    for (let index = 0; index < trailCount; index += 1) {
-      const progress = index / trailCount
+    for (const sample of getHomingTrailSamples({ startX, startY, endX, endY })) {
       const trail = this.add.sprite(
-        Phaser.Math.Linear(startX, endX, progress),
-        Phaser.Math.Linear(startY, endY, progress),
+        sample.x,
+        sample.y,
         'player-attack',
         HOMING_ATTACK_FRAME,
       )
@@ -2152,7 +2148,7 @@ export class GameplayScene extends Phaser.Scene {
       trail.setScale(Math.abs(this.player.scaleX), Math.abs(this.player.scaleY))
       trail.setFlipX(this.player.flipX)
       trail.setTint(THEME.cyan)
-      trail.setAlpha(0.42 * (1 - progress * 0.35))
+      trail.setAlpha(sample.alpha)
       trail.setBlendMode(Phaser.BlendModes.ADD)
 
       this.tweens.add({
