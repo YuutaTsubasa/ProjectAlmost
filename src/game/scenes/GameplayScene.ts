@@ -4,7 +4,7 @@ import { getEnemySpawnY, groundedBottomY, groundedHazardCenterY, objectDefinitio
 import type { CoinPoint, EnemyPoint, GravityZone, HazardRect, MovingPlatformRect, PlatformRect, StageData, SurfaceZone } from '../stages/stageTypes'
 import type { TranslationKey, TranslationParams } from '../../i18n'
 import { formatCoinLabel, formatHealthLabel } from '../../domain/stage/hudLabelRules'
-import { getHudPlatformMarker } from '../../domain/stage/hudMapRules'
+import { getHudCheckpointMarker, getHudPlatformMarker } from '../../domain/stage/hudMapRules'
 import { getHudProgress } from '../../domain/stage/hudProgressRules'
 import { formatStageTimer, shouldAdvanceStageTimer } from '../../domain/stage/timerRules'
 import { calculateStageRank } from '../../domain/scoring/scoringRules'
@@ -2403,9 +2403,10 @@ export class GameplayScene extends Phaser.Scene {
           tileSize: this.tileSize,
           worldHeight: this.worldHeight,
         })),
-        checkpointMarkers: this.stage.checkpoints.map((checkpoint) => ({
-          x: checkpoint.x / this.worldWidth,
-          y: checkpoint.surfaceY / this.worldHeight,
+        checkpointMarkers: this.stage.checkpoints.map((checkpoint) => getHudCheckpointMarker({
+          checkpoint,
+          worldWidth: this.worldWidth,
+          worldHeight: this.worldHeight,
         })),
         activeCheckpointIndex: this.activeCheckpointIndex,
         bossPhase: this.isBossStage ? Math.min(this.bossPhase + 1, BOSS_PHASE_COUNT) : 0,

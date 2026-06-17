@@ -18,3 +18,20 @@ export function getHudPlatformMarker(input: {
     width: input.platform.width / input.tileColumns,
   }
 }
+
+export function getHudCheckpointMarker(input: {
+  checkpoint: {
+    x: number
+    surfaceY: number
+  }
+  worldWidth: number
+  worldHeight: number
+}): {
+  x: number
+  y: number
+} {
+  return {
+    x: input.checkpoint.x / input.worldWidth,
+    y: input.checkpoint.surfaceY / input.worldHeight,
+  }
+}

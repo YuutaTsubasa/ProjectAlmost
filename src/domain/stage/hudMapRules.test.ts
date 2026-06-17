@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { getHudPlatformMarker } from './hudMapRules'
+import { getHudCheckpointMarker, getHudPlatformMarker } from './hudMapRules'
 
 describe('getHudPlatformMarker', () => {
   it('projects a platform from tile space into normalized map coordinates', () => {
@@ -27,5 +27,31 @@ describe('getHudPlatformMarker', () => {
       tileSize: 48,
       worldHeight: 960,
     })).toEqual({ x: 0.98, y: 1, width: 0.08 })
+  })
+})
+
+describe('getHudCheckpointMarker', () => {
+  it('projects checkpoint origin into normalized map coordinates', () => {
+    expect(getHudCheckpointMarker({
+      checkpoint: { x: 0, surfaceY: 0 },
+      worldWidth: 1000,
+      worldHeight: 500,
+    })).toEqual({ x: 0, y: 0 })
+  })
+
+  it('projects checkpoint surface position into normalized map coordinates', () => {
+    expect(getHudCheckpointMarker({
+      checkpoint: { x: 250, surfaceY: 125 },
+      worldWidth: 1000,
+      worldHeight: 500,
+    })).toEqual({ x: 0.25, y: 0.25 })
+  })
+
+  it('preserves raw normalized values without clamping', () => {
+    expect(getHudCheckpointMarker({
+      checkpoint: { x: 1200, surfaceY: 600 },
+      worldWidth: 1000,
+      worldHeight: 500,
+    })).toEqual({ x: 1.2, y: 1.2 })
   })
 })
