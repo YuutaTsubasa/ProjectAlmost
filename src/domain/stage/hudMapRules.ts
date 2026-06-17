@@ -35,3 +35,18 @@ export function getHudCheckpointMarker(input: {
     y: input.checkpoint.surfaceY / input.worldHeight,
   }
 }
+
+export function getHudEnemyMarker(input: {
+  enemyX: number
+  enemyY: number
+  worldWidth: number
+  worldHeight: number
+}): {
+  x: number
+  y: number
+} {
+  return {
+    x: input.enemyX / input.worldWidth,
+    y: input.enemyY / input.worldHeight,
+  }
+}
