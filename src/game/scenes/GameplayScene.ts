@@ -40,7 +40,10 @@ import {
   getHorizontalMovementDecision,
   getMovementFootstepDecision,
 } from '../../domain/player/movementRules'
-import { canApplyPlayerEnemyHit } from '../../domain/player/hurtRules'
+import {
+  canApplyPlayerEnemyHit,
+  canApplyPlayerHazardHit,
+} from '../../domain/player/hurtRules'
 import {
   HOMING_ATTACK_CONTACT_DISTANCE,
   HOMING_ATTACK_RANGE,
@@ -1609,7 +1612,13 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   private hurtPlayerFromHazard(sourceX: number): void {
-    if (this.isInvulnerable || this.isHurting || this.isHomingAttacking || this.isDead || this.stageCleared) {
+    if (!canApplyPlayerHazardHit({
+      invulnerable: this.isInvulnerable,
+      hurting: this.isHurting,
+      homingAttacking: this.isHomingAttacking,
+      dead: this.isDead,
+      stageCleared: this.stageCleared,
+    })) {
       return
     }
 

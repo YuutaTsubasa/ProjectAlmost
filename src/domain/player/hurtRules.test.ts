@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { canApplyPlayerEnemyHit } from './hurtRules'
+import { canApplyPlayerEnemyHit, canApplyPlayerHazardHit } from './hurtRules'
 
 describe('canApplyPlayerEnemyHit', () => {
   it('allows enemy contact damage when no blocking state is active', () => {
@@ -59,6 +59,68 @@ describe('canApplyPlayerEnemyHit', () => {
       enemyDefeated: false,
       homingAttacking: false,
       dead: true,
+    })).toBe(false)
+  })
+})
+
+describe('canApplyPlayerHazardHit', () => {
+  it('allows hazard contact damage when no blocking state is active', () => {
+    expect(canApplyPlayerHazardHit({
+      invulnerable: false,
+      hurting: false,
+      homingAttacking: false,
+      dead: false,
+      stageCleared: false,
+    })).toBe(true)
+  })
+
+  it('blocks hazard contact damage while invulnerable', () => {
+    expect(canApplyPlayerHazardHit({
+      invulnerable: true,
+      hurting: false,
+      homingAttacking: false,
+      dead: false,
+      stageCleared: false,
+    })).toBe(false)
+  })
+
+  it('blocks hazard contact damage while already hurting', () => {
+    expect(canApplyPlayerHazardHit({
+      invulnerable: false,
+      hurting: true,
+      homingAttacking: false,
+      dead: false,
+      stageCleared: false,
+    })).toBe(false)
+  })
+
+  it('blocks hazard contact damage during Homing Attack', () => {
+    expect(canApplyPlayerHazardHit({
+      invulnerable: false,
+      hurting: false,
+      homingAttacking: true,
+      dead: false,
+      stageCleared: false,
+    })).toBe(false)
+  })
+
+  it('blocks hazard contact damage after player death', () => {
+    expect(canApplyPlayerHazardHit({
+      invulnerable: false,
+      hurting: false,
+      homingAttacking: false,
+      dead: true,
+      stageCleared: false,
+    })).toBe(false)
+  })
+
+  it('blocks hazard contact damage after stage clear', () => {
+    expect(canApplyPlayerHazardHit({
+      invulnerable: false,
+      hurting: false,
+      homingAttacking: false,
+      dead: false,
+      stageCleared: true,
     })).toBe(false)
   })
 })
