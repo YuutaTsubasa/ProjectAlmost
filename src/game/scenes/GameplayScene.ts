@@ -4,6 +4,7 @@ import { getEnemySpawnY, groundedBottomY, groundedHazardCenterY, objectDefinitio
 import type { CoinPoint, EnemyPoint, GravityZone, HazardRect, MovingPlatformRect, PlatformRect, StageData, SurfaceZone } from '../stages/stageTypes'
 import type { TranslationKey, TranslationParams } from '../../i18n'
 import { formatCoinLabel, formatHealthLabel } from '../../domain/stage/hudLabelRules'
+import { getHudProgress } from '../../domain/stage/hudProgressRules'
 import { formatStageTimer, shouldAdvanceStageTimer } from '../../domain/stage/timerRules'
 import { calculateStageRank } from '../../domain/scoring/scoringRules'
 import type { ClearRank } from '../../domain/scoring/rank'
@@ -2387,8 +2388,8 @@ export class GameplayScene extends Phaser.Scene {
         objective: this.stage.objective,
         statusMessage: this.statusMessage,
         statusParams: this.statusParams,
-        playerProgress: Phaser.Math.Clamp(this.player.x / this.worldWidth, 0, 1),
-        playerProgressY: Phaser.Math.Clamp(this.player.y / this.worldHeight, 0, 1),
+        playerProgress: getHudProgress({ position: this.player.x, worldSize: this.worldWidth }),
+        playerProgressY: getHudProgress({ position: this.player.y, worldSize: this.worldHeight }),
         goalProgress: this.stage.goal.x / this.worldWidth,
         enemyActive: this.enemies.some((enemy) => !enemy.defeated),
         enemyMarkers: this.enemies.filter((enemy) => !enemy.defeated).map((enemy) => ({
