@@ -4,6 +4,7 @@ import {
   BOSS_PATTERN_MIN_DELAY_MS,
   BOSS_PATTERN_PHASE_DELAY_STEP_MS,
   BOSS_PHASE_COUNT,
+  getBossHudPhaseDisplay,
   getBossPatternDelayMs,
   getBossHitOutcome,
 } from './bossRules'
@@ -47,5 +48,40 @@ describe('getBossPatternDelayMs', () => {
     expect(getBossPatternDelayMs({ phase: 4 })).toBe(620)
     expect(getBossPatternDelayMs({ phase: 5 })).toBe(540)
     expect(getBossPatternDelayMs({ phase: 100 })).toBe(540)
+  })
+})
+
+describe('getBossHudPhaseDisplay', () => {
+  test('hides phase values for non-boss stages', () => {
+    expect(getBossHudPhaseDisplay({
+      isBossStage: false,
+      bossPhase: 0,
+    })).toEqual({ phase: 0, max: 0 })
+  })
+
+  test('displays one-based boss phase values', () => {
+    expect(getBossHudPhaseDisplay({
+      isBossStage: true,
+      bossPhase: 0,
+    })).toEqual({ phase: 1, max: 4 })
+    expect(getBossHudPhaseDisplay({
+      isBossStage: true,
+      bossPhase: 3,
+    })).toEqual({ phase: 4, max: 4 })
+  })
+
+  test('caps displayed boss phase at the phase count', () => {
+    expect(getBossHudPhaseDisplay({
+      isBossStage: true,
+      bossPhase: 4,
+    })).toEqual({ phase: 4, max: 4 })
+  })
+
+  test('supports an explicit phase count', () => {
+    expect(getBossHudPhaseDisplay({
+      isBossStage: true,
+      bossPhase: 2,
+      phaseCount: 3,
+    })).toEqual({ phase: 3, max: 3 })
   })
 })

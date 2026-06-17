@@ -24,3 +24,22 @@ export function getBossPatternDelayMs(input: { phase: number }): number {
     BOSS_PATTERN_BASE_DELAY_MS - input.phase * BOSS_PATTERN_PHASE_DELAY_STEP_MS,
   )
 }
+
+export function getBossHudPhaseDisplay(input: {
+  isBossStage: boolean
+  bossPhase: number
+  phaseCount?: number
+}): {
+  phase: number
+  max: number
+} {
+  if (!input.isBossStage) {
+    return { phase: 0, max: 0 }
+  }
+
+  const phaseCount = input.phaseCount ?? BOSS_PHASE_COUNT
+  return {
+    phase: Math.min(input.bossPhase + 1, phaseCount),
+    max: phaseCount,
+  }
+}

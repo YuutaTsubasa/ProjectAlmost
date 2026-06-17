@@ -22,6 +22,7 @@ import {
 } from '../../domain/boss/projectileRules'
 import {
   BOSS_PHASE_COUNT,
+  getBossHudPhaseDisplay,
   getBossPatternDelayMs,
   getBossHitOutcome,
 } from '../../domain/boss/bossRules'
@@ -2372,6 +2373,11 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   private dispatchHudState(overrides: Record<string, unknown> = {}): void {
+    const bossHudPhase = getBossHudPhaseDisplay({
+      isBossStage: this.isBossStage,
+      bossPhase: this.bossPhase,
+    })
+
     window.dispatchEvent(new CustomEvent('projectrun:hud', {
       detail: {
         hp: this.playerHealth,
@@ -2411,8 +2417,8 @@ export class GameplayScene extends Phaser.Scene {
           worldHeight: this.worldHeight,
         })),
         activeCheckpointIndex: this.activeCheckpointIndex,
-        bossPhase: this.isBossStage ? Math.min(this.bossPhase + 1, BOSS_PHASE_COUNT) : 0,
-        bossPhaseMax: this.isBossStage ? BOSS_PHASE_COUNT : 0,
+        bossPhase: bossHudPhase.phase,
+        bossPhaseMax: bossHudPhase.max,
         cleared: this.stageCleared,
         ...overrides,
       },
