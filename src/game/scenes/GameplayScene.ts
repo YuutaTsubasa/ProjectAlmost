@@ -3,6 +3,7 @@ import { IMAGE_ASSETS } from '../assets/assetManifest'
 import { getEnemySpawnY, groundedBottomY, groundedHazardCenterY, objectDefinitions } from '../objects/objectDefinitions'
 import type { CoinPoint, EnemyPoint, GravityZone, HazardRect, MovingPlatformRect, PlatformRect, StageData, SurfaceZone } from '../stages/stageTypes'
 import type { TranslationKey, TranslationParams } from '../../i18n'
+import { getReachedCheckpointCount } from '../../domain/stage/checkpointRules'
 import { formatCoinLabel, formatHealthLabel } from '../../domain/stage/hudLabelRules'
 import { getHudCheckpointMarker, getHudEnemyMarker, getHudGoalProgress, getHudPlatformMarker } from '../../domain/stage/hudMapRules'
 import { getHudProgress } from '../../domain/stage/hudProgressRules'
@@ -2359,11 +2360,15 @@ export class GameplayScene extends Phaser.Scene {
       coinTarget: this.coinTargetCount,
       enemiesDefeated: this.enemiesDefeated,
       enemyTarget: this.scoreEnemyTargetCount,
-      checkpointsReached: this.activeCheckpointIndex + 1,
+      checkpointsReached: this.getCheckpointReachedCount(),
       checkpointTarget: this.stage.checkpoints.length,
       damageTaken: this.damageTaken,
       falls: this.falls,
     })
+  }
+
+  private getCheckpointReachedCount(): number {
+    return getReachedCheckpointCount({ activeCheckpointIndex: this.activeCheckpointIndex })
   }
 
   private setStatusMessage(message: TranslationKey, params: TranslationParams = {}): void {
@@ -2388,7 +2393,7 @@ export class GameplayScene extends Phaser.Scene {
         falls: this.falls,
         enemiesDefeated: this.enemiesDefeated,
         enemyTarget: this.scoreEnemyTargetCount,
-        checkpointsReached: this.activeCheckpointIndex + 1,
+        checkpointsReached: this.getCheckpointReachedCount(),
         checkpointTarget: this.stage.checkpoints.length,
         rank: this.getRank(),
         time: this.getTimerValue(),
