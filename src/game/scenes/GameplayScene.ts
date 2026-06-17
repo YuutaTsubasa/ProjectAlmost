@@ -3,6 +3,7 @@ import { IMAGE_ASSETS } from '../assets/assetManifest'
 import { getEnemySpawnY, groundedBottomY, groundedHazardCenterY, objectDefinitions } from '../objects/objectDefinitions'
 import type { CoinPoint, EnemyPoint, GravityZone, HazardRect, MovingPlatformRect, PlatformRect, StageData, SurfaceZone } from '../stages/stageTypes'
 import type { TranslationKey, TranslationParams } from '../../i18n'
+import { formatCoinLabel, formatHealthLabel } from '../../domain/stage/hudLabelRules'
 import { formatStageTimer, shouldAdvanceStageTimer } from '../../domain/stage/timerRules'
 import { calculateStageRank } from '../../domain/scoring/scoringRules'
 import type { ClearRank } from '../../domain/scoring/rank'
@@ -2255,7 +2256,7 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   private getHealthLabel(): string {
-    return `HP ${this.playerHealth}/${PLAYER_MAX_HEALTH}`
+    return formatHealthLabel({ current: this.playerHealth, max: PLAYER_MAX_HEALTH })
   }
 
   private updateCoins(): void {
@@ -2327,7 +2328,7 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   private getCoinLabel(): string {
-    return `COIN ${String(this.collectedCoins).padStart(3, '0')} / ${this.coinTargetCount}`
+    return formatCoinLabel({ collected: this.collectedCoins, target: this.coinTargetCount })
   }
 
   private updateTimer(): void {
