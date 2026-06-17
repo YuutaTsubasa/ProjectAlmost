@@ -4,6 +4,7 @@ import {
   HOMING_TARGET_REVERSE_TOLERANCE_X,
   canStartHomingAttack,
   isHomingTargetEligible,
+  selectNearestHomingTarget,
 } from './homingRules'
 
 describe('canStartHomingAttack', () => {
@@ -153,5 +154,69 @@ describe('isHomingTargetEligible', () => {
       range: 50,
       reverseToleranceX: 20,
     })).toBe(false)
+  })
+})
+
+describe('selectNearestHomingTarget', () => {
+  test('returns undefined for an empty candidate list', () => {
+    expect(selectNearestHomingTarget({
+      playerX: 100,
+      facing: 1,
+      candidates: [],
+    })).toBeUndefined()
+  })
+
+  test('returns undefined when all candidates are ineligible', () => {
+    expect(selectNearestHomingTarget({
+      playerX: 100,
+      facing: 1,
+      candidates: [
+        { target: 'behind-far', targetX: 40, distance: 80 },
+        { target: 'too-far', targetX: 220, distance: 361 },
+      ],
+    })).toBeUndefined()
+  })
+
+  test('returns the only eligible target', () => {
+    expect(selectNearestHomingTarget({
+      playerX: 100,
+      facing: 1,
+      candidates: [
+        { target: 'target-a', targetX: 180, distance: 120 },
+      ],
+    })).toBe('target-a')
+  })
+
+  test('returns the nearest eligible target', () => {
+    expect(selectNearestHomingTarget({
+      playerX: 100,
+      facing: 1,
+      candidates: [
+        { target: 'farther', targetX: 250, distance: 200 },
+        { target: 'nearer', targetX: 180, distance: 90 },
+      ],
+    })).toBe('nearer')
+  })
+
+  test('ignores closer ineligible targets', () => {
+    expect(selectNearestHomingTarget({
+      playerX: 100,
+      facing: 1,
+      candidates: [
+        { target: 'behind-too-far', targetX: 40, distance: 40 },
+        { target: 'eligible', targetX: 200, distance: 160 },
+      ],
+    })).toBe('eligible')
+  })
+
+  test('keeps the first eligible target when distances tie', () => {
+    expect(selectNearestHomingTarget({
+      playerX: 100,
+      facing: 1,
+      candidates: [
+        { target: 'first', targetX: 180, distance: 120 },
+        { target: 'second', targetX: 190, distance: 120 },
+      ],
+    })).toBe('first')
   })
 })

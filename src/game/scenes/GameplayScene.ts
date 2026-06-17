@@ -34,7 +34,7 @@ import { canCrouch } from '../../domain/player/crouchRules'
 import {
   HOMING_ATTACK_RANGE,
   canStartHomingAttack,
-  isHomingTargetEligible,
+  selectNearestHomingTarget,
 } from '../../domain/player/homingRules'
 
 type ArcadeSprite = Phaser.Types.Physics.Arcade.SpriteWithDynamicBody
@@ -2037,19 +2037,18 @@ export class GameplayScene extends Phaser.Scene {
 
   private findHomingTarget(): ArcadeSprite | undefined {
     const facing = this.player.flipX ? -1 : 1
-    return this.enemies
+    const candidates = this.enemies
       .filter((enemy) => !enemy.defeated && enemy.sprite.active && enemy.sprite.visible)
       .map((enemy) => ({
-        sprite: enemy.sprite,
+        target: enemy.sprite,
+        targetX: enemy.sprite.x,
         distance: Phaser.Math.Distance.Between(this.player.x, this.player.y, enemy.sprite.x, enemy.sprite.y),
       }))
-      .filter(({ sprite, distance }) => isHomingTargetEligible({
-        playerX: this.player.x,
-        targetX: sprite.x,
-        facing,
-        distance,
-      }))
-      .sort((a, b) => a.distance - b.distance)[0]?.sprite
+    return selectNearestHomingTarget({
+      playerX: this.player.x,
+      facing,
+      candidates,
+    })
   }
 
   private updateHomingReticle(grounded: boolean): void {
