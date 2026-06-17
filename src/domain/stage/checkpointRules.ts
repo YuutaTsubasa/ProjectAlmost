@@ -3,3 +3,9 @@ export function getReachedCheckpointCount(input: {
 }): number {
   return input.activeCheckpointIndex + 1
 }
+
+export function getCheckpointTargetCount(input: {
+  checkpoints: readonly unknown[]
+}): number {
+  return input.checkpoints.length
+}

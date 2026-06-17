@@ -3,7 +3,7 @@ import { IMAGE_ASSETS } from '../assets/assetManifest'
 import { getEnemySpawnY, groundedBottomY, groundedHazardCenterY, objectDefinitions } from '../objects/objectDefinitions'
 import type { CoinPoint, EnemyPoint, GravityZone, HazardRect, MovingPlatformRect, PlatformRect, StageData, SurfaceZone } from '../stages/stageTypes'
 import type { TranslationKey, TranslationParams } from '../../i18n'
-import { getReachedCheckpointCount } from '../../domain/stage/checkpointRules'
+import { getCheckpointTargetCount, getReachedCheckpointCount } from '../../domain/stage/checkpointRules'
 import { formatCoinLabel, formatHealthLabel } from '../../domain/stage/hudLabelRules'
 import { getHudCheckpointMarkers, getHudEnemyMarkers, getHudGoalProgress, getHudPlatformMarkers } from '../../domain/stage/hudMapRules'
 import { getHudProgress } from '../../domain/stage/hudProgressRules'
@@ -2362,7 +2362,7 @@ export class GameplayScene extends Phaser.Scene {
       enemiesDefeated: this.enemiesDefeated,
       enemyTarget: this.scoreEnemyTargetCount,
       checkpointsReached: this.getCheckpointReachedCount(),
-      checkpointTarget: this.stage.checkpoints.length,
+      checkpointTarget: this.getCheckpointTargetCount(),
       damageTaken: this.damageTaken,
       falls: this.falls,
     })
@@ -2370,6 +2370,10 @@ export class GameplayScene extends Phaser.Scene {
 
   private getCheckpointReachedCount(): number {
     return getReachedCheckpointCount({ activeCheckpointIndex: this.activeCheckpointIndex })
+  }
+
+  private getCheckpointTargetCount(): number {
+    return getCheckpointTargetCount({ checkpoints: this.stage.checkpoints })
   }
 
   private setStatusMessage(message: TranslationKey, params: TranslationParams = {}): void {
@@ -2395,7 +2399,7 @@ export class GameplayScene extends Phaser.Scene {
         enemiesDefeated: this.enemiesDefeated,
         enemyTarget: this.scoreEnemyTargetCount,
         checkpointsReached: this.getCheckpointReachedCount(),
-        checkpointTarget: this.stage.checkpoints.length,
+        checkpointTarget: this.getCheckpointTargetCount(),
         rank: this.getRank(),
         time: this.getTimerValue(),
         objective: this.stage.objective,
