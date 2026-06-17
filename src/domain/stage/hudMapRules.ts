@@ -19,6 +19,24 @@ export function getHudPlatformMarker(input: {
   }
 }
 
+export function getHudPlatformMarkers(input: {
+  platforms: readonly {
+    col: number
+    row: number
+    width: number
+  }[]
+  tileColumns: number
+  tileSize: number
+  worldHeight: number
+}): { x: number; y: number; width: number }[] {
+  return input.platforms.map((platform) => getHudPlatformMarker({
+    platform,
+    tileColumns: input.tileColumns,
+    tileSize: input.tileSize,
+    worldHeight: input.worldHeight,
+  }))
+}
+
 export function getHudCheckpointMarker(input: {
   checkpoint: {
     x: number
