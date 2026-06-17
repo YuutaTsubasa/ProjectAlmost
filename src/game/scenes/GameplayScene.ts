@@ -48,6 +48,7 @@ import {
 import {
   HOMING_ATTACK_CONTACT_DISTANCE,
   HOMING_ATTACK_RANGE,
+  canShowHomingReticle,
   canStartHomingAttack,
   getHomingContactPoint,
   getHomingTrailSamples,
@@ -2091,7 +2092,14 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   private updateHomingReticle(grounded: boolean): void {
-    if (grounded || this.stageCleared || this.isDead || this.isAttacking || this.isHurting || this.isHomingAttacking) {
+    if (!canShowHomingReticle({
+      grounded,
+      stageCleared: this.stageCleared,
+      dead: this.isDead,
+      attacking: this.isAttacking,
+      hurting: this.isHurting,
+      homingAttacking: this.isHomingAttacking,
+    })) {
       this.homingReticle?.setVisible(false)
       return
     }

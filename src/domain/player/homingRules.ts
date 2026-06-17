@@ -26,6 +26,22 @@ export function canStartHomingAttack(input: {
   return input.attackReady && !input.hurting && !input.homingAttacking && !input.dead
 }
 
+export function canShowHomingReticle(input: {
+  grounded: boolean
+  stageCleared: boolean
+  dead: boolean
+  attacking: boolean
+  hurting: boolean
+  homingAttacking: boolean
+}): boolean {
+  return !input.grounded
+    && !input.stageCleared
+    && !input.dead
+    && !input.attacking
+    && !input.hurting
+    && !input.homingAttacking
+}
+
 export function isHomingTargetEligible(input: {
   playerX: number
   targetX: number

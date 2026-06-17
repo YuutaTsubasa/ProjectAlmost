@@ -5,6 +5,7 @@ import {
   HOMING_LINE_COIN_COLLECTION_RADIUS,
   HOMING_TARGET_REVERSE_TOLERANCE_X,
   HOMING_TRAIL_SPACING,
+  canShowHomingReticle,
   canStartHomingAttack,
   getHomingContactPoint,
   getHomingTrailSamples,
@@ -56,6 +57,85 @@ describe('canStartHomingAttack', () => {
       hurting: false,
       homingAttacking: false,
       dead: true,
+    })).toBe(false)
+  })
+})
+
+describe('canShowHomingReticle', () => {
+  test('allows reticle search when no blocking state is active', () => {
+    expect(canShowHomingReticle({
+      grounded: false,
+      stageCleared: false,
+      dead: false,
+      attacking: false,
+      hurting: false,
+      homingAttacking: false,
+    })).toBe(true)
+  })
+
+  test('blocks reticle while grounded', () => {
+    expect(canShowHomingReticle({
+      grounded: true,
+      stageCleared: false,
+      dead: false,
+      attacking: false,
+      hurting: false,
+      homingAttacking: false,
+    })).toBe(false)
+  })
+
+  test('blocks reticle after stage clear', () => {
+    expect(canShowHomingReticle({
+      grounded: false,
+      stageCleared: true,
+      dead: false,
+      attacking: false,
+      hurting: false,
+      homingAttacking: false,
+    })).toBe(false)
+  })
+
+  test('blocks reticle after player death', () => {
+    expect(canShowHomingReticle({
+      grounded: false,
+      stageCleared: false,
+      dead: true,
+      attacking: false,
+      hurting: false,
+      homingAttacking: false,
+    })).toBe(false)
+  })
+
+  test('blocks reticle while attacking', () => {
+    expect(canShowHomingReticle({
+      grounded: false,
+      stageCleared: false,
+      dead: false,
+      attacking: true,
+      hurting: false,
+      homingAttacking: false,
+    })).toBe(false)
+  })
+
+  test('blocks reticle while hurting', () => {
+    expect(canShowHomingReticle({
+      grounded: false,
+      stageCleared: false,
+      dead: false,
+      attacking: false,
+      hurting: true,
+      homingAttacking: false,
+    })).toBe(false)
+  })
+
+  test('blocks reticle during Homing Attack', () => {
+    expect(canShowHomingReticle({
+      grounded: false,
+      stageCleared: false,
+      dead: false,
+      attacking: false,
+      hurting: false,
+      homingAttacking: true,
     })).toBe(false)
   })
 })
