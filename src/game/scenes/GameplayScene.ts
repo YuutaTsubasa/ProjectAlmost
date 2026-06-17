@@ -12,7 +12,7 @@ import { formatStageTimer, shouldAdvanceStageTimer } from '../../domain/stage/ti
 import { calculateStageRank } from '../../domain/scoring/scoringRules'
 import type { ClearRank } from '../../domain/scoring/rank'
 import { isOutOfBounds } from '../../domain/world/bounds'
-import { getVerticalGravitySign } from '../../domain/world/gravityRules'
+import { getPlayerBodyGravityY, getVerticalGravitySign } from '../../domain/world/gravityRules'
 import {
   getMovingPlatformPosition,
   isMovingPlatformRider,
@@ -684,7 +684,7 @@ export class GameplayScene extends Phaser.Scene {
     this.playerGravityDirection = direction
     if (!this.player) return
 
-    const bodyGravityY = direction === 'down' ? 0 : -WORLD_GRAVITY_Y * 2
+    const bodyGravityY = getPlayerBodyGravityY({ direction, worldGravityY: WORLD_GRAVITY_Y })
     this.player.body.setGravityY(bodyGravityY)
     this.player.setFlipY(direction === 'up')
     if (!preserveVelocity) this.player.setVelocityY(0)
@@ -2258,7 +2258,12 @@ export class GameplayScene extends Phaser.Scene {
 
   private setPlayerHomingCollision(enabled: boolean): void {
     this.player.body.allowGravity = enabled
-    this.player.body.setGravityY(enabled && this.playerGravityDirection === 'up' ? -WORLD_GRAVITY_Y * 2 : 0)
+    this.player.body.setGravityY(enabled
+      ? getPlayerBodyGravityY({
+          direction: this.playerGravityDirection,
+          worldGravityY: WORLD_GRAVITY_Y,
+        })
+      : 0)
     this.player.body.checkCollision.none = !enabled
   }
 

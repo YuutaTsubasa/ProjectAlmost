@@ -5,3 +5,10 @@ export function getVerticalGravitySign(input: {
 }): 1 | -1 {
   return input.direction === 'down' ? 1 : -1
 }
+
+export function getPlayerBodyGravityY(input: {
+  direction: VerticalGravityDirection
+  worldGravityY: number
+}): number {
+  return input.direction === 'down' ? 0 : -input.worldGravityY * 2
+}
