@@ -7,6 +7,10 @@ import { calculateStageRank } from '../../domain/scoring/scoringRules'
 import type { ClearRank } from '../../domain/scoring/rank'
 import { isOutOfBounds } from '../../domain/world/bounds'
 import {
+  isBossProjectileExpired,
+  isBossProjectileOutOfBounds,
+} from '../../domain/boss/projectileRules'
+import {
   INITIAL_PATROL_DIRECTION,
   enemyCountsForScore,
   getEnemyRegenerationDecision,
@@ -72,7 +76,6 @@ const DEFAULT_DRAG_X = 1500
 const PLAYER_MAX_RUN_SPEED = 500
 const WORLD_GRAVITY_Y = 1500
 const BOSS_PHASE_COUNT = 4
-const BOSS_PROJECTILE_LIFETIME_MS = 7200
 const THEME = {
   royalBlue: 0x2f6fb4,
   cyan: 0x33b5ff,
@@ -1343,8 +1346,16 @@ export class GameplayScene extends Phaser.Scene {
     if (this.bossProjectiles.length === 0) return
 
     for (const projectile of [...this.bossProjectiles]) {
-      const expired = this.time.now - Number(projectile.getData('spawnedAt')) > BOSS_PROJECTILE_LIFETIME_MS
-      const outside = projectile.x < -80 || projectile.x > this.worldWidth + 80 || projectile.y < -80 || projectile.y > this.worldHeight + 80
+      const expired = isBossProjectileExpired({
+        now: this.time.now,
+        spawnedAt: Number(projectile.getData('spawnedAt')),
+      })
+      const outside = isBossProjectileOutOfBounds({
+        x: projectile.x,
+        y: projectile.y,
+        worldWidth: this.worldWidth,
+        worldHeight: this.worldHeight,
+      })
       if (outside) {
         this.destroyBossProjectile(projectile)
         continue
