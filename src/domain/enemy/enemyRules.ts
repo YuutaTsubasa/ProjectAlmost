@@ -69,3 +69,9 @@ export function getNextPatrolDirection(input: {
   if (input.x > input.patrolMaxX) return -1
   return input.currentDirection
 }
+
+export function hasActiveEnemy(input: {
+  enemies: readonly { defeated: boolean }[]
+}): boolean {
+  return input.enemies.some((enemy) => !enemy.defeated)
+}

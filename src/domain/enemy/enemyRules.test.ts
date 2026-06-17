@@ -8,6 +8,7 @@ import {
   getNextPatrolDirection,
   getEnemyRespawnDelayMs,
   getEnemyRespawnPolicy,
+  hasActiveEnemy,
 } from './enemyRules'
 
 describe('getEnemyRespawnPolicy', () => {
@@ -135,5 +136,29 @@ describe('enemy patrol direction', () => {
       patrolMaxX: 200,
       currentDirection: 1,
     })).toBe(1)
+  })
+})
+
+describe('hasActiveEnemy', () => {
+  test('returns false when no enemies exist', () => {
+    expect(hasActiveEnemy({ enemies: [] })).toBe(false)
+  })
+
+  test('returns false when every enemy is defeated', () => {
+    expect(hasActiveEnemy({
+      enemies: [
+        { defeated: true },
+        { defeated: true },
+      ],
+    })).toBe(false)
+  })
+
+  test('returns true when any enemy is not defeated', () => {
+    expect(hasActiveEnemy({
+      enemies: [
+        { defeated: true },
+        { defeated: false },
+      ],
+    })).toBe(true)
   })
 })

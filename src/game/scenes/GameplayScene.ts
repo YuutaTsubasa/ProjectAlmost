@@ -34,6 +34,7 @@ import {
   getNextPatrolDirection,
   getEnemyRespawnDelayMs,
   getEnemyRespawnPolicy,
+  hasActiveEnemy,
   type EnemyRespawnPolicy,
   type PatrolDirection,
 } from '../../domain/enemy/enemyRules'
@@ -2403,7 +2404,7 @@ export class GameplayScene extends Phaser.Scene {
         playerProgress: getHudProgress({ position: this.player.x, worldSize: this.worldWidth }),
         playerProgressY: getHudProgress({ position: this.player.y, worldSize: this.worldHeight }),
         goalProgress: getHudGoalProgress({ goalX: this.stage.goal.x, worldWidth: this.worldWidth }),
-        enemyActive: this.enemies.some((enemy) => !enemy.defeated),
+        enemyActive: hasActiveEnemy({ enemies: this.enemies }),
         enemyMarkers: this.enemies.filter((enemy) => !enemy.defeated).map((enemy) => getHudEnemyMarker({
           enemyX: enemy.sprite.x,
           enemyY: enemy.sprite.y,
