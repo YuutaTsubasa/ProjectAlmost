@@ -6,6 +6,7 @@ import type { TranslationKey, TranslationParams } from '../../i18n'
 import { calculateStageRank } from '../../domain/scoring/scoringRules'
 import type { ClearRank } from '../../domain/scoring/rank'
 import { isOutOfBounds } from '../../domain/world/bounds'
+import { getMovingPlatformPosition } from '../../domain/world/movingPlatformRules'
 import {
   getBossProjectileHitDecision,
   isBossProjectileExpired,
@@ -1830,12 +1831,18 @@ export class GameplayScene extends Phaser.Scene {
     }
 
     for (const platform of this.movingPlatforms) {
-      const phase = platform.point.phase ?? 0
       const carryingPlayer = this.isPlayerRidingMovingPlatform(platform)
-      const t = (this.time.now / platform.point.durationMs + phase) * Math.PI * 2
-      const offset = Math.sin(t) * platform.point.distance
-      const nextX = platform.point.axis === 'x' ? platform.startX + offset : platform.startX
-      const nextY = platform.point.axis === 'y' ? platform.startY + offset : platform.startY
+      const nextPosition = getMovingPlatformPosition({
+        startX: platform.startX,
+        startY: platform.startY,
+        axis: platform.point.axis,
+        distance: platform.point.distance,
+        durationMs: platform.point.durationMs,
+        phase: platform.point.phase,
+        nowMs: this.time.now,
+      })
+      const nextX = nextPosition.x
+      const nextY = nextPosition.y
       const deltaSeconds = Math.max(this.game.loop.delta / 1000, 0.001)
       const deltaX = nextX - platform.previousX
       const deltaY = nextY - platform.previousY
