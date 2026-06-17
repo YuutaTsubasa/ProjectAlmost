@@ -10,6 +10,7 @@ import {
   getMovingPlatformPosition,
   isMovingPlatformRider,
 } from '../../domain/world/movingPlatformRules'
+import { getPlatformTileIndex } from '../../domain/world/terrainRules'
 import {
   getBossProjectileHitDecision,
   isBossProjectileExpired,
@@ -1546,25 +1547,9 @@ export class GameplayScene extends Phaser.Scene {
   private writePlatformTiles(data: number[][], col: PlatformRect['col'], row: PlatformRect['row'], width: PlatformRect['width'], height: PlatformRect['height']): void {
     for (let y = 0; y < height; y += 1) {
       for (let x = 0; x < width; x += 1) {
-        data[row + y][col + x] = this.getPlatformTileIndex(x, width)
+        data[row + y][col + x] = getPlatformTileIndex({ index: x, width })
       }
     }
-  }
-
-  private getPlatformTileIndex(index: number, width: number): number {
-    if (width === 1) {
-      return 1
-    }
-
-    if (index === 0) {
-      return 0
-    }
-
-    if (index === width - 1) {
-      return 2
-    }
-
-    return 1
   }
 
   private tryAttack(): void {
