@@ -7,6 +7,7 @@ import { calculateStageRank } from '../../domain/scoring/scoringRules'
 import type { ClearRank } from '../../domain/scoring/rank'
 import { isOutOfBounds } from '../../domain/world/bounds'
 import {
+  getBossProjectileHitDecision,
   isBossProjectileExpired,
   isBossProjectileOutOfBounds,
 } from '../../domain/boss/projectileRules'
@@ -1368,8 +1369,12 @@ export class GameplayScene extends Phaser.Scene {
         continue
       }
 
-      if (!this.isDead && Phaser.Math.Distance.Between(this.player.x, this.player.y, projectile.x, projectile.y) < 42) {
-        if (this.isCrouching) continue
+      const hitDecision = getBossProjectileHitDecision({
+        playerDead: this.isDead,
+        playerCrouching: this.isCrouching,
+        distanceToPlayer: Phaser.Math.Distance.Between(this.player.x, this.player.y, projectile.x, projectile.y),
+      })
+      if (hitDecision === 'hit') {
         this.destroyBossProjectile(projectile)
         this.applyPlayerHit(projectile.x)
       }

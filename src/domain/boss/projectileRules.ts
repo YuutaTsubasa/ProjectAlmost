@@ -1,5 +1,8 @@
 export const BOSS_PROJECTILE_LIFETIME_MS = 7200
 export const BOSS_PROJECTILE_BOUNDS_MARGIN = 80
+export const BOSS_PROJECTILE_HIT_DISTANCE = 42
+
+export type BossProjectileHitDecision = 'ignore' | 'blocked-by-crouch' | 'hit'
 
 export function isBossProjectileExpired(input: {
   now: number
@@ -21,4 +24,16 @@ export function isBossProjectileOutOfBounds(input: {
     || input.x > input.worldWidth + margin
     || input.y < -margin
     || input.y > input.worldHeight + margin
+}
+
+export function getBossProjectileHitDecision(input: {
+  playerDead: boolean
+  playerCrouching: boolean
+  distanceToPlayer: number
+  hitDistance?: number
+}): BossProjectileHitDecision {
+  if (input.playerDead) return 'ignore'
+  if (input.distanceToPlayer >= (input.hitDistance ?? BOSS_PROJECTILE_HIT_DISTANCE)) return 'ignore'
+  if (input.playerCrouching) return 'blocked-by-crouch'
+  return 'hit'
 }

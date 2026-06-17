@@ -1,7 +1,9 @@
 import { describe, expect, test } from 'vitest'
 import {
   BOSS_PROJECTILE_BOUNDS_MARGIN,
+  BOSS_PROJECTILE_HIT_DISTANCE,
   BOSS_PROJECTILE_LIFETIME_MS,
+  getBossProjectileHitDecision,
   isBossProjectileExpired,
   isBossProjectileOutOfBounds,
 } from './projectileRules'
@@ -62,5 +64,63 @@ describe('isBossProjectileOutOfBounds', () => {
     expect(isBossProjectileOutOfBounds({ ...world, x: -10, y: 40 })).toBe(false)
     expect(isBossProjectileOutOfBounds({ ...world, x: 111, y: 40 })).toBe(true)
     expect(isBossProjectileOutOfBounds({ ...world, x: 110, y: 40 })).toBe(false)
+  })
+})
+
+describe('getBossProjectileHitDecision', () => {
+  test('uses the gameplay hit distance as the default', () => {
+    expect(BOSS_PROJECTILE_HIT_DISTANCE).toBe(42)
+  })
+
+  test('ignores dead players even inside hit distance', () => {
+    expect(getBossProjectileHitDecision({
+      playerDead: true,
+      playerCrouching: false,
+      distanceToPlayer: 0,
+    })).toBe('ignore')
+  })
+
+  test('ignores projectiles outside hit distance or on the exact boundary', () => {
+    expect(getBossProjectileHitDecision({
+      playerDead: false,
+      playerCrouching: false,
+      distanceToPlayer: 43,
+    })).toBe('ignore')
+    expect(getBossProjectileHitDecision({
+      playerDead: false,
+      playerCrouching: false,
+      distanceToPlayer: 42,
+    })).toBe('ignore')
+  })
+
+  test('blocks hits when player is crouching inside hit distance', () => {
+    expect(getBossProjectileHitDecision({
+      playerDead: false,
+      playerCrouching: true,
+      distanceToPlayer: 41,
+    })).toBe('blocked-by-crouch')
+  })
+
+  test('hits when player is alive, not crouching, and inside hit distance', () => {
+    expect(getBossProjectileHitDecision({
+      playerDead: false,
+      playerCrouching: false,
+      distanceToPlayer: 41,
+    })).toBe('hit')
+  })
+
+  test('supports an explicit hit distance for boundary checks', () => {
+    expect(getBossProjectileHitDecision({
+      playerDead: false,
+      playerCrouching: false,
+      distanceToPlayer: 9,
+      hitDistance: 10,
+    })).toBe('hit')
+    expect(getBossProjectileHitDecision({
+      playerDead: false,
+      playerCrouching: false,
+      distanceToPlayer: 10,
+      hitDistance: 10,
+    })).toBe('ignore')
   })
 })
