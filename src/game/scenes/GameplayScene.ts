@@ -31,6 +31,7 @@ import {
   getJumpDecision,
 } from '../../domain/player/jumpRules'
 import { canCrouch } from '../../domain/player/crouchRules'
+import { canStartHomingAttack } from '../../domain/player/homingRules'
 
 type ArcadeSprite = Phaser.Types.Physics.Arcade.SpriteWithDynamicBody
 type TilemapLayer = Phaser.Tilemaps.TilemapLayer | Phaser.Tilemaps.TilemapGPULayer
@@ -2003,7 +2004,12 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   private tryHomingAttack(): boolean {
-    if (!this.attackReady || this.isHurting || this.isHomingAttacking || this.isDead) {
+    if (!canStartHomingAttack({
+      attackReady: this.attackReady,
+      hurting: this.isHurting,
+      homingAttacking: this.isHomingAttacking,
+      dead: this.isDead,
+    })) {
       return false
     }
 
