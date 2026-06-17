@@ -4,6 +4,7 @@ import { getEnemySpawnY, groundedBottomY, groundedHazardCenterY, objectDefinitio
 import type { CoinPoint, EnemyPoint, GravityZone, HazardRect, MovingPlatformRect, PlatformRect, StageData, SurfaceZone } from '../stages/stageTypes'
 import type { TranslationKey, TranslationParams } from '../../i18n'
 import { getCheckpointTargetCount, getReachedCheckpointCount } from '../../domain/stage/checkpointRules'
+import { getCoinTargetCount } from '../../domain/stage/coinRules'
 import { formatCoinLabel, formatHealthLabel } from '../../domain/stage/hudLabelRules'
 import { getHudCheckpointMarkers, getHudEnemyMarkers, getHudGoalProgress, getHudPlatformMarkers } from '../../domain/stage/hudMapRules'
 import { getHudProgress } from '../../domain/stage/hudProgressRules'
@@ -253,7 +254,7 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   private get coinTargetCount(): number {
-    return this.stage.coins.length
+    return getCoinTargetCount({ coins: this.stage.coins })
   }
 
   private get scoreEnemyTargetCount(): number {
