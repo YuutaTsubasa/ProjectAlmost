@@ -63,6 +63,7 @@ import {
   getPlayerAnimationDecision,
   shouldPlayPlayerAnimation,
 } from '../../domain/player/animationRules'
+import { isPlayerGroundedByContact } from '../../domain/player/groundRules'
 import {
   canApplyPlayerDamage,
   canApplyPlayerEnemyHit,
@@ -655,9 +656,13 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   private isPlayerGrounded(): boolean {
-    return this.playerGravityDirection === 'down'
-      ? this.player.body.blocked.down || this.player.body.touching.down
-      : this.player.body.blocked.up || this.player.body.touching.up
+    return isPlayerGroundedByContact({
+      direction: this.playerGravityDirection,
+      blockedDown: this.player.body.blocked.down,
+      touchingDown: this.player.body.touching.down,
+      blockedUp: this.player.body.blocked.up,
+      touchingUp: this.player.body.touching.up,
+    })
   }
 
   private updateGravityZones(): void {
