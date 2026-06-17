@@ -1,6 +1,7 @@
 export type EnemyType = 'guard' | 'azure-core'
 export type EnemyRespawnPolicy = 'persistent' | 'regenerate'
 export type EnemyRegenerationDecision = 'skip' | 'delay' | 'regenerate'
+export type PatrolDirection = -1 | 1
 
 export type EnemyRuleInput = {
   type?: EnemyType
@@ -19,6 +20,7 @@ export type EnemyRegenerationInput = {
 
 export const DEFAULT_ENEMY_REGENERATE_DELAY_MS = 1400
 export const DEFAULT_ENEMY_REGENERATE_SAFE_DISTANCE = 140
+export const INITIAL_PATROL_DIRECTION: PatrolDirection = -1
 
 export const enemyDefinitions = {
   guard: {
@@ -55,4 +57,15 @@ export function getEnemyRegenerationDecision(input: EnemyRegenerationInput): Ene
   if (input.playerDead) return 'delay'
   if (input.playerDistance < (input.safeDistance ?? DEFAULT_ENEMY_REGENERATE_SAFE_DISTANCE)) return 'delay'
   return 'regenerate'
+}
+
+export function getNextPatrolDirection(input: {
+  x: number
+  patrolMinX: number
+  patrolMaxX: number
+  currentDirection: PatrolDirection
+}): PatrolDirection {
+  if (input.x < input.patrolMinX) return 1
+  if (input.x > input.patrolMaxX) return -1
+  return input.currentDirection
 }

@@ -7,11 +7,14 @@ import { calculateStageRank } from '../../domain/scoring/scoringRules'
 import type { ClearRank } from '../../domain/scoring/rank'
 import { isOutOfBounds } from '../../domain/world/bounds'
 import {
+  INITIAL_PATROL_DIRECTION,
   enemyCountsForScore,
   getEnemyRegenerationDecision,
+  getNextPatrolDirection,
   getEnemyRespawnDelayMs,
   getEnemyRespawnPolicy,
   type EnemyRespawnPolicy,
+  type PatrolDirection,
 } from '../../domain/enemy/enemyRules'
 
 type ArcadeSprite = Phaser.Types.Physics.Arcade.SpriteWithDynamicBody
@@ -25,7 +28,7 @@ type EnemyRuntime = {
   sprite: ArcadeSprite
   point: EnemyPoint
   defeated: boolean
-  direction: number
+  direction: PatrolDirection
 }
 type HazardRuntime = {
   sprite: Phaser.Types.Physics.Arcade.ImageWithStaticBody
@@ -1183,7 +1186,7 @@ export class GameplayScene extends Phaser.Scene {
         sprite,
         point,
         defeated: false,
-        direction: -1,
+        direction: INITIAL_PATROL_DIRECTION,
       }
     })
   }
@@ -1720,11 +1723,12 @@ export class GameplayScene extends Phaser.Scene {
         continue
       }
 
-      if (enemy.sprite.x < enemy.point.patrolMinX) {
-        enemy.direction = 1
-      } else if (enemy.sprite.x > enemy.point.patrolMaxX) {
-        enemy.direction = -1
-      }
+      enemy.direction = getNextPatrolDirection({
+        x: enemy.sprite.x,
+        patrolMinX: enemy.point.patrolMinX,
+        patrolMaxX: enemy.point.patrolMaxX,
+        currentDirection: enemy.direction,
+      })
 
       enemy.sprite.setVelocityX(enemy.direction * 80)
       enemy.sprite.setFlipX(enemy.direction > 0)

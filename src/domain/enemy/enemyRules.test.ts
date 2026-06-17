@@ -2,8 +2,10 @@ import { describe, expect, test } from 'vitest'
 import {
   DEFAULT_ENEMY_REGENERATE_DELAY_MS,
   DEFAULT_ENEMY_REGENERATE_SAFE_DISTANCE,
+  INITIAL_PATROL_DIRECTION,
   enemyCountsForScore,
   getEnemyRegenerationDecision,
+  getNextPatrolDirection,
   getEnemyRespawnDelayMs,
   getEnemyRespawnPolicy,
 } from './enemyRules'
@@ -79,5 +81,59 @@ describe('getEnemyRegenerationDecision', () => {
       playerDead: false,
       playerDistance: DEFAULT_ENEMY_REGENERATE_SAFE_DISTANCE,
     })).toBe('regenerate')
+  })
+})
+
+describe('enemy patrol direction', () => {
+  test('starts patrol enemies moving left', () => {
+    expect(INITIAL_PATROL_DIRECTION).toBe(-1)
+  })
+
+  test('turns right when enemy moves past the minimum patrol boundary', () => {
+    expect(getNextPatrolDirection({
+      x: 99,
+      patrolMinX: 100,
+      patrolMaxX: 200,
+      currentDirection: -1,
+    })).toBe(1)
+  })
+
+  test('turns left when enemy moves past the maximum patrol boundary', () => {
+    expect(getNextPatrolDirection({
+      x: 201,
+      patrolMinX: 100,
+      patrolMaxX: 200,
+      currentDirection: 1,
+    })).toBe(-1)
+  })
+
+  test('keeps the current direction inside the patrol range', () => {
+    expect(getNextPatrolDirection({
+      x: 150,
+      patrolMinX: 100,
+      patrolMaxX: 200,
+      currentDirection: -1,
+    })).toBe(-1)
+    expect(getNextPatrolDirection({
+      x: 150,
+      patrolMinX: 100,
+      patrolMaxX: 200,
+      currentDirection: 1,
+    })).toBe(1)
+  })
+
+  test('keeps the current direction on exact patrol boundaries', () => {
+    expect(getNextPatrolDirection({
+      x: 100,
+      patrolMinX: 100,
+      patrolMaxX: 200,
+      currentDirection: -1,
+    })).toBe(-1)
+    expect(getNextPatrolDirection({
+      x: 200,
+      patrolMinX: 100,
+      patrolMaxX: 200,
+      currentDirection: 1,
+    })).toBe(1)
   })
 })
