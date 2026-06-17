@@ -40,6 +40,7 @@ import {
   getHorizontalMovementDecision,
   getMovementFootstepDecision,
 } from '../../domain/player/movementRules'
+import { getPlayerAnimationDecision } from '../../domain/player/animationRules'
 import {
   canApplyPlayerDamage,
   canApplyPlayerEnemyHit,
@@ -785,23 +786,25 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   private updatePlayerAnimation(isMoving: boolean, grounded: boolean): void {
-    if (this.isAttacking || this.isHurting || this.isHomingAttacking || this.isDead) {
+    const decision = getPlayerAnimationDecision({
+      moving: isMoving,
+      grounded,
+      crouching: this.isCrouching,
+      attacking: this.isAttacking,
+      hurting: this.isHurting,
+      homingAttacking: this.isHomingAttacking,
+      dead: this.isDead,
+    })
+
+    if (decision.type === 'preserve') {
       return
     }
 
-    if (!grounded) {
+    if (decision.visualState === 'normal') {
       this.setPlayerVisualState('normal')
-      this.playPlayerAnimation('player-jump', true)
-      return
     }
 
-    if (this.isCrouching) {
-      this.playPlayerAnimation('player-crouch', true)
-      return
-    }
-
-    this.setPlayerVisualState('normal')
-    this.playPlayerAnimation(isMoving ? 'player-run' : 'player-idle', true)
+    this.playPlayerAnimation(decision.animation, true)
   }
 
   private playPlayerAnimation(key: string, respectAttackLock = false): void {
