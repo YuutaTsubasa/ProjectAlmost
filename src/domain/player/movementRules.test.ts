@@ -5,7 +5,11 @@ import {
   GROUND_ACCELERATION,
   ICE_GROUND_ACCELERATION,
   ICE_IDLE_DRAG_X,
+  LANDING_FOOTSTEP_DELAY_MS,
+  RUNNING_FOOTSTEP_INTERVAL_MS,
+  RUNNING_FOOTSTEP_MIN_SPEED_X,
   getHorizontalMovementDecision,
+  getMovementFootstepDecision,
 } from './movementRules'
 
 describe('getHorizontalMovementDecision', () => {
@@ -118,6 +122,115 @@ describe('getHorizontalMovementDecision', () => {
       dragX: DEFAULT_DRAG_X,
       stopVelocityX: false,
       direction: 'left',
+    })
+  })
+})
+
+describe('getMovementFootstepDecision', () => {
+  test('keeps movement footstep constants explicit', () => {
+    expect(LANDING_FOOTSTEP_DELAY_MS).toBe(180)
+    expect(RUNNING_FOOTSTEP_INTERVAL_MS).toBe(270)
+    expect(RUNNING_FOOTSTEP_MIN_SPEED_X).toBe(80)
+  })
+
+  test('plays landing footstep when newly grounded', () => {
+    expect(getMovementFootstepDecision({
+      now: 1000,
+      grounded: true,
+      wasGrounded: false,
+      moving: false,
+      velocityX: 0,
+      nextFootstepAt: 0,
+    })).toEqual({
+      playSfx: true,
+      nextFootstepAt: 1180,
+      wasGrounded: true,
+    })
+  })
+
+  test('plays running footstep when grounded moving fast enough after cooldown', () => {
+    expect(getMovementFootstepDecision({
+      now: 1000,
+      grounded: true,
+      wasGrounded: true,
+      moving: true,
+      velocityX: 81,
+      nextFootstepAt: 1000,
+    })).toEqual({
+      playSfx: true,
+      nextFootstepAt: 1270,
+      wasGrounded: true,
+    })
+  })
+
+  test('uses absolute horizontal velocity for running footstep threshold', () => {
+    expect(getMovementFootstepDecision({
+      now: 1000,
+      grounded: true,
+      wasGrounded: true,
+      moving: true,
+      velocityX: -81,
+      nextFootstepAt: 999,
+    }).playSfx).toBe(true)
+  })
+
+  test('does not play running footstep on exact speed boundary', () => {
+    expect(getMovementFootstepDecision({
+      now: 1000,
+      grounded: true,
+      wasGrounded: true,
+      moving: true,
+      velocityX: 80,
+      nextFootstepAt: 1000,
+    })).toEqual({
+      playSfx: false,
+      nextFootstepAt: 1000,
+      wasGrounded: true,
+    })
+  })
+
+  test('does not play running footstep before cooldown', () => {
+    expect(getMovementFootstepDecision({
+      now: 999,
+      grounded: true,
+      wasGrounded: true,
+      moving: true,
+      velocityX: 100,
+      nextFootstepAt: 1000,
+    })).toEqual({
+      playSfx: false,
+      nextFootstepAt: 1000,
+      wasGrounded: true,
+    })
+  })
+
+  test('does not play movement footstep while airborne but updates wasGrounded', () => {
+    expect(getMovementFootstepDecision({
+      now: 1000,
+      grounded: false,
+      wasGrounded: true,
+      moving: true,
+      velocityX: 200,
+      nextFootstepAt: 300,
+    })).toEqual({
+      playSfx: false,
+      nextFootstepAt: 300,
+      wasGrounded: false,
+    })
+  })
+
+  test('landing delay prevents immediate running footstep in the same frame', () => {
+    expect(getMovementFootstepDecision({
+      now: 1000,
+      grounded: true,
+      wasGrounded: false,
+      moving: true,
+      velocityX: 120,
+      nextFootstepAt: 0,
+    })).toEqual({
+      playSfx: true,
+      nextFootstepAt: 1180,
+      wasGrounded: true,
     })
   })
 })

@@ -32,7 +32,10 @@ import {
 } from '../../domain/player/jumpRules'
 import { canCrouch } from '../../domain/player/crouchRules'
 import { canPlayerPickUpCoin } from '../../domain/player/coinPickupRules'
-import { getHorizontalMovementDecision } from '../../domain/player/movementRules'
+import {
+  getHorizontalMovementDecision,
+  getMovementFootstepDecision,
+} from '../../domain/player/movementRules'
 import {
   HOMING_ATTACK_CONTACT_DISTANCE,
   HOMING_ATTACK_RANGE,
@@ -2359,17 +2362,20 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   private updateMovementSfx(grounded: boolean, moving: boolean): void {
-    if (grounded && !this.wasGrounded) {
+    const decision = getMovementFootstepDecision({
+      now: this.time.now,
+      grounded,
+      wasGrounded: this.wasGrounded,
+      moving,
+      velocityX: this.player.body.velocity.x,
+      nextFootstepAt: this.nextFootstepAt,
+    })
+    if (decision.playSfx) {
       this.dispatchSfx('armor-step')
-      this.nextFootstepAt = this.time.now + 180
     }
 
-    if (grounded && moving && Math.abs(this.player.body.velocity.x) > 80 && this.time.now >= this.nextFootstepAt) {
-      this.dispatchSfx('armor-step')
-      this.nextFootstepAt = this.time.now + 270
-    }
-
-    this.wasGrounded = grounded
+    this.nextFootstepAt = decision.nextFootstepAt
+    this.wasGrounded = decision.wasGrounded
   }
 
   private getTimerValue(): string {

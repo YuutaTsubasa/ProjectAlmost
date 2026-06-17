@@ -3,6 +3,9 @@ export const AIR_ACCELERATION = 720
 export const ICE_GROUND_ACCELERATION = 520
 export const ICE_IDLE_DRAG_X = 36
 export const DEFAULT_DRAG_X = 1500
+export const LANDING_FOOTSTEP_DELAY_MS = 180
+export const RUNNING_FOOTSTEP_INTERVAL_MS = 270
+export const RUNNING_FOOTSTEP_MIN_SPEED_X = 80
 
 export type HorizontalDirection = 'left' | 'right' | 'none'
 
@@ -11,6 +14,12 @@ export type HorizontalMovementDecision = {
   dragX: number
   stopVelocityX: boolean
   direction: HorizontalDirection
+}
+
+export type MovementFootstepDecision = {
+  playSfx: boolean
+  nextFootstepAt: number
+  wasGrounded: boolean
 }
 
 export function getHorizontalMovementDecision(input: {
@@ -52,5 +61,38 @@ export function getHorizontalMovementDecision(input: {
     dragX,
     stopVelocityX: false,
     direction: 'none',
+  }
+}
+
+export function getMovementFootstepDecision(input: {
+  now: number
+  grounded: boolean
+  wasGrounded: boolean
+  moving: boolean
+  velocityX: number
+  nextFootstepAt: number
+}): MovementFootstepDecision {
+  let playSfx = false
+  let nextFootstepAt = input.nextFootstepAt
+
+  if (input.grounded && !input.wasGrounded) {
+    playSfx = true
+    nextFootstepAt = input.now + LANDING_FOOTSTEP_DELAY_MS
+  }
+
+  if (
+    input.grounded
+    && input.moving
+    && Math.abs(input.velocityX) > RUNNING_FOOTSTEP_MIN_SPEED_X
+    && input.now >= nextFootstepAt
+  ) {
+    playSfx = true
+    nextFootstepAt = input.now + RUNNING_FOOTSTEP_INTERVAL_MS
+  }
+
+  return {
+    playSfx,
+    nextFootstepAt,
+    wasGrounded: input.grounded,
   }
 }
