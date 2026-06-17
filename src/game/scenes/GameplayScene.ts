@@ -31,6 +31,7 @@ import {
   getJumpDecision,
 } from '../../domain/player/jumpRules'
 import { canCrouch } from '../../domain/player/crouchRules'
+import { canPlayerPickUpCoin } from '../../domain/player/coinPickupRules'
 import {
   HOMING_ATTACK_CONTACT_DISTANCE,
   HOMING_ATTACK_RANGE,
@@ -2213,9 +2214,12 @@ export class GameplayScene extends Phaser.Scene {
         continue
       }
 
-      const distance = Phaser.Math.Distance.Between(playerCenter.x, playerCenter.y, coin.sprite.x, coin.sprite.y)
-
-      if (distance < 52) {
+      if (canPlayerPickUpCoin({
+        playerX: playerCenter.x,
+        playerY: playerCenter.y,
+        coinX: coin.sprite.x,
+        coinY: coin.sprite.y,
+      })) {
         this.collectCoin(coin)
       }
     }
