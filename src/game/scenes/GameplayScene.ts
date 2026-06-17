@@ -13,6 +13,7 @@ import {
 } from '../../domain/boss/projectileRules'
 import {
   BOSS_PHASE_COUNT,
+  getBossPatternDelayMs,
   getBossHitOutcome,
 } from '../../domain/boss/bossRules'
 import {
@@ -1286,7 +1287,7 @@ export class GameplayScene extends Phaser.Scene {
     this.fireBossVolley(this.bossPhase, this.bossShotIndex++)
 
     this.bossPatternEvent = this.time.addEvent({
-      delay: Math.max(540, 980 - this.bossPhase * 90),
+      delay: getBossPatternDelayMs({ phase: this.bossPhase }),
       loop: true,
       callback: () => {
         if (generation !== this.bossPatternGeneration || this.stageCleared || this.isDead) return
