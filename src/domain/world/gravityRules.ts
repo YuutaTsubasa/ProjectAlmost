@@ -27,6 +27,14 @@ export function shouldFlipPlayerYForGravity(input: {
   return input.direction === 'up'
 }
 
+export function shouldUpdateGravityZones(input: {
+  hasGravityZones: boolean
+  dead: boolean
+  stageCleared: boolean
+}): boolean {
+  return input.hasGravityZones && !input.dead && !input.stageCleared
+}
+
 export function findActiveGravityZone<TZone extends GravityZoneLike>(input: {
   pointX: number
   pointY: number

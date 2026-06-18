@@ -18,6 +18,7 @@ import {
   getPlayerBodyGravityY,
   getVerticalGravitySign,
   shouldFlipPlayerYForGravity,
+  shouldUpdateGravityZones,
 } from '../../domain/world/gravityRules'
 import {
   getMovingPlatformPosition,
@@ -722,12 +723,16 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   private updateGravityZones(): void {
-    if (!this.stage.gravityZones || this.isDead || this.stageCleared) return
+    if (!shouldUpdateGravityZones({
+      hasGravityZones: this.stage.gravityZones !== undefined,
+      dead: this.isDead,
+      stageCleared: this.stageCleared,
+    })) return
 
     const zone = findActiveGravityZone({
       pointX: this.player.x,
       pointY: this.player.y,
-      zones: this.stage.gravityZones,
+      zones: this.stage.gravityZones ?? [],
     })
 
     if (zone && zone.direction !== this.playerGravityDirection) {

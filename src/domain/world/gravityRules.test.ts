@@ -5,6 +5,7 @@ import {
   getPlayerBodyGravityY,
   getVerticalGravitySign,
   shouldFlipPlayerYForGravity,
+  shouldUpdateGravityZones,
 } from './gravityRules'
 
 describe('getVerticalGravitySign', () => {
@@ -71,5 +72,39 @@ describe('findActiveGravityZone', () => {
       pointY: 20,
       zones,
     })).toBeUndefined()
+  })
+})
+
+describe('shouldUpdateGravityZones', () => {
+  it('does not update when the stage has no gravity zones', () => {
+    expect(shouldUpdateGravityZones({
+      hasGravityZones: false,
+      dead: false,
+      stageCleared: false,
+    })).toBe(false)
+  })
+
+  it('does not update while the player is dead', () => {
+    expect(shouldUpdateGravityZones({
+      hasGravityZones: true,
+      dead: true,
+      stageCleared: false,
+    })).toBe(false)
+  })
+
+  it('does not update after stage clear', () => {
+    expect(shouldUpdateGravityZones({
+      hasGravityZones: true,
+      dead: false,
+      stageCleared: true,
+    })).toBe(false)
+  })
+
+  it('updates when gravity zones exist and gameplay is active', () => {
+    expect(shouldUpdateGravityZones({
+      hasGravityZones: true,
+      dead: false,
+      stageCleared: false,
+    })).toBe(true)
   })
 })
