@@ -60,6 +60,7 @@ import {
   canStartMeleeAttack,
   getMeleeAttackEndState,
   getMeleeAttackEntryState,
+  getMeleeAttackReadyState,
   getMeleeHitboxGeometry,
 } from '../../domain/player/attackRules'
 import { canCrouch } from '../../domain/player/crouchRules'
@@ -1629,7 +1630,8 @@ export class GameplayScene extends Phaser.Scene {
     })
 
     this.time.delayedCall(360, () => {
-      this.attackReady = true
+      const attackReadyState = getMeleeAttackReadyState()
+      this.attackReady = attackReadyState.attackReady
     })
   }
 

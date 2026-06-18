@@ -17,6 +17,10 @@ export type MeleeAttackEndState = {
   attacking: boolean
 }
 
+export type MeleeAttackReadyState = {
+  attackReady: boolean
+}
+
 export function canStartMeleeAttack(input: {
   attackReady: boolean
   hurting: boolean
@@ -35,6 +39,12 @@ export function getMeleeAttackEntryState(): MeleeAttackEntryState {
 export function getMeleeAttackEndState(): MeleeAttackEndState {
   return {
     attacking: false,
+  }
+}
+
+export function getMeleeAttackReadyState(): MeleeAttackReadyState {
+  return {
+    attackReady: true,
   }
 }
 

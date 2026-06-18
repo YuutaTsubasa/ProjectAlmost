@@ -5,6 +5,7 @@ import {
   canStartMeleeAttack,
   getMeleeAttackEndState,
   getMeleeAttackEntryState,
+  getMeleeAttackReadyState,
   getMeleeHitboxGeometry,
 } from './attackRules'
 
@@ -69,6 +70,22 @@ describe('getMeleeAttackEndState', () => {
   test('returns a fresh state object', () => {
     const first = getMeleeAttackEndState()
     const second = getMeleeAttackEndState()
+
+    expect(first).toEqual(second)
+    expect(first).not.toBe(second)
+  })
+})
+
+describe('getMeleeAttackReadyState', () => {
+  test('returns melee attack ready recovery state', () => {
+    expect(getMeleeAttackReadyState()).toEqual({
+      attackReady: true,
+    })
+  })
+
+  test('returns a fresh state object', () => {
+    const first = getMeleeAttackReadyState()
+    const second = getMeleeAttackReadyState()
 
     expect(first).toEqual(second)
     expect(first).not.toBe(second)
