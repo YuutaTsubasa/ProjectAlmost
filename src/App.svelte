@@ -1,32 +1,20 @@
 <script lang="ts">
-  import {
-    activateTitleMenuItem,
-    createInitialAppState,
-    moveTitleMenuSelection,
-    openTitleMenu,
-    selectTitleMenuItem,
-  } from './domain/app/appFlow'
+  import { applyTitleControlIntent, selectTitleMenuItemFromPointer } from './application/input/titleControls'
+  import { createInitialAppState } from './domain/app/appFlow'
   import { createProjectIdentity } from './domain/app/projectIdentity'
+  import type { ControlIntent } from './domain/input/controlIntents'
   import ResolutionFrame from './ui/layout/ResolutionFrame.svelte'
   import TitleScreen from './ui/title/TitleScreen.svelte'
 
   let appState = $state(createInitialAppState())
   const identity = createProjectIdentity()
 
-  function handleOpenMenu() {
-    appState = openTitleMenu(appState)
+  function handleControlIntent(intent: ControlIntent) {
+    appState = applyTitleControlIntent(appState, intent)
   }
 
-  function handleMoveTitleMenu(direction: -1 | 1) {
-    appState = moveTitleMenuSelection(appState, direction)
-  }
-
-  function handleActivateTitleMenuItem() {
-    appState = activateTitleMenuItem(appState)
-  }
-
-  function handleSelectTitleMenuItem(index: number) {
-    appState = selectTitleMenuItem(appState, index)
+  function handlePointerMenuSelection(selectedItemIndex: number) {
+    appState = selectTitleMenuItemFromPointer(appState, selectedItemIndex)
   }
 </script>
 
@@ -36,10 +24,8 @@
       <TitleScreen
         screen={appState.screen}
         productName={identity.productName}
-        onOpenMenu={handleOpenMenu}
-        onMoveSelection={handleMoveTitleMenu}
-        onActivateSelection={handleActivateTitleMenuItem}
-        onSelectItem={handleSelectTitleMenuItem}
+        onControlIntent={handleControlIntent}
+        onPointerMenuSelection={handlePointerMenuSelection}
       />
     {/if}
   </ResolutionFrame>

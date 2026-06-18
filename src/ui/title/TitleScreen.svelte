@@ -1,17 +1,19 @@
 <script lang="ts">
   import { TITLE_MENU_ITEMS, type AppScreen } from '../../domain/app/appFlow'
+  import {
+    mapKeyboardControlIntent,
+    type ControlContext,
+    type ControlIntent,
+  } from '../../domain/input/controlIntents'
 
   type Props = {
     screen: AppScreen
     productName: string
-    onOpenMenu: () => void
-    onMoveSelection: (direction: -1 | 1) => void
-    onActivateSelection: () => void
-    onSelectItem: (index: number) => void
+    onControlIntent: (intent: ControlIntent) => void
+    onPointerMenuSelection: (selectedItemIndex: number) => void
   }
 
-  let { screen, productName, onOpenMenu, onMoveSelection, onActivateSelection, onSelectItem }: Props =
-    $props()
+  let { screen, productName, onControlIntent, onPointerMenuSelection }: Props = $props()
 
   const menuLabels: Record<(typeof TITLE_MENU_ITEMS)[number], string> = {
     start: 'Start Game',
@@ -19,42 +21,33 @@
     back: 'Back',
   }
 
-  function handleKeydown(event: KeyboardEvent) {
-    if (screen.type === 'title-intro') {
-      onOpenMenu()
-      return
-    }
-
-    if (event.key === 'ArrowDown' || event.key.toLowerCase() === 's') {
-      event.preventDefault()
-      onMoveSelection(1)
-      return
-    }
-
-    if (event.key === 'ArrowUp' || event.key.toLowerCase() === 'w') {
-      event.preventDefault()
-      onMoveSelection(-1)
-      return
-    }
-
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault()
-      onActivateSelection()
-      return
-    }
-
-    if (event.key === 'Escape') {
-      event.preventDefault()
-      onSelectItem(2)
-      onActivateSelection()
-    }
+  function getControlContext(): ControlContext {
+    return screen.type === 'title-intro' ? 'title-intro' : 'title-menu'
   }
 
-  function handleMenuClick(index: number) {
-    onSelectItem(index)
-    if (TITLE_MENU_ITEMS[index] === 'back') {
-      onActivateSelection()
-    }
+  function handleKeydown(event: KeyboardEvent) {
+    const intent = mapKeyboardControlIntent(
+      {
+        key: event.key,
+        repeat: event.repeat,
+      },
+      getControlContext(),
+    )
+
+    if (!intent) return
+
+    event.preventDefault()
+    onControlIntent(intent)
+  }
+
+  function handleIntroPointer(event: PointerEvent) {
+    event.preventDefault()
+    onControlIntent('open')
+  }
+
+  function handleMenuPointer(event: PointerEvent, index: number) {
+    event.stopPropagation()
+    onPointerMenuSelection(index)
   }
 </script>
 
@@ -73,7 +66,12 @@
   </header>
 
   {#if screen.type === 'title-intro'}
-    <button class="title-enter-catcher" type="button" aria-label="Open title menu" onclick={onOpenMenu}></button>
+    <button
+      class="title-enter-catcher"
+      type="button"
+      aria-label="Open title menu"
+      onpointerdown={handleIntroPointer}
+    ></button>
     <div class="title-prompt" aria-hidden="true">
       <span></span>
       <b>Press Any Button</b>
@@ -85,10 +83,7 @@
         <button
           class:active={screen.selectedItemIndex === index}
           type="button"
-          onclick={(event) => {
-            event.stopPropagation()
-            handleMenuClick(index)
-          }}
+          onpointerdown={(event) => handleMenuPointer(event, index)}
         >
           <span>{String(index + 1).padStart(2, '0')}</span>
           <b>{menuLabels[item]}</b>
