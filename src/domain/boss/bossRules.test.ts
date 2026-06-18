@@ -7,6 +7,7 @@ import {
   canFireBossVolley,
   canHitBossPrototype,
   canStartBossPattern,
+  canRunBossPatternTick,
   getBossHudPhaseDisplay,
   getBossPhasePlayerResetState,
   getBossPatternDelayMs,
@@ -413,5 +414,43 @@ describe('canStartBossPattern', () => {
       stageCleared: false,
       phaseCount: 3,
     })).toBe(false)
+  })
+})
+
+describe('canRunBossPatternTick', () => {
+  test('rejects stale timer generations', () => {
+    expect(canRunBossPatternTick({
+      generation: 2,
+      currentGeneration: 3,
+      stageCleared: false,
+      playerDead: false,
+    })).toBe(false)
+  })
+
+  test('rejects after the stage is cleared', () => {
+    expect(canRunBossPatternTick({
+      generation: 3,
+      currentGeneration: 3,
+      stageCleared: true,
+      playerDead: false,
+    })).toBe(false)
+  })
+
+  test('rejects after the player is dead', () => {
+    expect(canRunBossPatternTick({
+      generation: 3,
+      currentGeneration: 3,
+      stageCleared: false,
+      playerDead: true,
+    })).toBe(false)
+  })
+
+  test('allows active matching timer generations', () => {
+    expect(canRunBossPatternTick({
+      generation: 3,
+      currentGeneration: 3,
+      stageCleared: false,
+      playerDead: false,
+    })).toBe(true)
   })
 })

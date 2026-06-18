@@ -167,3 +167,14 @@ export function canStartBossPattern(input: {
   const phaseCount = input.phaseCount ?? BOSS_PHASE_COUNT
   return input.bossPhase < phaseCount
 }
+
+export function canRunBossPatternTick(input: {
+  generation: number
+  currentGeneration: number
+  stageCleared: boolean
+  playerDead: boolean
+}): boolean {
+  return input.generation === input.currentGeneration
+    && !input.stageCleared
+    && !input.playerDead
+}

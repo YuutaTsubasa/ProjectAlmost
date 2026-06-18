@@ -36,6 +36,7 @@ import {
   BOSS_PHASE_COUNT,
   canFireBossVolley,
   canHitBossPrototype,
+  canRunBossPatternTick,
   canStartBossPattern,
   getBossPhasePlayerResetState,
   getBossHudPhaseDisplay,
@@ -1416,7 +1417,12 @@ export class GameplayScene extends Phaser.Scene {
       delay: getBossPatternDelayMs({ phase: this.bossPhase }),
       loop: true,
       callback: () => {
-        if (generation !== this.bossPatternGeneration || this.stageCleared || this.isDead) return
+        if (!canRunBossPatternTick({
+          generation,
+          currentGeneration: this.bossPatternGeneration,
+          stageCleared: this.stageCleared,
+          playerDead: this.isDead,
+        })) return
         this.fireBossVolley(this.bossPhase, this.bossShotIndex++)
       },
     })
