@@ -119,6 +119,7 @@ import {
   getHomingTrailSamples,
   isHomingTargetLost,
   selectNearestHomingTarget,
+  shouldUpdateHomingAttack,
 } from '../../domain/player/homingRules'
 
 type ArcadeSprite = Phaser.Types.Physics.Arcade.SpriteWithDynamicBody
@@ -2247,14 +2248,22 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   private updateHomingAttack(): void {
-    if (!this.isHomingAttacking || !this.homingTarget) {
+    const target = this.homingTarget
+    if (!shouldUpdateHomingAttack({
+      homingAttacking: this.isHomingAttacking,
+      hasTarget: target !== undefined,
+    })) {
+      return
+    }
+
+    if (!target) {
       return
     }
 
     if (isHomingTargetLost({
-      defeated: this.isEnemyDefeated(this.homingTarget),
-      active: this.homingTarget.active,
-      visible: this.homingTarget.visible,
+      defeated: this.isEnemyDefeated(target),
+      active: target.active,
+      visible: target.visible,
     })) {
       this.finishHomingAttack(false)
       return

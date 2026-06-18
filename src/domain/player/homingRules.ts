@@ -48,6 +48,13 @@ export function getHomingAttackEntryState(): HomingAttackEntryState {
   }
 }
 
+export function shouldUpdateHomingAttack(input: {
+  homingAttacking: boolean
+  hasTarget: boolean
+}): boolean {
+  return input.homingAttacking && input.hasTarget
+}
+
 export function canShowHomingReticle(input: {
   grounded: boolean
   stageCleared: boolean

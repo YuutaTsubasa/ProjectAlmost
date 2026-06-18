@@ -18,6 +18,7 @@ import {
   isHomingTargetLost,
   isHomingTargetEligible,
   selectNearestHomingTarget,
+  shouldUpdateHomingAttack,
 } from './homingRules'
 
 describe('canStartHomingAttack', () => {
@@ -82,6 +83,29 @@ describe('getHomingAttackEntryState', () => {
 
     expect(first).toEqual(second)
     expect(first).not.toBe(second)
+  })
+})
+
+describe('shouldUpdateHomingAttack', () => {
+  test('updates only while Homing Attack is active and a target exists', () => {
+    expect(shouldUpdateHomingAttack({
+      homingAttacking: true,
+      hasTarget: true,
+    })).toBe(true)
+  })
+
+  test('does not update when Homing Attack is not active', () => {
+    expect(shouldUpdateHomingAttack({
+      homingAttacking: false,
+      hasTarget: true,
+    })).toBe(false)
+  })
+
+  test('does not update without a Homing target', () => {
+    expect(shouldUpdateHomingAttack({
+      homingAttacking: true,
+      hasTarget: false,
+    })).toBe(false)
   })
 })
 
