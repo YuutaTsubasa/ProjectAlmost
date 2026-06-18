@@ -8,6 +8,7 @@ import {
   getBossHudPhaseDisplay,
   getBossPatternDelayMs,
   getBossHitOutcome,
+  getBossVolleyShots,
   isBossStageDefinition,
   shouldRestartBossPatternAfterRespawn,
   shouldResetBossRunAfterHomingHit,
@@ -52,6 +53,82 @@ describe('getBossPatternDelayMs', () => {
     expect(getBossPatternDelayMs({ phase: 4 })).toBe(620)
     expect(getBossPatternDelayMs({ phase: 5 })).toBe(540)
     expect(getBossPatternDelayMs({ phase: 100 })).toBe(540)
+  })
+})
+
+describe('getBossVolleyShots', () => {
+  test('returns one aimed shot for phase 0', () => {
+    expect(getBossVolleyShots({
+      phase: 0,
+      shotIndex: 7,
+      aimedAngle: 1.25,
+    })).toEqual([
+      { angle: 1.25, speed: 330 },
+    ])
+  })
+
+  test('returns three sweeping leftward shots for phase 1', () => {
+    const shotIndex = 3
+    const sweep = Math.sin(shotIndex * 0.72) * 0.36
+    const shots = getBossVolleyShots({
+      phase: 1,
+      shotIndex,
+      aimedAngle: 0.5,
+    })
+
+    expect(shots).toHaveLength(3)
+    expect(shots.map((shot) => shot.speed)).toEqual([350, 350, 350])
+    expect(shots[0]?.angle).toBeCloseTo(Math.PI + sweep - 0.2)
+    expect(shots[1]?.angle).toBeCloseTo(Math.PI + sweep)
+    expect(shots[2]?.angle).toBeCloseTo(Math.PI + sweep + 0.2)
+  })
+
+  test('returns biased shots plus an aimed shot for even phase 2 indexes', () => {
+    const shots = getBossVolleyShots({
+      phase: 2,
+      shotIndex: 4,
+      aimedAngle: 0.75,
+    })
+
+    expect(shots).toHaveLength(3)
+    expect(shots[0]).toEqual({ angle: Math.PI - 0.5 - 0.16, speed: 390 })
+    expect(shots[1]).toEqual({ angle: Math.PI - 0.5 + 0.16, speed: 390 })
+    expect(shots[2]).toEqual({ angle: 0.75, speed: 360 })
+  })
+
+  test('returns only biased shots for odd phase 2 indexes', () => {
+    const shots = getBossVolleyShots({
+      phase: 2,
+      shotIndex: 5,
+      aimedAngle: 0.75,
+    })
+
+    expect(shots).toHaveLength(2)
+    expect(shots[0]).toEqual({ angle: Math.PI + 0.5 - 0.16, speed: 390 })
+    expect(shots[1]).toEqual({ angle: Math.PI + 0.5 + 0.16, speed: 390 })
+  })
+
+  test('returns five radial shots for phase 3', () => {
+    const shotIndex = 6
+    const shots = getBossVolleyShots({
+      phase: 3,
+      shotIndex,
+      aimedAngle: 0.75,
+    })
+
+    expect(shots).toHaveLength(5)
+    expect(shots.map((shot) => shot.speed)).toEqual([390, 390, 390, 390, 390])
+    for (let index = 0; index < 5; index += 1) {
+      expect(shots[index]?.angle).toBeCloseTo(Math.PI / 2 + (Math.PI * index) / 4 + shotIndex * 0.1)
+    }
+  })
+
+  test('returns no shots for unknown phases', () => {
+    expect(getBossVolleyShots({
+      phase: 99,
+      shotIndex: 0,
+      aimedAngle: 0.75,
+    })).toEqual([])
   })
 })
 

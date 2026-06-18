@@ -35,6 +35,7 @@ import {
   getBossHudPhaseDisplay,
   getBossPatternDelayMs,
   getBossHitOutcome,
+  getBossVolleyShots,
   isBossStageDefinition,
   shouldRestartBossPatternAfterRespawn,
   shouldResetBossRunAfterHomingHit,
@@ -1399,39 +1400,9 @@ export class GameplayScene extends Phaser.Scene {
     const originX = boss.x
     const originY = boss.y
     const aimedAngle = Phaser.Math.Angle.Between(originX, originY, this.player.x, this.player.y)
-
-    if (phase === 0) {
-      this.spawnBossProjectile(originX, originY, aimedAngle, 330)
-      return
+    for (const shot of getBossVolleyShots({ phase, shotIndex, aimedAngle })) {
+      this.spawnBossProjectile(originX, originY, shot.angle, shot.speed)
     }
-
-    if (phase === 1) {
-      const sweep = Math.sin(shotIndex * 0.72) * 0.36
-      for (const offset of [-0.2, 0, 0.2]) {
-        this.spawnBossProjectile(originX, originY, Math.PI + sweep + offset, 350)
-      }
-      return
-    }
-
-    if (phase === 2) {
-      const verticalBias = shotIndex % 2 === 0 ? -0.5 : 0.5
-      for (const offset of [-0.16, 0.16]) {
-        this.spawnBossProjectile(originX, originY, Math.PI + verticalBias + offset, 390)
-      }
-      if (shotIndex % 2 === 0) {
-        this.spawnBossProjectile(originX, originY, aimedAngle, 360)
-      }
-      return
-    }
-
-    if (phase === 3) {
-      for (let index = 0; index < 5; index += 1) {
-        const angle = Math.PI / 2 + (Math.PI * index) / 4 + shotIndex * 0.1
-        this.spawnBossProjectile(originX, originY, angle, 390)
-      }
-      return
-    }
-
   }
 
   private spawnBossProjectile(x: number, y: number, angle: number, speed: number): void {

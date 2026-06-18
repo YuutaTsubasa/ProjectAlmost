@@ -10,6 +10,11 @@ export type BossHitOutcome =
   | { type: 'advance-phase'; nextPhase: number }
   | { type: 'defeated'; nextPhase: number }
 
+export type BossVolleyShot = {
+  angle: number
+  speed: number
+}
+
 export function isBossStageDefinition(input: {
   stageId: string
   enemies: readonly { id?: string }[]
@@ -34,6 +39,45 @@ export function getBossPatternDelayMs(input: { phase: number }): number {
     BOSS_PATTERN_MIN_DELAY_MS,
     BOSS_PATTERN_BASE_DELAY_MS - input.phase * BOSS_PATTERN_PHASE_DELAY_STEP_MS,
   )
+}
+
+export function getBossVolleyShots(input: {
+  phase: number
+  shotIndex: number
+  aimedAngle: number
+}): BossVolleyShot[] {
+  if (input.phase === 0) {
+    return [{ angle: input.aimedAngle, speed: 330 }]
+  }
+
+  if (input.phase === 1) {
+    const sweep = Math.sin(input.shotIndex * 0.72) * 0.36
+    return [-0.2, 0, 0.2].map((offset) => ({
+      angle: Math.PI + sweep + offset,
+      speed: 350,
+    }))
+  }
+
+  if (input.phase === 2) {
+    const verticalBias = input.shotIndex % 2 === 0 ? -0.5 : 0.5
+    const shots: BossVolleyShot[] = [-0.16, 0.16].map((offset) => ({
+      angle: Math.PI + verticalBias + offset,
+      speed: 390,
+    }))
+    if (input.shotIndex % 2 === 0) {
+      shots.push({ angle: input.aimedAngle, speed: 360 })
+    }
+    return shots
+  }
+
+  if (input.phase === 3) {
+    return Array.from({ length: 5 }, (_, index) => ({
+      angle: Math.PI / 2 + (Math.PI * index) / 4 + input.shotIndex * 0.1,
+      speed: 390,
+    }))
+  }
+
+  return []
 }
 
 export function getBossHudPhaseDisplay(input: {
