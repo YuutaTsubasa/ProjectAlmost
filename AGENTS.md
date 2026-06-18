@@ -6,16 +6,27 @@ Read this file before changing code in the rebuilt project. The previous playabl
 
 Every implementation task must follow the superpowers workflow:
 
-1. Read the relevant skill files before acting, especially `using-superpowers`.
-2. For new behavior or refactors, write or update a spec in `docs/superpowers/specs/`.
-3. Use TDD for domain or application behavior:
+1. Check `git status --short`.
+2. Read the relevant skill files before acting, especially `using-superpowers`.
+3. Confirm the newest user request is the active task. Do not re-run an old completed goal just because it appears in conversation history or a continuation summary.
+4. For new behavior or refactors, write or update a spec in `docs/superpowers/specs/`.
+5. Use TDD for domain or application behavior:
    - write the failing test first
    - run it and confirm the expected failure
    - implement the smallest code that passes
    - run focused and full verification
-4. Keep changes small enough to review and commit independently.
+6. Keep changes small enough to review and commit independently.
 
 Do not skip TDD because the change feels small. If the change is not testable, first improve the boundary until it is.
+
+## Session And Goal Boundaries
+
+- The repository root is the new rebuild project. Root-level `src/`, `src-tauri/`, `docs/`, `public/`, and `package.json` must stay in the root unless the user explicitly asks for a repository restructure.
+- `__prototype__/` is the old playable prototype and reference archive. Treat it as read-only by default.
+- Do not create, maintain, or use `__prototype__/rebuild/` as the new project location.
+- Prefer one major goal per session. For new features, architecture slices, asset pipeline changes, stage systems, or file moves, start from a clean Git state and finish with a scoped commit.
+- If a requested action would move or rename root-level project directories (`src/`, `src-tauri/`, `docs/`, `public/`, `package.json`, or `__prototype__/`), first state the planned source and destination paths in the conversation and verify the action matches the latest user request.
+- A previous instruction that has already been completed is history, not a standing order. Verify current state before acting on any task carried over by a summary or automation.
 
 ## Architecture Direction
 
