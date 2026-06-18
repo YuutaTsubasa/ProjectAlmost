@@ -22,6 +22,7 @@ import {
   getMovingPlatformPosition,
   isMovingPlatformRider,
 } from '../../domain/world/movingPlatformRules'
+import { findActiveSurfaceZone } from '../../domain/world/surfaceRules'
 import { getPlatformTileIndex } from '../../domain/world/terrainRules'
 import {
   getBossProjectileHitDecision,
@@ -706,13 +707,12 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   private findSurfaceZone(type: SurfaceZone['type']): SurfaceZone | undefined {
-    return this.stage.surfaceZones?.find((zone) =>
-      zone.type === type
-      && this.player.x >= zone.x
-      && this.player.x <= zone.x + zone.width
-      && this.player.y >= zone.y
-      && this.player.y <= zone.y + zone.height,
-    )
+    return findActiveSurfaceZone({
+      pointX: this.player.x,
+      pointY: this.player.y,
+      surfaceType: type,
+      zones: this.stage.surfaceZones ?? [],
+    })
   }
 
   private createTextures(): void {
