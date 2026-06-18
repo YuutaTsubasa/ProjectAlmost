@@ -64,6 +64,7 @@ import {
 } from '../../domain/player/jumpRules'
 import {
   canStartMeleeAttack,
+  getAttackInputDecision,
   getMeleeAttackEndState,
   getMeleeAttackEntryState,
   getMeleeAttackReadyState,
@@ -689,9 +690,14 @@ export class GameplayScene extends Phaser.Scene {
     this.updateMovementSfx(grounded, left || right)
     this.updatePlayerAnimation(!this.isCrouching && (left || right), grounded)
 
-    if (attackPressed && !this.isCrouching) {
+    const attackInputDecision = getAttackInputDecision({
+      attackPressed,
+      crouching: this.isCrouching,
+      grounded,
+    })
+    if (attackInputDecision !== 'none') {
       this.timerStarted = true
-      if (!grounded && this.tryHomingAttack()) {
+      if (attackInputDecision === 'homing-then-melee' && this.tryHomingAttack()) {
         return
       }
 

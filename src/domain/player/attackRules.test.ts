@@ -3,6 +3,7 @@ import {
   MELEE_HITBOX_FORWARD_OFFSET_X,
   MELEE_HITBOX_OFFSET_Y,
   canStartMeleeAttack,
+  getAttackInputDecision,
   getMeleeAttackEndState,
   getMeleeAttackEntryState,
   getMeleeAttackReadyState,
@@ -40,6 +41,40 @@ describe('canStartMeleeAttack', () => {
       hurting: false,
       homingAttacking: true,
     })).toBe(false)
+  })
+})
+
+describe('getAttackInputDecision', () => {
+  test('ignores frames without an attack press', () => {
+    expect(getAttackInputDecision({
+      attackPressed: false,
+      crouching: false,
+      grounded: true,
+    })).toBe('none')
+  })
+
+  test('ignores attack presses while crouching', () => {
+    expect(getAttackInputDecision({
+      attackPressed: true,
+      crouching: true,
+      grounded: true,
+    })).toBe('none')
+  })
+
+  test('uses melee directly for grounded attack presses', () => {
+    expect(getAttackInputDecision({
+      attackPressed: true,
+      crouching: false,
+      grounded: true,
+    })).toBe('melee')
+  })
+
+  test('tries homing before melee for airborne attack presses', () => {
+    expect(getAttackInputDecision({
+      attackPressed: true,
+      crouching: false,
+      grounded: false,
+    })).toBe('homing-then-melee')
   })
 })
 
