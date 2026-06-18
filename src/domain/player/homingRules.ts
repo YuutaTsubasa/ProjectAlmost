@@ -1,6 +1,7 @@
 export const HOMING_ATTACK_RANGE = 360
 export const HOMING_TARGET_REVERSE_TOLERANCE_X = 48
 export const HOMING_ATTACK_CONTACT_DISTANCE = 34
+export const HOMING_ATTACK_BOUNCE_Y = -420
 export const HOMING_LINE_COIN_COLLECTION_RADIUS = 52
 export const HOMING_TRAIL_SPACING = 28
 
@@ -89,6 +90,30 @@ export function getHomingContactPoint(input: {
   return {
     x: input.targetX - Math.cos(angle) * contactDistance,
     y: input.targetY - Math.sin(angle) * contactDistance,
+  }
+}
+
+export type HomingFinishStatusKey = 'status.homingHit' | 'status.homingMiss'
+
+export function getHomingFinishOutcome(input: {
+  hit: boolean
+  gravitySign: number
+}): {
+  remainingAirJumps?: number
+  velocityY: number
+  statusKey: HomingFinishStatusKey
+} {
+  if (input.hit) {
+    return {
+      remainingAirJumps: 1,
+      velocityY: HOMING_ATTACK_BOUNCE_Y * input.gravitySign,
+      statusKey: 'status.homingHit',
+    }
+  }
+
+  return {
+    velocityY: 0,
+    statusKey: 'status.homingMiss',
   }
 }
 

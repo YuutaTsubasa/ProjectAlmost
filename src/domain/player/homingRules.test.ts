@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest'
 import {
   HOMING_ATTACK_CONTACT_DISTANCE,
+  HOMING_ATTACK_BOUNCE_Y,
   HOMING_ATTACK_RANGE,
   HOMING_LINE_COIN_COLLECTION_RADIUS,
   HOMING_TARGET_REVERSE_TOLERANCE_X,
@@ -8,6 +9,7 @@ import {
   canShowHomingReticle,
   canStartHomingAttack,
   getHomingContactPoint,
+  getHomingFinishOutcome,
   getHomingTrailSamples,
   isPointCollectableByHomingLine,
   isHomingTargetEligible,
@@ -375,6 +377,44 @@ describe('getHomingContactPoint', () => {
       targetY: 0,
       contactDistance: 10,
     })).toEqual({ x: 90, y: 0 })
+  })
+})
+
+describe('getHomingFinishOutcome', () => {
+  test('keeps the Homing hit bounce velocity explicit', () => {
+    expect(HOMING_ATTACK_BOUNCE_Y).toBe(-420)
+  })
+
+  test('returns hit outcome for normal gravity', () => {
+    expect(getHomingFinishOutcome({
+      hit: true,
+      gravitySign: 1,
+    })).toEqual({
+      remainingAirJumps: 1,
+      velocityY: -420,
+      statusKey: 'status.homingHit',
+    })
+  })
+
+  test('uses gravity sign for hit bounce velocity', () => {
+    expect(getHomingFinishOutcome({
+      hit: true,
+      gravitySign: -1,
+    })).toEqual({
+      remainingAirJumps: 1,
+      velocityY: 420,
+      statusKey: 'status.homingHit',
+    })
+  })
+
+  test('returns miss outcome without resetting air jumps', () => {
+    expect(getHomingFinishOutcome({
+      hit: false,
+      gravitySign: 1,
+    })).toEqual({
+      velocityY: 0,
+      statusKey: 'status.homingMiss',
+    })
   })
 })
 

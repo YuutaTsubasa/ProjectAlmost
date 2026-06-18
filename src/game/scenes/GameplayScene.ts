@@ -89,6 +89,7 @@ import {
   canShowHomingReticle,
   canStartHomingAttack,
   getHomingContactPoint,
+  getHomingFinishOutcome,
   getHomingTrailSamples,
   isPointCollectableByHomingLine,
   selectNearestHomingTarget,
@@ -131,7 +132,6 @@ const PLAYER_ATTACK_SCALE = 0.98
 const PLAYER_ATTACK_VISUAL_Y_OFFSET = -10
 const PLAYER_CROUCH_VISUAL_Y_OFFSET = 10
 const HOMING_ATTACK_RECOVERY_MS = 220
-const HOMING_ATTACK_BOUNCE_Y = -420
 const HOMING_RETICLE_Y_OFFSET = -8
 const HOMING_ATTACK_FRAME = 2
 const HOMING_TRAIL_HOLD_MS = 70
@@ -2246,14 +2246,15 @@ export class GameplayScene extends Phaser.Scene {
     this.homingTarget = undefined
     this.setPlayerHomingCollision(true)
 
-    if (hit) {
-      this.remainingAirJumps = 1
-      this.player.setVelocity(0, HOMING_ATTACK_BOUNCE_Y * this.gravitySign)
-      this.setStatusMessage('status.homingHit')
-    } else {
-      this.player.setVelocity(0, 0)
-      this.setStatusMessage('status.homingMiss')
+    const outcome = getHomingFinishOutcome({
+      hit,
+      gravitySign: this.gravitySign,
+    })
+    if (outcome.remainingAirJumps !== undefined) {
+      this.remainingAirJumps = outcome.remainingAirJumps
     }
+    this.player.setVelocity(0, outcome.velocityY)
+    this.setStatusMessage(outcome.statusKey)
 
     this.time.delayedCall(HOMING_ATTACK_RECOVERY_MS, () => {
       this.isAttacking = false
