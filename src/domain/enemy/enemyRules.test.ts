@@ -5,6 +5,7 @@ import {
   INITIAL_PATROL_DIRECTION,
   enemyCountsForScore,
   getEnemyDefeatOutcome,
+  getEnemyDefeatRoute,
   getEnemyRegenerationDecision,
   getNextPatrolDirection,
   getEnemyRespawnDelayMs,
@@ -99,6 +100,16 @@ describe('getEnemyDefeatOutcome', () => {
       respawnPolicy: 'regenerate',
       shouldRegenerate: true,
     })
+  })
+})
+
+describe('getEnemyDefeatRoute', () => {
+  test('routes boss prototype defeats to boss hit handling', () => {
+    expect(getEnemyDefeatRoute({ bossPrototype: true })).toBe('boss-hit')
+  })
+
+  test('routes non-boss defeats to normal enemy defeat handling', () => {
+    expect(getEnemyDefeatRoute({ bossPrototype: false })).toBe('normal-defeat')
   })
 })
 

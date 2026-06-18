@@ -53,6 +53,7 @@ import {
 import {
   INITIAL_PATROL_DIRECTION,
   getEnemyDefeatOutcome,
+  getEnemyDefeatRoute,
   getEnemyRegenerationDecision,
   getNextPatrolDirection,
   getEnemyRespawnDelayMs,
@@ -1798,7 +1799,8 @@ export class GameplayScene extends Phaser.Scene {
       return
     }
 
-    if (enemy === this.bossPrototype) {
+    const defeatRoute = getEnemyDefeatRoute({ bossPrototype: enemy === this.bossPrototype })
+    if (defeatRoute === 'boss-hit') {
       this.hitBossPrototype()
       return
     }

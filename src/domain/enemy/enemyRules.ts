@@ -3,6 +3,7 @@ import type { GameObjectDefinition } from '../placement/objectDefinitions'
 export type EnemyType = 'guard' | 'azure-core'
 export type EnemyRespawnPolicy = 'persistent' | 'regenerate'
 export type EnemyRegenerationDecision = 'skip' | 'delay' | 'regenerate'
+export type EnemyDefeatRoute = 'boss-hit' | 'normal-defeat'
 export type PatrolDirection = -1 | 1
 export type EnemyDefeatOutcome = {
   scoreDelta: number
@@ -118,6 +119,12 @@ export function shouldProcessEnemyDefeat(input: {
   defeated: boolean
 }): boolean {
   return input.enemyExists && !input.defeated
+}
+
+export function getEnemyDefeatRoute(input: {
+  bossPrototype: boolean
+}): EnemyDefeatRoute {
+  return input.bossPrototype ? 'boss-hit' : 'normal-defeat'
 }
 
 export function hasActiveEnemy(input: {
