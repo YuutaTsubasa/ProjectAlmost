@@ -41,7 +41,7 @@ export function mapGamepadControlIntents(
   current: GamepadControlSnapshot | null,
   context: ControlContext,
 ): ControlIntent[] {
-  if (!current) return []
+  if (!current || !previous) return []
 
   const intents: ControlIntent[] = []
 

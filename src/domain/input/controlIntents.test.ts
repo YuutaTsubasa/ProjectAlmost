@@ -91,4 +91,12 @@ describe('mapGamepadControlIntents', () => {
   it('returns no intents when current gamepad data is missing', () => {
     expect(mapGamepadControlIntents(null, null, 'title-menu')).toEqual([])
   })
+
+  it('returns no intents when previous gamepad data is missing even if current is active', () => {
+    const activeButtons = { buttons: [true, false, false, false], axes: [0, 0] }
+    const activeAxis = { buttons: [false, false, false, false], axes: [0, -0.7] }
+
+    expect(mapGamepadControlIntents(null, activeButtons, 'title-menu')).toEqual([])
+    expect(mapGamepadControlIntents(null, activeAxis, 'title-menu')).toEqual([])
+  })
 })
