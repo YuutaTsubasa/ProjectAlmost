@@ -40,6 +40,22 @@ export function canApplyPlayerDamage(input: {
     && !input.dead
 }
 
+export const PLAYER_HIT_DAMAGE = 1
+
+export type PlayerDamageOutcome =
+  | { type: 'survived'; nextHealth: number }
+  | { type: 'defeated'; nextHealth: number }
+
+export function getPlayerDamageOutcome(input: {
+  currentHealth: number
+  damage?: number
+}): PlayerDamageOutcome {
+  const nextHealth = input.currentHealth - (input.damage ?? PLAYER_HIT_DAMAGE)
+  return nextHealth <= 0
+    ? { type: 'defeated', nextHealth }
+    : { type: 'survived', nextHealth }
+}
+
 export type PlayerKnockbackDirection = -1 | 1
 
 export function getPlayerKnockbackDirection(input: {

@@ -81,6 +81,7 @@ import {
   canApplyPlayerDamage,
   canApplyPlayerEnemyHit,
   canApplyPlayerHazardHit,
+  getPlayerDamageOutcome,
   getPlayerDefeatOutcome,
   getPlayerKnockbackDirection,
   type PlayerDefeatReason,
@@ -1663,12 +1664,13 @@ export class GameplayScene extends Phaser.Scene {
       return
     }
 
-    this.playerHealth -= 1
+    const damageOutcome = getPlayerDamageOutcome({ currentHealth: this.playerHealth })
+    this.playerHealth = damageOutcome.nextHealth
     this.dispatchSfx('hit')
     this.damageTaken += 1
     this.updateHealthText()
 
-    if (this.playerHealth <= 0) {
+    if (damageOutcome.type === 'defeated') {
       this.defeatPlayer('damage')
       return
     }

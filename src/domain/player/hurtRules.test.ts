@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import {
+  PLAYER_HIT_DAMAGE,
   canApplyPlayerDamage,
   canApplyPlayerEnemyHit,
   canApplyPlayerHazardHit,
+  getPlayerDamageOutcome,
   getPlayerDefeatOutcome,
   getPlayerKnockbackDirection,
 } from './hurtRules'
@@ -213,6 +215,49 @@ describe('getPlayerKnockbackDirection', () => {
       playerX: 200,
       sourceX: 160,
     })).toBe(1)
+  })
+})
+
+describe('getPlayerDamageOutcome', () => {
+  it('keeps player hit damage explicit', () => {
+    expect(PLAYER_HIT_DAMAGE).toBe(1)
+  })
+
+  it('survives when health remains above zero after damage', () => {
+    expect(getPlayerDamageOutcome({
+      currentHealth: 3,
+    })).toEqual({
+      type: 'survived',
+      nextHealth: 2,
+    })
+  })
+
+  it('defeats when health reaches zero after damage', () => {
+    expect(getPlayerDamageOutcome({
+      currentHealth: 1,
+    })).toEqual({
+      type: 'defeated',
+      nextHealth: 0,
+    })
+  })
+
+  it('does not clamp health before checking defeat', () => {
+    expect(getPlayerDamageOutcome({
+      currentHealth: 0,
+    })).toEqual({
+      type: 'defeated',
+      nextHealth: -1,
+    })
+  })
+
+  it('supports explicit damage for boundary checks', () => {
+    expect(getPlayerDamageOutcome({
+      currentHealth: 3,
+      damage: 3,
+    })).toEqual({
+      type: 'defeated',
+      nextHealth: 0,
+    })
   })
 })
 
