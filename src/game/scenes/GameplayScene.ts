@@ -76,12 +76,14 @@ import {
 } from '../../domain/player/animationRules'
 import { isPlayerGroundedByContact } from '../../domain/player/groundRules'
 import {
+  PLAYER_MAX_HEALTH,
   canApplyPlayerDamage,
   canApplyPlayerEnemyHit,
   canApplyPlayerHazardHit,
   getPlayerDamageOutcome,
   getPlayerDefeatOutcome,
   getPlayerKnockbackDirection,
+  getPlayerRespawnState,
   type PlayerDefeatReason,
 } from '../../domain/player/hurtRules'
 import {
@@ -127,7 +129,6 @@ type GravityDirection = GravityZone['direction']
 type BossProjectile = ArcadeSprite
 
 const SOLID_TILE_INDEXES = [0, 1, 2]
-const PLAYER_MAX_HEALTH = 3
 const CAMERA_ZOOM = 1.25
 const PLAYER_SCALE = 0.78
 const PLAYER_ATTACK_SCALE = 0.98
@@ -1933,17 +1934,18 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   private respawnPlayer(): void {
-    this.isHurting = false
-    this.isInvulnerable = false
-    this.isAttacking = false
-    this.isHomingAttacking = false
-    this.setCrouching(false)
-    this.isDead = false
+    const respawnState = getPlayerRespawnState()
+    this.isHurting = respawnState.hurting
+    this.isInvulnerable = respawnState.invulnerable
+    this.isAttacking = respawnState.attacking
+    this.isHomingAttacking = respawnState.homingAttacking
+    this.setCrouching(respawnState.crouching)
+    this.isDead = respawnState.dead
     this.homingTarget = undefined
-    this.attackReady = true
-    this.playerHealth = PLAYER_MAX_HEALTH
-    this.jumpBufferedUntil = 0
-    this.remainingAirJumps = 1
+    this.attackReady = respawnState.attackReady
+    this.playerHealth = respawnState.health
+    this.jumpBufferedUntil = respawnState.jumpBufferedUntil
+    this.remainingAirJumps = respawnState.remainingAirJumps
     this.lastGroundedAt = this.time.now
     this.updateHealthText()
     this.stopPlayerHurtBlink()

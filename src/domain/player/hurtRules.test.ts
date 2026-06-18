@@ -1,12 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import {
   PLAYER_HIT_DAMAGE,
+  PLAYER_MAX_HEALTH,
   canApplyPlayerDamage,
   canApplyPlayerEnemyHit,
   canApplyPlayerHazardHit,
   getPlayerDamageOutcome,
   getPlayerDefeatOutcome,
   getPlayerKnockbackDirection,
+  getPlayerRespawnState,
 } from './hurtRules'
 
 describe('canApplyPlayerEnemyHit', () => {
@@ -293,5 +295,30 @@ describe('getPlayerDefeatOutcome', () => {
       velocityY: 160,
       statusKey: 'status.critical',
     })
+  })
+})
+
+describe('getPlayerRespawnState', () => {
+  it('keeps max health explicit', () => {
+    expect(PLAYER_MAX_HEALTH).toBe(3)
+  })
+
+  it('returns the default respawn state', () => {
+    expect(getPlayerRespawnState()).toEqual({
+      hurting: false,
+      invulnerable: false,
+      attacking: false,
+      homingAttacking: false,
+      crouching: false,
+      dead: false,
+      attackReady: true,
+      health: 3,
+      jumpBufferedUntil: 0,
+      remainingAirJumps: 1,
+    })
+  })
+
+  it('supports explicit max health for boundary checks', () => {
+    expect(getPlayerRespawnState({ maxHealth: 5 }).health).toBe(5)
   })
 })

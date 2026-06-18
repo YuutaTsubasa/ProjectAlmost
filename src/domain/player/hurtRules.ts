@@ -41,10 +41,24 @@ export function canApplyPlayerDamage(input: {
 }
 
 export const PLAYER_HIT_DAMAGE = 1
+export const PLAYER_MAX_HEALTH = 3
 
 export type PlayerDamageOutcome =
   | { type: 'survived'; nextHealth: number }
   | { type: 'defeated'; nextHealth: number }
+
+export type PlayerRespawnState = {
+  hurting: boolean
+  invulnerable: boolean
+  attacking: boolean
+  homingAttacking: boolean
+  crouching: boolean
+  dead: boolean
+  attackReady: boolean
+  health: number
+  jumpBufferedUntil: number
+  remainingAirJumps: number
+}
 
 export function getPlayerDamageOutcome(input: {
   currentHealth: number
@@ -54,6 +68,23 @@ export function getPlayerDamageOutcome(input: {
   return nextHealth <= 0
     ? { type: 'defeated', nextHealth }
     : { type: 'survived', nextHealth }
+}
+
+export function getPlayerRespawnState(input: {
+  maxHealth?: number
+} = {}): PlayerRespawnState {
+  return {
+    hurting: false,
+    invulnerable: false,
+    attacking: false,
+    homingAttacking: false,
+    crouching: false,
+    dead: false,
+    attackReady: true,
+    health: input.maxHealth ?? PLAYER_MAX_HEALTH,
+    jumpBufferedUntil: 0,
+    remainingAirJumps: 1,
+  }
 }
 
 export type PlayerKnockbackDirection = -1 | 1
