@@ -10,6 +10,7 @@ import {
   RUNNING_FOOTSTEP_MIN_SPEED_X,
   getHorizontalMovementDecision,
   getMovementFootstepDecision,
+  getPlayerControlFlowDecision,
 } from './movementRules'
 
 describe('getHorizontalMovementDecision', () => {
@@ -232,5 +233,35 @@ describe('getMovementFootstepDecision', () => {
       nextFootstepAt: 1180,
       wasGrounded: true,
     })
+  })
+})
+
+describe('getPlayerControlFlowDecision', () => {
+  test('continues player control when alive before stage clear', () => {
+    expect(getPlayerControlFlowDecision({
+      dead: false,
+      stageCleared: false,
+    })).toBe('active')
+  })
+
+  test('stops player control after death', () => {
+    expect(getPlayerControlFlowDecision({
+      dead: true,
+      stageCleared: false,
+    })).toBe('dead')
+  })
+
+  test('stops player control after stage clear', () => {
+    expect(getPlayerControlFlowDecision({
+      dead: false,
+      stageCleared: true,
+    })).toBe('stage-cleared')
+  })
+
+  test('prioritizes death over stage clear', () => {
+    expect(getPlayerControlFlowDecision({
+      dead: true,
+      stageCleared: true,
+    })).toBe('dead')
   })
 })

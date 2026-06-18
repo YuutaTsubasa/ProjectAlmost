@@ -22,6 +22,17 @@ export type MovementFootstepDecision = {
   wasGrounded: boolean
 }
 
+export type PlayerControlFlowDecision = 'active' | 'dead' | 'stage-cleared'
+
+export function getPlayerControlFlowDecision(input: {
+  dead: boolean
+  stageCleared: boolean
+}): PlayerControlFlowDecision {
+  if (input.dead) return 'dead'
+  if (input.stageCleared) return 'stage-cleared'
+  return 'active'
+}
+
 export function getHorizontalMovementDecision(input: {
   left: boolean
   right: boolean

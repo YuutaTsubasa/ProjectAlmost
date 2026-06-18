@@ -73,6 +73,7 @@ import {
 import {
   getHorizontalMovementDecision,
   getMovementFootstepDecision,
+  getPlayerControlFlowDecision,
 } from '../../domain/player/movementRules'
 import {
   getPlayerAnimationDecision,
@@ -607,12 +608,16 @@ export class GameplayScene extends Phaser.Scene {
     }
     if (jumpPressed) this.jumpBufferedUntil = this.time.now + JUMP_BUFFER_MS
 
-    if (this.isDead) {
+    const controlFlow = getPlayerControlFlowDecision({
+      dead: this.isDead,
+      stageCleared: this.stageCleared,
+    })
+    if (controlFlow === 'dead') {
       this.player.setAccelerationX(0)
       return
     }
 
-    if (this.stageCleared) {
+    if (controlFlow === 'stage-cleared') {
       this.player.setAccelerationX(0)
       this.player.setVelocityX(0)
       this.updatePlayerAnimation(false, grounded)
