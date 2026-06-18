@@ -43,14 +43,12 @@ import {
 } from '../../domain/boss/bossRules'
 import {
   INITIAL_PATROL_DIRECTION,
-  enemyCountsForScore,
+  getEnemyDefeatOutcome,
   getEnemyRegenerationDecision,
   getNextPatrolDirection,
   getEnemyRespawnDelayMs,
-  getEnemyRespawnPolicy,
   getScoreEnemyTargetCount,
   hasActiveEnemy,
-  type EnemyRespawnPolicy,
   type PatrolDirection,
 } from '../../domain/enemy/enemyRules'
 import {
@@ -1728,9 +1726,8 @@ export class GameplayScene extends Phaser.Scene {
 
     enemy.defeated = true
     this.dispatchSfx('hit')
-    if (this.enemyCountsForScore(enemy.point)) {
-      this.enemiesDefeated += 1
-    }
+    const defeatOutcome = getEnemyDefeatOutcome(enemy.point)
+    this.enemiesDefeated += defeatOutcome.scoreDelta
     this.homingReticle?.setVisible(false)
     enemy.sprite.setVelocity(0, 0)
     enemy.sprite.body.enable = false
@@ -1757,17 +1754,9 @@ export class GameplayScene extends Phaser.Scene {
       enemy.sprite.setVisible(false)
     })
 
-    if (this.enemyRespawnPolicy(enemy.point) === 'regenerate') {
+    if (defeatOutcome.shouldRegenerate) {
       this.scheduleEnemyRegeneration(enemy)
     }
-  }
-
-  private enemyRespawnPolicy(point: EnemyPoint): EnemyRespawnPolicy {
-    return getEnemyRespawnPolicy(point)
-  }
-
-  private enemyCountsForScore(point: EnemyPoint): boolean {
-    return enemyCountsForScore(point)
   }
 
   private scheduleEnemyRegeneration(enemy: EnemyRuntime): void {

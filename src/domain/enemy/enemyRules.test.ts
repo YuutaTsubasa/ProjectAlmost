@@ -4,6 +4,7 @@ import {
   DEFAULT_ENEMY_REGENERATE_SAFE_DISTANCE,
   INITIAL_PATROL_DIRECTION,
   enemyCountsForScore,
+  getEnemyDefeatOutcome,
   getEnemyRegenerationDecision,
   getNextPatrolDirection,
   getEnemyRespawnDelayMs,
@@ -53,6 +54,47 @@ describe('getScoreEnemyTargetCount', () => {
         {},
       ],
     })).toBe(3)
+  })
+})
+
+describe('getEnemyDefeatOutcome', () => {
+  test('returns score delta and persistent policy for default guards', () => {
+    expect(getEnemyDefeatOutcome({ type: 'guard' })).toEqual({
+      scoreDelta: 1,
+      respawnPolicy: 'persistent',
+      shouldRegenerate: false,
+    })
+    expect(getEnemyDefeatOutcome({})).toEqual({
+      scoreDelta: 1,
+      respawnPolicy: 'persistent',
+      shouldRegenerate: false,
+    })
+  })
+
+  test('returns no score delta and regeneration policy for default Azure Cores', () => {
+    expect(getEnemyDefeatOutcome({ type: 'azure-core' })).toEqual({
+      scoreDelta: 0,
+      respawnPolicy: 'regenerate',
+      shouldRegenerate: true,
+    })
+  })
+
+  test('uses explicit score overrides', () => {
+    expect(getEnemyDefeatOutcome({ type: 'guard', countsForScore: false }).scoreDelta).toBe(0)
+    expect(getEnemyDefeatOutcome({ type: 'azure-core', countsForScore: true }).scoreDelta).toBe(1)
+  })
+
+  test('uses explicit respawn policy overrides', () => {
+    expect(getEnemyDefeatOutcome({ type: 'azure-core', respawnPolicy: 'persistent' })).toEqual({
+      scoreDelta: 0,
+      respawnPolicy: 'persistent',
+      shouldRegenerate: false,
+    })
+    expect(getEnemyDefeatOutcome({ type: 'guard', respawnPolicy: 'regenerate' })).toEqual({
+      scoreDelta: 1,
+      respawnPolicy: 'regenerate',
+      shouldRegenerate: true,
+    })
   })
 })
 

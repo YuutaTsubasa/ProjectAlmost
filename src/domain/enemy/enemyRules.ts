@@ -2,6 +2,11 @@ export type EnemyType = 'guard' | 'azure-core'
 export type EnemyRespawnPolicy = 'persistent' | 'regenerate'
 export type EnemyRegenerationDecision = 'skip' | 'delay' | 'regenerate'
 export type PatrolDirection = -1 | 1
+export type EnemyDefeatOutcome = {
+  scoreDelta: number
+  respawnPolicy: EnemyRespawnPolicy
+  shouldRegenerate: boolean
+}
 
 export type EnemyRuleInput = {
   type?: EnemyType
@@ -52,6 +57,15 @@ export function getScoreEnemyTargetCount(input: {
   enemies: readonly EnemyRuleInput[]
 }): number {
   return input.enemies.filter((enemy) => enemyCountsForScore(enemy)).length
+}
+
+export function getEnemyDefeatOutcome(input: EnemyRuleInput): EnemyDefeatOutcome {
+  const respawnPolicy = getEnemyRespawnPolicy(input)
+  return {
+    scoreDelta: enemyCountsForScore(input) ? 1 : 0,
+    respawnPolicy,
+    shouldRegenerate: respawnPolicy === 'regenerate',
+  }
 }
 
 export function getEnemyRespawnDelayMs(input: Pick<EnemyRuleInput, 'respawnDelayMs'>): number {
