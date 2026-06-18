@@ -8,7 +8,7 @@ import { getCoinTargetCount } from '../../domain/stage/coinRules'
 import { formatCoinLabel, formatHealthLabel } from '../../domain/stage/hudLabelRules'
 import { getHudCheckpointMarkers, getHudEnemyMarkers, getHudGoalProgress, getHudPlatformMarkers } from '../../domain/stage/hudMapRules'
 import { getHudProgress } from '../../domain/stage/hudProgressRules'
-import { formatStageTimer, shouldAdvanceStageTimer } from '../../domain/stage/timerRules'
+import { formatStageTimer, shouldAdvanceStageTimer, shouldStartStageAction } from '../../domain/stage/timerRules'
 import { calculateStageRank } from '../../domain/scoring/scoringRules'
 import type { ClearRank } from '../../domain/scoring/rank'
 import { isOutOfBounds } from '../../domain/world/bounds'
@@ -568,7 +568,14 @@ export class GameplayScene extends Phaser.Scene {
       this.updateParallaxBackground()
       return
     }
-    if (!this.timerStarted && (left || right || crouchHeld || jumpPressed || attackPressed)) {
+    if (shouldStartStageAction({
+      timerStarted: this.timerStarted,
+      left,
+      right,
+      crouchHeld,
+      jumpPressed,
+      attackPressed,
+    })) {
       this.startStageAction()
     }
 

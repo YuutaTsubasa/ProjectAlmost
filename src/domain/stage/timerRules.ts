@@ -6,6 +6,18 @@ export function shouldAdvanceStageTimer(input: {
   return input.timerStarted && !input.stageCleared && !input.dead
 }
 
+export function shouldStartStageAction(input: {
+  timerStarted: boolean
+  left: boolean
+  right: boolean
+  crouchHeld: boolean
+  jumpPressed: boolean
+  attackPressed: boolean
+}): boolean {
+  return !input.timerStarted
+    && (input.left || input.right || input.crouchHeld || input.jumpPressed || input.attackPressed)
+}
+
 export function formatStageTimer(input: {
   elapsedMs: number
 }): string {

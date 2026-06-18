@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatStageTimer, shouldAdvanceStageTimer } from './timerRules'
+import { formatStageTimer, shouldAdvanceStageTimer, shouldStartStageAction } from './timerRules'
 
 describe('shouldAdvanceStageTimer', () => {
   it('advances when the timer has started and gameplay is active', () => {
@@ -32,6 +32,48 @@ describe('shouldAdvanceStageTimer', () => {
       stageCleared: false,
       dead: true,
     })).toBe(false)
+  })
+})
+
+describe('shouldStartStageAction', () => {
+  it('does not start stage action after the timer has already started', () => {
+    expect(shouldStartStageAction({
+      timerStarted: true,
+      left: true,
+      right: false,
+      crouchHeld: false,
+      jumpPressed: false,
+      attackPressed: false,
+    })).toBe(false)
+  })
+
+  it('does not start stage action without gameplay input', () => {
+    expect(shouldStartStageAction({
+      timerStarted: false,
+      left: false,
+      right: false,
+      crouchHeld: false,
+      jumpPressed: false,
+      attackPressed: false,
+    })).toBe(false)
+  })
+
+  it.each([
+    ['left', { left: true }],
+    ['right', { right: true }],
+    ['crouch', { crouchHeld: true }],
+    ['jump', { jumpPressed: true }],
+    ['attack', { attackPressed: true }],
+  ])('starts stage action from %s input', (_label, activeInput) => {
+    expect(shouldStartStageAction({
+      timerStarted: false,
+      left: false,
+      right: false,
+      crouchHeld: false,
+      jumpPressed: false,
+      attackPressed: false,
+      ...activeInput,
+    })).toBe(true)
   })
 })
 
