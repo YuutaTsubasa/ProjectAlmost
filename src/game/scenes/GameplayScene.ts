@@ -119,6 +119,7 @@ import {
   getHomingTargetAcquisitionDecision,
   getHomingTrailSamples,
   isHomingTargetLost,
+  isHomingTargetAvailable,
   selectNearestHomingTarget,
   shouldUpdateHomingAttack,
 } from '../../domain/player/homingRules'
@@ -2209,7 +2210,11 @@ export class GameplayScene extends Phaser.Scene {
   private findHomingTarget(): ArcadeSprite | undefined {
     const facing = this.player.flipX ? -1 : 1
     const candidates = this.enemies
-      .filter((enemy) => !enemy.defeated && enemy.sprite.active && enemy.sprite.visible)
+      .filter((enemy) => isHomingTargetAvailable({
+        defeated: enemy.defeated,
+        active: enemy.sprite.active,
+        visible: enemy.sprite.visible,
+      }))
       .map((enemy) => ({
         target: enemy.sprite,
         targetX: enemy.sprite.x,

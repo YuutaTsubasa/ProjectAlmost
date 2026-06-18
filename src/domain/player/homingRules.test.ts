@@ -16,6 +16,7 @@ import {
   getHomingTargetAcquisitionDecision,
   getHomingTrailSamples,
   isPointCollectableByHomingLine,
+  isHomingTargetAvailable,
   isHomingTargetLost,
   isHomingTargetEligible,
   selectNearestHomingTarget,
@@ -117,6 +118,40 @@ describe('getHomingTargetAcquisitionDecision', () => {
 
   test('fails Homing Attack startup when no target exists', () => {
     expect(getHomingTargetAcquisitionDecision({ hasTarget: false })).toBe('fail')
+  })
+})
+
+describe('isHomingTargetAvailable', () => {
+  test('allows active visible targets that are not defeated', () => {
+    expect(isHomingTargetAvailable({
+      defeated: false,
+      active: true,
+      visible: true,
+    })).toBe(true)
+  })
+
+  test('rejects defeated targets', () => {
+    expect(isHomingTargetAvailable({
+      defeated: true,
+      active: true,
+      visible: true,
+    })).toBe(false)
+  })
+
+  test('rejects inactive targets', () => {
+    expect(isHomingTargetAvailable({
+      defeated: false,
+      active: false,
+      visible: true,
+    })).toBe(false)
+  })
+
+  test('rejects invisible targets', () => {
+    expect(isHomingTargetAvailable({
+      defeated: false,
+      active: true,
+      visible: false,
+    })).toBe(false)
   })
 })
 
