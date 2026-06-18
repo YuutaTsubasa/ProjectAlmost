@@ -12,6 +12,7 @@ import {
   getHomingFinishOutcome,
   getHomingTrailSamples,
   isPointCollectableByHomingLine,
+  isHomingTargetLost,
   isHomingTargetEligible,
   selectNearestHomingTarget,
 } from './homingRules'
@@ -415,6 +416,40 @@ describe('getHomingFinishOutcome', () => {
       velocityY: 0,
       statusKey: 'status.homingMiss',
     })
+  })
+})
+
+describe('isHomingTargetLost', () => {
+  test('treats defeated targets as lost', () => {
+    expect(isHomingTargetLost({
+      defeated: true,
+      active: true,
+      visible: true,
+    })).toBe(true)
+  })
+
+  test('treats inactive targets as lost', () => {
+    expect(isHomingTargetLost({
+      defeated: false,
+      active: false,
+      visible: true,
+    })).toBe(true)
+  })
+
+  test('treats invisible targets as lost', () => {
+    expect(isHomingTargetLost({
+      defeated: false,
+      active: true,
+      visible: false,
+    })).toBe(true)
+  })
+
+  test('keeps undefeated active visible targets usable', () => {
+    expect(isHomingTargetLost({
+      defeated: false,
+      active: true,
+      visible: true,
+    })).toBe(false)
   })
 })
 

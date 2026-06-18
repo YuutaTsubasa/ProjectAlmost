@@ -92,6 +92,7 @@ import {
   getHomingFinishOutcome,
   getHomingTrailSamples,
   isPointCollectableByHomingLine,
+  isHomingTargetLost,
   selectNearestHomingTarget,
 } from '../../domain/player/homingRules'
 
@@ -2208,7 +2209,11 @@ export class GameplayScene extends Phaser.Scene {
       return
     }
 
-    if (this.isEnemyDefeated(this.homingTarget) || !this.homingTarget.active || !this.homingTarget.visible) {
+    if (isHomingTargetLost({
+      defeated: this.isEnemyDefeated(this.homingTarget),
+      active: this.homingTarget.active,
+      visible: this.homingTarget.visible,
+    })) {
       this.finishHomingAttack(false)
       return
     }

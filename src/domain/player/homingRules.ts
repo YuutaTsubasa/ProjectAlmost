@@ -117,6 +117,14 @@ export function getHomingFinishOutcome(input: {
   }
 }
 
+export function isHomingTargetLost(input: {
+  defeated: boolean
+  active: boolean
+  visible: boolean
+}): boolean {
+  return input.defeated || !input.active || !input.visible
+}
+
 export function isPointCollectableByHomingLine(input: {
   startX: number
   startY: number
