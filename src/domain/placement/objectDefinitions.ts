@@ -81,9 +81,20 @@ export const objectDefinitions = {
 } as const satisfies Record<string, GameObjectDefinition>
 
 export type ObjectDefinitionId = keyof typeof objectDefinitions
+export type PlacementGravityDirection = 'down' | 'up'
 
 export function groundedCenterY(surfaceY: number, definitionId: 'player' | 'guard'): number {
   return surfaceY - objectDefinitions[definitionId].centerAboveSurface
+}
+
+export function getPlayerCenterY(input: {
+  surfaceY: number
+  gravity: PlacementGravityDirection
+}): number {
+  const distance = objectDefinitions.player.centerAboveSurface
+  return input.gravity === 'down'
+    ? input.surfaceY - distance
+    : input.surfaceY + distance
 }
 
 export function groundedBottomY(surfaceY: number, definitionId: 'checkpoint' | 'goal'): number {

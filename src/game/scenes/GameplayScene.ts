@@ -1,6 +1,6 @@
 import * as Phaser from 'phaser'
 import { IMAGE_ASSETS } from '../assets/assetManifest'
-import { getEnemySpawnY, groundedBottomY, groundedHazardCenterY, objectDefinitions } from '../objects/objectDefinitions'
+import { getEnemySpawnY, getPlayerCenterY, groundedBottomY, groundedHazardCenterY, objectDefinitions } from '../objects/objectDefinitions'
 import type { CoinPoint, EnemyPoint, GravityZone, HazardRect, MovingPlatformRect, PlatformRect, StageData, SurfaceZone } from '../stages/stageTypes'
 import type { TranslationKey, TranslationParams } from '../../i18n'
 import { getCheckpointTargetCount, getReachedCheckpointCount } from '../../domain/stage/checkpointRules'
@@ -138,11 +138,6 @@ const THEME = {
   white: 0xf8fdff,
 }
 
-function playerCenterY(surfaceY: number, gravity: GravityDirection = 'down'): number {
-  const distance = objectDefinitions.player.centerAboveSurface
-  return gravity === 'down' ? surfaceY - distance : surfaceY + distance
-}
-
 export class GameplayScene extends Phaser.Scene {
   private cursors!: Phaser.Types.Input.Keyboard.CursorKeys
   private keys!: Record<'left' | 'right' | 'jump' | 'crouch' | 'attack' | 'attackAlt', Phaser.Input.Keyboard.Key>
@@ -214,7 +209,10 @@ export class GameplayScene extends Phaser.Scene {
     this.playerGravityDirection = this.stage.playerSpawn.gravity ?? 'down'
     this.respawnPoint = {
       x: this.stage.playerSpawn.x,
-      y: playerCenterY(this.stage.playerSpawn.surfaceY, this.stage.playerSpawn.gravity ?? 'down'),
+      y: getPlayerCenterY({
+        surfaceY: this.stage.playerSpawn.surfaceY,
+        gravity: this.stage.playerSpawn.gravity ?? 'down',
+      }),
       gravity: this.stage.playerSpawn.gravity ?? 'down',
     }
   }
@@ -377,7 +375,10 @@ export class GameplayScene extends Phaser.Scene {
     const playerDefinition = objectDefinitions.player
     this.player = this.physics.add.sprite(
       this.stage.playerSpawn.x,
-      playerCenterY(this.stage.playerSpawn.surfaceY, this.stage.playerSpawn.gravity ?? 'down'),
+      getPlayerCenterY({
+        surfaceY: this.stage.playerSpawn.surfaceY,
+        gravity: this.stage.playerSpawn.gravity ?? 'down',
+      }),
       'player-idle',
     )
     this.player.setOrigin(playerDefinition.origin.x, playerDefinition.origin.y)
@@ -520,7 +521,10 @@ export class GameplayScene extends Phaser.Scene {
     this.activeCheckpointIndex = -1
     this.respawnPoint = {
       x: this.stage.playerSpawn.x,
-      y: playerCenterY(this.stage.playerSpawn.surfaceY, this.stage.playerSpawn.gravity ?? 'down'),
+      y: getPlayerCenterY({
+        surfaceY: this.stage.playerSpawn.surfaceY,
+        gravity: this.stage.playerSpawn.gravity ?? 'down',
+      }),
       gravity: this.stage.playerSpawn.gravity ?? 'down',
     }
   }
@@ -1521,7 +1525,10 @@ export class GameplayScene extends Phaser.Scene {
     this.setPlayerHomingCollision(true)
     this.setPlayerVisualState('normal')
     this.applyPlayerGravityDirection(this.stage.playerSpawn.gravity ?? 'down', false)
-    this.player.setPosition(this.stage.playerSpawn.x, playerCenterY(this.stage.playerSpawn.surfaceY, this.stage.playerSpawn.gravity ?? 'down'))
+    this.player.setPosition(this.stage.playerSpawn.x, getPlayerCenterY({
+      surfaceY: this.stage.playerSpawn.surfaceY,
+      gravity: this.stage.playerSpawn.gravity ?? 'down',
+    }))
     this.player.setVelocity(0, 0)
     this.cameras.main.centerOn(this.player.x, this.player.y)
     this.cameras.main.flash(180, 245, 250, 255)
@@ -1914,7 +1921,10 @@ export class GameplayScene extends Phaser.Scene {
     this.dispatchSfx('checkpoint')
     this.respawnPoint = {
       x: checkpoint.spawnX,
-      y: playerCenterY(checkpoint.spawnSurfaceY, checkpoint.spawnGravity ?? this.playerGravityDirection),
+      y: getPlayerCenterY({
+        surfaceY: checkpoint.spawnSurfaceY,
+        gravity: checkpoint.spawnGravity ?? this.playerGravityDirection,
+      }),
       gravity: checkpoint.spawnGravity ?? this.playerGravityDirection,
     }
     const sprite = this.checkpointSprites[nextCheckpointIndex]

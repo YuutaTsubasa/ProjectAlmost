@@ -1,5 +1,6 @@
 export {
   getEnemySpawnY,
+  getPlayerCenterY,
   groundedBottomY,
   groundedCenterY,
   groundedHazardCenterY,
@@ -7,4 +8,5 @@ export {
   type BodyDefinition,
   type GameObjectDefinition,
   type ObjectDefinitionId,
+  type PlacementGravityDirection,
 } from '../../domain/placement/objectDefinitions'

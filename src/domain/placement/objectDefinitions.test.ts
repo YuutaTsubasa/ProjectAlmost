@@ -1,5 +1,12 @@
 import { describe, expect, test } from 'vitest'
-import { getEnemySpawnY, groundedBottomY, groundedCenterY, groundedHazardCenterY, objectDefinitions } from './objectDefinitions'
+import {
+  getEnemySpawnY,
+  getPlayerCenterY,
+  groundedBottomY,
+  groundedCenterY,
+  groundedHazardCenterY,
+  objectDefinitions,
+} from './objectDefinitions'
 
 describe('groundedCenterY', () => {
   test('places the player center above the surface using the player definition', () => {
@@ -8,6 +15,18 @@ describe('groundedCenterY', () => {
 
   test('places guards using the guard definition', () => {
     expect(groundedCenterY(640, 'guard')).toBe(640 - objectDefinitions.guard.centerAboveSurface)
+  })
+})
+
+describe('getPlayerCenterY', () => {
+  test('places the player center above the surface for down gravity', () => {
+    expect(getPlayerCenterY({ surfaceY: 704, gravity: 'down' }))
+      .toBe(704 - objectDefinitions.player.centerAboveSurface)
+  })
+
+  test('places the player center below the surface for up gravity', () => {
+    expect(getPlayerCenterY({ surfaceY: 704, gravity: 'up' }))
+      .toBe(704 + objectDefinitions.player.centerAboveSurface)
   })
 })
 
