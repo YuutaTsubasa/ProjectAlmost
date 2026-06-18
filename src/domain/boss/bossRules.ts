@@ -168,6 +168,13 @@ export function canStartBossPattern(input: {
   return input.bossPhase < phaseCount
 }
 
+export function shouldResetBossSupportCore(input: {
+  sameAsBoss: boolean
+  enemyType?: string
+}): boolean {
+  return !input.sameAsBoss && input.enemyType === BOSS_PATTERN_ENEMY_TYPE
+}
+
 export function canRunBossPatternTick(input: {
   generation: number
   currentGeneration: number

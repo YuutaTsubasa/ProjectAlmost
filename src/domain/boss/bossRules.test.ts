@@ -15,6 +15,7 @@ import {
   getBossVolleyShots,
   isBossStageDefinition,
   shouldRestartBossPatternAfterRespawn,
+  shouldResetBossSupportCore,
   shouldResetBossRunAfterHomingHit,
 } from './bossRules'
 
@@ -414,6 +415,35 @@ describe('canStartBossPattern', () => {
       stageCleared: false,
       phaseCount: 3,
     })).toBe(false)
+  })
+})
+
+describe('shouldResetBossSupportCore', () => {
+  test('rejects the boss prototype even when it is an Azure Core', () => {
+    expect(shouldResetBossSupportCore({
+      sameAsBoss: true,
+      enemyType: 'azure-core',
+    })).toBe(false)
+  })
+
+  test('rejects non-Azure-Core enemies', () => {
+    expect(shouldResetBossSupportCore({
+      sameAsBoss: false,
+      enemyType: 'guard',
+    })).toBe(false)
+  })
+
+  test('rejects enemies without an explicit type', () => {
+    expect(shouldResetBossSupportCore({
+      sameAsBoss: false,
+    })).toBe(false)
+  })
+
+  test('allows non-boss Azure Core enemies', () => {
+    expect(shouldResetBossSupportCore({
+      sameAsBoss: false,
+      enemyType: 'azure-core',
+    })).toBe(true)
   })
 })
 

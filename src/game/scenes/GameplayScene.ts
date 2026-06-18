@@ -48,6 +48,7 @@ import {
   getBossVolleyShots,
   isBossStageDefinition,
   shouldRestartBossPatternAfterRespawn,
+  shouldResetBossSupportCore,
   shouldResetBossRunAfterHomingHit,
 } from '../../domain/boss/bossRules'
 import {
@@ -1427,10 +1428,15 @@ export class GameplayScene extends Phaser.Scene {
     boss.sprite.play('boss-priestess-cast', true)
     this.setStatusMessage('status.bossPattern', { phase: this.bossPhase + 1, max: BOSS_PHASE_COUNT })
     for (const enemy of this.enemies) {
-      if (enemy === boss || enemy.point.type !== 'azure-core') continue
+      const supportCorePoint = enemy.point.type === 'azure-core' ? enemy.point : undefined
+      if (!shouldResetBossSupportCore({
+        sameAsBoss: enemy === boss,
+        enemyType: supportCorePoint?.type,
+      })) continue
+      if (!supportCorePoint) continue
       this.tweens.killTweensOf(enemy.sprite)
       enemy.defeated = false
-      this.configureAzureCore(enemy.sprite, enemy.point.y)
+      this.configureAzureCore(enemy.sprite, supportCorePoint.y)
     }
     this.fireBossVolley(this.bossPhase, this.bossShotIndex++)
 
