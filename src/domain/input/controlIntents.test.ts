@@ -115,4 +115,19 @@ describe('mapGamepadControlIntents', () => {
 
     expect(mapGamepadControlIntents(previous, current, 'title-menu')).toEqual([])
   })
+
+  it('ignores transitions from unsupported to standard gamepad mappings', () => {
+    const previous: GamepadControlSnapshot = {
+      mapping: 'x-input',
+      buttons: [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false],
+      axes: [0, 0],
+    }
+    const current: GamepadControlSnapshot = {
+      mapping: 'standard',
+      buttons: [true, false, false, false],
+      axes: [0, -0.7],
+    }
+
+    expect(mapGamepadControlIntents(previous, current, 'title-menu')).toEqual([])
+  })
 })
