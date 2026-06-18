@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatStageTimer, shouldAdvanceStageTimer, shouldStartStageAction } from './timerRules'
+import { formatStageTimer, getStageInputArmedState, shouldAdvanceStageTimer, shouldStartStageAction } from './timerRules'
 
 describe('shouldAdvanceStageTimer', () => {
   it('advances when the timer has started and gameplay is active', () => {
@@ -73,6 +73,29 @@ describe('shouldStartStageAction', () => {
       jumpPressed: false,
       attackPressed: false,
       ...activeInput,
+    })).toBe(true)
+  })
+})
+
+describe('getStageInputArmedState', () => {
+  it('keeps stage input armed once armed', () => {
+    expect(getStageInputArmedState({
+      stageInputArmed: true,
+      gameplayInputHeld: true,
+    })).toBe(true)
+  })
+
+  it('keeps stage input unarmed while gameplay input is held', () => {
+    expect(getStageInputArmedState({
+      stageInputArmed: false,
+      gameplayInputHeld: true,
+    })).toBe(false)
+  })
+
+  it('arms stage input once gameplay input is released', () => {
+    expect(getStageInputArmedState({
+      stageInputArmed: false,
+      gameplayInputHeld: false,
     })).toBe(true)
   })
 })

@@ -18,6 +18,13 @@ export function shouldStartStageAction(input: {
     && (input.left || input.right || input.crouchHeld || input.jumpPressed || input.attackPressed)
 }
 
+export function getStageInputArmedState(input: {
+  stageInputArmed: boolean
+  gameplayInputHeld: boolean
+}): boolean {
+  return input.stageInputArmed || !input.gameplayInputHeld
+}
+
 export function formatStageTimer(input: {
   elapsedMs: number
 }): string {
