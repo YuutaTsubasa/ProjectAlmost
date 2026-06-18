@@ -22,6 +22,7 @@ import {
 } from '../../domain/world/gravityRules'
 import {
   getMovingPlatformDeltaSeconds,
+  getMovingPlatformDelta,
   getMovingPlatformUpdateDecision,
   getMovingPlatformPosition,
   getMovingPlatformCarriedPlayerPosition,
@@ -1952,8 +1953,14 @@ export class GameplayScene extends Phaser.Scene {
       const nextX = nextPosition.x
       const nextY = nextPosition.y
       const deltaSeconds = getMovingPlatformDeltaSeconds({ deltaMs: this.game.loop.delta })
-      const deltaX = nextX - platform.previousX
-      const deltaY = nextY - platform.previousY
+      const delta = getMovingPlatformDelta({
+        previousX: platform.previousX,
+        previousY: platform.previousY,
+        nextX,
+        nextY,
+      })
+      const deltaX = delta.x
+      const deltaY = delta.y
       const velocity = getMovingPlatformVelocity({ deltaX, deltaY, deltaSeconds })
 
       platform.sprite.body.setVelocity(velocity.x, velocity.y)

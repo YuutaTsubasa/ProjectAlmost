@@ -35,6 +35,18 @@ export function getMovingPlatformDeltaSeconds(input: {
   return Math.max(input.deltaMs / 1000, input.minDeltaSeconds ?? MOVING_PLATFORM_MIN_DELTA_SECONDS)
 }
 
+export function getMovingPlatformDelta(input: {
+  previousX: number
+  previousY: number
+  nextX: number
+  nextY: number
+}): { x: number; y: number } {
+  return {
+    x: input.nextX - input.previousX,
+    y: input.nextY - input.previousY,
+  }
+}
+
 export function getMovingPlatformVelocity(input: {
   deltaX: number
   deltaY: number

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   MOVING_PLATFORM_MIN_DELTA_SECONDS,
+  getMovingPlatformDelta,
   getMovingPlatformDeltaSeconds,
   getMovingPlatformUpdateDecision,
   getMovingPlatformPosition,
@@ -115,6 +116,44 @@ describe('getMovingPlatformDeltaSeconds', () => {
       deltaMs: 1,
       minDeltaSeconds: 0.01,
     })).toBe(0.01)
+  })
+})
+
+describe('getMovingPlatformDelta', () => {
+  it('calculates positive movement on both axes', () => {
+    expect(getMovingPlatformDelta({
+      previousX: 100,
+      previousY: 200,
+      nextX: 112,
+      nextY: 206,
+    })).toEqual({ x: 12, y: 6 })
+  })
+
+  it('returns zero delta for an unchanged axis', () => {
+    expect(getMovingPlatformDelta({
+      previousX: 100,
+      previousY: 200,
+      nextX: 100,
+      nextY: 208,
+    })).toEqual({ x: 0, y: 8 })
+  })
+
+  it('calculates negative movement on both axes', () => {
+    expect(getMovingPlatformDelta({
+      previousX: 100,
+      previousY: 200,
+      nextX: 90,
+      nextY: 196,
+    })).toEqual({ x: -10, y: -4 })
+  })
+
+  it('calculates x and y deltas independently', () => {
+    expect(getMovingPlatformDelta({
+      previousX: 100,
+      previousY: 200,
+      nextX: 103,
+      nextY: 191,
+    })).toEqual({ x: 3, y: -9 })
   })
 })
 
