@@ -1,4 +1,5 @@
 export const PLAYER_COIN_PICKUP_RADIUS = 52
+export type PlayerCoinPickupDecision = 'skip' | 'collect'
 
 export function canPlayerPickUpCoin(input: {
   playerX: number
@@ -16,4 +17,16 @@ export function shouldScanPlayerCoins(input: {
   dead: boolean
 }): boolean {
   return !input.stageCleared && !input.dead
+}
+
+export function getPlayerCoinPickupDecision(input: {
+  collected: boolean
+  playerX: number
+  playerY: number
+  coinX: number
+  coinY: number
+  radius?: number
+}): PlayerCoinPickupDecision {
+  if (input.collected) return 'skip'
+  return canPlayerPickUpCoin(input) ? 'collect' : 'skip'
 }

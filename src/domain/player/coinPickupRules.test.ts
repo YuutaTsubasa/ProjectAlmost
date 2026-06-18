@@ -2,6 +2,7 @@ import { describe, expect, test } from 'vitest'
 import {
   PLAYER_COIN_PICKUP_RADIUS,
   canPlayerPickUpCoin,
+  getPlayerCoinPickupDecision,
   shouldScanPlayerCoins,
 } from './coinPickupRules'
 
@@ -75,5 +76,47 @@ describe('shouldScanPlayerCoins', () => {
       stageCleared: false,
       dead: true,
     })).toBe(false)
+  })
+})
+
+describe('getPlayerCoinPickupDecision', () => {
+  test('skips collected coins even inside pickup radius', () => {
+    expect(getPlayerCoinPickupDecision({
+      collected: true,
+      playerX: 0,
+      playerY: 0,
+      coinX: 0,
+      coinY: 0,
+    })).toBe('skip')
+  })
+
+  test('collects uncollected coins inside pickup radius', () => {
+    expect(getPlayerCoinPickupDecision({
+      collected: false,
+      playerX: 0,
+      playerY: 0,
+      coinX: 30,
+      coinY: 40,
+    })).toBe('collect')
+  })
+
+  test('skips uncollected coins on the exact pickup radius boundary', () => {
+    expect(getPlayerCoinPickupDecision({
+      collected: false,
+      playerX: 0,
+      playerY: 0,
+      coinX: PLAYER_COIN_PICKUP_RADIUS,
+      coinY: 0,
+    })).toBe('skip')
+  })
+
+  test('skips uncollected coins outside pickup radius', () => {
+    expect(getPlayerCoinPickupDecision({
+      collected: false,
+      playerX: 0,
+      playerY: 0,
+      coinX: PLAYER_COIN_PICKUP_RADIUS + 1,
+      coinY: 0,
+    })).toBe('skip')
   })
 })

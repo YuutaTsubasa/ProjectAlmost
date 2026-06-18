@@ -74,7 +74,7 @@ import {
 } from '../../domain/player/attackRules'
 import { canCrouch } from '../../domain/player/crouchRules'
 import {
-  canPlayerPickUpCoin,
+  getPlayerCoinPickupDecision,
   shouldScanPlayerCoins,
 } from '../../domain/player/coinPickupRules'
 import {
@@ -2390,16 +2390,14 @@ export class GameplayScene extends Phaser.Scene {
     const playerCenter = this.player.getCenter()
 
     for (const coin of this.coins) {
-      if (coin.collected) {
-        continue
-      }
-
-      if (canPlayerPickUpCoin({
+      const pickupDecision = getPlayerCoinPickupDecision({
+        collected: coin.collected,
         playerX: playerCenter.x,
         playerY: playerCenter.y,
         coinX: coin.sprite.x,
         coinY: coin.sprite.y,
-      })) {
+      })
+      if (pickupDecision === 'collect') {
         this.collectCoin(coin)
       }
     }
