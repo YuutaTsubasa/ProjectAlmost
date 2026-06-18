@@ -4,6 +4,7 @@ import {
   BOSS_PROJECTILE_HIT_DISTANCE,
   BOSS_PROJECTILE_LIFETIME_MS,
   getBossProjectileHitDecision,
+  getBossProjectileLifecycleDecision,
   getBossProjectileVelocity,
   isBossProjectileExpired,
   isBossProjectileOutOfBounds,
@@ -123,6 +124,36 @@ describe('getBossProjectileHitDecision', () => {
       distanceToPlayer: 10,
       hitDistance: 10,
     })).toBe('ignore')
+  })
+})
+
+describe('getBossProjectileLifecycleDecision', () => {
+  test('destroys projectiles outside the world bounds', () => {
+    expect(getBossProjectileLifecycleDecision({
+      outside: true,
+      expired: false,
+    })).toBe('destroy')
+  })
+
+  test('fades expired projectiles that are still inside the world bounds', () => {
+    expect(getBossProjectileLifecycleDecision({
+      outside: false,
+      expired: true,
+    })).toBe('fade')
+  })
+
+  test('prioritizes destroy when a projectile is both outside and expired', () => {
+    expect(getBossProjectileLifecycleDecision({
+      outside: true,
+      expired: true,
+    })).toBe('destroy')
+  })
+
+  test('keeps projectiles that are neither outside nor expired', () => {
+    expect(getBossProjectileLifecycleDecision({
+      outside: false,
+      expired: false,
+    })).toBe('keep')
   })
 })
 

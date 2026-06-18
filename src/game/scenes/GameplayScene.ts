@@ -28,6 +28,7 @@ import { findActiveSurfaceZone } from '../../domain/world/surfaceRules'
 import { getPlatformTileIndex, getTileColumnCount, getTileRowCount } from '../../domain/world/terrainRules'
 import {
   getBossProjectileHitDecision,
+  getBossProjectileLifecycleDecision,
   getBossProjectileVelocity,
   isBossProjectileExpired,
   isBossProjectileOutOfBounds,
@@ -1469,11 +1470,12 @@ export class GameplayScene extends Phaser.Scene {
         worldWidth: this.worldWidth,
         worldHeight: this.worldHeight,
       })
-      if (outside) {
+      const lifecycleDecision = getBossProjectileLifecycleDecision({ outside, expired })
+      if (lifecycleDecision === 'destroy') {
         this.destroyBossProjectile(projectile)
         continue
       }
-      if (expired) {
+      if (lifecycleDecision === 'fade') {
         this.fadeBossProjectile(projectile)
         continue
       }
