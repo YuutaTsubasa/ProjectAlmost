@@ -13,6 +13,7 @@ import { calculateStageRank } from '../../domain/scoring/scoringRules'
 import type { ClearRank } from '../../domain/scoring/rank'
 import { isOutOfBounds } from '../../domain/world/bounds'
 import {
+  findActiveGravityZone,
   getPlayerBodyGravityY,
   getVerticalGravitySign,
   shouldFlipPlayerYForGravity,
@@ -672,12 +673,11 @@ export class GameplayScene extends Phaser.Scene {
   private updateGravityZones(): void {
     if (!this.stage.gravityZones || this.isDead || this.stageCleared) return
 
-    const zone = this.stage.gravityZones.find((candidate) =>
-      this.player.x >= candidate.x
-      && this.player.x <= candidate.x + candidate.width
-      && this.player.y >= candidate.y
-      && this.player.y <= candidate.y + candidate.height,
-    )
+    const zone = findActiveGravityZone({
+      pointX: this.player.x,
+      pointY: this.player.y,
+      zones: this.stage.gravityZones,
+    })
 
     if (zone && zone.direction !== this.playerGravityDirection) {
       this.applyPlayerGravityDirection(zone.direction)
