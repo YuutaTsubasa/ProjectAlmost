@@ -5,6 +5,7 @@ import type { CoinPoint, EnemyPoint, GravityZone, HazardRect, MovingPlatformRect
 import type { TranslationKey, TranslationParams } from '../../i18n'
 import { getCheckpointTargetCount, getReachedCheckpointCount } from '../../domain/stage/checkpointRules'
 import { getCoinTargetCount } from '../../domain/stage/coinRules'
+import { getStageClearState } from '../../domain/stage/stageClearRules'
 import { formatCoinLabel, formatHealthLabel } from '../../domain/stage/hudLabelRules'
 import { getHudCheckpointMarkers, getHudEnemyMarkers, getHudGoalProgress, getHudPlatformMarkers } from '../../domain/stage/hudMapRules'
 import { getHudProgress } from '../../domain/stage/hudProgressRules'
@@ -2036,11 +2037,12 @@ export class GameplayScene extends Phaser.Scene {
       return
     }
 
-    this.stageCleared = true
+    const clearState = getStageClearState()
+    this.stageCleared = clearState.stageCleared
     this.dispatchSfx('goal')
-    this.isAttacking = false
-    this.isHomingAttacking = false
-    this.attackReady = false
+    this.isAttacking = clearState.attacking
+    this.isHomingAttacking = clearState.homingAttacking
+    this.attackReady = clearState.attackReady
     this.homingTarget = undefined
     this.homingReticle?.setVisible(false)
     this.stopPlayerHurtBlink()
