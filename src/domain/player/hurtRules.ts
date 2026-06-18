@@ -40,6 +40,13 @@ export function canApplyPlayerDamage(input: {
     && !input.dead
 }
 
+export function canEnterPlayerDefeat(input: {
+  dead: boolean
+  stageCleared: boolean
+}): boolean {
+  return !input.dead && !input.stageCleared
+}
+
 export const PLAYER_HIT_DAMAGE = 1
 export const PLAYER_MAX_HEALTH = 3
 

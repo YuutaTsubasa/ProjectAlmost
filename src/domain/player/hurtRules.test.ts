@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   PLAYER_HIT_DAMAGE,
   PLAYER_MAX_HEALTH,
+  canEnterPlayerDefeat,
   canApplyPlayerDamage,
   canApplyPlayerEnemyHit,
   canApplyPlayerHazardHit,
@@ -197,6 +198,36 @@ describe('canApplyPlayerDamage', () => {
       homingAttacking: false,
       crouching: false,
       dead: true,
+    })).toBe(false)
+  })
+})
+
+describe('canEnterPlayerDefeat', () => {
+  it('allows defeat before death or stage clear', () => {
+    expect(canEnterPlayerDefeat({
+      dead: false,
+      stageCleared: false,
+    })).toBe(true)
+  })
+
+  it('blocks defeat when the player is already dead', () => {
+    expect(canEnterPlayerDefeat({
+      dead: true,
+      stageCleared: false,
+    })).toBe(false)
+  })
+
+  it('blocks defeat after the stage is cleared', () => {
+    expect(canEnterPlayerDefeat({
+      dead: false,
+      stageCleared: true,
+    })).toBe(false)
+  })
+
+  it('blocks defeat when already dead and stage cleared', () => {
+    expect(canEnterPlayerDefeat({
+      dead: true,
+      stageCleared: true,
     })).toBe(false)
   })
 })

@@ -84,6 +84,7 @@ import {
   canApplyPlayerDamage,
   canApplyPlayerEnemyHit,
   canApplyPlayerHazardHit,
+  canEnterPlayerDefeat,
   getPlayerDamageOutcome,
   getPlayerDefeatEntryState,
   getPlayerDefeatOutcome,
@@ -1983,7 +1984,10 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   private defeatPlayer(reason: PlayerDefeatReason): void {
-    if (this.isDead || this.stageCleared) {
+    if (!canEnterPlayerDefeat({
+      dead: this.isDead,
+      stageCleared: this.stageCleared,
+    })) {
       return
     }
 
