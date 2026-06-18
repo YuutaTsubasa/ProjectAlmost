@@ -39,3 +39,12 @@ export function canApplyPlayerDamage(input: {
     && !input.crouching
     && !input.dead
 }
+
+export type PlayerKnockbackDirection = -1 | 1
+
+export function getPlayerKnockbackDirection(input: {
+  playerX: number
+  sourceX: number
+}): PlayerKnockbackDirection {
+  return input.playerX < input.sourceX ? -1 : 1
+}

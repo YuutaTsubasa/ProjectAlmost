@@ -3,6 +3,7 @@ import {
   canApplyPlayerDamage,
   canApplyPlayerEnemyHit,
   canApplyPlayerHazardHit,
+  getPlayerKnockbackDirection,
 } from './hurtRules'
 
 describe('canApplyPlayerEnemyHit', () => {
@@ -188,5 +189,28 @@ describe('canApplyPlayerDamage', () => {
       crouching: false,
       dead: true,
     })).toBe(false)
+  })
+})
+
+describe('getPlayerKnockbackDirection', () => {
+  it('knocks left when player is left of the damage source', () => {
+    expect(getPlayerKnockbackDirection({
+      playerX: 120,
+      sourceX: 160,
+    })).toBe(-1)
+  })
+
+  it('knocks right when player is aligned with the damage source', () => {
+    expect(getPlayerKnockbackDirection({
+      playerX: 160,
+      sourceX: 160,
+    })).toBe(1)
+  })
+
+  it('knocks right when player is right of the damage source', () => {
+    expect(getPlayerKnockbackDirection({
+      playerX: 200,
+      sourceX: 160,
+    })).toBe(1)
   })
 })

@@ -76,6 +76,7 @@ import {
   canApplyPlayerDamage,
   canApplyPlayerEnemyHit,
   canApplyPlayerHazardHit,
+  getPlayerKnockbackDirection,
 } from '../../domain/player/hurtRules'
 import {
   HOMING_ATTACK_CONTACT_DISTANCE,
@@ -1691,7 +1692,10 @@ export class GameplayScene extends Phaser.Scene {
     this.stopPlayerHurtBlink()
     this.attackReady = false
 
-    const knockbackDirection = this.player.x < sourceX ? -1 : 1
+    const knockbackDirection = getPlayerKnockbackDirection({
+      playerX: this.player.x,
+      sourceX,
+    })
     this.player.setVelocity(knockbackDirection * 360, -360 * this.gravitySign)
     this.playPlayerAnimation('player-hurt')
     this.setStatusMessage('status.hurt', { hp: this.playerHealth, max: PLAYER_MAX_HEALTH })
