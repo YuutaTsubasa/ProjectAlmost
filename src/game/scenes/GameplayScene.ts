@@ -33,6 +33,7 @@ import {
 } from '../../domain/boss/projectileRules'
 import {
   BOSS_PHASE_COUNT,
+  canFireBossVolley,
   canHitBossPrototype,
   canStartBossPattern,
   getBossPhasePlayerResetState,
@@ -1418,9 +1419,14 @@ export class GameplayScene extends Phaser.Scene {
 
   private fireBossVolley(phase: number, shotIndex: number): void {
     const boss = this.bossPrototype?.sprite
-    if (!boss || !boss.visible) return
-    const originX = boss.x
-    const originY = boss.y
+    if (!canFireBossVolley({
+      bossExists: Boolean(boss),
+      bossVisible: boss?.visible ?? false,
+    })) return
+
+    const activeBoss = boss as NonNullable<typeof boss>
+    const originX = activeBoss.x
+    const originY = activeBoss.y
     const aimedAngle = Phaser.Math.Angle.Between(originX, originY, this.player.x, this.player.y)
     for (const shot of getBossVolleyShots({ phase, shotIndex, aimedAngle })) {
       this.spawnBossProjectile(originX, originY, shot.angle, shot.speed)

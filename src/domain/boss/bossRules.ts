@@ -66,6 +66,13 @@ export function canHitBossPrototype(input: {
   return input.bossExists && !input.bossDefeated
 }
 
+export function canFireBossVolley(input: {
+  bossExists: boolean
+  bossVisible: boolean
+}): boolean {
+  return input.bossExists && input.bossVisible
+}
+
 export function getBossVolleyShots(input: {
   phase: number
   shotIndex: number

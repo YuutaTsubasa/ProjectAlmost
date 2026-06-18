@@ -4,6 +4,7 @@ import {
   BOSS_PATTERN_MIN_DELAY_MS,
   BOSS_PATTERN_PHASE_DELAY_STEP_MS,
   BOSS_PHASE_COUNT,
+  canFireBossVolley,
   canHitBossPrototype,
   canStartBossPattern,
   getBossHudPhaseDisplay,
@@ -105,6 +106,29 @@ describe('canHitBossPrototype', () => {
       bossExists: true,
       bossDefeated: true,
     })).toBe(false)
+  })
+})
+
+describe('canFireBossVolley', () => {
+  test('rejects when the boss sprite is missing', () => {
+    expect(canFireBossVolley({
+      bossExists: false,
+      bossVisible: false,
+    })).toBe(false)
+  })
+
+  test('rejects when the boss sprite is invisible', () => {
+    expect(canFireBossVolley({
+      bossExists: true,
+      bossVisible: false,
+    })).toBe(false)
+  })
+
+  test('allows firing when the boss sprite exists and is visible', () => {
+    expect(canFireBossVolley({
+      bossExists: true,
+      bossVisible: true,
+    })).toBe(true)
   })
 })
 
