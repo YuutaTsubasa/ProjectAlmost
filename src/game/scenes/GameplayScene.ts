@@ -23,7 +23,7 @@ import {
   isMovingPlatformRider,
 } from '../../domain/world/movingPlatformRules'
 import { findActiveSurfaceZone } from '../../domain/world/surfaceRules'
-import { getPlatformTileIndex } from '../../domain/world/terrainRules'
+import { getPlatformTileIndex, getTileColumnCount, getTileRowCount } from '../../domain/world/terrainRules'
 import {
   getBossProjectileHitDecision,
   isBossProjectileExpired,
@@ -232,11 +232,17 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   private get tileColumns(): number {
-    return this.worldWidth / this.tileSize
+    return getTileColumnCount({
+      worldWidth: this.worldWidth,
+      tileSize: this.tileSize,
+    })
   }
 
   private get tileRows(): number {
-    return Math.ceil(this.worldHeight / this.tileSize)
+    return getTileRowCount({
+      worldHeight: this.worldHeight,
+      tileSize: this.tileSize,
+    })
   }
 
   private get stageTheme(): string {

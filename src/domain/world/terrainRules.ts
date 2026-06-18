@@ -1,3 +1,17 @@
+export function getTileColumnCount(input: {
+  worldWidth: number
+  tileSize: number
+}): number {
+  return input.worldWidth / input.tileSize
+}
+
+export function getTileRowCount(input: {
+  worldHeight: number
+  tileSize: number
+}): number {
+  return Math.ceil(input.worldHeight / input.tileSize)
+}
+
 export function getPlatformTileIndex(input: {
   index: number
   width: number
