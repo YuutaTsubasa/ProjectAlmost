@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  getPlayerVisualStatePresentation,
   getPlayerAnimationDecision,
   shouldPlayPlayerAnimation,
 } from './animationRules'
@@ -209,5 +210,31 @@ describe('shouldPlayPlayerAnimation', () => {
       attacking: false,
       hurting: false,
     })).toBe(false)
+  })
+})
+
+describe('getPlayerVisualStatePresentation', () => {
+  it('uses normal scale and zero visual offset for normal state', () => {
+    expect(getPlayerVisualStatePresentation({
+      state: 'normal',
+      normalScale: 0.78,
+      attackScale: 0.98,
+      attackVisualOffsetY: -10,
+    })).toEqual({
+      scale: 0.78,
+      visualOffsetY: 0,
+    })
+  })
+
+  it('uses attack scale and attack visual offset for attack state', () => {
+    expect(getPlayerVisualStatePresentation({
+      state: 'attack',
+      normalScale: 0.78,
+      attackScale: 0.98,
+      attackVisualOffsetY: -10,
+    })).toEqual({
+      scale: 0.98,
+      visualOffsetY: -10,
+    })
   })
 })

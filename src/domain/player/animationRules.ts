@@ -1,4 +1,5 @@
 export type PlayerAnimationKey = 'player-idle' | 'player-run' | 'player-jump' | 'player-crouch'
+export type PlayerVisualState = 'normal' | 'attack'
 
 export type PlayerAnimationDecision =
   | { type: 'preserve' }
@@ -56,4 +57,23 @@ export function shouldPlayPlayerAnimation(input: {
   }
 
   return input.currentAnimationKey !== input.key || input.currentTextureKey !== input.key
+}
+
+export function getPlayerVisualStatePresentation(input: {
+  state: PlayerVisualState
+  normalScale: number
+  attackScale: number
+  attackVisualOffsetY: number
+}): { scale: number, visualOffsetY: number } {
+  if (input.state === 'attack') {
+    return {
+      scale: input.attackScale,
+      visualOffsetY: input.attackVisualOffsetY,
+    }
+  }
+
+  return {
+    scale: input.normalScale,
+    visualOffsetY: 0,
+  }
 }

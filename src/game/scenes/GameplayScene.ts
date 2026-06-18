@@ -67,7 +67,9 @@ import {
 } from '../../domain/player/movementRules'
 import {
   getPlayerAnimationDecision,
+  getPlayerVisualStatePresentation,
   shouldPlayPlayerAnimation,
+  type PlayerVisualState,
 } from '../../domain/player/animationRules'
 import { isPlayerGroundedByContact } from '../../domain/player/groundRules'
 import {
@@ -2059,17 +2061,21 @@ export class GameplayScene extends Phaser.Scene {
     this.playPlayerAnimation('player-idle')
   }
 
-  private setPlayerVisualState(state: 'normal' | 'attack'): void {
-    const scale = state === 'attack' ? PLAYER_ATTACK_SCALE : PLAYER_SCALE
-    const offsetY = state === 'attack' ? PLAYER_ATTACK_VISUAL_Y_OFFSET : 0
+  private setPlayerVisualState(state: PlayerVisualState): void {
+    const { scale, visualOffsetY } = getPlayerVisualStatePresentation({
+      state,
+      normalScale: PLAYER_SCALE,
+      attackScale: PLAYER_ATTACK_SCALE,
+      attackVisualOffsetY: PLAYER_ATTACK_VISUAL_Y_OFFSET,
+    })
 
     if (this.player.scaleX !== scale || this.player.scaleY !== scale) {
       this.player.setScale(scale)
     }
 
-    if (this.playerVisualYOffset !== offsetY) {
-      this.player.y += offsetY - this.playerVisualYOffset
-      this.playerVisualYOffset = offsetY
+    if (this.playerVisualYOffset !== visualOffsetY) {
+      this.player.y += visualOffsetY - this.playerVisualYOffset
+      this.playerVisualYOffset = visualOffsetY
     }
 
     const body = objectDefinitions.player.body
