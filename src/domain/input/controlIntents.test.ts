@@ -69,6 +69,18 @@ describe('mapGamepadControlIntents', () => {
     expect(mapGamepadControlIntents(previous, { buttons: [], axes: [0, 0.5] }, 'title-menu')).toEqual([])
   })
 
+  it('emits move-up/down when axis crosses from exact threshold boundary', () => {
+    const fromNegativeBoundary = { buttons: [], axes: [0, -0.5] }
+    const fromPositiveBoundary = { buttons: [], axes: [0, 0.5] }
+
+    expect(
+      mapGamepadControlIntents(fromNegativeBoundary, { ...fromNegativeBoundary, axes: [0, -0.7] }, 'title-menu'),
+    ).toEqual(['move-up'])
+    expect(
+      mapGamepadControlIntents(fromPositiveBoundary, { ...fromPositiveBoundary, axes: [0, 0.7] }, 'title-menu'),
+    ).toEqual(['move-down'])
+  })
+
   it('emits intents only when buttons or axes move from inactive to active', () => {
     const previous = { buttons: [true, false, false, false], axes: [0, 0.8] }
     const current = { buttons: [true, false, false, false], axes: [0, 0.9] }
