@@ -65,6 +65,10 @@ export type PlayerHurtRecoveryState = {
   attackReady: boolean
 }
 
+export type PlayerInvulnerabilityRecoveryState = {
+  invulnerable: boolean
+}
+
 export function getPlayerDamageOutcome(input: {
   currentHealth: number
   damage?: number
@@ -96,6 +100,12 @@ export function getPlayerHurtRecoveryState(): PlayerHurtRecoveryState {
   return {
     hurting: false,
     attackReady: true,
+  }
+}
+
+export function getPlayerInvulnerabilityRecoveryState(): PlayerInvulnerabilityRecoveryState {
+  return {
+    invulnerable: false,
   }
 }
 

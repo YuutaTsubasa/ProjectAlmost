@@ -8,6 +8,7 @@ import {
   getPlayerDamageOutcome,
   getPlayerDefeatOutcome,
   getPlayerHurtRecoveryState,
+  getPlayerInvulnerabilityRecoveryState,
   getPlayerKnockbackDirection,
   getPlayerRespawnState,
 } from './hurtRules'
@@ -335,6 +336,22 @@ describe('getPlayerHurtRecoveryState', () => {
   it('returns a fresh state object', () => {
     const first = getPlayerHurtRecoveryState()
     const second = getPlayerHurtRecoveryState()
+
+    expect(first).toEqual(second)
+    expect(first).not.toBe(second)
+  })
+})
+
+describe('getPlayerInvulnerabilityRecoveryState', () => {
+  it('returns the invulnerability recovery state', () => {
+    expect(getPlayerInvulnerabilityRecoveryState()).toEqual({
+      invulnerable: false,
+    })
+  })
+
+  it('returns a fresh state object', () => {
+    const first = getPlayerInvulnerabilityRecoveryState()
+    const second = getPlayerInvulnerabilityRecoveryState()
 
     expect(first).toEqual(second)
     expect(first).not.toBe(second)

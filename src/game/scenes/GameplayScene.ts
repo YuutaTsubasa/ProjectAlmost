@@ -84,6 +84,7 @@ import {
   getPlayerDamageOutcome,
   getPlayerDefeatOutcome,
   getPlayerHurtRecoveryState,
+  getPlayerInvulnerabilityRecoveryState,
   getPlayerKnockbackDirection,
   getPlayerRespawnState,
   type PlayerDefeatReason,
@@ -1710,7 +1711,8 @@ export class GameplayScene extends Phaser.Scene {
     })
 
     this.time.delayedCall(900, () => {
-      this.isInvulnerable = false
+      const recoveryState = getPlayerInvulnerabilityRecoveryState()
+      this.isInvulnerable = recoveryState.invulnerable
       this.stopPlayerHurtBlink()
       this.setStatusMessage('status.stabilized')
     })
