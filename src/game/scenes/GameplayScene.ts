@@ -33,6 +33,7 @@ import {
 } from '../../domain/boss/projectileRules'
 import {
   BOSS_PHASE_COUNT,
+  canHitBossPrototype,
   canStartBossPattern,
   getBossPhasePlayerResetState,
   getBossHudPhaseDisplay,
@@ -1489,8 +1490,12 @@ export class GameplayScene extends Phaser.Scene {
 
   private hitBossPrototype(): void {
     const boss = this.bossPrototype
-    if (!boss || boss.defeated) return
+    if (!canHitBossPrototype({
+      bossExists: Boolean(boss),
+      bossDefeated: boss?.defeated ?? false,
+    })) return
 
+    const activeBoss = boss as NonNullable<typeof boss>
     this.bossPatternGeneration += 1
     this.bossPatternEvent?.remove(false)
     this.bossPatternEvent = undefined
@@ -1499,12 +1504,12 @@ export class GameplayScene extends Phaser.Scene {
     const outcome = getBossHitOutcome({ currentPhase: this.bossPhase })
     this.bossPhase = outcome.nextPhase
     this.dispatchHudState()
-    boss.defeated = true
-    boss.sprite.body.enable = false
+    activeBoss.defeated = true
+    activeBoss.sprite.body.enable = false
 
     if (outcome.type === 'defeated') {
       this.enemiesDefeated = 1
-      boss.sprite.play('boss-priestess-death', true)
+      activeBoss.sprite.play('boss-priestess-death', true)
       this.time.delayedCall(800, () => {
         this.goal.setVisible(true)
         this.goal.body.enable = true
@@ -1514,7 +1519,7 @@ export class GameplayScene extends Phaser.Scene {
       return
     }
 
-    boss.sprite.play('boss-priestess-hurt', true)
+    activeBoss.sprite.play('boss-priestess-hurt', true)
     const playerResetState = getBossPhasePlayerResetState({
       maxHealth: PLAYER_MAX_HEALTH,
     })

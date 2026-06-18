@@ -4,6 +4,7 @@ import {
   BOSS_PATTERN_MIN_DELAY_MS,
   BOSS_PATTERN_PHASE_DELAY_STEP_MS,
   BOSS_PHASE_COUNT,
+  canHitBossPrototype,
   canStartBossPattern,
   getBossHudPhaseDisplay,
   getBossPhasePlayerResetState,
@@ -81,6 +82,29 @@ describe('getBossPhasePlayerResetState', () => {
     expect(getBossPhasePlayerResetState({
       maxHealth: 5,
     }).health).toBe(5)
+  })
+})
+
+describe('canHitBossPrototype', () => {
+  test('rejects when the boss prototype is missing', () => {
+    expect(canHitBossPrototype({
+      bossExists: false,
+      bossDefeated: false,
+    })).toBe(false)
+  })
+
+  test('allows hits against an existing undefeated boss prototype', () => {
+    expect(canHitBossPrototype({
+      bossExists: true,
+      bossDefeated: false,
+    })).toBe(true)
+  })
+
+  test('rejects when the boss prototype is already defeated', () => {
+    expect(canHitBossPrototype({
+      bossExists: true,
+      bossDefeated: true,
+    })).toBe(false)
   })
 })
 

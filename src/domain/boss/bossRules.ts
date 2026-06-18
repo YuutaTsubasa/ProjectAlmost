@@ -59,6 +59,13 @@ export function getBossPhasePlayerResetState(input: {
   }
 }
 
+export function canHitBossPrototype(input: {
+  bossExists: boolean
+  bossDefeated: boolean
+}): boolean {
+  return input.bossExists && !input.bossDefeated
+}
+
 export function getBossVolleyShots(input: {
   phase: number
   shotIndex: number
