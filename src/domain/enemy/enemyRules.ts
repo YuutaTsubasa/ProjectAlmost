@@ -113,6 +113,13 @@ export function shouldRestoreEnemyPatrolVelocity(input: {
   return !input.frozen && input.behavior === 'patrol'
 }
 
+export function shouldProcessEnemyDefeat(input: {
+  enemyExists: boolean
+  defeated: boolean
+}): boolean {
+  return input.enemyExists && !input.defeated
+}
+
 export function hasActiveEnemy(input: {
   enemies: readonly { defeated: boolean }[]
 }): boolean {

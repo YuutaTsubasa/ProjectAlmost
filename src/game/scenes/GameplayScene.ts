@@ -58,6 +58,7 @@ import {
   getEnemyRespawnDelayMs,
   getScoreEnemyTargetCount,
   hasActiveEnemy,
+  shouldProcessEnemyDefeat,
   shouldRestoreEnemyPatrolVelocity,
   shouldUpdateEnemyFreezeState,
   shouldUpdateEnemyPatrol,
@@ -1787,7 +1788,13 @@ export class GameplayScene extends Phaser.Scene {
   private defeatEnemy(sprite: ArcadeSprite): void {
     const enemy = this.enemies.find((candidate) => candidate.sprite === sprite)
 
-    if (!enemy || enemy.defeated) {
+    if (!shouldProcessEnemyDefeat({
+      enemyExists: enemy !== undefined,
+      defeated: enemy?.defeated ?? false,
+    })) {
+      return
+    }
+    if (!enemy) {
       return
     }
 

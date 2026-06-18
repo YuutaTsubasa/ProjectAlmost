@@ -11,6 +11,7 @@ import {
   getEnemyRespawnPolicy,
   getScoreEnemyTargetCount,
   hasActiveEnemy,
+  shouldProcessEnemyDefeat,
   shouldUpdateEnemyFreezeState,
   shouldUpdateEnemyPatrol,
   shouldRestoreEnemyPatrolVelocity,
@@ -263,6 +264,29 @@ describe('shouldRestoreEnemyPatrolVelocity', () => {
     expect(shouldRestoreEnemyPatrolVelocity({
       frozen: false,
       behavior: 'homing-target',
+    })).toBe(false)
+  })
+})
+
+describe('shouldProcessEnemyDefeat', () => {
+  test('processes defeat when a runtime enemy exists and is not defeated', () => {
+    expect(shouldProcessEnemyDefeat({
+      enemyExists: true,
+      defeated: false,
+    })).toBe(true)
+  })
+
+  test('skips defeat processing when no runtime enemy exists', () => {
+    expect(shouldProcessEnemyDefeat({
+      enemyExists: false,
+      defeated: false,
+    })).toBe(false)
+  })
+
+  test('skips defeat processing when the enemy is already defeated', () => {
+    expect(shouldProcessEnemyDefeat({
+      enemyExists: true,
+      defeated: true,
     })).toBe(false)
   })
 })
