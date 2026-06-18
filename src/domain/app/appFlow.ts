@@ -1,4 +1,13 @@
-export type AppScreen = { type: 'title' }
+export const TITLE_MENU_ITEMS = ['start', 'settings', 'back'] as const
+
+export type TitleMenuItem = (typeof TITLE_MENU_ITEMS)[number]
+
+export type TitleMenuScreen = {
+  type: 'title-menu'
+  selectedItemIndex: number
+}
+
+export type AppScreen = { type: 'title-intro' } | TitleMenuScreen
 
 export type AppState = {
   screen: AppScreen
@@ -6,6 +15,42 @@ export type AppState = {
 
 export function createInitialAppState(): AppState {
   return {
-    screen: { type: 'title' },
+    screen: { type: 'title-intro' },
   }
+}
+
+export function openTitleMenu(state: AppState): AppState {
+  if (state.screen.type === 'title-menu') return state
+
+  return {
+    screen: { type: 'title-menu', selectedItemIndex: 0 },
+  }
+}
+
+export function moveTitleMenuSelection(state: AppState, direction: -1 | 1): AppState {
+  if (state.screen.type !== 'title-menu') return state
+
+  const itemCount = TITLE_MENU_ITEMS.length
+  const selectedItemIndex = (state.screen.selectedItemIndex + direction + itemCount) % itemCount
+
+  return {
+    screen: { type: 'title-menu', selectedItemIndex },
+  }
+}
+
+export function selectTitleMenuItem(state: AppState, selectedItemIndex: number): AppState {
+  if (state.screen.type !== 'title-menu') return state
+
+  return {
+    screen: { type: 'title-menu', selectedItemIndex },
+  }
+}
+
+export function activateTitleMenuItem(state: AppState): AppState {
+  if (state.screen.type !== 'title-menu') return state
+
+  const selectedItem = TITLE_MENU_ITEMS[state.screen.selectedItemIndex]
+  if (selectedItem !== 'back') return state
+
+  return createInitialAppState()
 }
