@@ -8,6 +8,7 @@ import {
   getMeleeAttackEntryState,
   getMeleeAttackReadyState,
   getMeleeHitboxGeometry,
+  isMeleeHitCandidate,
 } from './attackRules'
 
 describe('canStartMeleeAttack', () => {
@@ -157,5 +158,28 @@ describe('getMeleeHitboxGeometry', () => {
       direction: -1,
       flipX: true,
     })
+  })
+})
+
+describe('isMeleeHitCandidate', () => {
+  test('accepts non-defeated enemies that intersect the melee hitbox', () => {
+    expect(isMeleeHitCandidate({
+      defeated: false,
+      intersectsHitbox: true,
+    })).toBe(true)
+  })
+
+  test('rejects defeated enemies even when they intersect the melee hitbox', () => {
+    expect(isMeleeHitCandidate({
+      defeated: true,
+      intersectsHitbox: true,
+    })).toBe(false)
+  })
+
+  test('rejects non-intersecting enemies', () => {
+    expect(isMeleeHitCandidate({
+      defeated: false,
+      intersectsHitbox: false,
+    })).toBe(false)
   })
 })

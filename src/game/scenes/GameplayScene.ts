@@ -74,6 +74,7 @@ import {
   getMeleeAttackEntryState,
   getMeleeAttackReadyState,
   getMeleeHitboxGeometry,
+  isMeleeHitCandidate,
 } from '../../domain/player/attackRules'
 import { canCrouch } from '../../domain/player/crouchRules'
 import {
@@ -1666,7 +1667,10 @@ export class GameplayScene extends Phaser.Scene {
     hitbox.setFlipX(hitboxGeometry.flipX)
     hitbox.setVisible(false)
 
-    const hitEnemy = this.enemies.find((enemy) => !enemy.defeated && Phaser.Geom.Intersects.RectangleToRectangle(hitbox.getBounds(), enemy.sprite.getBounds()))
+    const hitEnemy = this.enemies.find((enemy) => isMeleeHitCandidate({
+      defeated: enemy.defeated,
+      intersectsHitbox: Phaser.Geom.Intersects.RectangleToRectangle(hitbox.getBounds(), enemy.sprite.getBounds()),
+    }))
 
     if (hitEnemy) {
       this.defeatEnemy(hitEnemy.sprite)

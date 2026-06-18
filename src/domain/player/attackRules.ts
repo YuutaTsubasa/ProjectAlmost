@@ -72,3 +72,10 @@ export function getMeleeHitboxGeometry(input: {
     flipX: direction < 0,
   }
 }
+
+export function isMeleeHitCandidate(input: {
+  defeated: boolean
+  intersectsHitbox: boolean
+}): boolean {
+  return !input.defeated && input.intersectsHitbox
+}
