@@ -58,6 +58,7 @@ import {
 } from '../../domain/player/jumpRules'
 import {
   canStartMeleeAttack,
+  getMeleeAttackEndState,
   getMeleeAttackEntryState,
   getMeleeHitboxGeometry,
 } from '../../domain/player/attackRules'
@@ -1622,7 +1623,8 @@ export class GameplayScene extends Phaser.Scene {
     })
 
     this.time.delayedCall(340, () => {
-      this.isAttacking = false
+      const attackEndState = getMeleeAttackEndState()
+      this.isAttacking = attackEndState.attacking
       this.setPlayerVisualState('normal')
     })
 

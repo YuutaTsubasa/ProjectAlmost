@@ -3,6 +3,7 @@ import {
   MELEE_HITBOX_FORWARD_OFFSET_X,
   MELEE_HITBOX_OFFSET_Y,
   canStartMeleeAttack,
+  getMeleeAttackEndState,
   getMeleeAttackEntryState,
   getMeleeHitboxGeometry,
 } from './attackRules'
@@ -52,6 +53,22 @@ describe('getMeleeAttackEntryState', () => {
   test('returns a fresh state object', () => {
     const first = getMeleeAttackEntryState()
     const second = getMeleeAttackEntryState()
+
+    expect(first).toEqual(second)
+    expect(first).not.toBe(second)
+  })
+})
+
+describe('getMeleeAttackEndState', () => {
+  test('returns melee attack end state', () => {
+    expect(getMeleeAttackEndState()).toEqual({
+      attacking: false,
+    })
+  })
+
+  test('returns a fresh state object', () => {
+    const first = getMeleeAttackEndState()
+    const second = getMeleeAttackEndState()
 
     expect(first).toEqual(second)
     expect(first).not.toBe(second)
