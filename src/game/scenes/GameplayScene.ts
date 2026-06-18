@@ -98,6 +98,7 @@ import {
   HOMING_ATTACK_RANGE,
   canShowHomingReticle,
   canStartHomingAttack,
+  getHomingAttackEntryState,
   getHomingContactPoint,
   getHomingFinishOutcome,
   getHomingRecoveryState,
@@ -2125,9 +2126,10 @@ export class GameplayScene extends Phaser.Scene {
       return false
     }
 
-    this.attackReady = false
-    this.isAttacking = true
-    this.isHomingAttacking = true
+    const homingEntryState = getHomingAttackEntryState()
+    this.attackReady = homingEntryState.attackReady
+    this.isAttacking = homingEntryState.attacking
+    this.isHomingAttacking = homingEntryState.homingAttacking
     this.homingTarget = target
     this.homingReticle?.setVisible(false)
     this.setPlayerVisualState('normal')

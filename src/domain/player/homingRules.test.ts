@@ -8,6 +8,7 @@ import {
   HOMING_TRAIL_SPACING,
   canShowHomingReticle,
   canStartHomingAttack,
+  getHomingAttackEntryState,
   getHomingContactPoint,
   getHomingFinishOutcome,
   getHomingRecoveryState,
@@ -62,6 +63,24 @@ describe('canStartHomingAttack', () => {
       homingAttacking: false,
       dead: true,
     })).toBe(false)
+  })
+})
+
+describe('getHomingAttackEntryState', () => {
+  test('returns Homing Attack entry state', () => {
+    expect(getHomingAttackEntryState()).toEqual({
+      attackReady: false,
+      attacking: true,
+      homingAttacking: true,
+    })
+  })
+
+  test('returns a fresh state object', () => {
+    const first = getHomingAttackEntryState()
+    const second = getHomingAttackEntryState()
+
+    expect(first).toEqual(second)
+    expect(first).not.toBe(second)
   })
 })
 

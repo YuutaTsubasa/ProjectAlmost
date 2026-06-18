@@ -23,6 +23,12 @@ export type HomingRecoveryState = {
   attackReady?: boolean
 }
 
+export type HomingAttackEntryState = {
+  attackReady: boolean
+  attacking: boolean
+  homingAttacking: boolean
+}
+
 export function canStartHomingAttack(input: {
   attackReady: boolean
   hurting: boolean
@@ -30,6 +36,14 @@ export function canStartHomingAttack(input: {
   dead: boolean
 }): boolean {
   return input.attackReady && !input.hurting && !input.homingAttacking && !input.dead
+}
+
+export function getHomingAttackEntryState(): HomingAttackEntryState {
+  return {
+    attackReady: false,
+    attacking: true,
+    homingAttacking: true,
+  }
 }
 
 export function canShowHomingReticle(input: {
