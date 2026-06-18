@@ -7,6 +7,7 @@
     selectTitleMenuItem,
   } from './domain/app/appFlow'
   import { createProjectIdentity } from './domain/app/projectIdentity'
+  import ResolutionFrame from './ui/layout/ResolutionFrame.svelte'
   import TitleScreen from './ui/title/TitleScreen.svelte'
 
   let appState = $state(createInitialAppState())
@@ -30,14 +31,16 @@
 </script>
 
 <main class="shell">
-  {#if appState.screen.type === 'title-intro' || appState.screen.type === 'title-menu'}
-    <TitleScreen
-      screen={appState.screen}
-      productName={identity.productName}
-      onOpenMenu={handleOpenMenu}
-      onMoveSelection={handleMoveTitleMenu}
-      onActivateSelection={handleActivateTitleMenuItem}
-      onSelectItem={handleSelectTitleMenuItem}
-    />
-  {/if}
+  <ResolutionFrame>
+    {#if appState.screen.type === 'title-intro' || appState.screen.type === 'title-menu'}
+      <TitleScreen
+        screen={appState.screen}
+        productName={identity.productName}
+        onOpenMenu={handleOpenMenu}
+        onMoveSelection={handleMoveTitleMenu}
+        onActivateSelection={handleActivateTitleMenuItem}
+        onSelectItem={handleSelectTitleMenuItem}
+      />
+    {/if}
+  </ResolutionFrame>
 </main>
