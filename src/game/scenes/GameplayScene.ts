@@ -32,6 +32,7 @@ import {
   getBossProjectileVelocity,
   isBossProjectileExpired,
   isBossProjectileOutOfBounds,
+  shouldUpdateBossProjectiles,
 } from '../../domain/boss/projectileRules'
 import {
   BOSS_PHASE_COUNT,
@@ -1463,7 +1464,7 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   private updateBossProjectiles(): void {
-    if (this.bossProjectiles.length === 0) return
+    if (!shouldUpdateBossProjectiles({ projectileCount: this.bossProjectiles.length })) return
 
     for (const projectile of [...this.bossProjectiles]) {
       const expired = isBossProjectileExpired({

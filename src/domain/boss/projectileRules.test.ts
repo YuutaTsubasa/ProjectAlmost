@@ -8,6 +8,7 @@ import {
   getBossProjectileVelocity,
   isBossProjectileExpired,
   isBossProjectileOutOfBounds,
+  shouldUpdateBossProjectiles,
 } from './projectileRules'
 
 describe('isBossProjectileExpired', () => {
@@ -154,6 +155,21 @@ describe('getBossProjectileLifecycleDecision', () => {
       outside: false,
       expired: false,
     })).toBe('keep')
+  })
+})
+
+describe('shouldUpdateBossProjectiles', () => {
+  test('skips updates when there are no boss projectiles', () => {
+    expect(shouldUpdateBossProjectiles({ projectileCount: 0 })).toBe(false)
+  })
+
+  test('runs updates when there is at least one boss projectile', () => {
+    expect(shouldUpdateBossProjectiles({ projectileCount: 1 })).toBe(true)
+    expect(shouldUpdateBossProjectiles({ projectileCount: 3 })).toBe(true)
+  })
+
+  test('treats negative projectile counts as not updateable', () => {
+    expect(shouldUpdateBossProjectiles({ projectileCount: -1 })).toBe(false)
   })
 })
 

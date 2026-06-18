@@ -53,6 +53,12 @@ export function getBossProjectileLifecycleDecision(input: {
   return 'keep'
 }
 
+export function shouldUpdateBossProjectiles(input: {
+  projectileCount: number
+}): boolean {
+  return input.projectileCount > 0
+}
+
 export function getBossProjectileVelocity(input: {
   angle: number
   speed: number
