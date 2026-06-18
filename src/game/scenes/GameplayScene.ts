@@ -35,6 +35,7 @@ import {
   getBossPatternDelayMs,
   getBossHitOutcome,
   isBossStageDefinition,
+  shouldRestartBossPatternAfterRespawn,
   shouldResetBossRunAfterHomingHit,
 } from '../../domain/boss/bossRules'
 import {
@@ -1976,7 +1977,10 @@ export class GameplayScene extends Phaser.Scene {
     this.playPlayerAnimation('player-idle')
     this.setEnemiesFrozen(false)
     this.setStatusMessage('status.restored')
-    if (this.isBossStage && this.bossPhase < BOSS_PHASE_COUNT) {
+    if (shouldRestartBossPatternAfterRespawn({
+      isBossStage: this.isBossStage,
+      bossPhase: this.bossPhase,
+    })) {
       this.time.delayedCall(500, () => this.startBossPattern())
     }
   }

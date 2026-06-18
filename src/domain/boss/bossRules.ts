@@ -64,3 +64,14 @@ export function shouldResetBossRunAfterHomingHit(input: {
   const phaseCount = input.phaseCount ?? BOSS_PHASE_COUNT
   return input.bossPhase < phaseCount - 1
 }
+
+export function shouldRestartBossPatternAfterRespawn(input: {
+  isBossStage: boolean
+  bossPhase: number
+  phaseCount?: number
+}): boolean {
+  if (!input.isBossStage) return false
+
+  const phaseCount = input.phaseCount ?? BOSS_PHASE_COUNT
+  return input.bossPhase < phaseCount
+}

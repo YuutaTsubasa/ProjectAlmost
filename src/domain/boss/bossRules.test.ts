@@ -8,6 +8,7 @@ import {
   getBossPatternDelayMs,
   getBossHitOutcome,
   isBossStageDefinition,
+  shouldRestartBossPatternAfterRespawn,
   shouldResetBossRunAfterHomingHit,
 } from './bossRules'
 
@@ -146,6 +147,46 @@ describe('shouldResetBossRunAfterHomingHit', () => {
     expect(shouldResetBossRunAfterHomingHit({
       targetIsBoss: true,
       bossPhase: 2,
+      phaseCount: 3,
+    })).toBe(false)
+  })
+})
+
+describe('shouldRestartBossPatternAfterRespawn', () => {
+  test('does not restart the boss pattern on non-boss stages', () => {
+    expect(shouldRestartBossPatternAfterRespawn({
+      isBossStage: false,
+      bossPhase: 0,
+    })).toBe(false)
+  })
+
+  test('restarts the boss pattern on boss stages before the phase count', () => {
+    expect(shouldRestartBossPatternAfterRespawn({
+      isBossStage: true,
+      bossPhase: 0,
+    })).toBe(true)
+    expect(shouldRestartBossPatternAfterRespawn({
+      isBossStage: true,
+      bossPhase: 3,
+    })).toBe(true)
+  })
+
+  test('does not restart the boss pattern when boss phase reaches the phase count', () => {
+    expect(shouldRestartBossPatternAfterRespawn({
+      isBossStage: true,
+      bossPhase: 4,
+    })).toBe(false)
+  })
+
+  test('supports an explicit phase count for boundary checks', () => {
+    expect(shouldRestartBossPatternAfterRespawn({
+      isBossStage: true,
+      bossPhase: 2,
+      phaseCount: 3,
+    })).toBe(true)
+    expect(shouldRestartBossPatternAfterRespawn({
+      isBossStage: true,
+      bossPhase: 3,
       phaseCount: 3,
     })).toBe(false)
   })
