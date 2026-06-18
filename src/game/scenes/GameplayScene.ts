@@ -83,6 +83,7 @@ import {
   canApplyPlayerHazardHit,
   getPlayerDamageOutcome,
   getPlayerDefeatOutcome,
+  getPlayerHurtRecoveryState,
   getPlayerKnockbackDirection,
   getPlayerRespawnState,
   type PlayerDefeatReason,
@@ -1703,8 +1704,9 @@ export class GameplayScene extends Phaser.Scene {
     })
 
     this.time.delayedCall(420, () => {
-      this.isHurting = false
-      this.attackReady = true
+      const recoveryState = getPlayerHurtRecoveryState()
+      this.isHurting = recoveryState.hurting
+      this.attackReady = recoveryState.attackReady
     })
 
     this.time.delayedCall(900, () => {

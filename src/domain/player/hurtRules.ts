@@ -60,6 +60,11 @@ export type PlayerRespawnState = {
   remainingAirJumps: number
 }
 
+export type PlayerHurtRecoveryState = {
+  hurting: boolean
+  attackReady: boolean
+}
+
 export function getPlayerDamageOutcome(input: {
   currentHealth: number
   damage?: number
@@ -84,6 +89,13 @@ export function getPlayerRespawnState(input: {
     health: input.maxHealth ?? PLAYER_MAX_HEALTH,
     jumpBufferedUntil: 0,
     remainingAirJumps: 1,
+  }
+}
+
+export function getPlayerHurtRecoveryState(): PlayerHurtRecoveryState {
+  return {
+    hurting: false,
+    attackReady: true,
   }
 }
 

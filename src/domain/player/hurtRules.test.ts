@@ -7,6 +7,7 @@ import {
   canApplyPlayerHazardHit,
   getPlayerDamageOutcome,
   getPlayerDefeatOutcome,
+  getPlayerHurtRecoveryState,
   getPlayerKnockbackDirection,
   getPlayerRespawnState,
 } from './hurtRules'
@@ -320,5 +321,22 @@ describe('getPlayerRespawnState', () => {
 
   it('supports explicit max health for boundary checks', () => {
     expect(getPlayerRespawnState({ maxHealth: 5 }).health).toBe(5)
+  })
+})
+
+describe('getPlayerHurtRecoveryState', () => {
+  it('returns the short hurt recovery state', () => {
+    expect(getPlayerHurtRecoveryState()).toEqual({
+      hurting: false,
+      attackReady: true,
+    })
+  })
+
+  it('returns a fresh state object', () => {
+    const first = getPlayerHurtRecoveryState()
+    const second = getPlayerHurtRecoveryState()
+
+    expect(first).toEqual(second)
+    expect(first).not.toBe(second)
   })
 })
