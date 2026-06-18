@@ -5,6 +5,7 @@ import {
   INITIAL_PATROL_DIRECTION,
   enemyCountsForScore,
   getEnemyDefeatOutcome,
+  getEnemyDefeatPresentationRoute,
   getEnemyDefeatRoute,
   getEnemyRegenerationDecision,
   getNextPatrolDirection,
@@ -110,6 +111,20 @@ describe('getEnemyDefeatRoute', () => {
 
   test('routes non-boss defeats to normal enemy defeat handling', () => {
     expect(getEnemyDefeatRoute({ bossPrototype: false })).toBe('normal-defeat')
+  })
+})
+
+describe('getEnemyDefeatPresentationRoute', () => {
+  test('uses the Azure Core burst presentation for Azure Cores', () => {
+    expect(getEnemyDefeatPresentationRoute({ type: 'azure-core' })).toBe('azure-core-burst')
+  })
+
+  test('uses the guard death presentation for guards', () => {
+    expect(getEnemyDefeatPresentationRoute({ type: 'guard' })).toBe('guard-death')
+  })
+
+  test('uses the guard death presentation when type is omitted', () => {
+    expect(getEnemyDefeatPresentationRoute({})).toBe('guard-death')
   })
 })
 

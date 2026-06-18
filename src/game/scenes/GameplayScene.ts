@@ -53,6 +53,7 @@ import {
 import {
   INITIAL_PATROL_DIRECTION,
   getEnemyDefeatOutcome,
+  getEnemyDefeatPresentationRoute,
   getEnemyDefeatRoute,
   getEnemyRegenerationDecision,
   getNextPatrolDirection,
@@ -1812,7 +1813,8 @@ export class GameplayScene extends Phaser.Scene {
     this.homingReticle?.setVisible(false)
     enemy.sprite.setVelocity(0, 0)
     enemy.sprite.body.enable = false
-    if (enemy.point.type === 'azure-core') {
+    const defeatPresentationRoute = getEnemyDefeatPresentationRoute({ type: enemy.point.type })
+    if (defeatPresentationRoute === 'azure-core-burst') {
       this.tweens.killTweensOf(enemy.sprite)
       this.tweens.add({
         targets: enemy.sprite,
