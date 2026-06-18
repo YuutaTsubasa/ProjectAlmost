@@ -58,6 +58,7 @@ import {
   getEnemyRespawnDelayMs,
   getScoreEnemyTargetCount,
   hasActiveEnemy,
+  shouldUpdateEnemyFreezeState,
   shouldUpdateEnemyPatrol,
   type PatrolDirection,
 } from '../../domain/enemy/enemyRules'
@@ -2090,7 +2091,10 @@ export class GameplayScene extends Phaser.Scene {
 
   private setEnemiesFrozen(frozen: boolean): void {
     for (const enemy of this.enemies) {
-      if (enemy.defeated || !enemy.sprite.active) continue
+      if (!shouldUpdateEnemyFreezeState({
+        defeated: enemy.defeated,
+        active: enemy.sprite.active,
+      })) continue
 
       enemy.sprite.setVelocity(0, 0)
       enemy.sprite.setAcceleration(0, 0)

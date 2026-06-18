@@ -11,6 +11,7 @@ import {
   getEnemyRespawnPolicy,
   getScoreEnemyTargetCount,
   hasActiveEnemy,
+  shouldUpdateEnemyFreezeState,
   shouldUpdateEnemyPatrol,
 } from './enemyRules'
 
@@ -216,6 +217,29 @@ describe('shouldUpdateEnemyPatrol', () => {
 
   test('updates enemies without an explicit type as default guards', () => {
     expect(shouldUpdateEnemyPatrol({ defeated: false })).toBe(true)
+  })
+})
+
+describe('shouldUpdateEnemyFreezeState', () => {
+  test('updates active enemies that are not defeated', () => {
+    expect(shouldUpdateEnemyFreezeState({
+      defeated: false,
+      active: true,
+    })).toBe(true)
+  })
+
+  test('skips defeated enemies', () => {
+    expect(shouldUpdateEnemyFreezeState({
+      defeated: true,
+      active: true,
+    })).toBe(false)
+  })
+
+  test('skips inactive enemies', () => {
+    expect(shouldUpdateEnemyFreezeState({
+      defeated: false,
+      active: false,
+    })).toBe(false)
   })
 })
 

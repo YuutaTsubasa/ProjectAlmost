@@ -97,6 +97,13 @@ export function shouldUpdateEnemyPatrol(input: {
   return !input.defeated && getEnemyType(input.type) !== 'azure-core'
 }
 
+export function shouldUpdateEnemyFreezeState(input: {
+  defeated: boolean
+  active: boolean
+}): boolean {
+  return !input.defeated && input.active
+}
+
 export function hasActiveEnemy(input: {
   enemies: readonly { defeated: boolean }[]
 }): boolean {
