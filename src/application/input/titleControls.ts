@@ -2,12 +2,13 @@ import {
   activateTitleMenuItem,
   moveTitleMenuSelection,
   openTitleMenu,
+  TITLE_MENU_ITEMS,
   selectTitleMenuItem,
   type AppState,
 } from '../../domain/app/appFlow'
 import type { ControlIntent } from '../../domain/input/controlIntents'
 
-const BACK_ITEM_INDEX = 2
+const BACK_ITEM_INDEX = TITLE_MENU_ITEMS.indexOf('back')
 
 export function applyTitleControlIntent(state: AppState, intent: ControlIntent): AppState {
   if (intent === 'open') {

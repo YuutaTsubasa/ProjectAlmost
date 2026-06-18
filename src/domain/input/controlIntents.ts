@@ -8,6 +8,7 @@ export type KeyboardControlDescriptor = {
 }
 
 export type GamepadControlSnapshot = {
+  mapping: string
   buttons: boolean[]
   axes: number[]
 }
@@ -42,6 +43,7 @@ export function mapGamepadControlIntents(
   context: ControlContext,
 ): ControlIntent[] {
   if (!current || !previous) return []
+  if (current.mapping !== 'standard') return []
 
   const intents: ControlIntent[] = []
 

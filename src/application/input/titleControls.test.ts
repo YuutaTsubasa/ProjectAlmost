@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { createInitialAppState } from '../../domain/app/appFlow'
+import { TITLE_MENU_ITEMS, createInitialAppState } from '../../domain/app/appFlow'
 import { applyTitleControlIntent, selectTitleMenuItemFromPointer } from './titleControls'
 
 describe('applyTitleControlIntent', () => {
@@ -22,7 +22,9 @@ describe('applyTitleControlIntent', () => {
   })
 
   it('confirms the selected title menu item', () => {
-    const backSelected = { screen: { type: 'title-menu', selectedItemIndex: 2 } } as const
+    const backSelected = {
+      screen: { type: 'title-menu', selectedItemIndex: TITLE_MENU_ITEMS.indexOf('back') },
+    } as const
 
     expect(applyTitleControlIntent(backSelected, 'confirm')).toEqual({
       screen: { type: 'title-intro' },
@@ -56,7 +58,7 @@ describe('applyTitleControlIntent', () => {
   it('activates Back immediately when pointer input selects it', () => {
     const state = { screen: { type: 'title-menu', selectedItemIndex: 0 } } as const
 
-    expect(selectTitleMenuItemFromPointer(state, 2)).toEqual({
+    expect(selectTitleMenuItemFromPointer(state, TITLE_MENU_ITEMS.indexOf('back'))).toEqual({
       screen: { type: 'title-intro' },
     })
   })

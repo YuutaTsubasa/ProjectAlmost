@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { mapGamepadControlIntents, mapKeyboardControlIntent } from './controlIntents'
+import { mapGamepadControlIntents, mapKeyboardControlIntent, type GamepadControlSnapshot } from './controlIntents'
 
 describe('mapKeyboardControlIntent', () => {
   it('maps any non-repeat key to open while waiting on the title intro', () => {
@@ -29,6 +29,7 @@ describe('mapKeyboardControlIntent', () => {
 describe('mapGamepadControlIntents', () => {
   it('maps gamepad buttons to open, confirm, back, and directional intents', () => {
     const previous = {
+      mapping: 'standard',
       buttons: [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false],
       axes: [0, 0],
     }
@@ -55,23 +56,23 @@ describe('mapGamepadControlIntents', () => {
   })
 
   it('maps left stick threshold crossings to directional intents', () => {
-    const previous = { buttons: [], axes: [0, 0] }
+    const previous = { mapping: 'standard', buttons: [], axes: [0, 0] }
 
-    expect(mapGamepadControlIntents(previous, { buttons: [], axes: [0, -0.7] }, 'title-menu')).toEqual(['move-up'])
-    expect(mapGamepadControlIntents(previous, { buttons: [], axes: [0, 0.7] }, 'title-menu')).toEqual(['move-down'])
-    expect(mapGamepadControlIntents(previous, { buttons: [], axes: [0, 0.2] }, 'title-menu')).toEqual([])
+    expect(mapGamepadControlIntents(previous, { mapping: 'standard', buttons: [], axes: [0, -0.7] }, 'title-menu')).toEqual(['move-up'])
+    expect(mapGamepadControlIntents(previous, { mapping: 'standard', buttons: [], axes: [0, 0.7] }, 'title-menu')).toEqual(['move-down'])
+    expect(mapGamepadControlIntents(previous, { mapping: 'standard', buttons: [], axes: [0, 0.2] }, 'title-menu')).toEqual([])
   })
 
   it('does not emit axis intents at exact thresholds', () => {
-    const previous = { buttons: [], axes: [0, 0] }
+    const previous = { mapping: 'standard', buttons: [], axes: [0, 0] }
 
-    expect(mapGamepadControlIntents(previous, { buttons: [], axes: [0, -0.5] }, 'title-menu')).toEqual([])
-    expect(mapGamepadControlIntents(previous, { buttons: [], axes: [0, 0.5] }, 'title-menu')).toEqual([])
+    expect(mapGamepadControlIntents(previous, { mapping: 'standard', buttons: [], axes: [0, -0.5] }, 'title-menu')).toEqual([])
+    expect(mapGamepadControlIntents(previous, { mapping: 'standard', buttons: [], axes: [0, 0.5] }, 'title-menu')).toEqual([])
   })
 
   it('emits move-up/down when axis crosses from exact threshold boundary', () => {
-    const fromNegativeBoundary = { buttons: [], axes: [0, -0.5] }
-    const fromPositiveBoundary = { buttons: [], axes: [0, 0.5] }
+    const fromNegativeBoundary = { mapping: 'standard', buttons: [], axes: [0, -0.5] }
+    const fromPositiveBoundary = { mapping: 'standard', buttons: [], axes: [0, 0.5] }
 
     expect(
       mapGamepadControlIntents(fromNegativeBoundary, { ...fromNegativeBoundary, axes: [0, -0.7] }, 'title-menu'),
@@ -82,8 +83,8 @@ describe('mapGamepadControlIntents', () => {
   })
 
   it('emits intents only when buttons or axes move from inactive to active', () => {
-    const previous = { buttons: [true, false, false, false], axes: [0, 0.8] }
-    const current = { buttons: [true, false, false, false], axes: [0, 0.9] }
+    const previous = { mapping: 'standard', buttons: [true, false, false, false], axes: [0, 0.8] }
+    const current = { mapping: 'standard', buttons: [true, false, false, false], axes: [0, 0.9] }
 
     expect(mapGamepadControlIntents(previous, current, 'title-menu')).toEqual([])
   })
@@ -93,10 +94,25 @@ describe('mapGamepadControlIntents', () => {
   })
 
   it('returns no intents when previous gamepad data is missing even if current is active', () => {
-    const activeButtons = { buttons: [true, false, false, false], axes: [0, 0] }
-    const activeAxis = { buttons: [false, false, false, false], axes: [0, -0.7] }
+    const activeButtons = { mapping: 'standard', buttons: [true, false, false, false], axes: [0, 0] }
+    const activeAxis = { mapping: 'standard', buttons: [false, false, false, false], axes: [0, -0.7] }
 
     expect(mapGamepadControlIntents(null, activeButtons, 'title-menu')).toEqual([])
     expect(mapGamepadControlIntents(null, activeAxis, 'title-menu')).toEqual([])
+  })
+
+  it('ignores unsupported gamepad mappings even when inputs are active', () => {
+    const previous: GamepadControlSnapshot = {
+      mapping: 'x-input',
+      buttons: [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false],
+      axes: [0, 0],
+    }
+    const current: GamepadControlSnapshot = {
+      mapping: 'x-input',
+      buttons: [true, true, false, false, false, false, false, false, false, false, false, false, true, false, false],
+      axes: [0, -0.7],
+    }
+
+    expect(mapGamepadControlIntents(previous, current, 'title-menu')).toEqual([])
   })
 })
