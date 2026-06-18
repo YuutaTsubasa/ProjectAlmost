@@ -35,6 +35,17 @@ export function getMovingPlatformDeltaSeconds(input: {
   return Math.max(input.deltaMs / 1000, input.minDeltaSeconds ?? MOVING_PLATFORM_MIN_DELTA_SECONDS)
 }
 
+export function getMovingPlatformVelocity(input: {
+  deltaX: number
+  deltaY: number
+  deltaSeconds: number
+}): { x: number; y: number } {
+  return {
+    x: input.deltaX / input.deltaSeconds,
+    y: input.deltaY / input.deltaSeconds,
+  }
+}
+
 export function isMovingPlatformRider(input: {
   playerGravityDown: boolean
   playerLeft: number

@@ -4,6 +4,7 @@ import {
   getMovingPlatformDeltaSeconds,
   getMovingPlatformUpdateDecision,
   getMovingPlatformPosition,
+  getMovingPlatformVelocity,
   isMovingPlatformRider,
 } from './movingPlatformRules'
 
@@ -113,6 +114,40 @@ describe('getMovingPlatformDeltaSeconds', () => {
       deltaMs: 1,
       minDeltaSeconds: 0.01,
     })).toBe(0.01)
+  })
+})
+
+describe('getMovingPlatformVelocity', () => {
+  it('calculates positive velocities from positive deltas', () => {
+    expect(getMovingPlatformVelocity({
+      deltaX: 12,
+      deltaY: 6,
+      deltaSeconds: 0.5,
+    })).toEqual({ x: 24, y: 12 })
+  })
+
+  it('returns zero velocity for zero movement on an axis', () => {
+    expect(getMovingPlatformVelocity({
+      deltaX: 0,
+      deltaY: 8,
+      deltaSeconds: 0.25,
+    })).toEqual({ x: 0, y: 32 })
+  })
+
+  it('calculates negative velocities from negative deltas', () => {
+    expect(getMovingPlatformVelocity({
+      deltaX: -10,
+      deltaY: -4,
+      deltaSeconds: 0.5,
+    })).toEqual({ x: -20, y: -8 })
+  })
+
+  it('calculates x and y velocities independently', () => {
+    expect(getMovingPlatformVelocity({
+      deltaX: 3,
+      deltaY: -9,
+      deltaSeconds: 0.3,
+    })).toEqual({ x: 10, y: -30 })
   })
 })
 

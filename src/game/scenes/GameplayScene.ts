@@ -24,6 +24,7 @@ import {
   getMovingPlatformDeltaSeconds,
   getMovingPlatformUpdateDecision,
   getMovingPlatformPosition,
+  getMovingPlatformVelocity,
   isMovingPlatformRider,
 } from '../../domain/world/movingPlatformRules'
 import { findActiveSurfaceZone } from '../../domain/world/surfaceRules'
@@ -1952,8 +1953,9 @@ export class GameplayScene extends Phaser.Scene {
       const deltaSeconds = getMovingPlatformDeltaSeconds({ deltaMs: this.game.loop.delta })
       const deltaX = nextX - platform.previousX
       const deltaY = nextY - platform.previousY
+      const velocity = getMovingPlatformVelocity({ deltaX, deltaY, deltaSeconds })
 
-      platform.sprite.body.setVelocity(deltaX / deltaSeconds, deltaY / deltaSeconds)
+      platform.sprite.body.setVelocity(velocity.x, velocity.y)
       platform.sprite.setPosition(nextX, nextY)
       platform.sprite.body.updateFromGameObject()
       if (carryingPlayer) {
