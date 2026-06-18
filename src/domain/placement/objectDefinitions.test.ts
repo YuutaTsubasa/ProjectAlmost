@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest'
 import {
   getEnemySpawnY,
+  getHazardFrameIndex,
   getPlayerCenterY,
   groundedBottomY,
   groundedCenterY,
@@ -39,6 +40,19 @@ describe('groundedBottomY', () => {
 describe('groundedHazardCenterY', () => {
   test('places floor spikes on a platform surface with visual inset', () => {
     expect(groundedHazardCenterY(704, 32, 'spikes')).toBe(704 - 16 + objectDefinitions.spikes.visualBottomInset)
+  })
+})
+
+describe('getHazardFrameIndex', () => {
+  test('uses the floor frame when orientation is omitted or floor', () => {
+    expect(getHazardFrameIndex({})).toBe(0)
+    expect(getHazardFrameIndex({ orientation: 'floor' })).toBe(0)
+  })
+
+  test('maps ceiling and wall orientations to authored frames', () => {
+    expect(getHazardFrameIndex({ orientation: 'ceiling' })).toBe(4)
+    expect(getHazardFrameIndex({ orientation: 'left-wall' })).toBe(3)
+    expect(getHazardFrameIndex({ orientation: 'right-wall' })).toBe(2)
   })
 })
 

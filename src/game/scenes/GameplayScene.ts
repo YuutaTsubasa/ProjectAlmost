@@ -1,6 +1,6 @@
 import * as Phaser from 'phaser'
 import { IMAGE_ASSETS } from '../assets/assetManifest'
-import { getEnemySpawnY, getPlayerCenterY, groundedBottomY, groundedHazardCenterY, objectDefinitions } from '../objects/objectDefinitions'
+import { getEnemySpawnY, getHazardFrameIndex, getPlayerCenterY, groundedBottomY, groundedHazardCenterY, objectDefinitions } from '../objects/objectDefinitions'
 import type { CoinPoint, EnemyPoint, GravityZone, HazardRect, MovingPlatformRect, PlatformRect, StageData, SurfaceZone } from '../stages/stageTypes'
 import type { TranslationKey, TranslationParams } from '../../i18n'
 import { getCheckpointTargetCount, getReachedCheckpointCount } from '../../domain/stage/checkpointRules'
@@ -1199,7 +1199,7 @@ export class GameplayScene extends Phaser.Scene {
 
   private createHazards(): void {
     this.hazards = (this.stage.hazards ?? []).map((point) => {
-      const frame = this.getHazardFrame(point)
+      const frame = getHazardFrameIndex({ orientation: point.orientation })
       const texture = point.type === 'lava' ? 'lava-hazard' : 'emerald-sanctuary-spikes'
       const centerY = groundedHazardCenterY(point.surfaceY, point.height, point.type)
       const sprite = point.type === 'lava'
@@ -1218,13 +1218,6 @@ export class GameplayScene extends Phaser.Scene {
 
       return { sprite, point }
     })
-  }
-
-  private getHazardFrame(point: HazardRect): number {
-    if (point.orientation === 'ceiling') return 4
-    if (point.orientation === 'left-wall') return 3
-    if (point.orientation === 'right-wall') return 2
-    return 0
   }
 
   private createCoins(): void {

@@ -82,6 +82,7 @@ export const objectDefinitions = {
 
 export type ObjectDefinitionId = keyof typeof objectDefinitions
 export type PlacementGravityDirection = 'down' | 'up'
+export type HazardOrientation = 'floor' | 'ceiling' | 'left-wall' | 'right-wall'
 
 export function groundedCenterY(surfaceY: number, definitionId: 'player' | 'guard'): number {
   return surfaceY - objectDefinitions[definitionId].centerAboveSurface
@@ -103,6 +104,15 @@ export function groundedBottomY(surfaceY: number, definitionId: 'checkpoint' | '
 
 export function groundedHazardCenterY(surfaceY: number, height: number, definitionId: 'spikes' | 'lava'): number {
   return surfaceY - height / 2 + objectDefinitions[definitionId].visualBottomInset
+}
+
+export function getHazardFrameIndex(input: {
+  orientation?: HazardOrientation
+}): number {
+  if (input.orientation === 'ceiling') return 4
+  if (input.orientation === 'left-wall') return 3
+  if (input.orientation === 'right-wall') return 2
+  return 0
 }
 
 export function getEnemySpawnY(
