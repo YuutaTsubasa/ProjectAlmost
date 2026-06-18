@@ -46,6 +46,18 @@ export function getMovingPlatformVelocity(input: {
   }
 }
 
+export function getMovingPlatformCarriedPlayerPosition(input: {
+  playerX: number
+  playerY: number
+  deltaX: number
+  deltaY: number
+}): { x: number; y: number } {
+  return {
+    x: input.playerX + input.deltaX,
+    y: input.playerY + input.deltaY,
+  }
+}
+
 export function isMovingPlatformRider(input: {
   playerGravityDown: boolean
   playerLeft: number

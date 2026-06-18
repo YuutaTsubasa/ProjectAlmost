@@ -4,6 +4,7 @@ import {
   getMovingPlatformDeltaSeconds,
   getMovingPlatformUpdateDecision,
   getMovingPlatformPosition,
+  getMovingPlatformCarriedPlayerPosition,
   getMovingPlatformVelocity,
   isMovingPlatformRider,
 } from './movingPlatformRules'
@@ -148,6 +149,44 @@ describe('getMovingPlatformVelocity', () => {
       deltaY: -9,
       deltaSeconds: 0.3,
     })).toEqual({ x: 10, y: -30 })
+  })
+})
+
+describe('getMovingPlatformCarriedPlayerPosition', () => {
+  it('applies positive platform deltas to both player axes', () => {
+    expect(getMovingPlatformCarriedPlayerPosition({
+      playerX: 100,
+      playerY: 200,
+      deltaX: 12,
+      deltaY: 6,
+    })).toEqual({ x: 112, y: 206 })
+  })
+
+  it('leaves an axis unchanged when its delta is zero', () => {
+    expect(getMovingPlatformCarriedPlayerPosition({
+      playerX: 100,
+      playerY: 200,
+      deltaX: 0,
+      deltaY: 8,
+    })).toEqual({ x: 100, y: 208 })
+  })
+
+  it('applies negative platform deltas to both player axes', () => {
+    expect(getMovingPlatformCarriedPlayerPosition({
+      playerX: 100,
+      playerY: 200,
+      deltaX: -10,
+      deltaY: -4,
+    })).toEqual({ x: 90, y: 196 })
+  })
+
+  it('applies x and y deltas independently', () => {
+    expect(getMovingPlatformCarriedPlayerPosition({
+      playerX: 100,
+      playerY: 200,
+      deltaX: 3,
+      deltaY: -9,
+    })).toEqual({ x: 103, y: 191 })
   })
 })
 

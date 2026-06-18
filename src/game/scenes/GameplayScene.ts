@@ -24,6 +24,7 @@ import {
   getMovingPlatformDeltaSeconds,
   getMovingPlatformUpdateDecision,
   getMovingPlatformPosition,
+  getMovingPlatformCarriedPlayerPosition,
   getMovingPlatformVelocity,
   isMovingPlatformRider,
 } from '../../domain/world/movingPlatformRules'
@@ -1959,8 +1960,14 @@ export class GameplayScene extends Phaser.Scene {
       platform.sprite.setPosition(nextX, nextY)
       platform.sprite.body.updateFromGameObject()
       if (carryingPlayer) {
-        this.player.x += deltaX
-        this.player.y += deltaY
+        const carriedPlayerPosition = getMovingPlatformCarriedPlayerPosition({
+          playerX: this.player.x,
+          playerY: this.player.y,
+          deltaX,
+          deltaY,
+        })
+        this.player.x = carriedPlayerPosition.x
+        this.player.y = carriedPlayerPosition.y
         this.player.body.updateFromGameObject()
       }
       platform.previousX = nextX
