@@ -5,6 +5,7 @@ export type EnemyRespawnPolicy = 'persistent' | 'regenerate'
 export type EnemyRegenerationDecision = 'skip' | 'delay' | 'regenerate'
 export type EnemyDefeatRoute = 'boss-hit' | 'normal-defeat'
 export type EnemyDefeatPresentationRoute = 'azure-core-burst' | 'guard-death'
+export type EnemyRegenerationPresentationRoute = 'azure-core-regeneration' | 'guard-regeneration'
 export type PatrolDirection = -1 | 1
 export type EnemyDefeatOutcome = {
   scoreDelta: number
@@ -132,6 +133,12 @@ export function getEnemyDefeatPresentationRoute(input: {
   type?: EnemyType
 }): EnemyDefeatPresentationRoute {
   return getEnemyType(input.type) === 'azure-core' ? 'azure-core-burst' : 'guard-death'
+}
+
+export function getEnemyRegenerationPresentationRoute(input: {
+  type?: EnemyType
+}): EnemyRegenerationPresentationRoute {
+  return getEnemyType(input.type) === 'azure-core' ? 'azure-core-regeneration' : 'guard-regeneration'
 }
 
 export function hasActiveEnemy(input: {

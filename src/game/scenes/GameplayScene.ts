@@ -55,6 +55,7 @@ import {
   getEnemyDefeatOutcome,
   getEnemyDefeatPresentationRoute,
   getEnemyDefeatRoute,
+  getEnemyRegenerationPresentationRoute,
   getEnemyRegenerationDecision,
   getNextPatrolDirection,
   getEnemyRespawnDelayMs,
@@ -1865,7 +1866,8 @@ export class GameplayScene extends Phaser.Scene {
 
     this.tweens.killTweensOf(enemy.sprite)
     enemy.sprite.setPosition(enemy.point.x, spawnY)
-    if (enemy.point.type === 'azure-core') {
+    const regenerationPresentationRoute = getEnemyRegenerationPresentationRoute({ type: enemy.point.type })
+    if (regenerationPresentationRoute === 'azure-core-regeneration') {
       this.configureAzureCore(enemy.sprite, spawnY)
       enemy.sprite.body.enable = false
       enemy.sprite.setScale(0.35)

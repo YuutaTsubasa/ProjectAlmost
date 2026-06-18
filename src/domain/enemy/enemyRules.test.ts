@@ -7,6 +7,7 @@ import {
   getEnemyDefeatOutcome,
   getEnemyDefeatPresentationRoute,
   getEnemyDefeatRoute,
+  getEnemyRegenerationPresentationRoute,
   getEnemyRegenerationDecision,
   getNextPatrolDirection,
   getEnemyRespawnDelayMs,
@@ -125,6 +126,20 @@ describe('getEnemyDefeatPresentationRoute', () => {
 
   test('uses the guard death presentation when type is omitted', () => {
     expect(getEnemyDefeatPresentationRoute({})).toBe('guard-death')
+  })
+})
+
+describe('getEnemyRegenerationPresentationRoute', () => {
+  test('uses the Azure Core regeneration presentation for Azure Cores', () => {
+    expect(getEnemyRegenerationPresentationRoute({ type: 'azure-core' })).toBe('azure-core-regeneration')
+  })
+
+  test('uses the guard regeneration presentation for guards', () => {
+    expect(getEnemyRegenerationPresentationRoute({ type: 'guard' })).toBe('guard-regeneration')
+  })
+
+  test('uses the guard regeneration presentation when type is omitted', () => {
+    expect(getEnemyRegenerationPresentationRoute({})).toBe('guard-regeneration')
   })
 })
 
