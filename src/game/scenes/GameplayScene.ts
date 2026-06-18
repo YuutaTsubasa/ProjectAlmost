@@ -97,6 +97,7 @@ import {
   canStartHomingAttack,
   getHomingContactPoint,
   getHomingFinishOutcome,
+  getHomingRecoveryState,
   getHomingTrailSamples,
   isPointCollectableByHomingLine,
   isHomingTargetLost,
@@ -2236,9 +2237,10 @@ export class GameplayScene extends Phaser.Scene {
     this.setStatusMessage(outcome.statusKey)
 
     this.time.delayedCall(HOMING_ATTACK_RECOVERY_MS, () => {
-      this.isAttacking = false
-      if (!this.isHurting) {
-        this.attackReady = true
+      const recoveryState = getHomingRecoveryState({ hurting: this.isHurting })
+      this.isAttacking = recoveryState.attacking
+      if (recoveryState.attackReady !== undefined) {
+        this.attackReady = recoveryState.attackReady
       }
     })
   }

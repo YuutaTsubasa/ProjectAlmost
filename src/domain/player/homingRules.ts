@@ -18,6 +18,11 @@ export type HomingTrailSample = {
   alpha: number
 }
 
+export type HomingRecoveryState = {
+  attacking: boolean
+  attackReady?: boolean
+}
+
 export function canStartHomingAttack(input: {
   attackReady: boolean
   hurting: boolean
@@ -114,6 +119,21 @@ export function getHomingFinishOutcome(input: {
   return {
     velocityY: 0,
     statusKey: 'status.homingMiss',
+  }
+}
+
+export function getHomingRecoveryState(input: {
+  hurting: boolean
+}): HomingRecoveryState {
+  if (input.hurting) {
+    return {
+      attacking: false,
+    }
+  }
+
+  return {
+    attacking: false,
+    attackReady: true,
   }
 }
 

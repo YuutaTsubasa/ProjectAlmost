@@ -10,6 +10,7 @@ import {
   canStartHomingAttack,
   getHomingContactPoint,
   getHomingFinishOutcome,
+  getHomingRecoveryState,
   getHomingTrailSamples,
   isPointCollectableByHomingLine,
   isHomingTargetLost,
@@ -416,6 +417,29 @@ describe('getHomingFinishOutcome', () => {
       velocityY: 0,
       statusKey: 'status.homingMiss',
     })
+  })
+})
+
+describe('getHomingRecoveryState', () => {
+  test('ends attack and restores readiness when player is not hurting', () => {
+    expect(getHomingRecoveryState({ hurting: false })).toEqual({
+      attacking: false,
+      attackReady: true,
+    })
+  })
+
+  test('ends attack without overwriting readiness while player is hurting', () => {
+    expect(getHomingRecoveryState({ hurting: true })).toEqual({
+      attacking: false,
+    })
+  })
+
+  test('returns a fresh state object', () => {
+    const first = getHomingRecoveryState({ hurting: false })
+    const second = getHomingRecoveryState({ hurting: false })
+
+    expect(first).toEqual(second)
+    expect(first).not.toBe(second)
   })
 })
 
