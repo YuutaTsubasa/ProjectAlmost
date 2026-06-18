@@ -5,6 +5,12 @@ export type StageClearState = {
   attackReady: boolean
 }
 
+export function canCompleteStage(input: {
+  stageCleared: boolean
+}): boolean {
+  return !input.stageCleared
+}
+
 export function getStageClearState(): StageClearState {
   return {
     stageCleared: true,

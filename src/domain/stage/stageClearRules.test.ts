@@ -1,5 +1,15 @@
 import { describe, expect, it } from 'vitest'
-import { getStageClearState } from './stageClearRules'
+import { canCompleteStage, getStageClearState } from './stageClearRules'
+
+describe('canCompleteStage', () => {
+  it('allows stage completion before the stage is cleared', () => {
+    expect(canCompleteStage({ stageCleared: false })).toBe(true)
+  })
+
+  it('blocks duplicate stage completion after the stage is cleared', () => {
+    expect(canCompleteStage({ stageCleared: true })).toBe(false)
+  })
+})
 
 describe('getStageClearState', () => {
   it('returns the stage clear state transition values', () => {
