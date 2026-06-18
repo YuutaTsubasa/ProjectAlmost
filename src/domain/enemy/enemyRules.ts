@@ -90,6 +90,13 @@ export function getNextPatrolDirection(input: {
   return input.currentDirection
 }
 
+export function shouldUpdateEnemyPatrol(input: {
+  defeated: boolean
+  type?: EnemyType
+}): boolean {
+  return !input.defeated && getEnemyType(input.type) !== 'azure-core'
+}
+
 export function hasActiveEnemy(input: {
   enemies: readonly { defeated: boolean }[]
 }): boolean {

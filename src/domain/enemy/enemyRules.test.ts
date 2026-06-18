@@ -11,6 +11,7 @@ import {
   getEnemyRespawnPolicy,
   getScoreEnemyTargetCount,
   hasActiveEnemy,
+  shouldUpdateEnemyPatrol,
 } from './enemyRules'
 
 describe('getEnemyRespawnPolicy', () => {
@@ -197,6 +198,24 @@ describe('enemy patrol direction', () => {
       patrolMaxX: 200,
       currentDirection: 1,
     })).toBe(1)
+  })
+})
+
+describe('shouldUpdateEnemyPatrol', () => {
+  test('skips defeated enemies', () => {
+    expect(shouldUpdateEnemyPatrol({ defeated: true, type: 'guard' })).toBe(false)
+  })
+
+  test('skips Azure Cores because they do not use patrol movement', () => {
+    expect(shouldUpdateEnemyPatrol({ defeated: false, type: 'azure-core' })).toBe(false)
+  })
+
+  test('updates guard enemies', () => {
+    expect(shouldUpdateEnemyPatrol({ defeated: false, type: 'guard' })).toBe(true)
+  })
+
+  test('updates enemies without an explicit type as default guards', () => {
+    expect(shouldUpdateEnemyPatrol({ defeated: false })).toBe(true)
   })
 })
 

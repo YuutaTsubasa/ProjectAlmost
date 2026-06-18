@@ -58,6 +58,7 @@ import {
   getEnemyRespawnDelayMs,
   getScoreEnemyTargetCount,
   hasActiveEnemy,
+  shouldUpdateEnemyPatrol,
   type PatrolDirection,
 } from '../../domain/enemy/enemyRules'
 import {
@@ -1876,10 +1877,10 @@ export class GameplayScene extends Phaser.Scene {
 
   private updateEnemyPatrol(): void {
     for (const enemy of this.enemies) {
-      if (enemy.defeated) {
-        continue
-      }
-      if (enemy.point.type === 'azure-core') {
+      if (!shouldUpdateEnemyPatrol({
+        defeated: enemy.defeated,
+        type: enemy.point.type,
+      })) {
         continue
       }
 
