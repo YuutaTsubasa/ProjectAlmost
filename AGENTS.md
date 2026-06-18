@@ -1,56 +1,63 @@
-# ProjectAlmost Agent Guide
+# Project Almost Rebuild Agent Guide
 
-Read this file before changing code in a new session. It is the project-level workflow entry point for Codex, Claude Code, and other coding agents.
+Read this file before changing code in the rebuilt project. The previous playable prototype is preserved under `__prototype__/` as a reference only.
 
-## Required Reading
+## Required Workflow
 
-Before implementation, read the relevant files in this order:
+Every implementation task must follow the superpowers workflow:
 
-1. `README.md` for the current product state and broad architecture.
-2. `docs/PROJECT_WORKFLOW.md` for the implementation workflow and required handoff notes.
-3. `docs/ARCHITECTURE_MAP.md` for ownership boundaries and risk areas.
-4. `docs/ARCHITECTURE_REVIEW_TDD_DDD.md` when planning new systems, refactors, or TDD-driven work.
-5. `docs/ASSET_PIPELINE.md` when adding or replacing runtime art, audio, fonts, or generated assets.
-6. `docs/GAME_DESIGN.md` when changing stage design, mechanics, controls, scoring, or world identity.
+1. Read the relevant skill files before acting, especially `using-superpowers`.
+2. For new behavior or refactors, write or update a spec in `docs/superpowers/specs/`.
+3. Use TDD for domain or application behavior:
+   - write the failing test first
+   - run it and confirm the expected failure
+   - implement the smallest code that passes
+   - run focused and full verification
+4. Keep changes small enough to review and commit independently.
 
-For stage work, also read:
+Do not skip TDD because the change feels small. If the change is not testable, first improve the boundary until it is.
 
-- `src/game/stages/stageTypes.ts`
-- `src/game/stages/stageRegistry.ts`
-- `src/game/objects/objectDefinitions.ts`
-- The specific stage JSON file being changed.
+## Architecture Direction
 
-## Working Rules
+The rebuild uses these layers:
 
-- Start by checking `git status --short`. Assume unrelated dirty files belong to another human or agent.
-- Keep feature changes scoped. Do not opportunistically refactor `App.svelte`, `GameplayScene.ts`, or `app.css`.
-- Do not put stage-specific or object-specific runtime state in module-level mutable globals.
-- Stage data must be selected, cloned, and passed into the gameplay scene instance. A later stage must not inherit platforms, hazards, enemies, assets, timers, or boss state from a previous stage.
-- Use object definitions for placement, origins, collision bodies, visual bottom insets, and object behavior. Do not fix sprite padding by hand in individual stage JSON files.
-- Runtime assets belong in `public/assets/` and must be registered in `src/game/assets/assetManifest.ts`.
-- Visible UI strings must go through `src/i18n.ts` for English, Japanese, Traditional Chinese, and Korean.
-- Verify frontend changes in the running app when possible, especially after UI, input, stage, or Phaser changes.
-- Prefer TDD on pure domain rules before wiring Svelte or Phaser adapters. See `docs/ARCHITECTURE_REVIEW_TDD_DDD.md`.
+- `src/domain/`: pure Functional core. No Svelte, Tauri, DOM, Phaser, browser storage, timers, or random side effects.
+- `src/application/`: use cases and reactive state models. Coordinates domain rules and exposes view models or commands.
+- `src/ui/` and Svelte components: Reactive presentation. Components render state and emit user intents.
+- `src-tauri/`: Tauri v2 desktop adapter. Rust commands must stay thin and explicit.
+- `__prototype__/`: historical playable prototype and asset/design reference. Do not import runtime code from it.
 
-## Before Editing
+OOP is allowed as a DDD organization tool for domain concepts and application services, but behavior should remain deterministic and testable. Prefer pure functions, immutable values, discriminated unions, and explicit commands/events.
 
-Write down the intended change in the conversation or in a short feature brief when the task is bigger than a small bug fix.
+## Prototype Boundary
 
-Use `docs/templates/FEATURE_BRIEF.md` as the structure for larger work:
+Use `__prototype__/` for:
 
-- target behavior
-- files expected to change
-- architecture risks
-- asset or localization impact
-- validation plan
+- checking previous gameplay behavior
+- reviewing assets, generated art, stage JSON, and UI references
+- comparing old architecture decisions
 
-## Before Finishing
+Do not:
 
-Run the smallest checks that match the change:
+- add new source files inside `__prototype__/` unless explicitly maintaining the old prototype
+- import from `__prototype__/src`
+- treat prototype code as the new architecture
 
-- Documentation-only: `git diff --check`
-- Svelte, TypeScript, gameplay, or data changes: `npm run check`
-- Asset manifest, preload, build, or routing changes: `npm run build`
-- Visual/UI changes: inspect in the browser and report what was verified.
+## Required Checks
 
-Update docs when the implementation changes an architecture rule, stage data convention, asset convention, or workflow expectation.
+Before finishing a task, run the smallest relevant checks:
+
+- Domain/application changes: `npm run test`
+- Svelte/TypeScript changes: `npm run check`
+- Build/config/Tauri frontend changes: `npm run build`
+- Tauri Rust changes: `cargo check --manifest-path src-tauri/Cargo.toml` when dependencies are available
+- Whitespace/path sanity: `git diff --check`
+
+Report any check that could not be run and why.
+
+## File Ownership Rules
+
+- Runtime assets for the rebuild will live under root-level `public/` or a future documented asset package, not under `__prototype__/public/`.
+- Visible text must be prepared for future localization; avoid hard-coded gameplay UI copy once UI systems begin.
+- Route, save, audio, stage, and gameplay systems need specs before implementation.
+- Keep root documentation current when the architecture changes.
