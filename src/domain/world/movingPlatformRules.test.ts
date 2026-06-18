@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
+  MOVING_PLATFORM_MIN_DELTA_SECONDS,
+  getMovingPlatformDeltaSeconds,
   getMovingPlatformUpdateDecision,
   getMovingPlatformPosition,
   isMovingPlatformRider,
@@ -90,6 +92,27 @@ describe('getMovingPlatformUpdateDecision', () => {
       dead: false,
       stageCleared: false,
     })).toBe('update')
+  })
+})
+
+describe('getMovingPlatformDeltaSeconds', () => {
+  it('converts frame delta milliseconds to seconds', () => {
+    expect(getMovingPlatformDeltaSeconds({ deltaMs: 16 })).toBe(0.016)
+  })
+
+  it('clamps one millisecond to the minimum delta seconds', () => {
+    expect(getMovingPlatformDeltaSeconds({ deltaMs: 1 })).toBe(MOVING_PLATFORM_MIN_DELTA_SECONDS)
+  })
+
+  it('clamps zero milliseconds to the minimum delta seconds', () => {
+    expect(getMovingPlatformDeltaSeconds({ deltaMs: 0 })).toBe(MOVING_PLATFORM_MIN_DELTA_SECONDS)
+  })
+
+  it('supports a custom minimum delta seconds', () => {
+    expect(getMovingPlatformDeltaSeconds({
+      deltaMs: 1,
+      minDeltaSeconds: 0.01,
+    })).toBe(0.01)
   })
 })
 

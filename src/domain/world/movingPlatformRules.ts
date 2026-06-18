@@ -1,6 +1,8 @@
 export type MovingPlatformAxis = 'x' | 'y'
 export type MovingPlatformUpdateDecision = 'stop' | 'update'
 
+export const MOVING_PLATFORM_MIN_DELTA_SECONDS = 0.001
+
 export function getMovingPlatformUpdateDecision(input: {
   dead: boolean
   stageCleared: boolean
@@ -24,6 +26,13 @@ export function getMovingPlatformPosition(input: {
     x: input.axis === 'x' ? input.startX + offset : input.startX,
     y: input.axis === 'y' ? input.startY + offset : input.startY,
   }
+}
+
+export function getMovingPlatformDeltaSeconds(input: {
+  deltaMs: number
+  minDeltaSeconds?: number
+}): number {
+  return Math.max(input.deltaMs / 1000, input.minDeltaSeconds ?? MOVING_PLATFORM_MIN_DELTA_SECONDS)
 }
 
 export function isMovingPlatformRider(input: {

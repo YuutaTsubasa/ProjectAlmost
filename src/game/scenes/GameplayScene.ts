@@ -21,6 +21,7 @@ import {
   shouldUpdateGravityZones,
 } from '../../domain/world/gravityRules'
 import {
+  getMovingPlatformDeltaSeconds,
   getMovingPlatformUpdateDecision,
   getMovingPlatformPosition,
   isMovingPlatformRider,
@@ -1948,7 +1949,7 @@ export class GameplayScene extends Phaser.Scene {
       })
       const nextX = nextPosition.x
       const nextY = nextPosition.y
-      const deltaSeconds = Math.max(this.game.loop.delta / 1000, 0.001)
+      const deltaSeconds = getMovingPlatformDeltaSeconds({ deltaMs: this.game.loop.delta })
       const deltaX = nextX - platform.previousX
       const deltaY = nextY - platform.previousY
 
