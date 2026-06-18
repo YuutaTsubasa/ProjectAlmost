@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  getMovingPlatformUpdateDecision,
   getMovingPlatformPosition,
   isMovingPlatformRider,
 } from './movingPlatformRules'
@@ -59,6 +60,36 @@ describe('getMovingPlatformPosition', () => {
       durationMs: 1000,
       nowMs: 750,
     })).toEqual({ x: 100, y: 120 })
+  })
+})
+
+describe('getMovingPlatformUpdateDecision', () => {
+  it('stops moving platforms while the player is dead', () => {
+    expect(getMovingPlatformUpdateDecision({
+      dead: true,
+      stageCleared: false,
+    })).toBe('stop')
+  })
+
+  it('stops moving platforms after the stage is cleared', () => {
+    expect(getMovingPlatformUpdateDecision({
+      dead: false,
+      stageCleared: true,
+    })).toBe('stop')
+  })
+
+  it('stops moving platforms when the player is dead and the stage is cleared', () => {
+    expect(getMovingPlatformUpdateDecision({
+      dead: true,
+      stageCleared: true,
+    })).toBe('stop')
+  })
+
+  it('updates moving platforms during active gameplay', () => {
+    expect(getMovingPlatformUpdateDecision({
+      dead: false,
+      stageCleared: false,
+    })).toBe('update')
   })
 })
 

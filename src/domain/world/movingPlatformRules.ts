@@ -1,4 +1,12 @@
 export type MovingPlatformAxis = 'x' | 'y'
+export type MovingPlatformUpdateDecision = 'stop' | 'update'
+
+export function getMovingPlatformUpdateDecision(input: {
+  dead: boolean
+  stageCleared: boolean
+}): MovingPlatformUpdateDecision {
+  return input.dead || input.stageCleared ? 'stop' : 'update'
+}
 
 export function getMovingPlatformPosition(input: {
   startX: number

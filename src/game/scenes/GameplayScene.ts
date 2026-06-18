@@ -21,6 +21,7 @@ import {
   shouldUpdateGravityZones,
 } from '../../domain/world/gravityRules'
 import {
+  getMovingPlatformUpdateDecision,
   getMovingPlatformPosition,
   isMovingPlatformRider,
 } from '../../domain/world/movingPlatformRules'
@@ -1895,7 +1896,11 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   private updateMovingPlatforms(): void {
-    if (this.isDead || this.stageCleared) {
+    const updateDecision = getMovingPlatformUpdateDecision({
+      dead: this.isDead,
+      stageCleared: this.stageCleared,
+    })
+    if (updateDecision === 'stop') {
       for (const platform of this.movingPlatforms) platform.sprite.body.setVelocity(0, 0)
       return
     }
