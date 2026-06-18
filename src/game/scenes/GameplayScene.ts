@@ -77,7 +77,9 @@ import {
   canApplyPlayerDamage,
   canApplyPlayerEnemyHit,
   canApplyPlayerHazardHit,
+  getPlayerDefeatOutcome,
   getPlayerKnockbackDirection,
+  type PlayerDefeatReason,
 } from '../../domain/player/hurtRules'
 import {
   HOMING_ATTACK_CONTACT_DISTANCE,
@@ -1979,16 +1981,19 @@ export class GameplayScene extends Phaser.Scene {
     }
   }
 
-  private defeatPlayer(reason: 'damage' | 'fall'): void {
+  private defeatPlayer(reason: PlayerDefeatReason): void {
     if (this.isDead || this.stageCleared) {
       return
     }
 
+    const defeatOutcome = getPlayerDefeatOutcome({
+      reason,
+      gravitySign: this.gravitySign,
+    })
+
     this.isDead = true
     this.dispatchSfx('death')
-    if (reason === 'fall') {
-      this.falls += 1
-    }
+    this.falls += defeatOutcome.fallCountDelta
     this.isHurting = false
     this.isInvulnerable = true
     this.isAttacking = false
@@ -2007,10 +2012,10 @@ export class GameplayScene extends Phaser.Scene {
     this.setPlayerHomingCollision(true)
     this.setPlayerVisualState('normal')
     this.player.setAccelerationX(0)
-    this.player.setVelocity(0, reason === 'fall' ? 0 : -160 * this.gravitySign)
+    this.player.setVelocity(0, defeatOutcome.velocityY)
     this.setEnemiesFrozen(true)
     this.playPlayerAnimation('player-death')
-    this.setStatusMessage(reason === 'fall' ? 'status.fall' : 'status.critical')
+    this.setStatusMessage(defeatOutcome.statusKey)
 
     this.time.delayedCall(700, () => {
       this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {

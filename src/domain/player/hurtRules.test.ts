@@ -3,6 +3,7 @@ import {
   canApplyPlayerDamage,
   canApplyPlayerEnemyHit,
   canApplyPlayerHazardHit,
+  getPlayerDefeatOutcome,
   getPlayerKnockbackDirection,
 } from './hurtRules'
 
@@ -212,5 +213,40 @@ describe('getPlayerKnockbackDirection', () => {
       playerX: 200,
       sourceX: 160,
     })).toBe(1)
+  })
+})
+
+describe('getPlayerDefeatOutcome', () => {
+  it('returns fall defeat outcome', () => {
+    expect(getPlayerDefeatOutcome({
+      reason: 'fall',
+      gravitySign: 1,
+    })).toEqual({
+      fallCountDelta: 1,
+      velocityY: 0,
+      statusKey: 'status.fall',
+    })
+  })
+
+  it('returns damage defeat outcome for normal gravity', () => {
+    expect(getPlayerDefeatOutcome({
+      reason: 'damage',
+      gravitySign: 1,
+    })).toEqual({
+      fallCountDelta: 0,
+      velocityY: -160,
+      statusKey: 'status.critical',
+    })
+  })
+
+  it('uses gravity sign for damage defeat velocity', () => {
+    expect(getPlayerDefeatOutcome({
+      reason: 'damage',
+      gravitySign: -1,
+    })).toEqual({
+      fallCountDelta: 0,
+      velocityY: 160,
+      statusKey: 'status.critical',
+    })
   })
 })

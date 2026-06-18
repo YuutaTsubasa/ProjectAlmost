@@ -48,3 +48,29 @@ export function getPlayerKnockbackDirection(input: {
 }): PlayerKnockbackDirection {
   return input.playerX < input.sourceX ? -1 : 1
 }
+
+export type PlayerDefeatReason = 'damage' | 'fall'
+export type PlayerDefeatStatusKey = 'status.critical' | 'status.fall'
+
+export function getPlayerDefeatOutcome(input: {
+  reason: PlayerDefeatReason
+  gravitySign: number
+}): {
+  fallCountDelta: number
+  velocityY: number
+  statusKey: PlayerDefeatStatusKey
+} {
+  if (input.reason === 'fall') {
+    return {
+      fallCountDelta: 1,
+      velocityY: 0,
+      statusKey: 'status.fall',
+    }
+  }
+
+  return {
+    fallCountDelta: 0,
+    velocityY: -160 * input.gravitySign,
+    statusKey: 'status.critical',
+  }
+}
