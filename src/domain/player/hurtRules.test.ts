@@ -6,6 +6,7 @@ import {
   canApplyPlayerEnemyHit,
   canApplyPlayerHazardHit,
   getPlayerDamageOutcome,
+  getPlayerDefeatEntryState,
   getPlayerDefeatOutcome,
   getPlayerHurtEntryState,
   getPlayerHurtRecoveryState,
@@ -298,6 +299,28 @@ describe('getPlayerDefeatOutcome', () => {
       velocityY: 160,
       statusKey: 'status.critical',
     })
+  })
+})
+
+describe('getPlayerDefeatEntryState', () => {
+  it('returns the defeat entry state', () => {
+    expect(getPlayerDefeatEntryState()).toEqual({
+      dead: true,
+      hurting: false,
+      invulnerable: true,
+      attacking: false,
+      homingAttacking: false,
+      crouching: false,
+      attackReady: false,
+    })
+  })
+
+  it('returns a fresh state object', () => {
+    const first = getPlayerDefeatEntryState()
+    const second = getPlayerDefeatEntryState()
+
+    expect(first).toEqual(second)
+    expect(first).not.toBe(second)
   })
 })
 

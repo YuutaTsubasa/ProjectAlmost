@@ -85,6 +85,7 @@ import {
   canApplyPlayerEnemyHit,
   canApplyPlayerHazardHit,
   getPlayerDamageOutcome,
+  getPlayerDefeatEntryState,
   getPlayerDefeatOutcome,
   getPlayerHurtEntryState,
   getPlayerHurtRecoveryState,
@@ -1991,15 +1992,16 @@ export class GameplayScene extends Phaser.Scene {
       gravitySign: this.gravitySign,
     })
 
-    this.isDead = true
+    const defeatEntryState = getPlayerDefeatEntryState()
+    this.isDead = defeatEntryState.dead
     this.dispatchSfx('death')
     this.falls += defeatOutcome.fallCountDelta
-    this.isHurting = false
-    this.isInvulnerable = true
-    this.isAttacking = false
-    this.isHomingAttacking = false
-    this.setCrouching(false)
-    this.attackReady = false
+    this.isHurting = defeatEntryState.hurting
+    this.isInvulnerable = defeatEntryState.invulnerable
+    this.isAttacking = defeatEntryState.attacking
+    this.isHomingAttacking = defeatEntryState.homingAttacking
+    this.setCrouching(defeatEntryState.crouching)
+    this.attackReady = defeatEntryState.attackReady
     this.homingTarget = undefined
     this.homingReticle?.setVisible(false)
     if (this.isBossStage) {

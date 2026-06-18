@@ -78,6 +78,16 @@ export type PlayerInvulnerabilityRecoveryState = {
   invulnerable: boolean
 }
 
+export type PlayerDefeatEntryState = {
+  dead: boolean
+  hurting: boolean
+  invulnerable: boolean
+  attacking: boolean
+  homingAttacking: boolean
+  crouching: boolean
+  attackReady: boolean
+}
+
 export function getPlayerDamageOutcome(input: {
   currentHealth: number
   damage?: number
@@ -108,6 +118,18 @@ export function getPlayerRespawnState(input: {
 export function getPlayerHurtEntryState(): PlayerHurtEntryState {
   return {
     hurting: true,
+    invulnerable: true,
+    attacking: false,
+    homingAttacking: false,
+    crouching: false,
+    attackReady: false,
+  }
+}
+
+export function getPlayerDefeatEntryState(): PlayerDefeatEntryState {
+  return {
+    dead: true,
+    hurting: false,
     invulnerable: true,
     attacking: false,
     homingAttacking: false,
