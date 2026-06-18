@@ -8,12 +8,24 @@ export type MeleeHitboxGeometry = {
   flipX: boolean
 }
 
+export type MeleeAttackEntryState = {
+  attackReady: boolean
+  attacking: boolean
+}
+
 export function canStartMeleeAttack(input: {
   attackReady: boolean
   hurting: boolean
   homingAttacking: boolean
 }): boolean {
   return input.attackReady && !input.hurting && !input.homingAttacking
+}
+
+export function getMeleeAttackEntryState(): MeleeAttackEntryState {
+  return {
+    attackReady: false,
+    attacking: true,
+  }
 }
 
 export function getMeleeHitboxGeometry(input: {

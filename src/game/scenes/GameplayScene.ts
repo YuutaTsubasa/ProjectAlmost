@@ -58,6 +58,7 @@ import {
 } from '../../domain/player/jumpRules'
 import {
   canStartMeleeAttack,
+  getMeleeAttackEntryState,
   getMeleeHitboxGeometry,
 } from '../../domain/player/attackRules'
 import { canCrouch } from '../../domain/player/crouchRules'
@@ -1593,10 +1594,11 @@ export class GameplayScene extends Phaser.Scene {
       return
     }
 
-    this.attackReady = false
+    const attackEntryState = getMeleeAttackEntryState()
+    this.attackReady = attackEntryState.attackReady
     this.dispatchSfx('armor-step')
     this.nextFootstepAt = this.time.now + 270
-    this.isAttacking = true
+    this.isAttacking = attackEntryState.attacking
     this.setPlayerVisualState('attack')
     this.playPlayerAnimation('player-attack')
 
