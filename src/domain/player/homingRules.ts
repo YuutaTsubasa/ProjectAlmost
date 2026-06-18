@@ -24,6 +24,7 @@ export type HomingRecoveryState = {
 }
 
 export type HomingLineCoinCollectionDecision = 'skip' | 'collect'
+export type HomingTargetAcquisitionDecision = 'fail' | 'start'
 
 export type HomingAttackEntryState = {
   attackReady: boolean
@@ -53,6 +54,12 @@ export function shouldUpdateHomingAttack(input: {
   hasTarget: boolean
 }): boolean {
   return input.homingAttacking && input.hasTarget
+}
+
+export function getHomingTargetAcquisitionDecision(input: {
+  hasTarget: boolean
+}): HomingTargetAcquisitionDecision {
+  return input.hasTarget ? 'start' : 'fail'
 }
 
 export function canShowHomingReticle(input: {

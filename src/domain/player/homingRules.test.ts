@@ -13,6 +13,7 @@ import {
   getHomingFinishOutcome,
   getHomingLineCoinCollectionDecision,
   getHomingRecoveryState,
+  getHomingTargetAcquisitionDecision,
   getHomingTrailSamples,
   isPointCollectableByHomingLine,
   isHomingTargetLost,
@@ -106,6 +107,16 @@ describe('shouldUpdateHomingAttack', () => {
       homingAttacking: true,
       hasTarget: false,
     })).toBe(false)
+  })
+})
+
+describe('getHomingTargetAcquisitionDecision', () => {
+  test('starts Homing Attack when a target exists', () => {
+    expect(getHomingTargetAcquisitionDecision({ hasTarget: true })).toBe('start')
+  })
+
+  test('fails Homing Attack startup when no target exists', () => {
+    expect(getHomingTargetAcquisitionDecision({ hasTarget: false })).toBe('fail')
   })
 })
 

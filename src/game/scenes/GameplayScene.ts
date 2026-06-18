@@ -116,6 +116,7 @@ import {
   getHomingFinishOutcome,
   getHomingLineCoinCollectionDecision,
   getHomingRecoveryState,
+  getHomingTargetAcquisitionDecision,
   getHomingTrailSamples,
   isHomingTargetLost,
   selectNearestHomingTarget,
@@ -2181,6 +2182,11 @@ export class GameplayScene extends Phaser.Scene {
     }
 
     const target = this.findHomingTarget()
+
+    const targetDecision = getHomingTargetAcquisitionDecision({ hasTarget: target !== undefined })
+    if (targetDecision === 'fail') {
+      return false
+    }
 
     if (!target) {
       return false
