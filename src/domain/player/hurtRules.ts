@@ -65,6 +65,15 @@ export type PlayerHurtRecoveryState = {
   attackReady: boolean
 }
 
+export type PlayerHurtEntryState = {
+  hurting: boolean
+  invulnerable: boolean
+  attacking: boolean
+  homingAttacking: boolean
+  crouching: boolean
+  attackReady: boolean
+}
+
 export type PlayerInvulnerabilityRecoveryState = {
   invulnerable: boolean
 }
@@ -93,6 +102,17 @@ export function getPlayerRespawnState(input: {
     health: input.maxHealth ?? PLAYER_MAX_HEALTH,
     jumpBufferedUntil: 0,
     remainingAirJumps: 1,
+  }
+}
+
+export function getPlayerHurtEntryState(): PlayerHurtEntryState {
+  return {
+    hurting: true,
+    invulnerable: true,
+    attacking: false,
+    homingAttacking: false,
+    crouching: false,
+    attackReady: false,
   }
 }
 

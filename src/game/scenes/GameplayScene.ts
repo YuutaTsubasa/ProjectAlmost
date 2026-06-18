@@ -83,6 +83,7 @@ import {
   canApplyPlayerHazardHit,
   getPlayerDamageOutcome,
   getPlayerDefeatOutcome,
+  getPlayerHurtEntryState,
   getPlayerHurtRecoveryState,
   getPlayerInvulnerabilityRecoveryState,
   getPlayerKnockbackDirection,
@@ -1677,16 +1678,17 @@ export class GameplayScene extends Phaser.Scene {
       return
     }
 
-    this.isHurting = true
-    this.isInvulnerable = true
-    this.isAttacking = false
-    this.isHomingAttacking = false
-    this.isCrouching = false
+    const hurtEntryState = getPlayerHurtEntryState()
+    this.isHurting = hurtEntryState.hurting
+    this.isInvulnerable = hurtEntryState.invulnerable
+    this.isAttacking = hurtEntryState.attacking
+    this.isHomingAttacking = hurtEntryState.homingAttacking
+    this.isCrouching = hurtEntryState.crouching
     this.homingTarget = undefined
     this.setPlayerHomingCollision(true)
     this.setPlayerVisualState('normal')
     this.stopPlayerHurtBlink()
-    this.attackReady = false
+    this.attackReady = hurtEntryState.attackReady
 
     const knockbackDirection = getPlayerKnockbackDirection({
       playerX: this.player.x,

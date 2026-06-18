@@ -7,6 +7,7 @@ import {
   canApplyPlayerHazardHit,
   getPlayerDamageOutcome,
   getPlayerDefeatOutcome,
+  getPlayerHurtEntryState,
   getPlayerHurtRecoveryState,
   getPlayerInvulnerabilityRecoveryState,
   getPlayerKnockbackDirection,
@@ -322,6 +323,27 @@ describe('getPlayerRespawnState', () => {
 
   it('supports explicit max health for boundary checks', () => {
     expect(getPlayerRespawnState({ maxHealth: 5 }).health).toBe(5)
+  })
+})
+
+describe('getPlayerHurtEntryState', () => {
+  it('returns the survived hit entry state', () => {
+    expect(getPlayerHurtEntryState()).toEqual({
+      hurting: true,
+      invulnerable: true,
+      attacking: false,
+      homingAttacking: false,
+      crouching: false,
+      attackReady: false,
+    })
+  })
+
+  it('returns a fresh state object', () => {
+    const first = getPlayerHurtEntryState()
+    const second = getPlayerHurtEntryState()
+
+    expect(first).toEqual(second)
+    expect(first).not.toBe(second)
   })
 })
 
