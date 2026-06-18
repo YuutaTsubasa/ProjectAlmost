@@ -53,3 +53,14 @@ export function getBossHudPhaseDisplay(input: {
     max: phaseCount,
   }
 }
+
+export function shouldResetBossRunAfterHomingHit(input: {
+  targetIsBoss: boolean
+  bossPhase: number
+  phaseCount?: number
+}): boolean {
+  if (!input.targetIsBoss) return false
+
+  const phaseCount = input.phaseCount ?? BOSS_PHASE_COUNT
+  return input.bossPhase < phaseCount - 1
+}

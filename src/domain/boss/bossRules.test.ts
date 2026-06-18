@@ -8,6 +8,7 @@ import {
   getBossPatternDelayMs,
   getBossHitOutcome,
   isBossStageDefinition,
+  shouldResetBossRunAfterHomingHit,
 } from './bossRules'
 
 describe('getBossHitOutcome', () => {
@@ -106,6 +107,46 @@ describe('isBossStageDefinition', () => {
     expect(isBossStageDefinition({
       stageId: '1-6',
       enemies: [{ id: 'guard-1' }, {}],
+    })).toBe(false)
+  })
+})
+
+describe('shouldResetBossRunAfterHomingHit', () => {
+  test('does not reset the boss run for non-boss targets', () => {
+    expect(shouldResetBossRunAfterHomingHit({
+      targetIsBoss: false,
+      bossPhase: 0,
+    })).toBe(false)
+  })
+
+  test('resets the boss run for boss targets before the final playable phase', () => {
+    expect(shouldResetBossRunAfterHomingHit({
+      targetIsBoss: true,
+      bossPhase: 0,
+    })).toBe(true)
+    expect(shouldResetBossRunAfterHomingHit({
+      targetIsBoss: true,
+      bossPhase: 2,
+    })).toBe(true)
+  })
+
+  test('does not reset the boss run on the final playable phase', () => {
+    expect(shouldResetBossRunAfterHomingHit({
+      targetIsBoss: true,
+      bossPhase: 3,
+    })).toBe(false)
+  })
+
+  test('supports an explicit phase count for boundary checks', () => {
+    expect(shouldResetBossRunAfterHomingHit({
+      targetIsBoss: true,
+      bossPhase: 1,
+      phaseCount: 3,
+    })).toBe(true)
+    expect(shouldResetBossRunAfterHomingHit({
+      targetIsBoss: true,
+      bossPhase: 2,
+      phaseCount: 3,
     })).toBe(false)
   })
 })

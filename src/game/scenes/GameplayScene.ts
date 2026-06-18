@@ -35,6 +35,7 @@ import {
   getBossPatternDelayMs,
   getBossHitOutcome,
   isBossStageDefinition,
+  shouldResetBossRunAfterHomingHit,
 } from '../../domain/boss/bossRules'
 import {
   INITIAL_PATROL_DIRECTION,
@@ -2207,7 +2208,10 @@ export class GameplayScene extends Phaser.Scene {
     this.player.setPosition(contactX, contactY)
     this.player.setVelocity(0, 0)
     this.dispatchSfx('armor-step')
-    const resetsBossRun = target === this.bossPrototype?.sprite && this.bossPhase < BOSS_PHASE_COUNT - 1
+    const resetsBossRun = shouldResetBossRunAfterHomingHit({
+      targetIsBoss: target === this.bossPrototype?.sprite,
+      bossPhase: this.bossPhase,
+    })
     this.defeatEnemy(target)
     if (!resetsBossRun) {
       this.finishHomingAttack(true)
