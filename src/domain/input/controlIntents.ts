@@ -81,8 +81,8 @@ function axisCrossed(
   const previousValue = previous?.axes[LEFT_STICK_Y_AXIS_INDEX] ?? 0
 
   if (direction === 'negative') {
-    return currentValue <= -AXIS_THRESHOLD && previousValue > -AXIS_THRESHOLD
+    return currentValue < -AXIS_THRESHOLD && previousValue > -AXIS_THRESHOLD
   }
 
-  return currentValue >= AXIS_THRESHOLD && previousValue < AXIS_THRESHOLD
+  return currentValue > AXIS_THRESHOLD && previousValue < AXIS_THRESHOLD
 }
