@@ -1,3 +1,5 @@
+import type { GameObjectDefinition } from '../placement/objectDefinitions'
+
 export type EnemyType = 'guard' | 'azure-core'
 export type EnemyRespawnPolicy = 'persistent' | 'regenerate'
 export type EnemyRegenerationDecision = 'skip' | 'delay' | 'regenerate'
@@ -102,6 +104,13 @@ export function shouldUpdateEnemyFreezeState(input: {
   active: boolean
 }): boolean {
   return !input.defeated && input.active
+}
+
+export function shouldRestoreEnemyPatrolVelocity(input: {
+  frozen: boolean
+  behavior: GameObjectDefinition['behavior']
+}): boolean {
+  return !input.frozen && input.behavior === 'patrol'
 }
 
 export function hasActiveEnemy(input: {

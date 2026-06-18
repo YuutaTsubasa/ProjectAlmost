@@ -58,6 +58,7 @@ import {
   getEnemyRespawnDelayMs,
   getScoreEnemyTargetCount,
   hasActiveEnemy,
+  shouldRestoreEnemyPatrolVelocity,
   shouldUpdateEnemyFreezeState,
   shouldUpdateEnemyPatrol,
   type PatrolDirection,
@@ -2105,7 +2106,10 @@ export class GameplayScene extends Phaser.Scene {
         enemy.sprite.anims.pause()
       } else {
         enemy.sprite.anims.resume()
-        if (definition.behavior === 'patrol') {
+        if (shouldRestoreEnemyPatrolVelocity({
+          frozen,
+          behavior: definition.behavior,
+        })) {
           enemy.sprite.setVelocityX(enemy.direction * 80)
         }
       }

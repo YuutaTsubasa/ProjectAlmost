@@ -13,6 +13,7 @@ import {
   hasActiveEnemy,
   shouldUpdateEnemyFreezeState,
   shouldUpdateEnemyPatrol,
+  shouldRestoreEnemyPatrolVelocity,
 } from './enemyRules'
 
 describe('getEnemyRespawnPolicy', () => {
@@ -239,6 +240,29 @@ describe('shouldUpdateEnemyFreezeState', () => {
     expect(shouldUpdateEnemyFreezeState({
       defeated: false,
       active: false,
+    })).toBe(false)
+  })
+})
+
+describe('shouldRestoreEnemyPatrolVelocity', () => {
+  test('restores patrol velocity for unfrozen patrol enemies', () => {
+    expect(shouldRestoreEnemyPatrolVelocity({
+      frozen: false,
+      behavior: 'patrol',
+    })).toBe(true)
+  })
+
+  test('does not restore patrol velocity while enemies are frozen', () => {
+    expect(shouldRestoreEnemyPatrolVelocity({
+      frozen: true,
+      behavior: 'patrol',
+    })).toBe(false)
+  })
+
+  test('does not restore patrol velocity for non-patrol behavior', () => {
+    expect(shouldRestoreEnemyPatrolVelocity({
+      frozen: false,
+      behavior: 'homing-target',
     })).toBe(false)
   })
 })
