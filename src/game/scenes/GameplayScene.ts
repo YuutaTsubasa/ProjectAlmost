@@ -26,6 +26,7 @@ import { findActiveSurfaceZone } from '../../domain/world/surfaceRules'
 import { getPlatformTileIndex, getTileColumnCount, getTileRowCount } from '../../domain/world/terrainRules'
 import {
   getBossProjectileHitDecision,
+  getBossProjectileVelocity,
   isBossProjectileExpired,
   isBossProjectileOutOfBounds,
 } from '../../domain/boss/projectileRules'
@@ -1408,7 +1409,8 @@ export class GameplayScene extends Phaser.Scene {
   private spawnBossProjectile(x: number, y: number, angle: number, speed: number): void {
     const projectile = this.physics.add.sprite(x, y, 'boss-projectile')
     projectile.body.allowGravity = false
-    projectile.setVelocity(Math.cos(angle) * speed, Math.sin(angle) * speed)
+    const velocity = getBossProjectileVelocity({ angle, speed })
+    projectile.setVelocity(velocity.x, velocity.y)
     projectile.setDepth(16)
     projectile.setBlendMode(Phaser.BlendModes.ADD)
     projectile.setData('spawnedAt', this.time.now)

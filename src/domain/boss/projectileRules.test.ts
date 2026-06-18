@@ -4,6 +4,7 @@ import {
   BOSS_PROJECTILE_HIT_DISTANCE,
   BOSS_PROJECTILE_LIFETIME_MS,
   getBossProjectileHitDecision,
+  getBossProjectileVelocity,
   isBossProjectileExpired,
   isBossProjectileOutOfBounds,
 } from './projectileRules'
@@ -122,5 +123,42 @@ describe('getBossProjectileHitDecision', () => {
       distanceToPlayer: 10,
       hitDistance: 10,
     })).toBe('ignore')
+  })
+})
+
+describe('getBossProjectileVelocity', () => {
+  test('moves right for angle 0', () => {
+    expect(getBossProjectileVelocity({ angle: 0, speed: 390 })).toEqual({
+      x: 390,
+      y: 0,
+    })
+  })
+
+  test('moves down for a half-pi angle', () => {
+    const velocity = getBossProjectileVelocity({ angle: Math.PI / 2, speed: 390 })
+
+    expect(velocity.x).toBeCloseTo(0)
+    expect(velocity.y).toBeCloseTo(390)
+  })
+
+  test('moves left for a pi angle', () => {
+    const velocity = getBossProjectileVelocity({ angle: Math.PI, speed: 390 })
+
+    expect(velocity.x).toBeCloseTo(-390)
+    expect(velocity.y).toBeCloseTo(0)
+  })
+
+  test('uses cosine and sine for diagonal velocity', () => {
+    const velocity = getBossProjectileVelocity({ angle: Math.PI / 4, speed: 100 })
+
+    expect(velocity.x).toBeCloseTo(Math.SQRT1_2 * 100)
+    expect(velocity.y).toBeCloseTo(Math.SQRT1_2 * 100)
+  })
+
+  test('returns zero velocity for zero speed', () => {
+    expect(getBossProjectileVelocity({ angle: 1.25, speed: 0 })).toEqual({
+      x: 0,
+      y: 0,
+    })
   })
 })

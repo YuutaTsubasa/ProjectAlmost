@@ -4,6 +4,11 @@ export const BOSS_PROJECTILE_HIT_DISTANCE = 42
 
 export type BossProjectileHitDecision = 'ignore' | 'blocked-by-crouch' | 'hit'
 
+export type BossProjectileVelocity = {
+  x: number
+  y: number
+}
+
 export function isBossProjectileExpired(input: {
   now: number
   spawnedAt: number
@@ -36,4 +41,14 @@ export function getBossProjectileHitDecision(input: {
   if (input.distanceToPlayer >= (input.hitDistance ?? BOSS_PROJECTILE_HIT_DISTANCE)) return 'ignore'
   if (input.playerCrouching) return 'blocked-by-crouch'
   return 'hit'
+}
+
+export function getBossProjectileVelocity(input: {
+  angle: number
+  speed: number
+}): BossProjectileVelocity {
+  return {
+    x: Math.cos(input.angle) * input.speed,
+    y: Math.sin(input.angle) * input.speed,
+  }
 }
