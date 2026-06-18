@@ -113,9 +113,9 @@ import {
   getHomingAttackEntryState,
   getHomingContactPoint,
   getHomingFinishOutcome,
+  getHomingLineCoinCollectionDecision,
   getHomingRecoveryState,
   getHomingTrailSamples,
-  isPointCollectableByHomingLine,
   isHomingTargetLost,
   selectNearestHomingTarget,
 } from '../../domain/player/homingRules'
@@ -2339,16 +2339,16 @@ export class GameplayScene extends Phaser.Scene {
 
   private collectCoinsAlongLine(startX: number, startY: number, endX: number, endY: number): void {
     for (const coin of this.coins) {
-      if (coin.collected) continue
-
-      if (isPointCollectableByHomingLine({
+      const collectionDecision = getHomingLineCoinCollectionDecision({
+        collected: coin.collected,
         startX,
         startY,
         endX,
         endY,
         pointX: coin.sprite.x,
         pointY: coin.sprite.y,
-      })) {
+      })
+      if (collectionDecision === 'collect') {
         this.collectCoin(coin)
       }
     }

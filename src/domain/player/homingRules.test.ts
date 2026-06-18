@@ -11,6 +11,7 @@ import {
   getHomingAttackEntryState,
   getHomingContactPoint,
   getHomingFinishOutcome,
+  getHomingLineCoinCollectionDecision,
   getHomingRecoveryState,
   getHomingTrailSamples,
   isPointCollectableByHomingLine,
@@ -327,6 +328,56 @@ describe('selectNearestHomingTarget', () => {
         { target: 'second', targetX: 190, distance: 120 },
       ],
     })).toBe('first')
+  })
+})
+
+describe('getHomingLineCoinCollectionDecision', () => {
+  test('skips collected coins even on the Homing line', () => {
+    expect(getHomingLineCoinCollectionDecision({
+      collected: true,
+      startX: 0,
+      startY: 0,
+      endX: 100,
+      endY: 0,
+      pointX: 50,
+      pointY: 0,
+    })).toBe('skip')
+  })
+
+  test('collects uncollected coins within the Homing line radius', () => {
+    expect(getHomingLineCoinCollectionDecision({
+      collected: false,
+      startX: 0,
+      startY: 0,
+      endX: 100,
+      endY: 0,
+      pointX: 50,
+      pointY: HOMING_LINE_COIN_COLLECTION_RADIUS - 1,
+    })).toBe('collect')
+  })
+
+  test('collects uncollected coins on the exact Homing line radius boundary', () => {
+    expect(getHomingLineCoinCollectionDecision({
+      collected: false,
+      startX: 0,
+      startY: 0,
+      endX: 100,
+      endY: 0,
+      pointX: 50,
+      pointY: HOMING_LINE_COIN_COLLECTION_RADIUS,
+    })).toBe('collect')
+  })
+
+  test('skips uncollected coins outside the Homing line radius', () => {
+    expect(getHomingLineCoinCollectionDecision({
+      collected: false,
+      startX: 0,
+      startY: 0,
+      endX: 100,
+      endY: 0,
+      pointX: 50,
+      pointY: HOMING_LINE_COIN_COLLECTION_RADIUS + 1,
+    })).toBe('skip')
   })
 })
 

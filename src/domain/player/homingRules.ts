@@ -23,6 +23,8 @@ export type HomingRecoveryState = {
   attackReady?: boolean
 }
 
+export type HomingLineCoinCollectionDecision = 'skip' | 'collect'
+
 export type HomingAttackEntryState = {
   attackReady: boolean
   attacking: boolean
@@ -182,6 +184,20 @@ export function isPointCollectableByHomingLine(input: {
   const closestY = input.startY + dy * projection
   const distance = Math.hypot(closestX - input.pointX, closestY - input.pointY)
   return distance <= radius
+}
+
+export function getHomingLineCoinCollectionDecision(input: {
+  collected: boolean
+  startX: number
+  startY: number
+  endX: number
+  endY: number
+  pointX: number
+  pointY: number
+  radius?: number
+}): HomingLineCoinCollectionDecision {
+  if (input.collected) return 'skip'
+  return isPointCollectableByHomingLine(input) ? 'collect' : 'skip'
 }
 
 export function getHomingTrailSamples(input: {
