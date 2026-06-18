@@ -3,7 +3,7 @@ import { IMAGE_ASSETS } from '../assets/assetManifest'
 import { getEnemySpawnY, getHazardFrameIndex, getPlayerCenterY, groundedBottomY, groundedHazardCenterY, objectDefinitions } from '../objects/objectDefinitions'
 import type { CoinPoint, EnemyPoint, GravityZone, HazardRect, MovingPlatformRect, PlatformRect, StageData, SurfaceZone } from '../stages/stageTypes'
 import type { TranslationKey, TranslationParams } from '../../i18n'
-import { getCheckpointTargetCount, getReachedCheckpointCount } from '../../domain/stage/checkpointRules'
+import { findNextCheckpointIndex, getCheckpointTargetCount, getReachedCheckpointCount } from '../../domain/stage/checkpointRules'
 import { getCoinTargetCount } from '../../domain/stage/coinRules'
 import { canCompleteStage, getStageClearState } from '../../domain/stage/stageClearRules'
 import { formatCoinLabel, formatHealthLabel } from '../../domain/stage/hudLabelRules'
@@ -1958,7 +1958,11 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   private updateCheckpoint(): void {
-    const nextCheckpointIndex = this.stage.checkpoints.findIndex((checkpoint, index) => index > this.activeCheckpointIndex && this.player.x >= checkpoint.x)
+    const nextCheckpointIndex = findNextCheckpointIndex({
+      checkpoints: this.stage.checkpoints,
+      activeCheckpointIndex: this.activeCheckpointIndex,
+      playerX: this.player.x,
+    })
 
     if (nextCheckpointIndex === -1) {
       return

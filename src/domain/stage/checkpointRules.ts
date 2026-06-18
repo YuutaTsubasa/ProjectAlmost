@@ -9,3 +9,13 @@ export function getCheckpointTargetCount(input: {
 }): number {
   return input.checkpoints.length
 }
+
+export function findNextCheckpointIndex(input: {
+  checkpoints: readonly { x: number }[]
+  activeCheckpointIndex: number
+  playerX: number
+}): number {
+  return input.checkpoints.findIndex((checkpoint, index) => (
+    index > input.activeCheckpointIndex && input.playerX >= checkpoint.x
+  ))
+}
