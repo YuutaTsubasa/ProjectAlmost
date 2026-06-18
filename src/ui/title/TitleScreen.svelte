@@ -1,9 +1,12 @@
 <script lang="ts">
+  import { onDestroy, onMount } from 'svelte'
   import { TITLE_MENU_ITEMS, type AppScreen } from '../../domain/app/appFlow'
   import {
+    mapGamepadControlIntents,
     mapKeyboardControlIntent,
     type ControlContext,
     type ControlIntent,
+    type GamepadControlSnapshot,
   } from '../../domain/input/controlIntents'
 
   type Props = {
@@ -20,6 +23,9 @@
     settings: 'Settings',
     back: 'Back',
   }
+
+  let previousGamepadSnapshot: GamepadControlSnapshot | null = null
+  let gamepadAnimationFrame = 0
 
   function getControlContext(): ControlContext {
     return screen.type === 'title-intro' ? 'title-intro' : 'title-menu'
@@ -49,6 +55,37 @@
     event.stopPropagation()
     onPointerMenuSelection(index)
   }
+
+  function pollGamepad() {
+    const currentSnapshot = readFirstGamepadSnapshot()
+    const intents = mapGamepadControlIntents(previousGamepadSnapshot, currentSnapshot, getControlContext())
+
+    for (const intent of intents) {
+      onControlIntent(intent)
+    }
+
+    previousGamepadSnapshot = currentSnapshot
+    gamepadAnimationFrame = requestAnimationFrame(pollGamepad)
+  }
+
+  function readFirstGamepadSnapshot(): GamepadControlSnapshot | null {
+    const gamepads = navigator.getGamepads?.()
+    const gamepad = gamepads?.find((candidate) => candidate?.connected)
+    if (!gamepad) return null
+
+    return {
+      buttons: gamepad.buttons.map((button) => button.pressed),
+      axes: [...gamepad.axes],
+    }
+  }
+
+  onMount(() => {
+    gamepadAnimationFrame = requestAnimationFrame(pollGamepad)
+  })
+
+  onDestroy(() => {
+    cancelAnimationFrame(gamepadAnimationFrame)
+  })
 </script>
 
 <svelte:window onkeydown={handleKeydown} />
