@@ -34,6 +34,7 @@ import {
 import {
   BOSS_PHASE_COUNT,
   canStartBossPattern,
+  getBossPhasePlayerResetState,
   getBossHudPhaseDisplay,
   getBossPatternDelayMs,
   getBossHitOutcome,
@@ -1514,11 +1515,14 @@ export class GameplayScene extends Phaser.Scene {
     }
 
     boss.sprite.play('boss-priestess-hurt', true)
-    this.playerHealth = PLAYER_MAX_HEALTH
+    const playerResetState = getBossPhasePlayerResetState({
+      maxHealth: PLAYER_MAX_HEALTH,
+    })
+    this.playerHealth = playerResetState.health
     this.updateHealthText()
-    this.isAttacking = false
-    this.isHomingAttacking = false
-    this.attackReady = true
+    this.isAttacking = playerResetState.attacking
+    this.isHomingAttacking = playerResetState.homingAttacking
+    this.attackReady = playerResetState.attackReady
     this.homingTarget = undefined
     this.homingReticle?.setVisible(false)
     this.setPlayerHomingCollision(true)

@@ -10,6 +10,13 @@ export type BossHitOutcome =
   | { type: 'advance-phase'; nextPhase: number }
   | { type: 'defeated'; nextPhase: number }
 
+export type BossPhasePlayerResetState = {
+  health: number
+  attacking: boolean
+  homingAttacking: boolean
+  attackReady: boolean
+}
+
 export type BossVolleyShot = {
   angle: number
   speed: number
@@ -39,6 +46,17 @@ export function getBossPatternDelayMs(input: { phase: number }): number {
     BOSS_PATTERN_MIN_DELAY_MS,
     BOSS_PATTERN_BASE_DELAY_MS - input.phase * BOSS_PATTERN_PHASE_DELAY_STEP_MS,
   )
+}
+
+export function getBossPhasePlayerResetState(input: {
+  maxHealth: number
+}): BossPhasePlayerResetState {
+  return {
+    health: input.maxHealth,
+    attacking: false,
+    homingAttacking: false,
+    attackReady: true,
+  }
 }
 
 export function getBossVolleyShots(input: {

@@ -6,6 +6,7 @@ import {
   BOSS_PHASE_COUNT,
   canStartBossPattern,
   getBossHudPhaseDisplay,
+  getBossPhasePlayerResetState,
   getBossPatternDelayMs,
   getBossHitOutcome,
   getBossVolleyShots,
@@ -53,6 +54,33 @@ describe('getBossPatternDelayMs', () => {
     expect(getBossPatternDelayMs({ phase: 4 })).toBe(620)
     expect(getBossPatternDelayMs({ phase: 5 })).toBe(540)
     expect(getBossPatternDelayMs({ phase: 100 })).toBe(540)
+  })
+})
+
+describe('getBossPhasePlayerResetState', () => {
+  test('returns the boss phase player reset state', () => {
+    expect(getBossPhasePlayerResetState({
+      maxHealth: 3,
+    })).toEqual({
+      health: 3,
+      attacking: false,
+      homingAttacking: false,
+      attackReady: true,
+    })
+  })
+
+  test('returns a fresh state object', () => {
+    const first = getBossPhasePlayerResetState({ maxHealth: 3 })
+    const second = getBossPhasePlayerResetState({ maxHealth: 3 })
+
+    expect(first).toEqual(second)
+    expect(first).not.toBe(second)
+  })
+
+  test('uses the supplied max health', () => {
+    expect(getBossPhasePlayerResetState({
+      maxHealth: 5,
+    }).health).toBe(5)
   })
 })
 
