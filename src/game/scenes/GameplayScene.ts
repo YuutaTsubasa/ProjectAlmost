@@ -31,6 +31,7 @@ import {
 } from '../../domain/boss/projectileRules'
 import {
   BOSS_PHASE_COUNT,
+  canStartBossPattern,
   getBossHudPhaseDisplay,
   getBossPatternDelayMs,
   getBossHitOutcome,
@@ -1351,7 +1352,13 @@ export class GameplayScene extends Phaser.Scene {
 
   private startBossPattern(): void {
     const boss = this.bossPrototype
-    if (!boss || boss.point.type !== 'azure-core' || this.bossPhase >= BOSS_PHASE_COUNT || this.stageCleared) return
+    if (!canStartBossPattern({
+      bossExists: boss !== undefined,
+      bossType: boss?.point.type,
+      bossPhase: this.bossPhase,
+      stageCleared: this.stageCleared,
+    })) return
+    if (!boss || boss.point.type !== 'azure-core') return
 
     const generation = ++this.bossPatternGeneration
     this.clearBossProjectiles()

@@ -4,6 +4,7 @@ export const BOSS_PATTERN_PHASE_DELAY_STEP_MS = 90
 export const BOSS_PATTERN_MIN_DELAY_MS = 540
 export const BOSS_STAGE_ID_SUFFIX = '-6'
 export const BOSS_PROTOTYPE_ENEMY_ID = 'boss-prototype'
+export const BOSS_PATTERN_ENEMY_TYPE = 'azure-core'
 
 export type BossHitOutcome =
   | { type: 'advance-phase'; nextPhase: number }
@@ -71,6 +72,21 @@ export function shouldRestartBossPatternAfterRespawn(input: {
   phaseCount?: number
 }): boolean {
   if (!input.isBossStage) return false
+
+  const phaseCount = input.phaseCount ?? BOSS_PHASE_COUNT
+  return input.bossPhase < phaseCount
+}
+
+export function canStartBossPattern(input: {
+  bossExists: boolean
+  bossType?: string
+  bossPhase: number
+  stageCleared: boolean
+  phaseCount?: number
+}): boolean {
+  if (!input.bossExists) return false
+  if (input.bossType !== BOSS_PATTERN_ENEMY_TYPE) return false
+  if (input.stageCleared) return false
 
   const phaseCount = input.phaseCount ?? BOSS_PHASE_COUNT
   return input.bossPhase < phaseCount

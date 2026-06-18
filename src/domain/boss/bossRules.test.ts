@@ -4,6 +4,7 @@ import {
   BOSS_PATTERN_MIN_DELAY_MS,
   BOSS_PATTERN_PHASE_DELAY_STEP_MS,
   BOSS_PHASE_COUNT,
+  canStartBossPattern,
   getBossHudPhaseDisplay,
   getBossPatternDelayMs,
   getBossHitOutcome,
@@ -187,6 +188,76 @@ describe('shouldRestartBossPatternAfterRespawn', () => {
     expect(shouldRestartBossPatternAfterRespawn({
       isBossStage: true,
       bossPhase: 3,
+      phaseCount: 3,
+    })).toBe(false)
+  })
+})
+
+describe('canStartBossPattern', () => {
+  test('rejects when the boss prototype is missing', () => {
+    expect(canStartBossPattern({
+      bossExists: false,
+      bossType: 'azure-core',
+      bossPhase: 0,
+      stageCleared: false,
+    })).toBe(false)
+  })
+
+  test('rejects when the boss prototype is not an Azure Core', () => {
+    expect(canStartBossPattern({
+      bossExists: true,
+      bossType: 'guard',
+      bossPhase: 0,
+      stageCleared: false,
+    })).toBe(false)
+  })
+
+  test('rejects after the stage is cleared', () => {
+    expect(canStartBossPattern({
+      bossExists: true,
+      bossType: 'azure-core',
+      bossPhase: 0,
+      stageCleared: true,
+    })).toBe(false)
+  })
+
+  test('allows start while the boss phase is below the phase count', () => {
+    expect(canStartBossPattern({
+      bossExists: true,
+      bossType: 'azure-core',
+      bossPhase: 0,
+      stageCleared: false,
+    })).toBe(true)
+    expect(canStartBossPattern({
+      bossExists: true,
+      bossType: 'azure-core',
+      bossPhase: 3,
+      stageCleared: false,
+    })).toBe(true)
+  })
+
+  test('rejects when the boss phase reaches the phase count', () => {
+    expect(canStartBossPattern({
+      bossExists: true,
+      bossType: 'azure-core',
+      bossPhase: 4,
+      stageCleared: false,
+    })).toBe(false)
+  })
+
+  test('supports an explicit phase count for boundary checks', () => {
+    expect(canStartBossPattern({
+      bossExists: true,
+      bossType: 'azure-core',
+      bossPhase: 2,
+      stageCleared: false,
+      phaseCount: 3,
+    })).toBe(true)
+    expect(canStartBossPattern({
+      bossExists: true,
+      bossType: 'azure-core',
+      bossPhase: 3,
+      stageCleared: false,
       phaseCount: 3,
     })).toBe(false)
   })
