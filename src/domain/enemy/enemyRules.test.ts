@@ -13,6 +13,7 @@ import {
   getEnemyRespawnDelayMs,
   getEnemyRespawnPolicy,
   getScoreEnemyTargetCount,
+  hasAzureCoreEnemy,
   hasActiveEnemy,
   shouldProcessEnemyDefeat,
   shouldUpdateEnemyFreezeState,
@@ -61,6 +62,38 @@ describe('getScoreEnemyTargetCount', () => {
         {},
       ],
     })).toBe(3)
+  })
+})
+
+describe('hasAzureCoreEnemy', () => {
+  test('returns false when a stage has no enemies', () => {
+    expect(hasAzureCoreEnemy({ enemies: [] })).toBe(false)
+  })
+
+  test('returns false for guard-only enemies', () => {
+    expect(hasAzureCoreEnemy({
+      enemies: [
+        { type: 'guard' },
+        { type: 'guard' },
+      ],
+    })).toBe(false)
+  })
+
+  test('returns false when enemy type is omitted because it defaults to guard semantics', () => {
+    expect(hasAzureCoreEnemy({
+      enemies: [
+        {},
+      ],
+    })).toBe(false)
+  })
+
+  test('returns true when any enemy is an Azure Core', () => {
+    expect(hasAzureCoreEnemy({
+      enemies: [
+        { type: 'guard' },
+        { type: 'azure-core' },
+      ],
+    })).toBe(true)
   })
 })
 

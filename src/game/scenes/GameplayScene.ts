@@ -60,6 +60,7 @@ import {
   getNextPatrolDirection,
   getEnemyRespawnDelayMs,
   getScoreEnemyTargetCount,
+  hasAzureCoreEnemy,
   hasActiveEnemy,
   shouldProcessEnemyDefeat,
   shouldRestoreEnemyPatrolVelocity,
@@ -2602,7 +2603,7 @@ export class GameplayScene extends Phaser.Scene {
   }
 
   private getInitialStatusMessage(): TranslationKey {
-    return this.stage.enemies.some((enemy) => enemy.type === 'azure-core')
+    return hasAzureCoreEnemy({ enemies: this.stage.enemies })
       ? 'status.azureDetected'
       : 'status.initial'
   }

@@ -64,6 +64,12 @@ export function getScoreEnemyTargetCount(input: {
   return input.enemies.filter((enemy) => enemyCountsForScore(enemy)).length
 }
 
+export function hasAzureCoreEnemy(input: {
+  enemies: readonly EnemyRuleInput[]
+}): boolean {
+  return input.enemies.some((enemy) => getEnemyType(enemy.type) === 'azure-core')
+}
+
 export function getEnemyDefeatOutcome(input: EnemyRuleInput): EnemyDefeatOutcome {
   const respawnPolicy = getEnemyRespawnPolicy(input)
   return {
