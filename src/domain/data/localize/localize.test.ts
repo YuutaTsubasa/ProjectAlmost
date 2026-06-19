@@ -95,7 +95,7 @@ describe('localize', () => {
         },
         world06: {
           title: '深淵魔窟',
-          subtitle: '通往惡魔深淵的最後の降途。',
+          subtitle: '通往惡魔深淵的最終降途。',
         },
       },
       ko: {

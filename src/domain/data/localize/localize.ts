@@ -95,7 +95,7 @@ const catalog: LocalizedTextCatalog = {
     'worlds.world05.title': '燼落火山',
     'worlds.world05.subtitle': '位於火山核心的破碎鍛造場。',
     'worlds.world06.title': '深淵魔窟',
-    'worlds.world06.subtitle': '通往惡魔深淵的最後の降途。',
+    'worlds.world06.subtitle': '通往惡魔深淵的最終降途。',
   },
   ko: {
     'worlds.world01.title': '화이트 팰리스',
