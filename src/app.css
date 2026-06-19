@@ -1110,6 +1110,7 @@ input {
   cursor: pointer;
   text-align: left;
   backdrop-filter: blur(8px);
+  translate: none;
   transition:
     border-color 180ms ease,
     background 180ms ease,
@@ -1122,7 +1123,7 @@ input {
   background:
     linear-gradient(90deg, color-mix(in srgb, var(--thumb-accent) 26%, transparent), transparent 56%),
     rgba(255, 255, 255, 0.13);
-  transform: translateY(-0.35cqh);
+  transform: none;
 }
 
 .world-rail .world-thumb.active {
@@ -1135,12 +1136,13 @@ input {
   box-shadow:
     -6px 0 24px -8px var(--thumb-accent),
     inset 0 0 18px rgba(255, 255, 255, 0.04);
-  transform: translateY(-0.8cqh);
+  translate: none;
+  transform: none;
 }
 
 .world-rail .world-thumb.active:hover,
 .world-rail .world-thumb.active:focus-visible {
-  transform: translateY(-0.8cqh);
+  transform: none;
 }
 
 .world-thumb-art {
