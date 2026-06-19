@@ -1,8 +1,10 @@
 <script lang="ts">
   import { TITLE_MENU_ITEMS, type AppScreen } from '../../domain/app/appFlow'
 
+  type TitleScreenState = Extract<AppScreen, { type: 'title-intro' | 'title-menu' }>
+
   type Props = {
-    screen: AppScreen
+    screen: TitleScreenState
     productName: string
     onOpenMenu: () => void
     onMoveSelection: (direction: -1 | 1) => void
@@ -52,9 +54,7 @@
 
   function handleMenuClick(index: number) {
     onSelectItem(index)
-    if (TITLE_MENU_ITEMS[index] === 'back') {
-      onActivateSelection()
-    }
+    onActivateSelection()
   }
 </script>
 

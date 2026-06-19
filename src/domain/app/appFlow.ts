@@ -7,11 +7,18 @@ export type TitleMenuScreen = {
   selectedItemIndex: number
 }
 
-export type AppScreen = { type: 'title-intro' } | TitleMenuScreen
+export type WorldSelectScreen = {
+  type: 'world-select'
+  selectedWorldIndex: number
+}
+
+export type AppScreen = { type: 'title-intro' } | TitleMenuScreen | WorldSelectScreen
 
 export type AppState = {
   screen: AppScreen
 }
+
+const WORLD_COUNT = 6
 
 export function createInitialAppState(): AppState {
   return {
@@ -50,7 +57,45 @@ export function activateTitleMenuItem(state: AppState): AppState {
   if (state.screen.type !== 'title-menu') return state
 
   const selectedItem = TITLE_MENU_ITEMS[state.screen.selectedItemIndex]
+  if (selectedItem === 'start') {
+    return {
+      screen: { type: 'world-select', selectedWorldIndex: 0 },
+    }
+  }
+
   if (selectedItem !== 'back') return state
 
   return createInitialAppState()
+}
+
+export function moveWorldSelection(state: AppState, direction: -1 | 1): AppState {
+  if (state.screen.type !== 'world-select') return state
+
+  const selectedWorldIndex = (state.screen.selectedWorldIndex + direction + WORLD_COUNT) % WORLD_COUNT
+
+  return {
+    screen: { type: 'world-select', selectedWorldIndex },
+  }
+}
+
+export function selectWorld(state: AppState, selectedWorldIndex: number): AppState {
+  if (state.screen.type !== 'world-select') return state
+
+  return {
+    screen: { type: 'world-select', selectedWorldIndex },
+  }
+}
+
+export function confirmSelectedWorld(state: AppState): AppState {
+  if (state.screen.type !== 'world-select') return state
+
+  return state
+}
+
+export function backFromWorldSelect(state: AppState): AppState {
+  if (state.screen.type !== 'world-select') return state
+
+  return {
+    screen: { type: 'title-menu', selectedItemIndex: 0 },
+  }
 }
