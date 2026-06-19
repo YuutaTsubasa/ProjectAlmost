@@ -8,6 +8,12 @@
     selectTitleMenuItem,
     selectWorld,
   } from './domain/app/appFlow'
+  import { createMusicCommand, createSfxCommand } from './application/audio/audioCommands'
+  import { getControlIntentSfxAction } from './application/audio/audioEvents'
+  import {
+    createBrowserAudioController,
+    type BrowserAudioController,
+  } from './application/audio/browserAudioController'
   import { applyControlIntent } from './application/input/appControls'
   import { createProjectIdentity } from './domain/app/projectIdentity'
   import { projectData } from './domain/data/projectData'
@@ -27,12 +33,22 @@
 
   let settings: GameSettings = $state(parseStoredSettings(null, false))
   let appState = $state(createInitialAppState())
+  let audio: BrowserAudioController | undefined
   const identity = createProjectIdentity()
   const locale: LocaleCode = $derived(settings.language)
+
+  function syncMusicForCurrentState() {
+    audio?.execute(createMusicCommand(appState.screen, settings))
+  }
+
+  function playUiSfx(action: 'move' | 'confirm' | 'back') {
+    audio?.execute(createSfxCommand(action, settings))
+  }
 
   function syncSettings(nextSettings: GameSettings) {
     settings = nextSettings
     localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings))
+    syncMusicForCurrentState()
   }
 
   function actualFullscreen() {
@@ -52,10 +68,19 @@
   }
 
   function handleSelectTitleMenuItem(index: number) {
+    const previousIndex = appState.screen.type === 'title-menu' ? appState.screen.selectedItemIndex : null
     appState = selectTitleMenuItem(appState, index)
+    if (
+      previousIndex !== null &&
+      appState.screen.type === 'title-menu' &&
+      previousIndex !== appState.screen.selectedItemIndex
+    ) {
+      playUiSfx('move')
+    }
   }
 
   function handleControlIntent(intent: ControlIntent) {
+    const previousScreen = appState.screen
     const previousFullscreen = settings.fullscreen
     const nextState = applyControlIntent({ ...appState, settings }, intent)
     appState = { screen: nextState.screen }
@@ -66,23 +91,42 @@
         void setFullscreen(nextState.settings.fullscreen)
       }
     }
+
+    const sfxAction = getControlIntentSfxAction(previousScreen, appState.screen, intent)
+    if (sfxAction) playUiSfx(sfxAction)
+    syncMusicForCurrentState()
   }
 
   function handleSelectWorld(index: number) {
+    const previousIndex = appState.screen.type === 'world-select' ? appState.screen.selectedWorldIndex : null
     appState = selectWorld(appState, index)
+    if (
+      previousIndex !== null &&
+      appState.screen.type === 'world-select' &&
+      previousIndex !== appState.screen.selectedWorldIndex
+    ) {
+      playUiSfx('move')
+    }
+    syncMusicForCurrentState()
   }
 
   function handleConfirmWorld() {
+    playUiSfx('confirm')
     appState = confirmSelectedWorld(appState)
+    syncMusicForCurrentState()
   }
 
   function handleBackFromWorldSelect() {
+    playUiSfx('back')
     appState = backFromWorldSelect(appState)
+    syncMusicForCurrentState()
   }
 
   function handleSelectSettingsItem(index: number) {
     if (appState.screen.type !== 'settings' || appState.screen.deleteConfirm) return
+    const previousIndex = appState.screen.selectedItemIndex
     appState = { screen: { ...appState.screen, selectedItemIndex: index } }
+    if (previousIndex !== index) playUiSfx('move')
   }
 
   function handleAdjustSettingsItem(index: number, direction: -1 | 1) {
@@ -94,44 +138,69 @@
     )
 
     syncSettings(nextSettings)
+    playUiSfx('move')
     if (index === 4) void setFullscreen(nextSettings.fullscreen)
   }
 
   function handleActivateSettingsItem(index: number) {
     if (index <= 6) {
+      playUiSfx('confirm')
       handleAdjustSettingsItem(index, 1)
       return
     }
     if (index === 7) {
       syncSettings(resetSettings(actualFullscreen()))
+      playUiSfx('confirm')
       return
     }
     if (index === 8 && appState.screen.type === 'settings') {
       appState = { screen: { ...appState.screen, deleteConfirm: { selectedActionIndex: 0 } } }
+      playUiSfx('confirm')
       return
     }
     if (index === 9) {
       appState = { screen: { type: 'title-menu', selectedItemIndex: 1 } }
+      playUiSfx('back')
+      syncMusicForCurrentState()
     }
   }
 
   function handleCancelDelete() {
+    playUiSfx('back')
     appState = cancelDeleteConfirm(appState)
   }
 
   function handleConfirmDelete() {
+    playUiSfx('confirm')
     appState = cancelDeleteConfirm(appState)
   }
 
   onMount(() => {
+    audio = createBrowserAudioController()
     syncSettings(parseStoredSettings(localStorage.getItem(SETTINGS_STORAGE_KEY), actualFullscreen()))
+    void audio.attemptAutoplay(createMusicCommand(appState.screen, settings).volume)
+
+    const unlockAudio = () => {
+      audio?.unlock()
+      syncMusicForCurrentState()
+    }
 
     const handleFullscreenChange = () => {
       syncSettings({ ...settings, fullscreen: actualFullscreen() })
     }
 
+    window.addEventListener('keydown', unlockAudio)
+    window.addEventListener('pointerdown', unlockAudio)
+    window.addEventListener('touchstart', unlockAudio)
     document.addEventListener('fullscreenchange', handleFullscreenChange)
-    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange)
+    return () => {
+      window.removeEventListener('keydown', unlockAudio)
+      window.removeEventListener('pointerdown', unlockAudio)
+      window.removeEventListener('touchstart', unlockAudio)
+      document.removeEventListener('fullscreenchange', handleFullscreenChange)
+      audio?.destroy()
+      audio = undefined
+    }
   })
 </script>
 

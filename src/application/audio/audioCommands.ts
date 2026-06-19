@@ -8,20 +8,21 @@ import {
 } from '../../domain/audio/audioPolicy'
 import type { GameSettings } from '../../domain/settings/settings'
 
-export type AudioCommand =
-  | { type: 'set-music'; track: MusicTrackId; volume: number }
-  | { type: 'prepare-music'; track: MusicTrackId }
-  | { type: 'play-sfx'; sound: SfxId; volume: number }
+export type SetMusicCommand = { type: 'set-music'; track: MusicTrackId; volume: number }
+export type PrepareMusicCommand = { type: 'prepare-music'; track: MusicTrackId }
+export type PlaySfxCommand = { type: 'play-sfx'; sound: SfxId; volume: number }
 
-export function createMusicCommand(screen: AppScreen, settings: GameSettings): AudioCommand {
+export type AudioCommand = SetMusicCommand | PrepareMusicCommand | PlaySfxCommand
+
+export function createMusicCommand(screen: AppScreen, settings: GameSettings): SetMusicCommand {
   return { type: 'set-music', ...getMusicForScreen(screen, settings) }
 }
 
-export function createPrepareMusicCommand(track: MusicTrackId): AudioCommand {
+export function createPrepareMusicCommand(track: MusicTrackId): PrepareMusicCommand {
   return { type: 'prepare-music', track }
 }
 
-export function createSfxCommand(action: UiSfxAction, settings: GameSettings): AudioCommand | null {
+export function createSfxCommand(action: UiSfxAction, settings: GameSettings): PlaySfxCommand | null {
   const volume = computeSfxVolume(settings)
   if (volume <= 0) return null
 
