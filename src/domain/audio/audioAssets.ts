@@ -1,0 +1,18 @@
+export const MUSIC_ASSETS = {
+  title: '/assets/audio/titlescreen.mp3',
+  world01Bgm: '/assets/audio/world01_bgm.mp3',
+  world02Bgm: '/assets/audio/world02_bgm.mp3',
+  world03Bgm: '/assets/audio/world03_bgm.mp3',
+  world04Bgm: '/assets/audio/world04_bgm.mp3',
+  world05Bgm: '/assets/audio/world05_bgm.mp3',
+  world06Bgm: '/assets/audio/world06_bgm.mp3',
+} as const
+
+export const SFX_ASSETS = {
+  'ui-move': '/assets/audio/sfx/ui-move.wav',
+  'ui-confirm': '/assets/audio/sfx/ui-confirm.wav',
+  'ui-back': '/assets/audio/sfx/ui-back.wav',
+} as const
+
+export type MusicTrackId = keyof typeof MUSIC_ASSETS
+export type SfxId = keyof typeof SFX_ASSETS
