@@ -1,11 +1,16 @@
 import { describe, expect, it } from 'vitest'
 import {
   activateTitleMenuItem,
+  backFromSettings,
   backFromWorldSelect,
+  cancelDeleteConfirm,
   confirmSelectedWorld,
   createInitialAppState,
+  moveSettingsDeleteConfirmSelection,
+  moveSettingsScreenSelection,
   moveTitleMenuSelection,
   moveWorldSelection,
+  openSettingsDeleteConfirm,
   openTitleMenu,
   selectTitleMenuItem,
   selectWorld,
@@ -76,10 +81,12 @@ describe('activateTitleMenuItem', () => {
     })
   })
 
-  it('keeps Settings inactive for now', () => {
+  it('opens settings when Settings is activated', () => {
     const state = { screen: { type: 'title-menu', selectedItemIndex: 1 } } as const
 
-    expect(activateTitleMenuItem(state)).toBe(state)
+    expect(activateTitleMenuItem(state)).toEqual({
+      screen: { type: 'settings', selectedItemIndex: 0, deleteConfirm: null },
+    })
   })
 
   it('returns to the title intro when Back is activated', () => {
@@ -87,6 +94,46 @@ describe('activateTitleMenuItem', () => {
 
     expect(activateTitleMenuItem(state)).toEqual({
       screen: { type: 'title-intro' },
+    })
+  })
+})
+
+describe('settings screen flow', () => {
+  it('moves settings selection with wraparound', () => {
+    expect(
+      moveSettingsScreenSelection(
+        { screen: { type: 'settings', selectedItemIndex: 0, deleteConfirm: null } },
+        -1,
+      ),
+    ).toEqual({
+      screen: { type: 'settings', selectedItemIndex: 9, deleteConfirm: null },
+    })
+  })
+
+  it('opens, moves, and cancels delete confirmation', () => {
+    const settingsState = { screen: { type: 'settings', selectedItemIndex: 8, deleteConfirm: null } } as const
+
+    expect(openSettingsDeleteConfirm(settingsState)).toEqual({
+      screen: { type: 'settings', selectedItemIndex: 8, deleteConfirm: { selectedActionIndex: 0 } },
+    })
+    expect(
+      moveSettingsDeleteConfirmSelection(
+        { screen: { type: 'settings', selectedItemIndex: 8, deleteConfirm: { selectedActionIndex: 0 } } },
+        1,
+      ),
+    ).toEqual({
+      screen: { type: 'settings', selectedItemIndex: 8, deleteConfirm: { selectedActionIndex: 1 } },
+    })
+    expect(
+      cancelDeleteConfirm({
+        screen: { type: 'settings', selectedItemIndex: 8, deleteConfirm: { selectedActionIndex: 1 } },
+      }),
+    ).toEqual({ screen: { type: 'settings', selectedItemIndex: 8, deleteConfirm: null } })
+  })
+
+  it('returns from settings to title menu with Settings selected', () => {
+    expect(backFromSettings({ screen: { type: 'settings', selectedItemIndex: 3, deleteConfirm: null } })).toEqual({
+      screen: { type: 'title-menu', selectedItemIndex: 1 },
     })
   })
 })

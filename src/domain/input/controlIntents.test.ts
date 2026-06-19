@@ -38,6 +38,35 @@ describe('mapKeyboardControlIntent', () => {
     expect(mapKeyboardControlIntent({ key: 'Escape', repeat: false }, 'world-select')).toBe('back')
   })
 
+  it('maps settings keys to row navigation, adjustment, confirm, and back intents', () => {
+    expect(mapKeyboardControlIntent({ key: 'ArrowUp', repeat: false }, 'settings')).toBe('move-up')
+    expect(mapKeyboardControlIntent({ key: 'w', repeat: false }, 'settings')).toBe('move-up')
+    expect(mapKeyboardControlIntent({ key: 'ArrowDown', repeat: false }, 'settings')).toBe('move-down')
+    expect(mapKeyboardControlIntent({ key: 's', repeat: false }, 'settings')).toBe('move-down')
+    expect(mapKeyboardControlIntent({ key: 'ArrowLeft', repeat: false }, 'settings')).toBe('move-left')
+    expect(mapKeyboardControlIntent({ key: 'a', repeat: false }, 'settings')).toBe('move-left')
+    expect(mapKeyboardControlIntent({ key: 'ArrowRight', repeat: false }, 'settings')).toBe('move-right')
+    expect(mapKeyboardControlIntent({ key: 'd', repeat: false }, 'settings')).toBe('move-right')
+    expect(mapKeyboardControlIntent({ key: 'Enter', repeat: false }, 'settings')).toBe('confirm')
+    expect(mapKeyboardControlIntent({ key: ' ', repeat: false }, 'settings')).toBe('confirm')
+    expect(mapKeyboardControlIntent({ key: 'Escape', repeat: false }, 'settings')).toBe('back')
+  })
+
+  it('maps delete confirmation keys to horizontal selection, confirm, and back intents', () => {
+    expect(mapKeyboardControlIntent({ key: 'ArrowLeft', repeat: false }, 'settings-delete-confirm')).toBe(
+      'move-left',
+    )
+    expect(mapKeyboardControlIntent({ key: 'ArrowRight', repeat: false }, 'settings-delete-confirm')).toBe(
+      'move-right',
+    )
+    expect(mapKeyboardControlIntent({ key: 'a', repeat: false }, 'settings-delete-confirm')).toBe('move-left')
+    expect(mapKeyboardControlIntent({ key: 'd', repeat: false }, 'settings-delete-confirm')).toBe('move-right')
+    expect(mapKeyboardControlIntent({ key: 'Enter', repeat: false }, 'settings-delete-confirm')).toBe('confirm')
+    expect(mapKeyboardControlIntent({ key: ' ', repeat: false }, 'settings-delete-confirm')).toBe('confirm')
+    expect(mapKeyboardControlIntent({ key: 'Escape', repeat: false }, 'settings-delete-confirm')).toBe('back')
+    expect(mapKeyboardControlIntent({ key: 'ArrowUp', repeat: false }, 'settings-delete-confirm')).toBeNull()
+  })
+
   it('ignores unsupported or repeated keys', () => {
     expect(mapKeyboardControlIntent({ key: 'a', repeat: false }, 'title-menu')).toBeNull()
     expect(mapKeyboardControlIntent({ key: 'ArrowDown', repeat: true }, 'world-select')).toBeNull()
@@ -58,6 +87,10 @@ describe('mapGamepadControlIntents', () => {
 
     expect(
       mapGamepadControlIntents(previous, { ...previous, buttons: [true, false, false, false] }, 'title-menu'),
+    ).toEqual(['confirm'])
+
+    expect(
+      mapGamepadControlIntents(previous, { ...previous, buttons: [true, false, false, false] }, 'settings'),
     ).toEqual(['confirm'])
 
     expect(

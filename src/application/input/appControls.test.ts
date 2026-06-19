@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { DEFAULT_SETTINGS } from '../../domain/settings/settings'
 import { applyControlIntent } from './appControls'
 
 describe('applyControlIntent', () => {
@@ -42,6 +43,63 @@ describe('applyControlIntent', () => {
     expect(applyControlIntent(worldState, 'confirm')).toBe(worldState)
     expect(applyControlIntent(worldState, 'back')).toEqual({
       screen: { type: 'title-menu', selectedItemIndex: 0 },
+    })
+  })
+
+  it('moves, adjusts, activates, and backs out of settings', () => {
+    const settingsState = {
+      screen: { type: 'settings', selectedItemIndex: 0, deleteConfirm: null },
+      settings: DEFAULT_SETTINGS,
+    } as const
+
+    expect(applyControlIntent(settingsState, 'move-down')).toEqual({
+      ...settingsState,
+      screen: { type: 'settings', selectedItemIndex: 1, deleteConfirm: null },
+    })
+    expect(applyControlIntent(settingsState, 'move-up')).toEqual({
+      ...settingsState,
+      screen: { type: 'settings', selectedItemIndex: 9, deleteConfirm: null },
+    })
+    expect(applyControlIntent(settingsState, 'move-right')).toEqual({
+      ...settingsState,
+      settings: { ...DEFAULT_SETTINGS, masterVolume: 100 },
+    })
+    expect(applyControlIntent(settingsState, 'move-left')).toEqual({
+      ...settingsState,
+      settings: { ...DEFAULT_SETTINGS, masterVolume: 90 },
+    })
+    expect(
+      applyControlIntent(
+        { ...settingsState, screen: { type: 'settings', selectedItemIndex: 8, deleteConfirm: null } },
+        'confirm',
+      ),
+    ).toEqual({
+      ...settingsState,
+      screen: { type: 'settings', selectedItemIndex: 8, deleteConfirm: { selectedActionIndex: 0 } },
+    })
+    expect(applyControlIntent(settingsState, 'back')).toEqual({
+      screen: { type: 'title-menu', selectedItemIndex: 1 },
+      settings: DEFAULT_SETTINGS,
+    })
+  })
+
+  it('handles delete confirmation controls in settings', () => {
+    const state = {
+      screen: { type: 'settings', selectedItemIndex: 8, deleteConfirm: { selectedActionIndex: 0 as const } },
+      settings: DEFAULT_SETTINGS,
+    } as const
+
+    expect(applyControlIntent(state, 'move-right')).toEqual({
+      ...state,
+      screen: { type: 'settings', selectedItemIndex: 8, deleteConfirm: { selectedActionIndex: 1 } },
+    })
+    expect(applyControlIntent(state, 'back')).toEqual({
+      ...state,
+      screen: { type: 'settings', selectedItemIndex: 8, deleteConfirm: null },
+    })
+    expect(applyControlIntent(state, 'confirm')).toEqual({
+      ...state,
+      screen: { type: 'settings', selectedItemIndex: 8, deleteConfirm: null },
     })
   })
 })

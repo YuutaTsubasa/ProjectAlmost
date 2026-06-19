@@ -7,7 +7,12 @@ export type ControlIntent =
   | 'confirm'
   | 'back'
 
-export type ControlContext = 'title-intro' | 'title-menu' | 'world-select'
+export type ControlContext =
+  | 'title-intro'
+  | 'title-menu'
+  | 'world-select'
+  | 'settings'
+  | 'settings-delete-confirm'
 
 export type KeyboardControlDescriptor = {
   key: string
@@ -41,6 +46,24 @@ export function mapKeyboardControlIntent(
   if (context === 'title-menu') {
     if (descriptor.key === 'ArrowUp' || key === 'w') return 'move-up'
     if (descriptor.key === 'ArrowDown' || key === 's') return 'move-down'
+    if (descriptor.key === 'Enter' || descriptor.key === ' ') return 'confirm'
+    if (descriptor.key === 'Escape') return 'back'
+    return null
+  }
+
+  if (context === 'settings') {
+    if (descriptor.key === 'ArrowUp' || key === 'w') return 'move-up'
+    if (descriptor.key === 'ArrowDown' || key === 's') return 'move-down'
+    if (descriptor.key === 'ArrowLeft' || key === 'a') return 'move-left'
+    if (descriptor.key === 'ArrowRight' || key === 'd') return 'move-right'
+    if (descriptor.key === 'Enter' || descriptor.key === ' ') return 'confirm'
+    if (descriptor.key === 'Escape') return 'back'
+    return null
+  }
+
+  if (context === 'settings-delete-confirm') {
+    if (descriptor.key === 'ArrowLeft' || key === 'a') return 'move-left'
+    if (descriptor.key === 'ArrowRight' || key === 'd') return 'move-right'
     if (descriptor.key === 'Enter' || descriptor.key === ' ') return 'confirm'
     if (descriptor.key === 'Escape') return 'back'
     return null

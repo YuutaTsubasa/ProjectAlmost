@@ -243,6 +243,151 @@ describe('localize', () => {
       )
     }
   })
+
+  it('includes localized settings, common, and language values for every supported locale', () => {
+    const expectedByLocale = {
+      en: {
+        systemMenu: 'System Menu',
+        title: 'Settings',
+        masterVolume: 'Master Volume',
+        musicVolume: 'Music Volume',
+        sfxVolume: 'SFX Volume',
+        language: 'Language',
+        fullscreen: 'Fullscreen',
+        screenShake: 'Screen Shake',
+        vibration: 'Controller Vibration',
+        reset: 'Reset to Default',
+        deleteSave: 'Delete Save Data',
+        deleteTitle: 'Delete Save Data?',
+        deleteBody: 'All stage clears, unlocks, records, and best ranks will be permanently deleted.',
+        select: 'Select',
+        adjust: 'Adjust',
+        on: 'On',
+        off: 'Off',
+        cancel: 'Cancel',
+        delete: 'Delete',
+        warning: 'Warning',
+        english: 'English',
+      },
+      ja: {
+        systemMenu: 'システムメニュー',
+        title: '設定',
+        masterVolume: 'マスター音量',
+        musicVolume: '音楽音量',
+        sfxVolume: '効果音音量',
+        language: '言語',
+        fullscreen: 'フルスクリーン',
+        screenShake: '画面振動',
+        vibration: 'コントローラー振動',
+        reset: '初期設定に戻す',
+        deleteSave: 'セーブデータ削除',
+        deleteTitle: 'セーブデータを削除しますか？',
+        deleteBody: 'ステージクリア、解放、記録、最高ランクがすべて削除されます。',
+        select: '選択',
+        adjust: '調整',
+        on: 'オン',
+        off: 'オフ',
+        cancel: 'キャンセル',
+        delete: '削除',
+        warning: '警告',
+        english: '英語',
+      },
+      zhHant: {
+        systemMenu: '系統選單',
+        title: '設定',
+        masterVolume: '主音量',
+        musicVolume: '音樂音量',
+        sfxVolume: '音效音量',
+        language: '語言',
+        fullscreen: '全螢幕',
+        screenShake: '畫面震動',
+        vibration: '控制器震動',
+        reset: '恢復預設值',
+        deleteSave: '刪除存檔',
+        deleteTitle: '刪除存檔？',
+        deleteBody: '所有過關、解鎖、紀錄與最佳評價都將永久刪除。',
+        select: '選擇',
+        adjust: '調整',
+        on: '開啟',
+        off: '關閉',
+        cancel: '取消',
+        delete: '刪除',
+        warning: '警告',
+        english: '英文',
+      },
+      ko: {
+        systemMenu: '시스템 메뉴',
+        title: '설정',
+        masterVolume: '전체 음량',
+        musicVolume: '음악 음량',
+        sfxVolume: '효과음 음량',
+        language: '언어',
+        fullscreen: '전체 화면',
+        screenShake: '화면 흔들림',
+        vibration: '컨트롤러 진동',
+        reset: '기본값 복원',
+        deleteSave: '저장 데이터 삭제',
+        deleteTitle: '저장 데이터를 삭제할까요?',
+        deleteBody: '모든 클리어, 해금, 기록 및 최고 랭크가 영구 삭제됩니다.',
+        select: '선택',
+        adjust: '조정',
+        on: '켜기',
+        off: '끄기',
+        cancel: '취소',
+        delete: '삭제',
+        warning: '경고',
+        english: '영어',
+      },
+    }
+
+    const locales = ['en', 'ja', 'zhHant', 'ko'] as const
+
+    for (const locale of locales) {
+      expect(resolveLocalizedText(localize, locale, 'settings.systemMenu')).toBe(
+        expectedByLocale[locale].systemMenu,
+      )
+      expect(resolveLocalizedText(localize, locale, 'settings.title')).toBe(expectedByLocale[locale].title)
+      expect(resolveLocalizedText(localize, locale, 'settings.masterVolume')).toBe(
+        expectedByLocale[locale].masterVolume,
+      )
+      expect(resolveLocalizedText(localize, locale, 'settings.musicVolume')).toBe(
+        expectedByLocale[locale].musicVolume,
+      )
+      expect(resolveLocalizedText(localize, locale, 'settings.sfxVolume')).toBe(
+        expectedByLocale[locale].sfxVolume,
+      )
+      expect(resolveLocalizedText(localize, locale, 'settings.language')).toBe(
+        expectedByLocale[locale].language,
+      )
+      expect(resolveLocalizedText(localize, locale, 'settings.fullscreen')).toBe(
+        expectedByLocale[locale].fullscreen,
+      )
+      expect(resolveLocalizedText(localize, locale, 'settings.screenShake')).toBe(
+        expectedByLocale[locale].screenShake,
+      )
+      expect(resolveLocalizedText(localize, locale, 'settings.vibration')).toBe(
+        expectedByLocale[locale].vibration,
+      )
+      expect(resolveLocalizedText(localize, locale, 'settings.reset')).toBe(expectedByLocale[locale].reset)
+      expect(resolveLocalizedText(localize, locale, 'settings.deleteSave')).toBe(
+        expectedByLocale[locale].deleteSave,
+      )
+      expect(resolveLocalizedText(localize, locale, 'settings.deleteTitle')).toBe(
+        expectedByLocale[locale].deleteTitle,
+      )
+      expect(resolveLocalizedText(localize, locale, 'settings.deleteBody')).toBe(
+        expectedByLocale[locale].deleteBody,
+      )
+      expect(resolveLocalizedText(localize, locale, 'common.select')).toBe(expectedByLocale[locale].select)
+      expect(resolveLocalizedText(localize, locale, 'common.adjust')).toBe(expectedByLocale[locale].adjust)
+      expect(resolveLocalizedText(localize, locale, 'common.on')).toBe(expectedByLocale[locale].on)
+      expect(resolveLocalizedText(localize, locale, 'common.off')).toBe(expectedByLocale[locale].off)
+      expect(resolveLocalizedText(localize, locale, 'common.cancel')).toBe(expectedByLocale[locale].cancel)
+      expect(resolveLocalizedText(localize, locale, 'common.delete')).toBe(expectedByLocale[locale].delete)
+      expect(resolveLocalizedText(localize, locale, 'common.warning')).toBe(expectedByLocale[locale].warning)
+      expect(resolveLocalizedText(localize, locale, 'language.en')).toBe(expectedByLocale[locale].english)
+    }
+  })
 })
 
 describe('resolveLocalizedText', () => {
