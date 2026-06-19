@@ -73,7 +73,7 @@ Create `public/assets/maps/` and copy the six `*_stage_select.webp` files from `
 
 - [ ] **Step 2: Create the Svelte presentation component**
 
-Create `WorldSelectScreen.svelte` with props for `catalog`, `selectedWorldIndex`, `onMoveSelection`, `onSelectWorld`, `onConfirmWorld`, and `onBack`. Derive ordered worlds from `catalog.order`, render the selected background image, left-side selected-world copy, right-side world rail, Back button, and bottom control hints.
+Create `WorldSelectScreen.svelte` with props for `catalog`, `selectedWorldIndex`, `onMoveSelection`, `onSelectWorld`, `onConfirmWorld`, and `onBack`. Derive ordered worlds from `catalog.order`, render the prototype-compatible `world-backdrop`, left-side `world-cinematic-copy`, bottom horizontal `world-rail`, `menu-back-button dark` Back button, and `select-controls world-controls` hints.
 
 - [ ] **Step 3: Wire the app shell**
 
@@ -81,7 +81,7 @@ Import `projectData`, `WorldSelectScreen`, and the new app-flow helpers in `App.
 
 - [ ] **Step 4: Add CSS**
 
-Add `.world-select` styles to `src/app.css`, following the prototype cinematic layout with full-frame background, dark overlays, left hero copy, right vertical rail, and responsive container-query sizing.
+Add `.world-select` styles to `src/app.css`, following the final prototype cinematic layout with full-frame background, dark overlays, left cinematic copy, bottom horizontal rail, and responsive frame-relative sizing.
 
 - [ ] **Step 5: Run Svelte/TypeScript check**
 

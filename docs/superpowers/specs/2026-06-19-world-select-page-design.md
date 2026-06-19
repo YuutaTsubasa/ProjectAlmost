@@ -31,8 +31,8 @@ The rebuild should reference the prototype's cinematic world select:
 - Full-frame selected-world background using each world's `assetRefs.stageSelectBackground`.
 - Dark cinematic overlays so text remains readable.
 - Large selected-world copy on the left: world number, localized title, and localized subtitle.
-- Vertical world rail on the right with all six worlds, selected state, world symbol, localized title, and number.
-- Compact control hints at the bottom using the existing title-screen font system.
+- Bottom horizontal world rail with all six worlds, selected state, world symbol, localized title, and number, matching the final prototype treatment.
+- Compact control hints at the lower right using the final prototype `select-controls world-controls` treatment.
 
 The styling should be rebuilt in `src/app.css` and fit inside the existing `ResolutionFrame`.
 

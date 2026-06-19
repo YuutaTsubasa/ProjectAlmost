@@ -82,44 +82,44 @@
 <svelte:window onkeydown={handleKeydown} />
 
 <section class={`world-select theme-${selectedWorld.theme}`} aria-label="World Select">
-  <img class="world-select-bg" src={selectedWorld.assetRefs.stageSelectBackground} alt="" />
-  <div class="world-select-shade" aria-hidden="true"></div>
-  <div class="world-select-motif" aria-hidden="true">{selectedWorld.symbol}</div>
+  <div class="world-backdrop" aria-hidden="true"></div>
 
-  <header class="world-select-head">
+  <header class="world-cinematic-head">
     <span aria-hidden="true"></span>
-    <b>World Select</b>
+    <strong>World Select</strong>
   </header>
 
-  <button class="world-back" type="button" onclick={onBack}>
+  <button class="menu-back-button dark world-back-button" type="button" onclick={onBack} aria-label="Back">
     <span aria-hidden="true">‹</span>
     <b>Back</b>
   </button>
 
-  <article class="world-hero" aria-live="polite">
-    <small>World {worldNumber(selectedWorld)}</small>
-    <h2>{worldTitle(selectedWorld)}</h2>
+  <div class="world-cinematic-copy" aria-live="polite">
+    <span class="world-number">WORLD {worldNumber(selectedWorld)}</span>
+    <strong class="world-cinematic-name">{worldTitle(selectedWorld)}</strong>
     <p>{worldSubtitle(selectedWorld)}</p>
-    <dl>
+
+    <div class="world-cinematic-progress">
       <div>
-        <dt>Stages</dt>
-        <dd>{selectedWorld.stageCount}</dd>
+        <span>Progress</span>
+        <b>0<small> / {selectedWorld.stageCount}</small></b>
       </div>
-      <div>
-        <dt>Theme</dt>
-        <dd>{selectedWorld.theme}</dd>
+      <div class="world-progress-track" aria-hidden="true">
+        <span style="width: 0%"></span>
       </div>
-    </dl>
+    </div>
+
     <button class="world-enter" type="button" onclick={onConfirmWorld}>
       <span>Enter World</span>
       <b aria-hidden="true">›</b>
     </button>
-  </article>
+  </div>
 
-  <nav class="world-rail" aria-label="World list">
+  <nav class="world-rail" aria-label="World Select">
     {#each orderedWorlds as world, index}
       <button
         class:active={index === selectedWorldIndex}
+        class={`world-thumb theme-${world.theme}`}
         type="button"
         aria-label={`World ${worldNumber(world)} ${worldTitle(world)}`}
         onclick={() => onSelectWorld(index)}
@@ -128,18 +128,19 @@
           onConfirmWorld()
         }}
       >
-        <span class="world-rail-symbol" aria-hidden="true">{world.symbol}</span>
-        <span class="world-rail-copy">
+        <span class="world-thumb-art" aria-hidden="true">{world.symbol}</span>
+        <span class="world-thumb-copy">
           <strong>{worldTitle(world)}</strong>
           <small>World {worldNumber(world)}</small>
         </span>
-        <i>{worldNumber(world)}</i>
+        <span class="world-thumb-number">{worldNumber(world)}</span>
       </button>
     {/each}
   </nav>
 
-  <p class="world-controls">
-    <kbd>←</kbd><kbd>→</kbd><kbd>↑</kbd><kbd>↓</kbd> Select <kbd>Enter</kbd> Confirm
-    <kbd>Esc</kbd> Back
-  </p>
+  <div class="select-controls world-controls">
+    <span><kbd>←</kbd><kbd>→</kbd><kbd>↑</kbd><kbd>↓</kbd> Select</span>
+    <span><kbd>Space</kbd> Confirm</span>
+    <span><kbd>Esc</kbd> Back</span>
+  </div>
 </section>
