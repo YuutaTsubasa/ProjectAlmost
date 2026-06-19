@@ -1107,7 +1107,8 @@ input {
   color: white;
   cursor: pointer;
   text-align: left;
-  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px) saturate(125%);
+  backdrop-filter: blur(8px) saturate(125%);
   translate: none;
   transition:
     border-color 180ms ease,
@@ -1121,7 +1122,7 @@ input {
   background:
     linear-gradient(90deg, color-mix(in srgb, var(--thumb-accent) 26%, transparent), transparent 56%),
     rgba(255, 255, 255, 0.13);
-  transform: none;
+  transform: translateY(-0.35cqh);
 }
 
 .world-rail .world-thumb.active {
@@ -1135,12 +1136,12 @@ input {
     -6px 0 24px -8px var(--thumb-accent),
     inset 0 0 18px rgba(255, 255, 255, 0.04);
   translate: none;
-  transform: none;
+  transform: translateY(-0.8cqh);
 }
 
 .world-rail .world-thumb.active:hover,
 .world-rail .world-thumb.active:focus-visible {
-  transform: none;
+  transform: translateY(-0.8cqh);
 }
 
 .world-thumb-art {
