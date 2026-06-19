@@ -1,6 +1,20 @@
 export type LocaleCode = 'en' | 'ja' | 'zhHant' | 'ko'
 
-export type LocalizationKey = `worlds.world0${1 | 2 | 3 | 4 | 5 | 6}.${'title' | 'subtitle'}`
+export type WorldLocalizationKey = `worlds.world0${1 | 2 | 3 | 4 | 5 | 6}.${'title' | 'subtitle'}`
+
+export type TitleLocalizationKey =
+  | 'title.prompt.pressAnyButton'
+  | 'title.menu.start'
+  | 'title.menu.settings'
+  | 'title.menu.back'
+  | 'title.controls.select'
+  | 'title.controls.confirm'
+  | 'title.controls.back'
+  | 'title.aria.screen'
+  | 'title.aria.openMenu'
+  | 'title.aria.menu'
+
+export type LocalizationKey = WorldLocalizationKey | TitleLocalizationKey
 
 export interface LocaleRecord {
   code: LocaleCode
@@ -14,6 +28,19 @@ export interface WorldLocalizationReferences {
   subtitle: LocalizationKey
 }
 
+export interface TitleLocalizationReferences {
+  promptPressAnyButton: TitleLocalizationKey
+  menuStart: TitleLocalizationKey
+  menuSettings: TitleLocalizationKey
+  menuBack: TitleLocalizationKey
+  controlsSelect: TitleLocalizationKey
+  controlsConfirm: TitleLocalizationKey
+  controlsBack: TitleLocalizationKey
+  ariaScreen: TitleLocalizationKey
+  ariaOpenMenu: TitleLocalizationKey
+  ariaMenu: TitleLocalizationKey
+}
+
 export type WorldLocalizationReferenceGroup = Record<
   `world0${1 | 2 | 3 | 4 | 5 | 6}`,
   WorldLocalizationReferences
@@ -22,9 +49,23 @@ export type WorldLocalizationReferenceGroup = Record<
 export interface LocalizeData {
   languages: readonly LocaleRecord[]
   references: {
+    title: TitleLocalizationReferences
     worlds: WorldLocalizationReferenceGroup
   }
   catalog: LocalizedTextCatalog
+}
+
+const title: TitleLocalizationReferences = {
+  promptPressAnyButton: 'title.prompt.pressAnyButton',
+  menuStart: 'title.menu.start',
+  menuSettings: 'title.menu.settings',
+  menuBack: 'title.menu.back',
+  controlsSelect: 'title.controls.select',
+  controlsConfirm: 'title.controls.confirm',
+  controlsBack: 'title.controls.back',
+  ariaScreen: 'title.aria.screen',
+  ariaOpenMenu: 'title.aria.openMenu',
+  ariaMenu: 'title.aria.menu',
 }
 
 const worlds: WorldLocalizationReferenceGroup = {
@@ -56,6 +97,16 @@ const worlds: WorldLocalizationReferenceGroup = {
 
 const catalog: LocalizedTextCatalog = {
   en: {
+    'title.prompt.pressAnyButton': 'Press Any Button',
+    'title.menu.start': 'Start Game',
+    'title.menu.settings': 'Settings',
+    'title.menu.back': 'Back',
+    'title.controls.select': 'Select',
+    'title.controls.confirm': 'Confirm',
+    'title.controls.back': 'Back',
+    'title.aria.screen': 'Project Almost title screen',
+    'title.aria.openMenu': 'Open title menu',
+    'title.aria.menu': 'Title menu',
     'worlds.world01.title': 'White Palace',
     'worlds.world01.subtitle': 'A radiant kingdom above the clouds.',
     'worlds.world02.title': 'Emerald Sanctuary',
@@ -70,6 +121,16 @@ const catalog: LocalizedTextCatalog = {
     'worlds.world06.subtitle': 'The final descent into the demonic abyss.',
   },
   ja: {
+    'title.prompt.pressAnyButton': 'いずれかのボタンを押してください',
+    'title.menu.start': 'ゲーム開始',
+    'title.menu.settings': '設定',
+    'title.menu.back': '戻る',
+    'title.controls.select': '選択',
+    'title.controls.confirm': '決定',
+    'title.controls.back': '戻る',
+    'title.aria.screen': 'Project Almost タイトル画面',
+    'title.aria.openMenu': 'タイトルメニューを開く',
+    'title.aria.menu': 'タイトルメニュー',
     'worlds.world01.title': 'ホワイトパレス',
     'worlds.world01.subtitle': '雲海に輝く天空の王国。',
     'worlds.world02.title': 'エメラルド・サンクチュアリ',
@@ -84,6 +145,16 @@ const catalog: LocalizedTextCatalog = {
     'worlds.world06.subtitle': '悪魔の深淵へ続く最後の降下。',
   },
   zhHant: {
+    'title.prompt.pressAnyButton': '按下任意按鈕',
+    'title.menu.start': '開始遊戲',
+    'title.menu.settings': '設定',
+    'title.menu.back': '返回',
+    'title.controls.select': '選擇',
+    'title.controls.confirm': '確認',
+    'title.controls.back': '返回',
+    'title.aria.screen': 'Project Almost 標題畫面',
+    'title.aria.openMenu': '開啟標題選單',
+    'title.aria.menu': '標題選單',
     'worlds.world01.title': '白色宮殿',
     'worlds.world01.subtitle': '高踞雲海之上的光輝王國。',
     'worlds.world02.title': '翡翠聖林',
@@ -98,6 +169,16 @@ const catalog: LocalizedTextCatalog = {
     'worlds.world06.subtitle': '通往惡魔深淵的最終降途。',
   },
   ko: {
+    'title.prompt.pressAnyButton': '아무 버튼이나 누르세요',
+    'title.menu.start': '게임 시작',
+    'title.menu.settings': '설정',
+    'title.menu.back': '뒤로',
+    'title.controls.select': '선택',
+    'title.controls.confirm': '확인',
+    'title.controls.back': '뒤로',
+    'title.aria.screen': 'Project Almost 타이틀 화면',
+    'title.aria.openMenu': '타이틀 메뉴 열기',
+    'title.aria.menu': '타이틀 메뉴',
     'worlds.world01.title': '화이트 팰리스',
     'worlds.world01.subtitle': '구름 위에서 빛나는 하늘의 왕국.',
     'worlds.world02.title': '에메랄드 생추어리',
@@ -121,6 +202,7 @@ export const localize: LocalizeData = {
     { code: 'ko', label: '한국어' },
   ],
   references: {
+    title,
     worlds,
   },
   catalog,

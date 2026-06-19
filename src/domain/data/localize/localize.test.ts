@@ -18,6 +18,21 @@ describe('localize', () => {
     })
   })
 
+  it('groups title screen localization references', () => {
+    expect(localize.references.title).toEqual({
+      promptPressAnyButton: 'title.prompt.pressAnyButton',
+      menuStart: 'title.menu.start',
+      menuSettings: 'title.menu.settings',
+      menuBack: 'title.menu.back',
+      controlsSelect: 'title.controls.select',
+      controlsConfirm: 'title.controls.confirm',
+      controlsBack: 'title.controls.back',
+      ariaScreen: 'title.aria.screen',
+      ariaOpenMenu: 'title.aria.openMenu',
+      ariaMenu: 'title.aria.menu',
+    })
+  })
+
   it('includes localized title and subtitle values for every supported locale', () => {
     const expectedByLocale = {
       en: {
@@ -138,6 +153,94 @@ describe('localize', () => {
           expectedByLocale[locale][worldId].subtitle,
         )
       }
+    }
+  })
+
+  it('includes localized title screen UI values for every supported locale', () => {
+    const expectedByLocale = {
+      en: {
+        promptPressAnyButton: 'Press Any Button',
+        menuStart: 'Start Game',
+        menuSettings: 'Settings',
+        menuBack: 'Back',
+        controlsSelect: 'Select',
+        controlsConfirm: 'Confirm',
+        controlsBack: 'Back',
+        ariaScreen: 'Project Almost title screen',
+        ariaOpenMenu: 'Open title menu',
+        ariaMenu: 'Title menu',
+      },
+      ja: {
+        promptPressAnyButton: 'いずれかのボタンを押してください',
+        menuStart: 'ゲーム開始',
+        menuSettings: '設定',
+        menuBack: '戻る',
+        controlsSelect: '選択',
+        controlsConfirm: '決定',
+        controlsBack: '戻る',
+        ariaScreen: 'Project Almost タイトル画面',
+        ariaOpenMenu: 'タイトルメニューを開く',
+        ariaMenu: 'タイトルメニュー',
+      },
+      zhHant: {
+        promptPressAnyButton: '按下任意按鈕',
+        menuStart: '開始遊戲',
+        menuSettings: '設定',
+        menuBack: '返回',
+        controlsSelect: '選擇',
+        controlsConfirm: '確認',
+        controlsBack: '返回',
+        ariaScreen: 'Project Almost 標題畫面',
+        ariaOpenMenu: '開啟標題選單',
+        ariaMenu: '標題選單',
+      },
+      ko: {
+        promptPressAnyButton: '아무 버튼이나 누르세요',
+        menuStart: '게임 시작',
+        menuSettings: '설정',
+        menuBack: '뒤로',
+        controlsSelect: '선택',
+        controlsConfirm: '확인',
+        controlsBack: '뒤로',
+        ariaScreen: 'Project Almost 타이틀 화면',
+        ariaOpenMenu: '타이틀 메뉴 열기',
+        ariaMenu: '타이틀 메뉴',
+      },
+    }
+
+    const locales = ['en', 'ja', 'zhHant', 'ko'] as const
+
+    for (const locale of locales) {
+      expect(resolveLocalizedText(localize, locale, 'title.prompt.pressAnyButton')).toBe(
+        expectedByLocale[locale].promptPressAnyButton,
+      )
+      expect(resolveLocalizedText(localize, locale, 'title.menu.start')).toBe(
+        expectedByLocale[locale].menuStart,
+      )
+      expect(resolveLocalizedText(localize, locale, 'title.menu.settings')).toBe(
+        expectedByLocale[locale].menuSettings,
+      )
+      expect(resolveLocalizedText(localize, locale, 'title.menu.back')).toBe(
+        expectedByLocale[locale].menuBack,
+      )
+      expect(resolveLocalizedText(localize, locale, 'title.controls.select')).toBe(
+        expectedByLocale[locale].controlsSelect,
+      )
+      expect(resolveLocalizedText(localize, locale, 'title.controls.confirm')).toBe(
+        expectedByLocale[locale].controlsConfirm,
+      )
+      expect(resolveLocalizedText(localize, locale, 'title.controls.back')).toBe(
+        expectedByLocale[locale].controlsBack,
+      )
+      expect(resolveLocalizedText(localize, locale, 'title.aria.screen')).toBe(
+        expectedByLocale[locale].ariaScreen,
+      )
+      expect(resolveLocalizedText(localize, locale, 'title.aria.openMenu')).toBe(
+        expectedByLocale[locale].ariaOpenMenu,
+      )
+      expect(resolveLocalizedText(localize, locale, 'title.aria.menu')).toBe(
+        expectedByLocale[locale].ariaMenu,
+      )
     }
   })
 })

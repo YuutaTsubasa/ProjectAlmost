@@ -1,17 +1,24 @@
 <script lang="ts">
+  import { onMount } from 'svelte'
   import {
     resolveLocalizedText,
     type LocaleCode,
     type LocalizeData,
   } from '../../domain/data/localize/localize'
   import type { WorldCatalog, WorldData } from '../../domain/data/worlds/worldTypes'
+  import {
+    mapGamepadControlIntents,
+    mapKeyboardControlIntent,
+    type ControlIntent,
+    type GamepadControlSnapshot,
+  } from '../../domain/input/controlIntents'
 
   type Props = {
     catalog: WorldCatalog
     localizeData: LocalizeData
     locale?: LocaleCode
     selectedWorldIndex: number
-    onMoveSelection: (direction: -1 | 1) => void
+    onControlIntent: (intent: ControlIntent) => void
     onSelectWorld: (index: number) => void
     onConfirmWorld: () => void
     onBack: () => void
@@ -22,11 +29,13 @@
     localizeData,
     locale = 'en',
     selectedWorldIndex,
-    onMoveSelection,
+    onControlIntent,
     onSelectWorld,
     onConfirmWorld,
     onBack,
   }: Props = $props()
+
+  let previousGamepadSnapshot: GamepadControlSnapshot | null = null
 
   const orderedWorlds = $derived(catalog.order.map((worldId) => catalog.items[worldId]))
   const selectedWorld = $derived(orderedWorlds[selectedWorldIndex] ?? orderedWorlds[0])
@@ -44,39 +53,47 @@
   }
 
   function handleKeydown(event: KeyboardEvent) {
-    if (
-      event.key === 'ArrowDown' ||
-      event.key === 'ArrowRight' ||
-      event.key.toLowerCase() === 's' ||
-      event.key.toLowerCase() === 'd'
-    ) {
-      event.preventDefault()
-      onMoveSelection(1)
-      return
-    }
+    const intent = mapKeyboardControlIntent(
+      { key: event.key, repeat: event.repeat },
+      'world-select',
+    )
 
-    if (
-      event.key === 'ArrowUp' ||
-      event.key === 'ArrowLeft' ||
-      event.key.toLowerCase() === 'w' ||
-      event.key.toLowerCase() === 'a'
-    ) {
+    if (intent) {
       event.preventDefault()
-      onMoveSelection(-1)
-      return
-    }
-
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault()
-      onConfirmWorld()
-      return
-    }
-
-    if (event.key === 'Escape') {
-      event.preventDefault()
-      onBack()
+      onControlIntent(intent)
     }
   }
+
+  function readGamepadSnapshot(): GamepadControlSnapshot | null {
+    const gamepads = navigator.getGamepads?.()
+    const gamepad = Array.from(gamepads ?? []).find((candidate): candidate is Gamepad => Boolean(candidate))
+    if (!gamepad) return null
+
+    return {
+      buttons: gamepad.buttons.map((button) => button.pressed),
+      axes: [...gamepad.axes],
+    }
+  }
+
+  onMount(() => {
+    let frameId = 0
+
+    function pollGamepad() {
+      const currentSnapshot = readGamepadSnapshot()
+      const intents = mapGamepadControlIntents(previousGamepadSnapshot, currentSnapshot, 'world-select')
+
+      for (const intent of intents) {
+        onControlIntent(intent)
+      }
+
+      previousGamepadSnapshot = currentSnapshot
+      frameId = requestAnimationFrame(pollGamepad)
+    }
+
+    frameId = requestAnimationFrame(pollGamepad)
+
+    return () => cancelAnimationFrame(frameId)
+  })
 </script>
 
 <svelte:window onkeydown={handleKeydown} />

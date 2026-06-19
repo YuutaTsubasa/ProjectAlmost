@@ -1,42 +1,30 @@
 <script lang="ts">
   import {
-    activateTitleMenuItem,
     backFromWorldSelect,
     confirmSelectedWorld,
     createInitialAppState,
-    moveTitleMenuSelection,
-    moveWorldSelection,
-    openTitleMenu,
     selectTitleMenuItem,
     selectWorld,
   } from './domain/app/appFlow'
+  import { applyControlIntent } from './application/input/appControls'
   import { createProjectIdentity } from './domain/app/projectIdentity'
   import { projectData } from './domain/data/projectData'
+  import type { LocaleCode } from './domain/data/localize/localize'
+  import type { ControlIntent } from './domain/input/controlIntents'
   import ResolutionFrame from './ui/layout/ResolutionFrame.svelte'
   import TitleScreen from './ui/title/TitleScreen.svelte'
   import WorldSelectScreen from './ui/world/WorldSelectScreen.svelte'
 
   let appState = $state(createInitialAppState())
   const identity = createProjectIdentity()
-
-  function handleOpenMenu() {
-    appState = openTitleMenu(appState)
-  }
-
-  function handleMoveTitleMenu(direction: -1 | 1) {
-    appState = moveTitleMenuSelection(appState, direction)
-  }
-
-  function handleActivateTitleMenuItem() {
-    appState = activateTitleMenuItem(appState)
-  }
+  const locale: LocaleCode = 'en'
 
   function handleSelectTitleMenuItem(index: number) {
     appState = selectTitleMenuItem(appState, index)
   }
 
-  function handleMoveWorldSelection(direction: -1 | 1) {
-    appState = moveWorldSelection(appState, direction)
+  function handleControlIntent(intent: ControlIntent) {
+    appState = applyControlIntent(appState, intent)
   }
 
   function handleSelectWorld(index: number) {
@@ -58,17 +46,18 @@
       <TitleScreen
         screen={appState.screen}
         productName={identity.productName}
-        onOpenMenu={handleOpenMenu}
-        onMoveSelection={handleMoveTitleMenu}
-        onActivateSelection={handleActivateTitleMenuItem}
+        localizeData={projectData.localize}
+        locale={locale}
+        onControlIntent={handleControlIntent}
         onSelectItem={handleSelectTitleMenuItem}
       />
     {:else if appState.screen.type === 'world-select'}
       <WorldSelectScreen
         catalog={projectData.worlds}
         localizeData={projectData.localize}
+        locale={locale}
         selectedWorldIndex={appState.screen.selectedWorldIndex}
-        onMoveSelection={handleMoveWorldSelection}
+        onControlIntent={handleControlIntent}
         onSelectWorld={handleSelectWorld}
         onConfirmWorld={handleConfirmWorld}
         onBack={handleBackFromWorldSelect}
