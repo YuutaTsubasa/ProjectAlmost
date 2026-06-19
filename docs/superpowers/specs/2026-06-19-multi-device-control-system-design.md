@@ -54,6 +54,7 @@ Pointer and touch:
 
 Gamepad:
 
+- Only standard-mapped gamepads are considered by this slice; unsupported layouts are ignored.
 - D-pad down or left stick Y above the positive threshold maps to `move-down`.
 - D-pad up or left stick Y below the negative threshold maps to `move-up`.
 - South face button maps to `open` on the intro and `confirm` on the menu.
@@ -76,7 +77,7 @@ For the title flow, `src/application/input/titleControls.ts` should apply intent
 - `move-up` calls `moveTitleMenuSelection(-1)` when the menu is open
 - `move-down` calls `moveTitleMenuSelection(1)` when the menu is open
 - `confirm` calls `activateTitleMenuItem()` when the menu is open
-- `back` selects or activates the existing Back behavior when the menu is open
+- `back` selects or activates the existing Back behavior when the menu is open, deriving the Back index from `TITLE_MENU_ITEMS`
 
 `App.svelte` should call the application input bridge instead of switching on control intents directly.
 
@@ -85,6 +86,7 @@ For the title flow, `src/application/input/titleControls.ts` should apply intent
 - Unknown keyboard keys should produce no navigation intent while the menu is open.
 - Unsupported gamepad layouts should be ignored instead of throwing.
 - Missing gamepad data should produce no intents.
+- Unsupported gamepad mappings should produce no intents even when their buttons or axes are active.
 - Repeated keyboard events should be ignored for menu movement and confirmation so held keys do not skip multiple items unexpectedly.
 - Gamepad axis values inside the dead zone should be inactive.
 - Pointer actions should not bubble into duplicate open or confirm intents.

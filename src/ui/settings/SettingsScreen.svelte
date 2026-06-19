@@ -100,6 +100,7 @@
     if (!gamepad) return null
 
     return {
+      mapping: gamepad.mapping,
       buttons: gamepad.buttons.map((button) => button.pressed),
       axes: [...gamepad.axes],
     }
