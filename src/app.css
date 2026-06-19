@@ -964,9 +964,7 @@ input {
   margin-top: 2cqh;
   margin-left: -0.5cqw;
   color: #fff;
-  font-family: var(--heading);
   font-size: clamp(38px, 6.1cqw, 118px);
-  font-weight: 400;
   letter-spacing: 0;
   line-height: 0.88;
   overflow-wrap: anywhere;
