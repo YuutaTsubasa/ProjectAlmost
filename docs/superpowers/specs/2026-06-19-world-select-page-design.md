@@ -32,6 +32,7 @@ The rebuild should reference the prototype's cinematic world select:
 - Dark cinematic overlays so text remains readable.
 - Large selected-world copy on the left: world number, localized title, and localized subtitle.
 - Bottom horizontal world rail with all six worlds, selected state, world symbol, localized title, and number, matching the final prototype treatment.
+- The world rail glass treatment should not depend only on browser-native backdrop rendering. Keep the prototype-style `backdrop-filter`, and layer a blurred copy of the selected world background inside each rail option so Chromium and Safari show comparable frosted depth.
 - Compact control hints at the lower right using the final prototype `select-controls world-controls` treatment.
 
 The styling should be rebuilt in `src/app.css` and fit inside the existing `ResolutionFrame`.
