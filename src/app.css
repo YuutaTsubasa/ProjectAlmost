@@ -1250,9 +1250,13 @@ input {
 .world-thumb.theme-abyss { --world-color: #ca89f5; }
 
 .world-controls {
+  left: auto;
   right: 4.2cqw;
   bottom: 2.5cqh;
   gap: 1cqw;
+  width: max-content;
+  max-width: calc(100% - 8.4cqw);
+  flex-wrap: nowrap;
   padding: 0.65cqh 0.8cqw;
   border-color: rgba(255, 255, 255, 0.28);
   background: rgba(4, 10, 20, 0.72);
