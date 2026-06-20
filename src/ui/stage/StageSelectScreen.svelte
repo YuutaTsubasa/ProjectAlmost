@@ -179,7 +179,7 @@
     <div class="stage-stats">
       <div>
         <span class="stage-label">{text(stageSelectRefs.bestTime)}</span>
-        <b>--:--.--</b>
+        <b>{text(stageSelectRefs.recordUnavailable)}</b>
       </div>
       <div>
         <span class="stage-label">{text(stageSelectRefs.rank)}</span>
@@ -228,15 +228,15 @@
         }}
       >
         <i aria-hidden="true"></i>
-        <b>{stage.id}</b>
-        <span><strong>{stage.id}</strong>{stageSubtitle(stage)}</span>
+        <b>{stage.number}</b>
+        <span><strong>{stageTitle(stage)}</strong>{stageSubtitle(stage)}</span>
       </button>
     {/each}
   </div>
 
   <div class="select-controls stage-controls">
     <span><kbd>←</kbd><kbd>→</kbd><kbd>↑</kbd><kbd>↓</kbd> {text('common.select')}</span>
-    <span><kbd>Space</kbd> {text('common.confirm')}</span>
-    <span><kbd>Esc</kbd> {text('common.back')}</span>
+    <span><kbd>␣</kbd> {text('common.confirm')}</span>
+    <span><kbd>⎋</kbd> {text('common.back')}</span>
   </div>
 </section>

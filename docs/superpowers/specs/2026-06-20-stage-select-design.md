@@ -50,9 +50,10 @@ The layout follows the approved visual direction:
 
 - Full-screen selected world map background from root `public/assets/maps/*_stage_select.webp`.
 - Center/top banner for the localized Stage Select title.
-- Left translucent detail panel with preview, localized stage title/subtitle, localized objective, collectible count, static best time/rank display values, and deploy button.
+- Left translucent detail panel with preview, localized stage title/subtitle, localized objective, collectible count, unavailable-record placeholders sourced from existing localization keys, and deploy button.
 - Connected stage nodes positioned by `StageData.nodePosition`.
-- Back button and compact control hints matching the rebuild UI language.
+- Back button and compact control hints matching the rebuild UI language, with symbol keycaps (`␣`, `⎋`) paired to localized action labels.
+- Stage nodes use compact numeric stage numbers plus localized title/subtitle labels; raw `stage.id` is not visible UI copy.
 
 The component must not read browser storage, dispatch global audio events, import prototype runtime code, or import stage JSON files from `__prototype__/`. It only renders data and emits user intents.
 
