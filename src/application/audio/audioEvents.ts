@@ -30,6 +30,10 @@ function selectedPositionChanged(previousScreen: AppScreen, nextScreen: AppScree
     return previousScreen.selectedWorldIndex !== nextScreen.selectedWorldIndex
   }
 
+  if (previousScreen.type === 'stage-select' && nextScreen.type === 'stage-select') {
+    return previousScreen.selectedStageIndex !== nextScreen.selectedStageIndex
+  }
+
   if (previousScreen.type === 'settings' && nextScreen.type === 'settings') {
     const previousDeleteIndex = previousScreen.deleteConfirm?.selectedActionIndex
     const nextDeleteIndex = nextScreen.deleteConfirm?.selectedActionIndex

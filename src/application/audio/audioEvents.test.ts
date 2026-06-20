@@ -26,6 +26,13 @@ describe('getControlIntentSfxAction', () => {
     ).toBe('move')
     expect(
       getControlIntentSfxAction(
+        { type: 'stage-select', selectedWorldIndex: 0, worldId: 'world01', selectedStageIndex: 0 },
+        { type: 'stage-select', selectedWorldIndex: 0, worldId: 'world01', selectedStageIndex: 1 },
+        'move-right',
+      ),
+    ).toBe('move')
+    expect(
+      getControlIntentSfxAction(
         { type: 'settings', selectedItemIndex: 0, deleteConfirm: null },
         { type: 'settings', selectedItemIndex: 1, deleteConfirm: null },
         'move-down',

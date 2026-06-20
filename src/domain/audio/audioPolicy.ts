@@ -35,7 +35,7 @@ export function getMusicForScreen(screen: AppScreen, settings: GameSettings): Mu
     return { track: 'title', volume: computeMusicVolume(settings, TITLE_INTRO_VOLUME_MULTIPLIER) }
   }
 
-  if (screen.type === 'world-select') {
+  if (screen.type === 'world-select' || screen.type === 'stage-select') {
     return {
       track: WORLD_BGM_TRACKS[screen.selectedWorldIndex] ?? 'world01Bgm',
       volume: computeMusicVolume(settings),

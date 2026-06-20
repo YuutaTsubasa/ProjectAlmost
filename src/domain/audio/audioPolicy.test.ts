@@ -50,12 +50,27 @@ describe('screen music policy', () => {
       track: 'world03Bgm',
       volume: 0.336,
     })
+    expect(
+      getMusicForScreen(
+        { type: 'stage-select', selectedWorldIndex: 4, worldId: 'world05', selectedStageIndex: 0 },
+        DEFAULT_SETTINGS,
+      ),
+    ).toEqual({
+      track: 'world05Bgm',
+      volume: 0.336,
+    })
   })
 
   it('falls back to world one music for out-of-range world indexes', () => {
     expect(getMusicForScreen({ type: 'world-select', selectedWorldIndex: 99 }, DEFAULT_SETTINGS).track).toBe(
       'world01Bgm',
     )
+    expect(
+      getMusicForScreen(
+        { type: 'stage-select', selectedWorldIndex: 99, worldId: 'world01', selectedStageIndex: 0 },
+        DEFAULT_SETTINGS,
+      ).track,
+    ).toBe('world01Bgm')
   })
 })
 
