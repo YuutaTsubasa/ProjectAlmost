@@ -244,6 +244,86 @@ describe('localize', () => {
     }
   })
 
+  it('includes localized stage select labels and objective values for every supported locale', () => {
+    const expectedByLocale = {
+      en: {
+        title: 'Stage Select',
+        objective: 'Objective',
+        collectibles: 'Collectibles',
+        bestTime: 'Best Time',
+        rank: 'Rank',
+        activeCharacter: 'Active Character',
+        deploy: 'Deploy',
+        recordUnavailable: '--',
+        reachGoal: 'Reach the goal',
+        defeatBoss: 'Defeat the boss',
+      },
+      ja: {
+        title: 'ステージ選択',
+        objective: '目標',
+        collectibles: '収集',
+        bestTime: 'ベストタイム',
+        rank: 'ランク',
+        activeCharacter: '出撃キャラクター',
+        deploy: '出撃',
+        recordUnavailable: '--',
+        reachGoal: 'ゴールに到達',
+        defeatBoss: 'ボスを倒す',
+      },
+      zhHant: {
+        title: '關卡選擇',
+        objective: '目標',
+        collectibles: '收集品',
+        bestTime: '最佳時間',
+        rank: '評級',
+        activeCharacter: '出擊角色',
+        deploy: '出擊',
+        recordUnavailable: '--',
+        reachGoal: '抵達終點',
+        defeatBoss: '擊敗首領',
+      },
+      ko: {
+        title: '스테이지 선택',
+        objective: '목표',
+        collectibles: '수집품',
+        bestTime: '최고 기록',
+        rank: '랭크',
+        activeCharacter: '출격 캐릭터',
+        deploy: '출격',
+        recordUnavailable: '--',
+        reachGoal: '목표 지점에 도달',
+        defeatBoss: '보스 처치',
+      },
+    } as const
+
+    for (const locale of localize.languages.map((language) => language.code)) {
+      expect(resolveLocalizedText(localize, locale, 'stageSelect.title')).toBe(expectedByLocale[locale].title)
+      expect(resolveLocalizedText(localize, locale, 'stageSelect.objective')).toBe(
+        expectedByLocale[locale].objective,
+      )
+      expect(resolveLocalizedText(localize, locale, 'stageSelect.collectibles')).toBe(
+        expectedByLocale[locale].collectibles,
+      )
+      expect(resolveLocalizedText(localize, locale, 'stageSelect.bestTime')).toBe(
+        expectedByLocale[locale].bestTime,
+      )
+      expect(resolveLocalizedText(localize, locale, 'stageSelect.rank')).toBe(expectedByLocale[locale].rank)
+      expect(resolveLocalizedText(localize, locale, 'stageSelect.activeCharacter')).toBe(
+        expectedByLocale[locale].activeCharacter,
+      )
+      expect(resolveLocalizedText(localize, locale, 'stageSelect.deploy')).toBe(expectedByLocale[locale].deploy)
+      expect(resolveLocalizedText(localize, locale, 'stageSelect.recordUnavailable')).toBe(
+        expectedByLocale[locale].recordUnavailable,
+      )
+      expect(resolveLocalizedText(localize, locale, 'stageObjectives.reachGoal')).toBe(
+        expectedByLocale[locale].reachGoal,
+      )
+      expect(resolveLocalizedText(localize, locale, 'stageObjectives.defeatBoss')).toBe(
+        expectedByLocale[locale].defeatBoss,
+      )
+    }
+  })
+
   it('includes localized settings, common, and language values for every supported locale', () => {
     const expectedByLocale = {
       en: {
