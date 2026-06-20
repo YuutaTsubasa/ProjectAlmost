@@ -26,8 +26,9 @@ describe('Stage Select localization contract', () => {
 
   it('renders the prototype-style layered stage preview scene', () => {
     expect(stageSelectSource).toContain('class="stage-preview-scene"')
-    expect(stageSelectSource).toContain('--stage-preview-image: url("${stage.previewAssetRef}")')
-    expect(stageSelectSource).toContain('stage.previewBackgroundAssetRef ?? stage.previewAssetRef')
-    expect(stageSelectSource).toContain('--stage-preview-background: url("${background}")')
+    expect(stageSelectSource).toContain('class="stage-preview-background"')
+    expect(stageSelectSource).toContain('src={stagePreviewBackground(selectedStage)}')
+    expect(stageSelectSource).toContain('class="stage-preview-foreground"')
+    expect(stageSelectSource).toContain('src={selectedStage.previewAssetRef}')
   })
 })
