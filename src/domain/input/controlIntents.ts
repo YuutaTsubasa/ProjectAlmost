@@ -11,6 +11,7 @@ export type ControlContext =
   | 'title-intro'
   | 'title-menu'
   | 'world-select'
+  | 'stage-select'
   | 'settings'
   | 'settings-delete-confirm'
 

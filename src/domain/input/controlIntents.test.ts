@@ -38,6 +38,19 @@ describe('mapKeyboardControlIntent', () => {
     expect(mapKeyboardControlIntent({ key: 'Escape', repeat: false }, 'world-select')).toBe('back')
   })
 
+  it('maps keyboard controls to stage select intents', () => {
+    expect(mapKeyboardControlIntent({ key: 'ArrowLeft', repeat: false }, 'stage-select')).toBe(
+      'move-left',
+    )
+    expect(mapKeyboardControlIntent({ key: 'a', repeat: false }, 'stage-select')).toBe('move-left')
+    expect(mapKeyboardControlIntent({ key: 'ArrowRight', repeat: false }, 'stage-select')).toBe(
+      'move-right',
+    )
+    expect(mapKeyboardControlIntent({ key: 'd', repeat: false }, 'stage-select')).toBe('move-right')
+    expect(mapKeyboardControlIntent({ key: 'Enter', repeat: false }, 'stage-select')).toBe('confirm')
+    expect(mapKeyboardControlIntent({ key: 'Escape', repeat: false }, 'stage-select')).toBe('back')
+  })
+
   it('maps settings keys to row navigation, adjustment, confirm, and back intents', () => {
     expect(mapKeyboardControlIntent({ key: 'ArrowUp', repeat: false }, 'settings')).toBe('move-up')
     expect(mapKeyboardControlIntent({ key: 'w', repeat: false }, 'settings')).toBe('move-up')
@@ -149,6 +162,21 @@ describe('mapGamepadControlIntents', () => {
     expect(
       mapGamepadControlIntents(previous, { mapping: 'standard', buttons: [], axes: [0.2, 0.2] }, 'world-select'),
     ).toEqual([])
+  })
+
+  it('maps standard gamepad controls to stage select intents', () => {
+    const previous = {
+      mapping: 'standard',
+      buttons: Array(16).fill(false),
+      axes: [0, 0],
+    }
+    const current = {
+      mapping: 'standard',
+      buttons: Array(16).fill(false),
+      axes: [0.75, 0],
+    }
+
+    expect(mapGamepadControlIntents(previous, current, 'stage-select')).toEqual(['move-right'])
   })
 
   it('does not emit axis intents at exact thresholds', () => {

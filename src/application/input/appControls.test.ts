@@ -40,9 +40,34 @@ describe('applyControlIntent', () => {
 
     const worldState = { screen: { type: 'world-select', selectedWorldIndex: 3 } } as const
 
-    expect(applyControlIntent(worldState, 'confirm')).toBe(worldState)
+    expect(applyControlIntent(worldState, 'confirm')).toEqual({
+      screen: { type: 'stage-select', selectedWorldIndex: 3, worldId: 'world04', selectedStageIndex: 0 },
+    })
     expect(applyControlIntent(worldState, 'back')).toEqual({
       screen: { type: 'title-menu', selectedItemIndex: 0 },
+    })
+  })
+
+  it('moves, confirms, and backs out of stage select', () => {
+    const state = {
+      screen: { type: 'stage-select', selectedWorldIndex: 2, worldId: 'world03', selectedStageIndex: 0 },
+    } as const
+
+    expect(applyControlIntent(state, 'move-right')).toEqual({
+      screen: { type: 'stage-select', selectedWorldIndex: 2, worldId: 'world03', selectedStageIndex: 1 },
+    })
+    expect(applyControlIntent(state, 'move-down')).toEqual({
+      screen: { type: 'stage-select', selectedWorldIndex: 2, worldId: 'world03', selectedStageIndex: 1 },
+    })
+    expect(applyControlIntent(state, 'move-left')).toEqual({
+      screen: { type: 'stage-select', selectedWorldIndex: 2, worldId: 'world03', selectedStageIndex: 5 },
+    })
+    expect(applyControlIntent(state, 'move-up')).toEqual({
+      screen: { type: 'stage-select', selectedWorldIndex: 2, worldId: 'world03', selectedStageIndex: 5 },
+    })
+    expect(applyControlIntent(state, 'confirm')).toBe(state)
+    expect(applyControlIntent(state, 'back')).toEqual({
+      screen: { type: 'world-select', selectedWorldIndex: 2 },
     })
   })
 

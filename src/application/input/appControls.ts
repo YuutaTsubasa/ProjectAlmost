@@ -1,10 +1,13 @@
 import {
   activateTitleMenuItem,
   backFromSettings,
+  backFromStageSelect,
   backFromWorldSelect,
   cancelDeleteConfirm,
+  confirmSelectedStage,
   confirmSelectedWorld,
   createInitialAppState,
+  moveStageSelection,
   moveSettingsDeleteConfirmSelection,
   moveSettingsScreenSelection,
   moveTitleMenuSelection,
@@ -79,6 +82,15 @@ export function applyControlIntent(state: SettingsStateCarrier, intent: ControlI
       }
     }
     if (intent === 'back') return withSettings(backFromSettings(state))
+    return state
+  }
+
+  if (state.screen.type === 'stage-select') {
+    if (intent === 'move-right' || intent === 'move-down') return moveStageSelection(state, 1)
+    if (intent === 'move-left' || intent === 'move-up') return moveStageSelection(state, -1)
+    if (intent === 'confirm') return confirmSelectedStage(state)
+    if (intent === 'back') return backFromStageSelect(state)
+
     return state
   }
 
