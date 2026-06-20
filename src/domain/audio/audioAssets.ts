@@ -6,6 +6,12 @@ export const MUSIC_ASSETS = {
   world04Bgm: '/assets/audio/world04_bgm.mp3',
   world05Bgm: '/assets/audio/world05_bgm.mp3',
   world06Bgm: '/assets/audio/world06_bgm.mp3',
+  world01Map: '/assets/audio/world01_map.mp3',
+  world02Map: '/assets/audio/world02_map.mp3',
+  world03Map: '/assets/audio/world03_map.mp3',
+  world04Map: '/assets/audio/world04_map.mp3',
+  world05Map: '/assets/audio/world05_map.mp3',
+  world06Map: '/assets/audio/world06_map.mp3',
 } as const
 
 export const SFX_ASSETS = {

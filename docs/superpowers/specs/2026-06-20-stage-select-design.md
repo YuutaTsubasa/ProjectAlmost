@@ -87,7 +87,7 @@ Stage Select uses the existing audio command path. UI SFX actions are derived by
 - Confirm plays `confirm`.
 - Back plays `back`.
 
-`getMusicForScreen` handles `stage-select` and returns the selected world's existing BGM track. This slice does not add or copy `worldXX_map.mp3`; the root rebuild currently has `worldXX_bgm.mp3` assets, so Stage Select reuses those tracks until the audio asset package includes map themes.
+`getMusicForScreen` handles `stage-select` and returns the selected world's map music track (`worldXXMap`) so Stage Select matches the prototype's `worldXX_map.mp3` behavior. World Select continues to use the selected world's BGM track (`worldXXBgm`).
 
 ## Data Boundaries
 

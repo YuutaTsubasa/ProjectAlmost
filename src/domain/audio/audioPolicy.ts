@@ -21,6 +21,14 @@ const WORLD_BGM_TRACKS: readonly MusicTrackId[] = [
   'world05Bgm',
   'world06Bgm',
 ]
+const WORLD_MAP_TRACKS: readonly MusicTrackId[] = [
+  'world01Map',
+  'world02Map',
+  'world03Map',
+  'world04Map',
+  'world05Map',
+  'world06Map',
+]
 
 export function computeMusicVolume(settings: GameSettings, multiplier = 1): number {
   return BASE_MUSIC_VOLUME * (settings.masterVolume / 100) * (settings.musicVolume / 100) * multiplier
@@ -35,9 +43,16 @@ export function getMusicForScreen(screen: AppScreen, settings: GameSettings): Mu
     return { track: 'title', volume: computeMusicVolume(settings, TITLE_INTRO_VOLUME_MULTIPLIER) }
   }
 
-  if (screen.type === 'world-select' || screen.type === 'stage-select') {
+  if (screen.type === 'world-select') {
     return {
       track: WORLD_BGM_TRACKS[screen.selectedWorldIndex] ?? 'world01Bgm',
+      volume: computeMusicVolume(settings),
+    }
+  }
+
+  if (screen.type === 'stage-select') {
+    return {
+      track: WORLD_MAP_TRACKS[screen.selectedWorldIndex] ?? 'world01Map',
       volume: computeMusicVolume(settings),
     }
   }

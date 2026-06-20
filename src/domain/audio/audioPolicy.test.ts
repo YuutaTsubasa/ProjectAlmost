@@ -10,7 +10,7 @@ import {
 } from './audioPolicy'
 
 describe('audio asset manifests', () => {
-  it('declares the public audio assets used by title and world select', () => {
+  it('declares the public audio assets used by title, world select, and stage select', () => {
     expect(MUSIC_ASSETS).toEqual({
       title: '/assets/audio/titlescreen.mp3',
       world01Bgm: '/assets/audio/world01_bgm.mp3',
@@ -19,6 +19,12 @@ describe('audio asset manifests', () => {
       world04Bgm: '/assets/audio/world04_bgm.mp3',
       world05Bgm: '/assets/audio/world05_bgm.mp3',
       world06Bgm: '/assets/audio/world06_bgm.mp3',
+      world01Map: '/assets/audio/world01_map.mp3',
+      world02Map: '/assets/audio/world02_map.mp3',
+      world03Map: '/assets/audio/world03_map.mp3',
+      world04Map: '/assets/audio/world04_map.mp3',
+      world05Map: '/assets/audio/world05_map.mp3',
+      world06Map: '/assets/audio/world06_map.mp3',
     })
     expect(SFX_ASSETS).toEqual({
       'ui-move': '/assets/audio/sfx/ui-move.wav',
@@ -56,7 +62,7 @@ describe('screen music policy', () => {
         DEFAULT_SETTINGS,
       ),
     ).toEqual({
-      track: 'world05Bgm',
+      track: 'world05Map',
       volume: 0.336,
     })
   })
@@ -70,7 +76,7 @@ describe('screen music policy', () => {
         { type: 'stage-select', selectedWorldIndex: 99, worldId: 'world01', selectedStageIndex: 0 },
         DEFAULT_SETTINGS,
       ).track,
-    ).toBe('world01Bgm')
+    ).toBe('world01Map')
   })
 })
 
