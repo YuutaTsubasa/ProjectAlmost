@@ -12,6 +12,22 @@
   let currentSrc = $state('')
   let previousSrc = $state<string | null>(null)
   let previousTimer: ReturnType<typeof setTimeout> | null = null
+  let transitionRequestId = 0
+
+  async function preloadImage(nextSrc: string): Promise<void> {
+    const image = new Image()
+    image.src = nextSrc
+
+    if (image.decode) {
+      await image.decode()
+      return
+    }
+
+    await new Promise<void>((resolve) => {
+      image.onload = () => resolve()
+      image.onerror = () => resolve()
+    })
+  }
 
   $effect(() => {
     if (!src) return
@@ -23,14 +39,28 @@
 
     if (src === currentSrc) return
 
-    previousSrc = currentSrc
-    currentSrc = src
+    const nextSrc = src
+    const requestId = ++transitionRequestId
+    let cancelled = false
 
-    if (previousTimer) clearTimeout(previousTimer)
-    previousTimer = setTimeout(() => {
-      previousSrc = null
-      previousTimer = null
-    }, durationMs)
+    preloadImage(nextSrc)
+      .catch(() => undefined)
+      .then(() => {
+        if (cancelled || requestId !== transitionRequestId || nextSrc === currentSrc) return
+
+        previousSrc = currentSrc
+        currentSrc = nextSrc
+
+        if (previousTimer) clearTimeout(previousTimer)
+        previousTimer = setTimeout(() => {
+          previousSrc = null
+          previousTimer = null
+        }, durationMs)
+      })
+
+    return () => {
+      cancelled = true
+    }
   })
 
   onDestroy(() => {

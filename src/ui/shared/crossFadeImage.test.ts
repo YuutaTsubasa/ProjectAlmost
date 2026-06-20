@@ -7,6 +7,8 @@ describe('CrossFadeImage', () => {
     expect(crossFadeSource).toContain('durationMs')
     expect(crossFadeSource).toContain('previousSrc')
     expect(crossFadeSource).toContain('currentSrc')
+    expect(crossFadeSource).toContain('preloadImage')
+    expect(crossFadeSource).toContain('decode')
     expect(crossFadeSource).toContain('{#key currentSrc}')
     expect(crossFadeSource).toContain('crossfade-image-layer previous')
     expect(crossFadeSource).toContain('crossfade-image-layer current')

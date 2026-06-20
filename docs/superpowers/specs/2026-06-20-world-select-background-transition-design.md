@@ -14,7 +14,7 @@ The prototype World Select keeps a dedicated `.world-backdrop` with transition s
 
 ## Design
 
-`src/ui/shared/CrossFadeImage.svelte` owns the reusable image crossfade behavior. It receives a `src` string, keeps the previous `src` during one animation window, and keys the current layer by `currentSrc` so Svelte remounts the incoming layer and reliably restarts the fade-in animation.
+`src/ui/shared/CrossFadeImage.svelte` owns the reusable image crossfade behavior. It receives a `src` string, preloads and decodes the incoming image before starting the transition, keeps the previous `src` during one animation window, and keys the current layer by `currentSrc` so Svelte remounts the incoming layer when needed.
 
 `src/ui/world/WorldSelectScreen.svelte` derives the selected background URL from `world.assetRefs.stageSelectBackground` and passes it to `CrossFadeImage`. World Select should not manage backdrop timers or previous image state. This keeps animation state local to the presentation primitive and avoids leaking visual transition behavior into domain or application state.
 
@@ -32,6 +32,7 @@ The prototype World Select keeps a dedicated `.world-backdrop` with transition s
 Add focused UI contract tests that import Svelte components as raw source and read the real stylesheet. The tests verify:
 
 - `CrossFadeImage.svelte` exposes `src` and `durationMs` props.
+- `CrossFadeImage.svelte` preloads the incoming `src` before moving it into `currentSrc`.
 - `CrossFadeImage.svelte` renders previous and current layers.
 - `CrossFadeImage.svelte` keys the current layer by `currentSrc`.
 - `CrossFadeImage.svelte` removes the outgoing previous layer after the configured duration.
@@ -50,4 +51,4 @@ Run:
 
 ## Risks
 
-The main risk is writing a decorative fade that does not actually keep the outgoing image in the DOM or accidentally leaving the active image transparent. The tests and browser verification check for a previous layer above a visible keyed current layer so the implementation preserves both images during the transition.
+The main risk is writing a decorative fade that does not actually keep the outgoing image in the DOM, accidentally leaving the active image transparent, or starting the fade before the incoming image is decoded. The tests and browser verification check for a previous layer above a visible keyed current layer, and the component preloads the incoming image before swapping state.

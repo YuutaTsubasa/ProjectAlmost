@@ -4,7 +4,7 @@
 
 **Goal:** Restore the World Select selected-background crossfade with a reusable shared image crossfade component.
 
-**Architecture:** Keep crossfade mechanics in `src/ui/shared/CrossFadeImage.svelte`. `WorldSelectScreen.svelte` derives the selected world's background URL from catalog data and delegates the transition to the shared component, while `src/app.css` keeps the current image visible and fades the previous image out above it.
+**Architecture:** Keep crossfade mechanics in `src/ui/shared/CrossFadeImage.svelte`. `WorldSelectScreen.svelte` derives the selected world's background URL from catalog data and delegates the transition to the shared component, while `src/app.css` keeps the current image visible and fades the previous image out above it. The shared component preloads and decodes the incoming image before swapping `currentSrc`, preventing a black or empty frame during the fade.
 
 **Tech Stack:** Svelte 5, CSS animations, Vitest raw-file contract tests.
 
@@ -28,6 +28,8 @@ describe('CrossFadeImage', () => {
     expect(crossFadeSource).toContain('durationMs')
     expect(crossFadeSource).toContain('previousSrc')
     expect(crossFadeSource).toContain('currentSrc')
+    expect(crossFadeSource).toContain('preloadImage')
+    expect(crossFadeSource).toContain('decode')
     expect(crossFadeSource).toContain('{#key currentSrc}')
     expect(crossFadeSource).toContain('crossfade-image-layer previous')
     expect(crossFadeSource).toContain('crossfade-image-layer current')
@@ -91,7 +93,7 @@ Expected: FAIL because World Select still owns backdrop timer state and has not 
 
 - [ ] **Step 1: Create `CrossFadeImage.svelte`**
 
-Implement the component with `src`, `durationMs`, and optional `class` props. Track `currentSrc` and `previousSrc`, clear previous after `durationMs`, and key the current layer by `currentSrc`.
+Implement the component with `src`, `durationMs`, and optional `class` props. Track `currentSrc` and `previousSrc`, preload/decode the incoming `src` before swapping, clear previous after `durationMs`, and key the current layer by `currentSrc`.
 
 - [ ] **Step 2: Wire World Select**
 
