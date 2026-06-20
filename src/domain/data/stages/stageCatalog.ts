@@ -1,17 +1,14 @@
-import type { StageId, WorldId } from '../worlds/worldTypes'
+import { worlds } from '../worlds/worldCatalog'
+import type { StageId, WorldData, WorldId } from '../worlds/worldTypes'
 import type { StageCatalog, StageData, StageNodePosition } from './stageTypes'
 
 type StageSeed = {
-  worldId: WorldId
-  background: string
   positions: readonly StageNodePosition[]
   coins: readonly [number, number, number, number, number, number]
 }
 
 const seeds: Record<WorldId, StageSeed> = {
   world01: {
-    worldId: 'world01',
-    background: '/assets/maps/white_palace_stage_select.webp',
     positions: [
       { x: 34, y: 82 },
       { x: 81, y: 86 },
@@ -23,8 +20,6 @@ const seeds: Record<WorldId, StageSeed> = {
     coins: [24, 28, 30, 32, 34, 12],
   },
   world02: {
-    worldId: 'world02',
-    background: '/assets/maps/emerald_sanctuary_stage_select.webp',
     positions: [
       { x: 31, y: 67 },
       { x: 45, y: 58 },
@@ -36,8 +31,6 @@ const seeds: Record<WorldId, StageSeed> = {
     coins: [26, 30, 32, 34, 36, 14],
   },
   world03: {
-    worldId: 'world03',
-    background: '/assets/maps/cerulean_depths_stage_select.webp',
     positions: [
       { x: 30, y: 72 },
       { x: 44, y: 56 },
@@ -49,8 +42,6 @@ const seeds: Record<WorldId, StageSeed> = {
     coins: [26, 28, 34, 36, 38, 14],
   },
   world04: {
-    worldId: 'world04',
-    background: '/assets/maps/frostveil_peaks_stage_select.webp',
     positions: [
       { x: 29, y: 70 },
       { x: 42, y: 58 },
@@ -62,8 +53,6 @@ const seeds: Record<WorldId, StageSeed> = {
     coins: [28, 30, 34, 36, 40, 16],
   },
   world05: {
-    worldId: 'world05',
-    background: '/assets/maps/emberfall_caldera_stage_select.webp',
     positions: [
       { x: 28, y: 72 },
       { x: 43, y: 57 },
@@ -75,8 +64,6 @@ const seeds: Record<WorldId, StageSeed> = {
     coins: [30, 32, 36, 38, 42, 16],
   },
   world06: {
-    worldId: 'world06',
-    background: '/assets/maps/abyssal_hollow_stage_select.webp',
     positions: [
       { x: 30, y: 74 },
       { x: 45, y: 60 },
@@ -89,35 +76,31 @@ const seeds: Record<WorldId, StageSeed> = {
   },
 }
 
-const worldIds = ['world01', 'world02', 'world03', 'world04', 'world05', 'world06'] as const
+function getStageNumber(stageId: StageId): StageData['number'] {
+  return Number(stageId.split('-')[1]) as StageData['number']
+}
 
-function createStage(
-  worldId: WorldId,
-  worldNumber: 1 | 2 | 3 | 4 | 5 | 6,
-  stageNumber: 1 | 2 | 3 | 4 | 5 | 6,
-): StageData {
-  const seed = seeds[worldId]
-  const id = `${worldNumber}-${stageNumber}` as StageId
+function createStage(world: WorldData, stageId: StageId): StageData {
+  const seed = seeds[world.id]
+  const stageNumber = getStageNumber(stageId)
   const isBoss = stageNumber === 6
 
   return {
-    id,
-    worldId,
+    id: stageId,
+    worldId: world.id,
     number: stageNumber,
-    titleRef: `stages.${id}.title`,
-    subtitleRef: `stages.${id}.subtitle`,
+    titleRef: `stages.${stageId}.title`,
+    subtitleRef: `stages.${stageId}.subtitle`,
     objectiveRef: isBoss ? 'stageObjectives.defeatBoss' : 'stageObjectives.reachGoal',
     collectibleCount: seed.coins[stageNumber - 1],
     nodePosition: seed.positions[stageNumber - 1],
-    previewAssetRef: seed.background,
+    previewAssetRef: world.assetRefs.stageSelectBackground,
     isBoss,
   }
 }
 
-const orderedStages = worldIds.flatMap((worldId, worldIndex) =>
-  ([1, 2, 3, 4, 5, 6] as const).map((stageNumber) =>
-    createStage(worldId, (worldIndex + 1) as 1 | 2 | 3 | 4 | 5 | 6, stageNumber),
-  ),
+const orderedStages = worlds.order.flatMap((worldId) =>
+  worlds.items[worldId].stageIds.map((stageId) => createStage(worlds.items[worldId], stageId)),
 )
 
 export const stages: StageCatalog = {

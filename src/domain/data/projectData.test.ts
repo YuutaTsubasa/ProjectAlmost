@@ -20,4 +20,15 @@ describe('projectData', () => {
   it('uses the stage catalog as the project stages source', () => {
     expect(projectData.stages).toBe(stages)
   })
+
+  it('backs every world stage id with matching stage project data', () => {
+    for (const worldId of projectData.worlds.order) {
+      const world = projectData.worlds.items[worldId]
+
+      for (const stageId of world.stageIds) {
+        expect(projectData.stages.items[stageId]).toBeDefined()
+        expect(projectData.stages.items[stageId].worldId).toBe(worldId)
+      }
+    }
+  })
 })

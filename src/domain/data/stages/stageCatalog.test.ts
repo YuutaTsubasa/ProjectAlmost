@@ -1,13 +1,36 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { localize, resolveLocalizedText } from '../localize/localize'
 import { worlds } from '../worlds/worldCatalog'
 import { stages } from './stageCatalog'
 
+afterEach(() => {
+  vi.resetModules()
+  vi.doUnmock('../worlds/worldCatalog')
+})
+
 describe('stages', () => {
   it('orders all 36 campaign stages by world and stage number', () => {
+    const orderedStageIds = worlds.order.flatMap((worldId) => worlds.items[worldId].stageIds)
+
     expect(stages.order).toHaveLength(36)
-    expect(stages.order.slice(0, 6)).toEqual(['1-1', '1-2', '1-3', '1-4', '1-5', '1-6'])
-    expect(stages.order.slice(-6)).toEqual(['6-1', '6-2', '6-3', '6-4', '6-5', '6-6'])
+    expect(stages.order).toEqual(orderedStageIds)
+  })
+
+  it('derives ordered stages from the world catalog order', async () => {
+    const reversedWorlds = {
+      ...worlds,
+      order: [...worlds.order].reverse(),
+    }
+
+    vi.doMock('../worlds/worldCatalog', () => ({
+      worlds: reversedWorlds,
+    }))
+
+    const { stages: stagesFromWorldCatalog } = await import('./stageCatalog')
+
+    expect(stagesFromWorldCatalog.order).toEqual(
+      reversedWorlds.order.flatMap((worldId) => reversedWorlds.items[worldId].stageIds),
+    )
   })
 
   it('indexes every stage by stable id with UI-ready metadata', () => {
