@@ -62,6 +62,10 @@ describe('stages', () => {
       objectiveRef: 'stageObjectives.defeatBoss',
       isBoss: true,
     })
+    expect(stages.items['1-4']).toMatchObject({
+      id: '1-4',
+      nodePosition: { x: 53, y: 51 },
+    })
     expect(stages.items['6-6']).toMatchObject({
       id: '6-6',
       worldId: 'world06',

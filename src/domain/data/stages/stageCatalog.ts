@@ -13,7 +13,7 @@ const seeds: Record<WorldId, StageSeed> = {
       { x: 34, y: 82 },
       { x: 81, y: 86 },
       { x: 74, y: 50 },
-      { x: 55, y: 39 },
+      { x: 53, y: 51 },
       { x: 70, y: 27 },
       { x: 73, y: 6 },
     ],
