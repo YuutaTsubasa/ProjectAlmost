@@ -26,6 +26,14 @@
 - Modify `src/App.svelte`: render Stage Select and bridge pointer callbacks to app state, music, and SFX.
 - Modify `src/app.css`: add Stage Select styles adapted from `__prototype__/src/app.css`.
 
+## Prototype Alignment Follow-Up
+
+- [x] Update UI/source tests so Stage Select detail panel keeps prototype information density: no separate world title/subtitle lines, selected heading uses world title plus `stage.id`, stage nodes show ids like `1-1`, and selected-node tooltips show only stage id plus subtitle.
+- [x] Add a shared `ControlHints` Svelte component and replace inline control hints in Title Screen, World Select, Settings, and Stage Select. Keep the black-background presentation centralized so later keyboard/mouse, touch, or controller labels can be swapped from one boundary.
+- [x] Copy prototype preview artwork needed by the rebuild into root `public/assets/maps/`, update Stage catalog preview refs, and keep `__prototype__/` read-only as a reference source.
+- [x] Change BOSS stage node treatment from orange/yellow to red.
+- [x] Run focused tests first, then full verification and browser QA against the local app.
+
 ## Task 1: Stage Catalog And Project Data
 
 **Files:**

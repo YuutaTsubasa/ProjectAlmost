@@ -50,10 +50,12 @@ The layout follows the approved visual direction:
 
 - Full-screen selected world map background from root `public/assets/maps/*_stage_select.webp`.
 - Center/top banner for the localized Stage Select title.
-- Left translucent detail panel with preview, localized stage title/subtitle, localized objective, collectible count, unavailable-record placeholders sourced from existing localization keys, and deploy button.
+- Left translucent detail panel with prototype-style preview art, a compact selected-stage heading, localized stage subtitle, localized objective, collectible count, unavailable-record placeholders sourced from existing localization keys, and deploy button. The panel must not add separate world title/subtitle lines above the selected stage because that diverges from the prototype information density.
 - Connected stage nodes positioned by `StageData.nodePosition`.
-- Back button and compact control hints matching the rebuild UI language, with symbol keycaps (`␣`, `⎋`) paired to localized action labels.
-- Stage nodes use compact numeric stage numbers plus localized title/subtitle labels; raw `stage.id` is not visible UI copy.
+- Back button and compact control hints matching the rebuild UI language, with key labels paired to localized action labels.
+- Stage nodes show stable stage ids such as `1-1`, matching the prototype. The selected-node tooltip is compact: stage id plus localized subtitle, not full localized title copy.
+- Boss stage nodes use the same form as normal stage nodes with a red visual treatment.
+- Title Screen, World Select, Settings, and Stage Select share a single control-hints component. The component owns the black-background control-hint presentation and accepts hint data so a later input-device adapter can switch labels for keyboard/mouse, touch, or controller.
 
 The component must not read browser storage, dispatch global audio events, import prototype runtime code, or import stage JSON files from `__prototype__/`. It only renders data and emits user intents.
 
@@ -91,7 +93,7 @@ Stage Select uses the existing audio command path. UI SFX actions are derived by
 
 The prototype is a visual and behavioral reference only. The rebuild must not import from `__prototype__/src`, must not store new runtime assets under `__prototype__/public`, and must not create `__prototype__/rebuild/`.
 
-Runtime asset references must point to root `public/` paths. Existing stage-select map backgrounds are already available under `public/assets/maps/`.
+Runtime asset references must point to root `public/` paths. Existing stage-select map backgrounds are already available under `public/assets/maps/`. Prototype preview art used by the rebuild must be copied into root `public/assets/maps/`; rebuild data must not reference `__prototype__/public`.
 
 ## Testing Plan
 

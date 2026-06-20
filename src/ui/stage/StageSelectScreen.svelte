@@ -14,6 +14,7 @@
     type ControlIntent,
     type GamepadControlSnapshot,
   } from '../../domain/input/controlIntents'
+  import ControlHints from '../controls/ControlHints.svelte'
 
   type Props = {
     worlds: WorldCatalog
@@ -57,16 +58,8 @@
     return resolveLocalizedText(localizeData, locale, key)
   }
 
-  function stageTitle(stage: StageData): string {
-    return text(stage.titleRef)
-  }
-
   function worldTitle(world: WorldData): string {
     return text(world.titleRef)
-  }
-
-  function worldSubtitle(world: WorldData): string {
-    return text(world.subtitleRef)
   }
 
   function stageSubtitle(stage: StageData): string {
@@ -170,9 +163,7 @@
       style={`background-image: url("${selectedStage.previewAssetRef}")`}
       aria-hidden="true"
     ></div>
-    <span class="stage-world-title">{worldTitle(selectedWorld)}</span>
-    <span class="stage-world-subtitle">{worldSubtitle(selectedWorld)}</span>
-    <strong class="stage-title">{stageTitle(selectedStage)}</strong>
+    <strong class="stage-title">{worldTitle(selectedWorld)} {selectedStage.id}</strong>
     <span class="stage-subtitle">{stageSubtitle(selectedStage)}</span>
 
     <div class="stage-rule"></div>
@@ -230,7 +221,7 @@
         class="stage-node"
         style={`left:${stage.nodePosition.x}%;top:${stage.nodePosition.y}%;--node-index:${index}`}
         type="button"
-        aria-label={`${stageTitle(stage)}, ${stageSubtitle(stage)}`}
+        aria-label={`${stage.id}, ${stageSubtitle(stage)}`}
         onclick={() => onSelectStage(index)}
         ondblclick={() => {
           onSelectStage(index)
@@ -238,15 +229,18 @@
         }}
       >
         <i aria-hidden="true"></i>
-        <b>{stage.number}</b>
-        <span><strong>{stageTitle(stage)}</strong>{stageSubtitle(stage)}</span>
+        <b>{stage.id}</b>
+        <span><strong>{stage.id}</strong>{stageSubtitle(stage)}</span>
       </button>
     {/each}
   </div>
 
-  <div class="select-controls stage-controls">
-    <span><kbd>←</kbd><kbd>→</kbd><kbd>↑</kbd><kbd>↓</kbd> {text('common.select')}</span>
-    <span><kbd>␣</kbd> {text('common.confirm')}</span>
-    <span><kbd>⎋</kbd> {text('common.back')}</span>
-  </div>
+  <ControlHints
+    className="stage-controls"
+    hints={[
+      { keys: ['←', '→', '↑', '↓'], label: text('common.select') },
+      { keys: ['Space'], label: text('common.confirm') },
+      { keys: ['Esc'], label: text('common.back') },
+    ]}
+  />
 </section>

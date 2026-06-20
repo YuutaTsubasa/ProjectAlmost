@@ -13,6 +13,7 @@
     type ControlIntent,
     type GamepadControlSnapshot,
   } from '../../domain/input/controlIntents'
+  import ControlHints from '../controls/ControlHints.svelte'
 
   type TitleScreenState = Extract<AppScreen, { type: 'title-intro' | 'title-menu' }>
 
@@ -132,10 +133,14 @@
         </button>
       {/each}
     </nav>
-    <p class="title-controls">
-      <kbd>↑</kbd><kbd>↓</kbd> {text('title.controls.select')} <kbd>Enter</kbd>
-      {text('title.controls.confirm')} <kbd>Esc</kbd> {text('title.controls.back')}
-    </p>
+    <ControlHints
+      className="title-controls"
+      hints={[
+        { keys: ['↑', '↓'], label: text('title.controls.select') },
+        { keys: ['Enter'], label: text('title.controls.confirm') },
+        { keys: ['Esc'], label: text('title.controls.back') },
+      ]}
+    />
   {/if}
 
   <small class="title-copyright">© 2026 Yuuta Tsubasa Studio</small>

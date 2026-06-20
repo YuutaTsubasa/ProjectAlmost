@@ -320,30 +320,9 @@ input {
   line-height: 1;
 }
 
-.settings-panel p {
-  display: flex;
-  gap: 0.38cqw;
-  align-items: center;
-  justify-content: center;
+.settings-controls {
   margin: 0.7cqh 0 0;
-  color: var(--hud-soft, #5c7796);
   font-size: min(1.25cqh, 14px);
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.settings-panel kbd {
-  display: grid;
-  min-width: 1.35cqw;
-  height: 2.15cqh;
-  padding: 0 0.25cqw;
-  place-items: center;
-  border: 1px solid var(--hud-line, rgba(58, 116, 176, 0.42));
-  border-radius: 4px;
-  background: white;
-  color: var(--hud-ink, #123257);
-  font-family: var(--mono);
 }
 
 .confirm-dialog {
@@ -1168,13 +1147,11 @@ input {
   background: rgba(4, 10, 20, 0.78);
 }
 
-.select-controls {
-  position: absolute;
-  right: 1.6cqw;
-  bottom: 2.6cqh;
-  z-index: 12;
+.control-hints {
   display: flex;
   gap: 1.2cqw;
+  align-items: center;
+  justify-content: center;
   padding: 0.8cqh 1cqw;
   border: 1px solid rgba(255, 255, 255, 0.28);
   border-radius: 7px;
@@ -1189,13 +1166,13 @@ input {
   backdrop-filter: blur(7px);
 }
 
-.select-controls span {
+.control-hints span {
   display: flex;
   gap: 0.35cqw;
   align-items: center;
 }
 
-.select-controls kbd {
+.control-hints kbd {
   display: grid;
   min-width: 1.6cqw;
   height: 2.8cqh;
@@ -1765,29 +1742,6 @@ input {
   text-transform: uppercase;
 }
 
-.stage-world-title,
-.stage-world-subtitle {
-  display: block;
-  overflow-wrap: anywhere;
-  text-transform: uppercase;
-}
-
-.stage-world-title {
-  margin-top: 1.1cqh;
-  color: var(--stage-soft);
-  font-size: min(0.74cqw, 14px);
-  font-weight: 700;
-  letter-spacing: 0.16em;
-}
-
-.stage-world-subtitle {
-  margin-top: 0.2cqh;
-  color: color-mix(in srgb, var(--stage-soft) 82%, white);
-  font-size: min(0.6cqw, 12px);
-  font-weight: 700;
-  letter-spacing: 0.12em;
-}
-
 .stage-title {
   margin-top: 0.95cqh;
   font-size: min(1.45cqw, 28px);
@@ -1982,13 +1936,14 @@ input {
 }
 
 .stage-node.boss i {
-  background: linear-gradient(145deg, #ffe6a0, #d5762f 52%, #833112);
+  background: linear-gradient(145deg, #ffb5a8, #d83a32 52%, #791314);
 }
 
 .stage-node b {
   position: relative;
   z-index: 1;
-  font-size: min(0.78cqw, 15px);
+  font-size: min(0.74cqw, 14px);
+  white-space: nowrap;
 }
 
 .stage-node.active {
@@ -2045,6 +2000,10 @@ input {
 }
 
 .stage-controls {
+  position: absolute;
+  right: 1.6cqw;
+  bottom: 2.6cqh;
+  z-index: 12;
   max-width: calc(100% - 3.2cqw);
 }
 

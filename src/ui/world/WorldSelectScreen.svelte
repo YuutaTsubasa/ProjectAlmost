@@ -3,6 +3,7 @@
   import {
     resolveLocalizedText,
     type LocaleCode,
+    type LocalizationKey,
     type LocalizeData,
   } from '../../domain/data/localize/localize'
   import type { WorldCatalog, WorldData } from '../../domain/data/worlds/worldTypes'
@@ -12,6 +13,7 @@
     type ControlIntent,
     type GamepadControlSnapshot,
   } from '../../domain/input/controlIntents'
+  import ControlHints from '../controls/ControlHints.svelte'
 
   type Props = {
     catalog: WorldCatalog
@@ -40,12 +42,16 @@
   const orderedWorlds = $derived(catalog.order.map((worldId) => catalog.items[worldId]))
   const selectedWorld = $derived(orderedWorlds[selectedWorldIndex] ?? orderedWorlds[0])
 
+  function text(key: LocalizationKey): string {
+    return resolveLocalizedText(localizeData, locale, key)
+  }
+
   function worldTitle(world: WorldData): string {
-    return resolveLocalizedText(localizeData, locale, world.titleRef)
+    return text(world.titleRef)
   }
 
   function worldSubtitle(world: WorldData): string {
-    return resolveLocalizedText(localizeData, locale, world.subtitleRef)
+    return text(world.subtitleRef)
   }
 
   function worldNumber(world: WorldData): string {
@@ -156,9 +162,12 @@
     {/each}
   </nav>
 
-  <div class="select-controls world-controls">
-    <span><kbd>←</kbd><kbd>→</kbd><kbd>↑</kbd><kbd>↓</kbd> Select</span>
-    <span><kbd>Space</kbd> Confirm</span>
-    <span><kbd>Esc</kbd> Back</span>
-  </div>
+  <ControlHints
+    className="world-controls"
+    hints={[
+      { keys: ['←', '→', '↑', '↓'], label: text('common.select') },
+      { keys: ['Space'], label: text('common.confirm') },
+      { keys: ['Esc'], label: text('common.back') },
+    ]}
+  />
 </section>

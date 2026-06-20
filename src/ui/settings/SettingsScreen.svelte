@@ -14,6 +14,7 @@
     type GamepadControlSnapshot,
   } from '../../domain/input/controlIntents'
   import { SETTINGS_ROWS, type GameSettings, type SettingsRowId } from '../../domain/settings/settings'
+  import ControlHints from '../controls/ControlHints.svelte'
 
   type Props = {
     screen: SettingsScreenState
@@ -202,10 +203,14 @@
       {/each}
     </div>
 
-    <p>
-      <kbd>↑</kbd><kbd>↓</kbd> {text('common.select')} <kbd>←</kbd><kbd>→</kbd>
-      {text('common.adjust')} <kbd>Esc</kbd> {text('common.back')}
-    </p>
+    <ControlHints
+      className="settings-controls"
+      hints={[
+        { keys: ['↑', '↓'], label: text('common.select') },
+        { keys: ['←', '→'], label: text('common.adjust') },
+        { keys: ['Esc'], label: text('common.back') },
+      ]}
+    />
   </div>
 
   {#if screen.deleteConfirm}

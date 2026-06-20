@@ -51,7 +51,7 @@ describe('stages', () => {
       objectiveRef: 'stageObjectives.reachGoal',
       collectibleCount: 24,
       nodePosition: { x: 34, y: 82 },
-      previewAssetRef: '/assets/maps/white_palace_stage_select.webp',
+      previewAssetRef: '/assets/maps/white_palace_mid_bg_loop.webp',
       isBoss: false,
     })
     expect(stages.items['1-6']).toMatchObject({

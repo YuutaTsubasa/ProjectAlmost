@@ -2,27 +2,25 @@ import { describe, expect, it } from 'vitest'
 import stageSelectSource from './StageSelectScreen.svelte?raw'
 
 describe('Stage Select localization contract', () => {
-  it('avoids hard-coded visible text in placeholders, node labels, and control hints', () => {
+  it('keeps prototype-aligned visible text density and localized placeholders', () => {
     expect(stageSelectSource).toContain('function worldTitle(world: WorldData): string')
     expect(stageSelectSource).toContain('return text(world.titleRef)')
-    expect(stageSelectSource).toContain('function worldSubtitle(world: WorldData): string')
-    expect(stageSelectSource).toContain('return text(world.subtitleRef)')
-    expect(stageSelectSource).toContain('<span class="stage-world-title">{worldTitle(selectedWorld)}</span>')
+    expect(stageSelectSource).not.toContain('function worldSubtitle(world: WorldData): string')
+    expect(stageSelectSource).not.toContain('class="stage-world-title"')
+    expect(stageSelectSource).not.toContain('class="stage-world-subtitle"')
     expect(stageSelectSource).toContain(
-      '<span class="stage-world-subtitle">{worldSubtitle(selectedWorld)}</span>',
+      '<strong class="stage-title">{worldTitle(selectedWorld)} {selectedStage.id}</strong>',
     )
 
     expect(stageSelectSource).toContain('<b>{text(stageSelectRefs.recordUnavailable)}</b>')
     expect(stageSelectSource).not.toContain('--:--.--')
 
-    expect(stageSelectSource).toContain('<b>{stage.number}</b>')
-    expect(stageSelectSource).toContain('<span><strong>{stageTitle(stage)}</strong>{stageSubtitle(stage)}</span>')
-    expect(stageSelectSource).not.toContain('<b>{stage.id}</b>')
-    expect(stageSelectSource).not.toContain('<span><strong>{stage.id}</strong>{stageSubtitle(stage)}</span>')
+    expect(stageSelectSource).toContain('<b>{stage.id}</b>')
+    expect(stageSelectSource).toContain('<span><strong>{stage.id}</strong>{stageSubtitle(stage)}</span>')
+    expect(stageSelectSource).not.toContain('<b>{stage.number}</b>')
+    expect(stageSelectSource).not.toContain('<span><strong>{stageTitle(stage)}</strong>{stageSubtitle(stage)}</span>')
 
-    expect(stageSelectSource).toContain("<span><kbd>␣</kbd> {text('common.confirm')}</span>")
-    expect(stageSelectSource).toContain("<span><kbd>⎋</kbd> {text('common.back')}</span>")
-    expect(stageSelectSource).not.toContain('<kbd>Space</kbd>')
-    expect(stageSelectSource).not.toContain('<kbd>Esc</kbd>')
+    expect(stageSelectSource).toContain('ControlHints')
+    expect(stageSelectSource).not.toContain('<kbd>')
   })
 })
