@@ -14,7 +14,7 @@ const seeds: Record<WorldId, StageSeed> = {
       { x: 81, y: 86 },
       { x: 74, y: 50 },
       { x: 53, y: 51 },
-      { x: 70, y: 27 },
+      { x: 37, y: 41 },
       { x: 73, y: 6 },
     ],
     coins: [24, 28, 30, 32, 34, 12],

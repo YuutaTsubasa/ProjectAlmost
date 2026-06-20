@@ -66,6 +66,10 @@ describe('stages', () => {
       id: '1-4',
       nodePosition: { x: 53, y: 51 },
     })
+    expect(stages.items['1-5']).toMatchObject({
+      id: '1-5',
+      nodePosition: { x: 37, y: 41 },
+    })
     expect(stages.items['6-6']).toMatchObject({
       id: '6-6',
       worldId: 'world06',
