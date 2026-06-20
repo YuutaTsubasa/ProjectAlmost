@@ -2,62 +2,22 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Restore the World Select selected-background crossfade with a reusable shared image crossfade component.
+**Goal:** Restore the World Select selected-background behavior using the prototype's stable single-backdrop approach.
 
-**Architecture:** Keep crossfade mechanics in `src/ui/shared/CrossFadeImage.svelte`. `WorldSelectScreen.svelte` derives the selected world's background URL from catalog data and delegates the transition to the shared component, while `src/app.css` keeps the current image visible below the previous image without transition/keyframe animation. The shared component preloads and decodes the incoming image before swapping `currentSrc`, then advances an explicit `previousOpacity` state with `requestAnimationFrame` until the previous layer reaches opacity 0.
+**Architecture:** Keep World Select backdrop rendering in `WorldSelectScreen.svelte` as a single `.world-backdrop` element, matching `__prototype__/src/WorldSelect.svelte`. The themed `.world-select.theme-*` class updates CSS variables in `src/app.css`; `.world-backdrop` reads `--world-background` directly and draws the cinematic overlay with `::before`. Do not use previous/current layers, `CrossFadeImage`, timers, or requestAnimationFrame opacity state for World Select.
 
-**Tech Stack:** Svelte 5, component-driven `requestAnimationFrame` opacity state, Vitest raw-file contract tests.
+**Tech Stack:** Svelte 5, CSS theme variables, Vitest raw-file contract tests.
 
 ---
 
-### Task 1: Add The Failing Shared Component Contract Test
-
-**Files:**
-- Create: `src/ui/shared/crossFadeImage.test.ts`
-- Create: `src/ui/shared/CrossFadeImage.svelte`
-
-- [ ] **Step 1: Write the failing test**
-
-```ts
-import { describe, expect, it } from 'vitest'
-import crossFadeSource from './CrossFadeImage.svelte?raw'
-
-describe('CrossFadeImage', () => {
-  it('keeps outgoing and keyed incoming image layers for a visible crossfade', () => {
-    expect(crossFadeSource).toContain('src')
-    expect(crossFadeSource).toContain('durationMs')
-    expect(crossFadeSource).toContain('previousSrc')
-    expect(crossFadeSource).toContain('currentSrc')
-    expect(crossFadeSource).toContain('previousOpacity')
-    expect(crossFadeSource).toContain('startPreviousFade')
-    expect(crossFadeSource).toContain('effectiveDurationMs')
-    expect(crossFadeSource).toContain('prefers-reduced-motion: reduce')
-    expect(crossFadeSource).toContain('preloadImage')
-    expect(crossFadeSource).toContain('decode')
-    expect(crossFadeSource).toContain('requestAnimationFrame')
-    expect(crossFadeSource).toContain('cancelAnimationFrame')
-    expect(crossFadeSource).toContain('{#key currentSrc}')
-    expect(crossFadeSource).toContain('crossfade-image-layer previous')
-    expect(crossFadeSource).toContain('opacity: ${previousOpacity}')
-    expect(crossFadeSource).toContain('crossfade-image-layer current')
-  })
-})
-```
-
-- [ ] **Step 2: Run test to verify it fails**
-
-Run: `npm run test -- src/ui/shared/crossFadeImage.test.ts`
-
-Expected: FAIL because `CrossFadeImage.svelte` does not exist.
-
-### Task 2: Update The World Select Contract Test
+### Task 1: Update The World Select Contract Test
 
 **Files:**
 - Modify: `src/ui/world/worldSelectBackgroundTransition.test.ts`
 - Read: `src/ui/world/WorldSelectScreen.svelte`
 - Read: `src/app.css`
 
-- [ ] **Step 1: Update the existing test**
+- [ ] **Step 1: Write the failing test**
 
 ```ts
 import { describe, expect, it } from 'vitest'
@@ -68,23 +28,22 @@ import worldSelectSource from './WorldSelectScreen.svelte?raw'
 const appCss = readFileSync(fileURLToPath(new URL('../../app.css', import.meta.url)), 'utf8')
 
 describe('World Select background transition', () => {
-  it('delegates selected background transitions to CrossFadeImage', () => {
-    expect(worldSelectSource).toContain("import CrossFadeImage from '../shared/CrossFadeImage.svelte'")
-    expect(worldSelectSource).toContain('world-backdrop-stack')
-    expect(worldSelectSource).toContain('assetRefs.stageSelectBackground')
-    expect(worldSelectSource).toContain('<CrossFadeImage')
+  it('matches the prototype single backdrop layer driven by world theme variables', () => {
+    expect(worldSelectSource).not.toContain("import CrossFadeImage from '../shared/CrossFadeImage.svelte'")
+    expect(worldSelectSource).toContain('world-backdrop')
+    expect(worldSelectSource).not.toContain('assetRefs.stageSelectBackground')
+    expect(worldSelectSource).not.toContain('<CrossFadeImage')
     expect(worldSelectSource).not.toContain('previousBackdropTimer')
 
-    expect(appCss).toContain('.world-backdrop-stack')
-    expect(appCss).toContain('.crossfade-image-layer')
-    expect(appCss).toContain('transition: none;')
-    expect(appCss).toContain('.crossfade-image-layer.previous')
-    expect(appCss).not.toContain('opacity 420ms ease')
-    expect(appCss).not.toContain('.crossfade-image-layer.previous.fading')
+    expect(appCss).toContain('.world-backdrop')
+    expect(appCss).toContain('background: var(--world-background) center / cover no-repeat')
+    expect(appCss).toContain('.world-backdrop::before')
+    expect(appCss).toContain('.world-select.theme-palace')
+    expect(appCss).not.toContain('.world-backdrop-stack')
+    expect(appCss).not.toContain('.crossfade-image')
+    expect(appCss).not.toContain('.crossfade-image-layer')
     expect(appCss).not.toContain('@keyframes crossfade-image-previous-out')
     expect(appCss).not.toContain('@keyframes crossfade-image-current-in')
-    expect(appCss).not.toContain('filter 420ms ease')
-    expect(appCss).not.toContain('filter: saturate(0.86)')
   })
 })
 ```
@@ -93,34 +52,35 @@ describe('World Select background transition', () => {
 
 Run: `npm run test -- src/ui/world/worldSelectBackgroundTransition.test.ts`
 
-Expected: FAIL because World Select still owns backdrop timer state and has not imported `CrossFadeImage`.
+Expected: FAIL because World Select still imports and renders `CrossFadeImage`.
 
-### Task 3: Implement The Shared Crossfade
+### Task 2: Restore Prototype Backdrop Structure
 
 **Files:**
-- Create: `src/ui/shared/CrossFadeImage.svelte`
 - Modify: `src/ui/world/WorldSelectScreen.svelte`
 - Modify: `src/app.css`
+- Delete: `src/ui/shared/CrossFadeImage.svelte`
+- Delete: `src/ui/shared/crossFadeImage.test.ts`
 
-- [ ] **Step 1: Create `CrossFadeImage.svelte`**
+- [ ] **Step 1: Wire World Select Like The Prototype**
 
-Implement the component with `src`, `durationMs`, and optional `class` props. Track `currentSrc`, `previousSrc`, and `previousOpacity`, preload/decode the incoming `src` before swapping, animate `previousOpacity` down to 0 with `requestAnimationFrame`, collapse the effective duration to 0 for `prefers-reduced-motion: reduce`, clear previous only after opacity reaches 0, and key the current layer by `currentSrc`.
+Remove `CrossFadeImage`, remove `selectedBackdropImage`, and render `<div class="world-backdrop" aria-hidden="true"></div>` inside `.world-select`.
 
-- [ ] **Step 2: Wire World Select**
+- [ ] **Step 2: Update CSS**
 
-Import `CrossFadeImage`, remove backdrop timer state from `WorldSelectScreen.svelte`, keep `selectedBackdropImage`, and render the shared component inside `.world-backdrop-stack`.
+Replace `.world-backdrop-stack` and `.crossfade-image*` rules with `.world-backdrop` and `.world-backdrop::before`, using `--world-background`.
 
-- [ ] **Step 3: Update CSS**
+- [ ] **Step 3: Remove The Unused CrossFade Component**
 
-Move generic layer rules to `.crossfade-image` and `.crossfade-image-layer`. Keep World Select overlay rules on `.world-backdrop-stack::before`. Keep the current layer visible and let the component drive the previous layer opacity inline; do not use crossfade keyframes, CSS transition interpolation, animate current layer, or animate any CSS filter.
+Delete `src/ui/shared/CrossFadeImage.svelte` and its test because World Select no longer uses that architecture.
 
 - [ ] **Step 4: Run focused tests**
 
-Run: `npm run test -- src/ui/shared/crossFadeImage.test.ts src/ui/world/worldSelectBackgroundTransition.test.ts`
+Run: `npm run test -- src/ui/world/worldSelectBackgroundTransition.test.ts`
 
 Expected: PASS.
 
-### Task 4: Verify The Slice
+### Task 3: Verify The Slice
 
 **Files:**
 - Verify: all changed files

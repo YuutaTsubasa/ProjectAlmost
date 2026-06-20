@@ -4,24 +4,24 @@ import { fileURLToPath } from 'node:url'
 import worldSelectSource from './WorldSelectScreen.svelte?raw'
 
 const appCss = readFileSync(fileURLToPath(new URL('../../app.css', import.meta.url)), 'utf8')
+const worldBackdropCss = appCss.match(/\.world-backdrop \{[\s\S]*?\n\}/)?.[0] ?? ''
 
 describe('World Select background transition', () => {
-  it('delegates selected background transitions to CrossFadeImage', () => {
-    expect(worldSelectSource).toContain("import CrossFadeImage from '../shared/CrossFadeImage.svelte'")
-    expect(worldSelectSource).toContain('world-backdrop-stack')
-    expect(worldSelectSource).toContain('assetRefs.stageSelectBackground')
-    expect(worldSelectSource).toContain('<CrossFadeImage')
+  it('matches the prototype single backdrop layer driven by world theme variables', () => {
+    expect(worldSelectSource).not.toContain("import CrossFadeImage from '../shared/CrossFadeImage.svelte'")
+    expect(worldSelectSource).toContain('world-backdrop')
+    expect(worldSelectSource).not.toContain('assetRefs.stageSelectBackground')
+    expect(worldSelectSource).not.toContain('<CrossFadeImage')
     expect(worldSelectSource).not.toContain('previousBackdropTimer')
 
-    expect(appCss).toContain('.world-backdrop-stack')
-    expect(appCss).toContain('.crossfade-image-layer')
-    expect(appCss).toContain('transition: none;')
-    expect(appCss).toContain('.crossfade-image-layer.previous')
-    expect(appCss).not.toContain('opacity 420ms ease')
-    expect(appCss).not.toContain('.crossfade-image-layer.previous.fading')
+    expect(appCss).toContain('.world-backdrop')
+    expect(worldBackdropCss).toContain('background: var(--world-background) center / cover no-repeat')
+    expect(appCss).toContain('.world-backdrop::before')
+    expect(appCss).toContain('.world-select.theme-palace')
+    expect(appCss).not.toContain('.world-backdrop-stack')
+    expect(appCss).not.toContain('.crossfade-image')
+    expect(appCss).not.toContain('.crossfade-image-layer')
     expect(appCss).not.toContain('@keyframes crossfade-image-previous-out')
     expect(appCss).not.toContain('@keyframes crossfade-image-current-in')
-    expect(appCss).not.toContain('filter 420ms ease')
-    expect(appCss).not.toContain('filter: saturate(0.86)')
   })
 })

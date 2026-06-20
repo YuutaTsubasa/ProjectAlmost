@@ -1,6 +1,5 @@
 <script lang="ts">
   import { onMount } from 'svelte'
-  import CrossFadeImage from '../shared/CrossFadeImage.svelte'
   import {
     resolveLocalizedText,
     type LocaleCode,
@@ -40,7 +39,6 @@
 
   const orderedWorlds = $derived(catalog.order.map((worldId) => catalog.items[worldId]))
   const selectedWorld = $derived(orderedWorlds[selectedWorldIndex] ?? orderedWorlds[0])
-  const selectedBackdropImage = $derived(selectedWorld.assetRefs.stageSelectBackground)
 
   function worldTitle(world: WorldData): string {
     return resolveLocalizedText(localizeData, locale, world.titleRef)
@@ -102,9 +100,7 @@
 <svelte:window onkeydown={handleKeydown} />
 
 <section class={`world-select theme-${selectedWorld.theme}`} aria-label="World Select">
-  <div class="world-backdrop-stack">
-    <CrossFadeImage src={selectedBackdropImage} durationMs={420} />
-  </div>
+  <div class="world-backdrop" aria-hidden="true"></div>
 
   <header class="world-cinematic-head">
     <span aria-hidden="true"></span>

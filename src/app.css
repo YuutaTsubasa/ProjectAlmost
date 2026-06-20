@@ -1217,45 +1217,22 @@ input {
   background: #07111c;
 }
 
-.world-backdrop-stack {
+.world-backdrop {
   position: absolute;
   inset: 0;
-  overflow: hidden;
+  background: var(--world-background) center / cover no-repeat;
+  filter: saturate(0.96) contrast(1.02);
+  scale: 1;
 }
 
-.world-backdrop-stack::before {
+.world-backdrop::before {
   content: "";
   position: absolute;
   inset: 0;
-  z-index: 2;
   background:
     linear-gradient(90deg, rgba(4, 9, 18, 0.68) 0%, rgba(4, 9, 18, 0.34) 39%, transparent 68%),
     linear-gradient(0deg, rgba(4, 9, 18, 0.42) 0%, transparent 35%);
   pointer-events: none;
-}
-
-.crossfade-image {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-}
-
-.crossfade-image-layer {
-  position: absolute;
-  inset: 0;
-  background: var(--crossfade-image) center / cover no-repeat;
-  filter: saturate(0.96) contrast(1.02);
-  opacity: 1;
-  scale: 1;
-  transition: none;
-}
-
-.crossfade-image-layer.current {
-  z-index: 1;
-}
-
-.crossfade-image-layer.previous {
-  z-index: 2;
 }
 
 .world-cinematic-head {
