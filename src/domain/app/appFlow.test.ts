@@ -2,16 +2,20 @@ import { describe, expect, it } from 'vitest'
 import {
   activateTitleMenuItem,
   backFromSettings,
+  backFromStageSelect,
   backFromWorldSelect,
   cancelDeleteConfirm,
+  confirmSelectedStage,
   confirmSelectedWorld,
   createInitialAppState,
   moveSettingsDeleteConfirmSelection,
   moveSettingsScreenSelection,
+  moveStageSelection,
   moveTitleMenuSelection,
   moveWorldSelection,
   openSettingsDeleteConfirm,
   openTitleMenu,
+  selectStage,
   selectTitleMenuItem,
   selectWorld,
 } from './appFlow'
@@ -179,10 +183,97 @@ describe('selectWorld', () => {
 })
 
 describe('confirmSelectedWorld', () => {
-  it('preserves selected world until stage select exists', () => {
+  it('opens stage select for the selected world with the first stage selected', () => {
     const state = { screen: { type: 'world-select', selectedWorldIndex: 2 } } as const
 
+    expect(confirmSelectedWorld(state)).toEqual({
+      screen: {
+        type: 'stage-select',
+        selectedWorldIndex: 2,
+        worldId: 'world03',
+        selectedStageIndex: 0,
+      },
+    })
+  })
+
+  it('does not change state outside world select', () => {
+    const state = createInitialAppState()
+
     expect(confirmSelectedWorld(state)).toBe(state)
+  })
+})
+
+describe('moveStageSelection', () => {
+  it('wraps selection forward through stages in the selected world', () => {
+    const state = {
+      screen: { type: 'stage-select', selectedWorldIndex: 0, worldId: 'world01', selectedStageIndex: 5 },
+    } as const
+
+    expect(moveStageSelection(state, 1)).toEqual({
+      screen: { type: 'stage-select', selectedWorldIndex: 0, worldId: 'world01', selectedStageIndex: 0 },
+    })
+  })
+
+  it('wraps selection backward through stages in the selected world', () => {
+    const state = {
+      screen: { type: 'stage-select', selectedWorldIndex: 0, worldId: 'world01', selectedStageIndex: 0 },
+    } as const
+
+    expect(moveStageSelection(state, -1)).toEqual({
+      screen: { type: 'stage-select', selectedWorldIndex: 0, worldId: 'world01', selectedStageIndex: 5 },
+    })
+  })
+
+  it('does not move stage selection outside stage select', () => {
+    const state = createInitialAppState()
+
+    expect(moveStageSelection(state, 1)).toBe(state)
+  })
+})
+
+describe('selectStage', () => {
+  it('selects a stage directly while preserving the selected world', () => {
+    const state = {
+      screen: { type: 'stage-select', selectedWorldIndex: 4, worldId: 'world05', selectedStageIndex: 0 },
+    } as const
+
+    expect(selectStage(state, 3)).toEqual({
+      screen: { type: 'stage-select', selectedWorldIndex: 4, worldId: 'world05', selectedStageIndex: 3 },
+    })
+  })
+
+  it('does not select a stage outside stage select', () => {
+    const state = createInitialAppState()
+
+    expect(selectStage(state, 3)).toBe(state)
+  })
+})
+
+describe('confirmSelectedStage', () => {
+  it('preserves selected stage until gameplay entry exists', () => {
+    const state = {
+      screen: { type: 'stage-select', selectedWorldIndex: 1, worldId: 'world02', selectedStageIndex: 4 },
+    } as const
+
+    expect(confirmSelectedStage(state)).toBe(state)
+  })
+})
+
+describe('backFromStageSelect', () => {
+  it('returns to world select with the originating world selected', () => {
+    const state = {
+      screen: { type: 'stage-select', selectedWorldIndex: 3, worldId: 'world04', selectedStageIndex: 2 },
+    } as const
+
+    expect(backFromStageSelect(state)).toEqual({
+      screen: { type: 'world-select', selectedWorldIndex: 3 },
+    })
+  })
+
+  it('does not change state outside stage select', () => {
+    const state = createInitialAppState()
+
+    expect(backFromStageSelect(state)).toBe(state)
   })
 })
 

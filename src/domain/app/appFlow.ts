@@ -4,6 +4,7 @@ import {
   openDeleteConfirm,
   type DeleteConfirmState,
 } from '../settings/settings'
+import type { WorldId } from '../data/worlds/worldTypes'
 
 export const TITLE_MENU_ITEMS = ['start', 'settings', 'back'] as const
 
@@ -19,19 +20,33 @@ export type WorldSelectScreen = {
   selectedWorldIndex: number
 }
 
+export type StageSelectScreen = {
+  type: 'stage-select'
+  selectedWorldIndex: number
+  worldId: WorldId
+  selectedStageIndex: number
+}
+
 export type SettingsScreen = {
   type: 'settings'
   selectedItemIndex: number
   deleteConfirm: DeleteConfirmState | null
 }
 
-export type AppScreen = { type: 'title-intro' } | TitleMenuScreen | WorldSelectScreen | SettingsScreen
+export type AppScreen =
+  | { type: 'title-intro' }
+  | TitleMenuScreen
+  | WorldSelectScreen
+  | StageSelectScreen
+  | SettingsScreen
 
 export type AppState = {
   screen: AppScreen
 }
 
 const WORLD_COUNT = 6
+const WORLD_IDS = ['world01', 'world02', 'world03', 'world04', 'world05', 'world06'] as const
+const STAGES_PER_WORLD = 6
 
 export function createInitialAppState(): AppState {
   return {
@@ -108,7 +123,14 @@ export function selectWorld(state: AppState, selectedWorldIndex: number): AppSta
 export function confirmSelectedWorld(state: AppState): AppState {
   if (state.screen.type !== 'world-select') return state
 
-  return state
+  return {
+    screen: {
+      type: 'stage-select',
+      selectedWorldIndex: state.screen.selectedWorldIndex,
+      worldId: WORLD_IDS[state.screen.selectedWorldIndex] ?? 'world01',
+      selectedStageIndex: 0,
+    },
+  }
 }
 
 export function backFromWorldSelect(state: AppState): AppState {
@@ -116,6 +138,38 @@ export function backFromWorldSelect(state: AppState): AppState {
 
   return {
     screen: { type: 'title-menu', selectedItemIndex: 0 },
+  }
+}
+
+export function moveStageSelection(state: AppState, direction: -1 | 1): AppState {
+  if (state.screen.type !== 'stage-select') return state
+
+  const selectedStageIndex = (state.screen.selectedStageIndex + direction + STAGES_PER_WORLD) % STAGES_PER_WORLD
+
+  return {
+    screen: { ...state.screen, selectedStageIndex },
+  }
+}
+
+export function selectStage(state: AppState, selectedStageIndex: number): AppState {
+  if (state.screen.type !== 'stage-select') return state
+
+  return {
+    screen: { ...state.screen, selectedStageIndex },
+  }
+}
+
+export function confirmSelectedStage(state: AppState): AppState {
+  if (state.screen.type !== 'stage-select') return state
+
+  return state
+}
+
+export function backFromStageSelect(state: AppState): AppState {
+  if (state.screen.type !== 'stage-select') return state
+
+  return {
+    screen: { type: 'world-select', selectedWorldIndex: state.screen.selectedWorldIndex },
   }
 }
 
