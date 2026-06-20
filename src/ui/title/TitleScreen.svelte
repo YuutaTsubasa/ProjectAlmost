@@ -137,7 +137,7 @@
       className="title-controls"
       hints={[
         { keys: ['↑', '↓'], label: text('title.controls.select') },
-        { keys: ['Enter'], label: text('title.controls.confirm') },
+        { keys: ['Space'], label: text('title.controls.confirm') },
         { keys: ['Esc'], label: text('title.controls.back') },
       ]}
     />

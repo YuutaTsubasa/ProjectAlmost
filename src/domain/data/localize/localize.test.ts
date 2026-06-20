@@ -488,3 +488,36 @@ describe('resolveLocalizedText', () => {
     expect(resolveLocalizedText(localize, 'zhHant', missingKey)).toBe('worlds.world99.title')
   })
 })
+
+describe('prototype stage subtitle copy', () => {
+  it('keeps Stage Select subtitles aligned with the prototype localization catalog', () => {
+    const expectedByLocale = {
+      en: {
+        'stages.1-1.subtitle': 'The First Gate',
+        'stages.1-6.subtitle': 'The High Spire',
+        'stages.6-6.subtitle': 'Abyss Queen Duel',
+      },
+      ja: {
+        'stages.1-1.subtitle': '最初の門',
+        'stages.1-6.subtitle': '高き尖塔',
+        'stages.6-6.subtitle': '深淵女王の決闘',
+      },
+      zhHant: {
+        'stages.1-1.subtitle': '最初之門',
+        'stages.1-6.subtitle': '高塔',
+        'stages.6-6.subtitle': '深淵女王決鬥',
+      },
+      ko: {
+        'stages.1-1.subtitle': '첫 번째 문',
+        'stages.1-6.subtitle': '높은 첨탑',
+        'stages.6-6.subtitle': '심연 여왕 결투',
+      },
+    } as const
+
+    for (const locale of localize.languages.map((language) => language.code)) {
+      for (const [key, expectedText] of Object.entries(expectedByLocale[locale])) {
+        expect(resolveLocalizedText(localize, locale, key as LocalizationKey)).toBe(expectedText)
+      }
+    }
+  })
+})

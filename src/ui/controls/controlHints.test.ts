@@ -37,4 +37,9 @@ describe('ControlHints component contract', () => {
     expect(worldSelectSource).not.toContain('Confirm</span>')
     expect(worldSelectSource).not.toContain('Back</span>')
   })
+
+  it('keeps Title Screen confirm key label aligned with other menu screens', () => {
+    expect(titleSource).toContain("{ keys: ['Space'], label: text('title.controls.confirm') }")
+    expect(titleSource).not.toContain("{ keys: ['Enter'], label: text('title.controls.confirm') }")
+  })
 })

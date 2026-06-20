@@ -66,7 +66,7 @@ Extend `src/domain/data/localize/localize.ts` with Stage Select labels and stage
 - Stage Select labels: title, objective, collectibles, best time, rank, active character, deploy, record unavailable, and aria labels.
 - Stage text: title, subtitle, and objective refs for all 36 stages.
 
-All visible Stage Select text must resolve through `resolveLocalizedText`. Four locale catalogs (`en`, `ja`, `zhHant`, `ko`) must contain every new key. Stage copy can be concise first-pass content, but it must be complete and stable enough for UI layout.
+All visible Stage Select text must resolve through `resolveLocalizedText`. Four locale catalogs (`en`, `ja`, `zhHant`, `ko`) must contain every new key. Stage subtitle copy follows the prototype localization catalog so the rebuild Stage Select presents the same stage names while still using rebuild-localized keys.
 
 ## Input Flow
 
