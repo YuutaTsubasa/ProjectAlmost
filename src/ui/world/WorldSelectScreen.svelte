@@ -36,9 +36,33 @@
   }: Props = $props()
 
   let previousGamepadSnapshot: GamepadControlSnapshot | null = null
+  let currentBackdropImage = $state('')
+  let previousBackdropImage = $state<string | null>(null)
+  let previousBackdropTimer: ReturnType<typeof setTimeout> | null = null
 
   const orderedWorlds = $derived(catalog.order.map((worldId) => catalog.items[worldId]))
   const selectedWorld = $derived(orderedWorlds[selectedWorldIndex] ?? orderedWorlds[0])
+  const selectedBackdropImage = $derived(selectedWorld.assetRefs.stageSelectBackground)
+
+  $effect(() => {
+    if (!selectedBackdropImage) return
+
+    if (!currentBackdropImage) {
+      currentBackdropImage = selectedBackdropImage
+      return
+    }
+
+    if (selectedBackdropImage === currentBackdropImage) return
+
+    previousBackdropImage = currentBackdropImage
+    currentBackdropImage = selectedBackdropImage
+
+    if (previousBackdropTimer) clearTimeout(previousBackdropTimer)
+    previousBackdropTimer = setTimeout(() => {
+      previousBackdropImage = null
+      previousBackdropTimer = null
+    }, 460)
+  })
 
   function worldTitle(world: WorldData): string {
     return resolveLocalizedText(localizeData, locale, world.titleRef)
@@ -95,12 +119,32 @@
 
     return () => cancelAnimationFrame(frameId)
   })
+
+  onMount(() => {
+    return () => {
+      if (previousBackdropTimer) clearTimeout(previousBackdropTimer)
+    }
+  })
 </script>
 
 <svelte:window onkeydown={handleKeydown} />
 
 <section class={`world-select theme-${selectedWorld.theme}`} aria-label="World Select">
-  <div class="world-backdrop" aria-hidden="true"></div>
+  <div class="world-backdrop-stack" aria-hidden="true">
+    {#if previousBackdropImage}
+      {#key previousBackdropImage}
+        <div
+          class="world-backdrop-layer previous"
+          style={`--world-backdrop-image: url("${previousBackdropImage}")`}
+        ></div>
+      {/key}
+    {/if}
+
+    <div
+      class="world-backdrop-layer current"
+      style={`--world-backdrop-image: url("${currentBackdropImage || selectedBackdropImage}")`}
+    ></div>
+  </div>
 
   <header class="world-cinematic-head">
     <span aria-hidden="true"></span>

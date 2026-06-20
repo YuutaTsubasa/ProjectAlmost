@@ -1217,21 +1217,43 @@ input {
   background: #07111c;
 }
 
-.world-backdrop {
+.world-backdrop-stack {
   position: absolute;
   inset: 0;
-  background: var(--world-background) center / cover no-repeat;
-  filter: saturate(0.96) contrast(1.02);
-  scale: 1;
+  overflow: hidden;
 }
 
-.world-backdrop::before {
+.world-backdrop-stack::before {
   content: "";
   position: absolute;
   inset: 0;
+  z-index: 2;
   background:
     linear-gradient(90deg, rgba(4, 9, 18, 0.68) 0%, rgba(4, 9, 18, 0.34) 39%, transparent 68%),
     linear-gradient(0deg, rgba(4, 9, 18, 0.42) 0%, transparent 35%);
+  pointer-events: none;
+}
+
+.world-backdrop-layer {
+  position: absolute;
+  inset: 0;
+  background: var(--world-backdrop-image) center / cover no-repeat;
+  filter: saturate(0.96) contrast(1.02);
+  opacity: 1;
+  scale: 1;
+  transition:
+    opacity 420ms ease,
+    filter 420ms ease;
+}
+
+.world-backdrop-layer.current {
+  z-index: 1;
+  animation: world-backdrop-current-in 420ms ease both;
+}
+
+.world-backdrop-layer.previous {
+  z-index: 0;
+  animation: world-backdrop-previous-out 420ms ease both;
 }
 
 .world-cinematic-head {
@@ -1640,6 +1662,30 @@ input {
   to {
     opacity: 1;
     translate: 0 0;
+  }
+}
+
+@keyframes world-backdrop-current-in {
+  from {
+    opacity: 0;
+    filter: saturate(0.86) contrast(1.02);
+  }
+
+  to {
+    opacity: 1;
+    filter: saturate(0.96) contrast(1.02);
+  }
+}
+
+@keyframes world-backdrop-previous-out {
+  from {
+    opacity: 1;
+    filter: saturate(0.96) contrast(1.02);
+  }
+
+  to {
+    opacity: 0;
+    filter: saturate(0.86) contrast(1.02);
   }
 }
 
