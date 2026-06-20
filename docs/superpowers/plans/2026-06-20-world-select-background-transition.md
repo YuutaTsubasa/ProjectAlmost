@@ -37,6 +37,9 @@ describe('World Select background transition', () => {
 
     expect(appCss).toContain('.world-backdrop')
     expect(appCss).toContain('background: var(--world-background) center / cover no-repeat')
+    expect(worldBackdropCss).toContain('transition:')
+    expect(worldBackdropCss).toContain('background-image 300ms ease')
+    expect(worldBackdropCss).toContain('filter 300ms ease')
     expect(appCss).toContain('.world-backdrop::before')
     expect(appCss).toContain('.world-select.theme-palace')
     expect(appCss).not.toContain('.world-backdrop-stack')
@@ -68,7 +71,7 @@ Remove `CrossFadeImage`, remove `selectedBackdropImage`, and render `<div class=
 
 - [ ] **Step 2: Update CSS**
 
-Replace `.world-backdrop-stack` and `.crossfade-image*` rules with `.world-backdrop` and `.world-backdrop::before`, using `--world-background`.
+Replace `.world-backdrop-stack` and `.crossfade-image*` rules with `.world-backdrop` and `.world-backdrop::before`, using `--world-background`, and keep the prototype `background-image 300ms ease, filter 300ms ease` transition.
 
 - [ ] **Step 3: Remove The Unused CrossFade Component**
 

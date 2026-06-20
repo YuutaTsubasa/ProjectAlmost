@@ -16,6 +16,9 @@ describe('World Select background transition', () => {
 
     expect(appCss).toContain('.world-backdrop')
     expect(worldBackdropCss).toContain('background: var(--world-background) center / cover no-repeat')
+    expect(worldBackdropCss).toContain('transition:')
+    expect(worldBackdropCss).toContain('background-image 300ms ease')
+    expect(worldBackdropCss).toContain('filter 300ms ease')
     expect(appCss).toContain('.world-backdrop::before')
     expect(appCss).toContain('.world-select.theme-palace')
     expect(appCss).not.toContain('.world-backdrop-stack')

@@ -1223,6 +1223,9 @@ input {
   background: var(--world-background) center / cover no-repeat;
   filter: saturate(0.96) contrast(1.02);
   scale: 1;
+  transition:
+    background-image 300ms ease,
+    filter 300ms ease;
 }
 
 .world-backdrop::before {

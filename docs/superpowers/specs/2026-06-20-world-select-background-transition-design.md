@@ -20,6 +20,7 @@ The prototype World Select keeps one dedicated `.world-backdrop` element. The se
 
 - `.world-backdrop` fills the screen.
 - `.world-backdrop` renders `var(--world-background) center / cover no-repeat`.
+- `.world-backdrop` keeps the prototype transition contract: `background-image 300ms ease, filter 300ms ease`.
 - `.world-backdrop::before` owns the cinematic dark overlay.
 - `.world-select.theme-*` owns the background image variables and world color variables.
 - There are no `.crossfade-image*` selectors, crossfade keyframes, previous/current layers, or requestAnimationFrame-driven image fades for World Select.
@@ -31,7 +32,7 @@ Add focused UI contract tests that import Svelte components as raw source and re
 - `WorldSelectScreen.svelte` renders `.world-backdrop`.
 - `WorldSelectScreen.svelte` does not import or use `CrossFadeImage`.
 - `WorldSelectScreen.svelte` does not derive `assetRefs.stageSelectBackground` for backdrop transition state.
-- CSS contains `.world-backdrop`, `.world-backdrop::before`, and `background: var(--world-background) center / cover no-repeat`.
+- CSS contains `.world-backdrop`, `.world-backdrop::before`, `background: var(--world-background) center / cover no-repeat`, and the prototype `background-image`/`filter` transition.
 - CSS does not contain `.crossfade-image*` selectors or crossfade keyframes.
 
 Run:
