@@ -4,9 +4,9 @@
 
 **Goal:** Restore the World Select selected-background crossfade with a reusable shared image crossfade component.
 
-**Architecture:** Keep crossfade mechanics in `src/ui/shared/CrossFadeImage.svelte`. `WorldSelectScreen.svelte` derives the selected world's background URL from catalog data and delegates the transition to the shared component, while `src/app.css` keeps the current image visible and fades the previous image out above it. The shared component preloads and decodes the incoming image before swapping `currentSrc`, preventing a black or empty frame during the fade.
+**Architecture:** Keep crossfade mechanics in `src/ui/shared/CrossFadeImage.svelte`. `WorldSelectScreen.svelte` derives the selected world's background URL from catalog data and delegates the transition to the shared component, while `src/app.css` keeps the current image visible below the previous image without transition/keyframe animation. The shared component preloads and decodes the incoming image before swapping `currentSrc`, then advances an explicit `previousOpacity` state with `requestAnimationFrame` until the previous layer reaches opacity 0.
 
-**Tech Stack:** Svelte 5, CSS animations, Vitest raw-file contract tests.
+**Tech Stack:** Svelte 5, component-driven `requestAnimationFrame` opacity state, Vitest raw-file contract tests.
 
 ---
 
@@ -28,12 +28,18 @@ describe('CrossFadeImage', () => {
     expect(crossFadeSource).toContain('durationMs')
     expect(crossFadeSource).toContain('previousSrc')
     expect(crossFadeSource).toContain('currentSrc')
+    expect(crossFadeSource).toContain('previousOpacity')
+    expect(crossFadeSource).toContain('startPreviousFade')
+    expect(crossFadeSource).toContain('effectiveDurationMs')
+    expect(crossFadeSource).toContain('prefers-reduced-motion: reduce')
     expect(crossFadeSource).toContain('preloadImage')
     expect(crossFadeSource).toContain('decode')
+    expect(crossFadeSource).toContain('requestAnimationFrame')
+    expect(crossFadeSource).toContain('cancelAnimationFrame')
     expect(crossFadeSource).toContain('{#key currentSrc}')
     expect(crossFadeSource).toContain('crossfade-image-layer previous')
+    expect(crossFadeSource).toContain('opacity: ${previousOpacity}')
     expect(crossFadeSource).toContain('crossfade-image-layer current')
-    expect(crossFadeSource).toContain('setTimeout')
   })
 })
 ```
@@ -71,9 +77,14 @@ describe('World Select background transition', () => {
 
     expect(appCss).toContain('.world-backdrop-stack')
     expect(appCss).toContain('.crossfade-image-layer')
-    expect(appCss).toContain('transition:')
-    expect(appCss).toContain('opacity 420ms ease')
-    expect(appCss).toContain('@keyframes crossfade-image-previous-out')
+    expect(appCss).toContain('transition: none;')
+    expect(appCss).toContain('.crossfade-image-layer.previous')
+    expect(appCss).not.toContain('opacity 420ms ease')
+    expect(appCss).not.toContain('.crossfade-image-layer.previous.fading')
+    expect(appCss).not.toContain('@keyframes crossfade-image-previous-out')
+    expect(appCss).not.toContain('@keyframes crossfade-image-current-in')
+    expect(appCss).not.toContain('filter 420ms ease')
+    expect(appCss).not.toContain('filter: saturate(0.86)')
   })
 })
 ```
@@ -93,7 +104,7 @@ Expected: FAIL because World Select still owns backdrop timer state and has not 
 
 - [ ] **Step 1: Create `CrossFadeImage.svelte`**
 
-Implement the component with `src`, `durationMs`, and optional `class` props. Track `currentSrc` and `previousSrc`, preload/decode the incoming `src` before swapping, clear previous after `durationMs`, and key the current layer by `currentSrc`.
+Implement the component with `src`, `durationMs`, and optional `class` props. Track `currentSrc`, `previousSrc`, and `previousOpacity`, preload/decode the incoming `src` before swapping, animate `previousOpacity` down to 0 with `requestAnimationFrame`, collapse the effective duration to 0 for `prefers-reduced-motion: reduce`, clear previous only after opacity reaches 0, and key the current layer by `currentSrc`.
 
 - [ ] **Step 2: Wire World Select**
 
@@ -101,7 +112,7 @@ Import `CrossFadeImage`, remove backdrop timer state from `WorldSelectScreen.sve
 
 - [ ] **Step 3: Update CSS**
 
-Move generic layer rules to `.crossfade-image` and `.crossfade-image-layer`. Keep World Select overlay rules on `.world-backdrop-stack::before`. Keep the current layer visible and fade the previous layer out above it.
+Move generic layer rules to `.crossfade-image` and `.crossfade-image-layer`. Keep World Select overlay rules on `.world-backdrop-stack::before`. Keep the current layer visible and let the component drive the previous layer opacity inline; do not use crossfade keyframes, CSS transition interpolation, animate current layer, or animate any CSS filter.
 
 - [ ] **Step 4: Run focused tests**
 

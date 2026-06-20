@@ -11,7 +11,8 @@
 
   let currentSrc = $state('')
   let previousSrc = $state<string | null>(null)
-  let previousTimer: ReturnType<typeof setTimeout> | null = null
+  let previousOpacity = $state(1)
+  let fadeFrame: ReturnType<typeof requestAnimationFrame> | null = null
   let transitionRequestId = 0
 
   async function preloadImage(nextSrc: string): Promise<void> {
@@ -26,6 +27,49 @@
     await new Promise<void>((resolve) => {
       image.onload = () => resolve()
       image.onerror = () => resolve()
+    })
+  }
+
+  function cancelPreviousFade(): void {
+    if (!fadeFrame) return
+
+    cancelAnimationFrame(fadeFrame)
+    fadeFrame = null
+  }
+
+  function effectiveDurationMs(): number {
+    if (
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    ) {
+      return 0
+    }
+
+    return durationMs
+  }
+
+  function startPreviousFade(): void {
+    cancelPreviousFade()
+
+    previousOpacity = 1
+    const fadeDurationMs = effectiveDurationMs()
+
+    fadeFrame = requestAnimationFrame((startedAt) => {
+      const step = (now: number) => {
+        const progress = fadeDurationMs <= 0 ? 1 : Math.min((now - startedAt) / fadeDurationMs, 1)
+        previousOpacity = 1 - progress
+
+        if (progress < 1 && previousSrc) {
+          fadeFrame = requestAnimationFrame(step)
+          return
+        }
+
+        previousSrc = null
+        previousOpacity = 1
+        fadeFrame = null
+      }
+
+      step(startedAt)
     })
   }
 
@@ -48,14 +92,11 @@
       .then(() => {
         if (cancelled || requestId !== transitionRequestId || nextSrc === currentSrc) return
 
+        cancelPreviousFade()
         previousSrc = currentSrc
+        previousOpacity = 1
         currentSrc = nextSrc
-
-        if (previousTimer) clearTimeout(previousTimer)
-        previousTimer = setTimeout(() => {
-          previousSrc = null
-          previousTimer = null
-        }, durationMs)
+        startPreviousFade()
       })
 
     return () => {
@@ -64,7 +105,7 @@
   })
 
   onDestroy(() => {
-    if (previousTimer) clearTimeout(previousTimer)
+    cancelPreviousFade()
   })
 </script>
 
@@ -72,7 +113,7 @@
   {#if previousSrc}
     <div
       class="crossfade-image-layer previous"
-      style={`--crossfade-image: url("${previousSrc}"); --crossfade-duration: ${durationMs}ms`}
+      style={`--crossfade-image: url("${previousSrc}"); --crossfade-duration: ${durationMs}ms; opacity: ${previousOpacity}`}
     ></div>
   {/if}
 

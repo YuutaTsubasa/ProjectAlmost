@@ -1247,19 +1247,15 @@ input {
   filter: saturate(0.96) contrast(1.02);
   opacity: 1;
   scale: 1;
-  transition:
-    opacity 420ms ease,
-    filter 420ms ease;
+  transition: none;
 }
 
 .crossfade-image-layer.current {
   z-index: 1;
-  animation: crossfade-image-current-in var(--crossfade-duration, 420ms) ease both;
 }
 
 .crossfade-image-layer.previous {
   z-index: 2;
-  animation: crossfade-image-previous-out var(--crossfade-duration, 420ms) ease both;
 }
 
 .world-cinematic-head {
@@ -1668,28 +1664,6 @@ input {
   to {
     opacity: 1;
     translate: 0 0;
-  }
-}
-
-@keyframes crossfade-image-current-in {
-  from {
-    filter: saturate(0.86) contrast(1.02);
-  }
-
-  to {
-    filter: saturate(0.96) contrast(1.02);
-  }
-}
-
-@keyframes crossfade-image-previous-out {
-  from {
-    opacity: 1;
-    filter: saturate(0.96) contrast(1.02);
-  }
-
-  to {
-    opacity: 0;
-    filter: saturate(0.86) contrast(1.02);
   }
 }
 
