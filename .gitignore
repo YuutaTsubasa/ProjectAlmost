@@ -5,6 +5,7 @@ dist-ssr/
 coverage/
 .svelte-kit/
 .vite/
+.superpowers/
 
 # Tauri / Rust
 src-tauri/gen/
