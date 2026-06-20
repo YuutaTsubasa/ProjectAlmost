@@ -59,6 +59,7 @@ describe('stages', () => {
       id: '1-6',
       worldId: 'world01',
       number: 6,
+      nodePosition: { x: 71, y: 26 },
       objectiveRef: 'stageObjectives.defeatBoss',
       isBoss: true,
     })
