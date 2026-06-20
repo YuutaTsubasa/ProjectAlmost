@@ -23,4 +23,11 @@ describe('Stage Select localization contract', () => {
     expect(stageSelectSource).toContain('ControlHints')
     expect(stageSelectSource).not.toContain('<kbd>')
   })
+
+  it('renders the prototype-style layered stage preview scene', () => {
+    expect(stageSelectSource).toContain('class="stage-preview-scene"')
+    expect(stageSelectSource).toContain('--stage-preview-image: url("${stage.previewAssetRef}")')
+    expect(stageSelectSource).toContain('stage.previewBackgroundAssetRef ?? stage.previewAssetRef')
+    expect(stageSelectSource).toContain('--stage-preview-background: url("${background}")')
+  })
 })

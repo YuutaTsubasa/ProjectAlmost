@@ -80,6 +80,10 @@ const previewAssetRefs: Partial<Record<WorldId, string>> = {
   world01: '/assets/maps/white_palace_mid_bg_loop.webp',
 }
 
+const previewBackgroundAssetRefs: Partial<Record<WorldId, string>> = {
+  world01: '/assets/maps/white_palace_sky.webp',
+}
+
 function getStageNumber(stageId: StageId): StageData['number'] {
   return Number(stageId.split('-')[1]) as StageData['number']
 }
@@ -99,6 +103,7 @@ function createStage(world: WorldData, stageId: StageId): StageData {
     collectibleCount: seed.coins[stageNumber - 1],
     nodePosition: seed.positions[stageNumber - 1],
     previewAssetRef: previewAssetRefs[world.id] ?? world.assetRefs.stageSelectBackground,
+    previewBackgroundAssetRef: previewBackgroundAssetRefs[world.id],
     isBoss,
   }
 }

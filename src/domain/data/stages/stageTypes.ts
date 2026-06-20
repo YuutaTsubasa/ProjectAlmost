@@ -16,6 +16,7 @@ export interface StageData {
   collectibleCount: number
   nodePosition: StageNodePosition
   previewAssetRef: string
+  previewBackgroundAssetRef?: string
   isBoss: boolean
 }
 

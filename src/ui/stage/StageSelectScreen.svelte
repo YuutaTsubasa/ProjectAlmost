@@ -70,6 +70,11 @@
     return text(stage.objectiveRef)
   }
 
+  function previewSceneStyle(stage: StageData): string {
+    const background = stage.previewBackgroundAssetRef ?? stage.previewAssetRef
+    return `--stage-preview-image: url("${stage.previewAssetRef}");--stage-preview-background: url("${background}")`
+  }
+
   function handleConfirmStage() {
     confirming = true
     onConfirmStage()
@@ -158,11 +163,9 @@
   </button>
 
   <aside class="stage-detail" aria-live="polite">
-    <div
-      class="stage-preview"
-      style={`background-image: url("${selectedStage.previewAssetRef}")`}
-      aria-hidden="true"
-    ></div>
+    <div class="stage-preview" aria-hidden="true">
+      <div class="stage-preview-scene" style={previewSceneStyle(selectedStage)}></div>
+    </div>
     <strong class="stage-title">{worldTitle(selectedWorld)} {selectedStage.id}</strong>
     <span class="stage-subtitle">{stageSubtitle(selectedStage)}</span>
 

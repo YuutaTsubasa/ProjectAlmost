@@ -50,7 +50,7 @@ The layout follows the approved visual direction:
 
 - Full-screen selected world map background from root `public/assets/maps/*_stage_select.webp`.
 - Center/top banner for the localized Stage Select title.
-- Left translucent detail panel with prototype-style preview art, a compact selected-stage heading, localized stage subtitle, localized objective, collectible count, unavailable-record placeholders sourced from existing localization keys, and deploy button. The panel must not add separate world title/subtitle lines above the selected stage because that diverges from the prototype information density.
+- Left translucent detail panel with prototype-style layered preview art, a compact selected-stage heading, localized stage subtitle, localized objective, collectible count, unavailable-record placeholders sourced from existing localization keys, and deploy button. The preview uses the gameplay foreground loop over the matching sky/background layer. The panel must not add separate world title/subtitle lines above the selected stage because that diverges from the prototype information density.
 - Connected stage nodes positioned by `StageData.nodePosition`.
 - Back button and compact control hints matching the rebuild UI language, with key labels paired to localized action labels.
 - Stage nodes show stable stage ids such as `1-1`, matching the prototype. The selected-node tooltip is compact: stage id plus localized subtitle, not full localized title copy.
