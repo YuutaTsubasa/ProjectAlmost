@@ -1,10 +1,13 @@
 <script lang="ts">
   import { onMount } from 'svelte'
   import {
+    backFromStageSelect,
     backFromWorldSelect,
     cancelDeleteConfirm,
+    confirmSelectedStage,
     confirmSelectedWorld,
     createInitialAppState,
+    selectStage,
     selectTitleMenuItem,
     selectWorld,
   } from './domain/app/appFlow'
@@ -28,6 +31,7 @@
   } from './domain/settings/settings'
   import ResolutionFrame from './ui/layout/ResolutionFrame.svelte'
   import SettingsScreen from './ui/settings/SettingsScreen.svelte'
+  import StageSelectScreen from './ui/stage/StageSelectScreen.svelte'
   import TitleScreen from './ui/title/TitleScreen.svelte'
   import WorldSelectScreen from './ui/world/WorldSelectScreen.svelte'
 
@@ -113,6 +117,31 @@
   function handleConfirmWorld() {
     playUiSfx('confirm')
     appState = confirmSelectedWorld(appState)
+    syncMusicForCurrentState()
+  }
+
+  function handleSelectStage(index: number) {
+    const previousIndex = appState.screen.type === 'stage-select' ? appState.screen.selectedStageIndex : null
+    appState = selectStage(appState, index)
+    if (
+      previousIndex !== null &&
+      appState.screen.type === 'stage-select' &&
+      previousIndex !== appState.screen.selectedStageIndex
+    ) {
+      playUiSfx('move')
+    }
+    syncMusicForCurrentState()
+  }
+
+  function handleConfirmStage() {
+    playUiSfx('confirm')
+    appState = confirmSelectedStage(appState)
+    syncMusicForCurrentState()
+  }
+
+  function handleBackFromStageSelect() {
+    playUiSfx('back')
+    appState = backFromStageSelect(appState)
     syncMusicForCurrentState()
   }
 
@@ -225,6 +254,19 @@
         onSelectWorld={handleSelectWorld}
         onConfirmWorld={handleConfirmWorld}
         onBack={handleBackFromWorldSelect}
+      />
+    {:else if appState.screen.type === 'stage-select'}
+      <StageSelectScreen
+        worlds={projectData.worlds}
+        stages={projectData.stages}
+        localizeData={projectData.localize}
+        locale={locale}
+        selectedWorldIndex={appState.screen.selectedWorldIndex}
+        selectedStageIndex={appState.screen.selectedStageIndex}
+        onControlIntent={handleControlIntent}
+        onSelectStage={handleSelectStage}
+        onConfirmStage={handleConfirmStage}
+        onBack={handleBackFromStageSelect}
       />
     {:else if appState.screen.type === 'settings'}
       <SettingsScreen
