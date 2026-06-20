@@ -1234,10 +1234,16 @@ input {
   pointer-events: none;
 }
 
-.world-backdrop-layer {
+.crossfade-image {
   position: absolute;
   inset: 0;
-  background: var(--world-backdrop-image) center / cover no-repeat;
+  overflow: hidden;
+}
+
+.crossfade-image-layer {
+  position: absolute;
+  inset: 0;
+  background: var(--crossfade-image) center / cover no-repeat;
   filter: saturate(0.96) contrast(1.02);
   opacity: 1;
   scale: 1;
@@ -1246,14 +1252,14 @@ input {
     filter 420ms ease;
 }
 
-.world-backdrop-layer.current {
+.crossfade-image-layer.current {
   z-index: 1;
-  animation: world-backdrop-current-in 420ms ease both;
+  animation: crossfade-image-current-in var(--crossfade-duration, 420ms) ease both;
 }
 
-.world-backdrop-layer.previous {
-  z-index: 0;
-  animation: world-backdrop-previous-out 420ms ease both;
+.crossfade-image-layer.previous {
+  z-index: 2;
+  animation: crossfade-image-previous-out var(--crossfade-duration, 420ms) ease both;
 }
 
 .world-cinematic-head {
@@ -1665,19 +1671,17 @@ input {
   }
 }
 
-@keyframes world-backdrop-current-in {
+@keyframes crossfade-image-current-in {
   from {
-    opacity: 0;
     filter: saturate(0.86) contrast(1.02);
   }
 
   to {
-    opacity: 1;
     filter: saturate(0.96) contrast(1.02);
   }
 }
 
-@keyframes world-backdrop-previous-out {
+@keyframes crossfade-image-previous-out {
   from {
     opacity: 1;
     filter: saturate(0.96) contrast(1.02);

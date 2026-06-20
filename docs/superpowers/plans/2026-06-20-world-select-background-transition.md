@@ -2,41 +2,76 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Restore the World Select selected-background crossfade so changing worlds no longer swaps images instantly.
+**Goal:** Restore the World Select selected-background crossfade with a reusable shared image crossfade component.
 
-**Architecture:** Keep this as presentation behavior in `WorldSelectScreen.svelte` and `src/app.css`. The Svelte component retains the previous selected world's background URL for one animation window, while CSS crossfades previous and current backdrop layers.
+**Architecture:** Keep crossfade mechanics in `src/ui/shared/CrossFadeImage.svelte`. `WorldSelectScreen.svelte` derives the selected world's background URL from catalog data and delegates the transition to the shared component, while `src/app.css` keeps the current image visible and fades the previous image out above it.
 
 **Tech Stack:** Svelte 5, CSS animations, Vitest raw-file contract tests.
 
 ---
 
-### Task 1: Add The Failing UI Contract Test
+### Task 1: Add The Failing Shared Component Contract Test
 
 **Files:**
-- Create: `src/ui/world/worldSelectBackgroundTransition.test.ts`
-- Read: `src/ui/world/WorldSelectScreen.svelte`
-- Read: `src/app.css`
+- Create: `src/ui/shared/crossFadeImage.test.ts`
+- Create: `src/ui/shared/CrossFadeImage.svelte`
 
 - [ ] **Step 1: Write the failing test**
 
 ```ts
 import { describe, expect, it } from 'vitest'
-import appCss from '../../app.css?raw'
+import crossFadeSource from './CrossFadeImage.svelte?raw'
+
+describe('CrossFadeImage', () => {
+  it('keeps outgoing and keyed incoming image layers for a visible crossfade', () => {
+    expect(crossFadeSource).toContain('src')
+    expect(crossFadeSource).toContain('durationMs')
+    expect(crossFadeSource).toContain('previousSrc')
+    expect(crossFadeSource).toContain('currentSrc')
+    expect(crossFadeSource).toContain('{#key currentSrc}')
+    expect(crossFadeSource).toContain('crossfade-image-layer previous')
+    expect(crossFadeSource).toContain('crossfade-image-layer current')
+    expect(crossFadeSource).toContain('setTimeout')
+  })
+})
+```
+
+- [ ] **Step 2: Run test to verify it fails**
+
+Run: `npm run test -- src/ui/shared/crossFadeImage.test.ts`
+
+Expected: FAIL because `CrossFadeImage.svelte` does not exist.
+
+### Task 2: Update The World Select Contract Test
+
+**Files:**
+- Modify: `src/ui/world/worldSelectBackgroundTransition.test.ts`
+- Read: `src/ui/world/WorldSelectScreen.svelte`
+- Read: `src/app.css`
+
+- [ ] **Step 1: Update the existing test**
+
+```ts
+import { describe, expect, it } from 'vitest'
+import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
 import worldSelectSource from './WorldSelectScreen.svelte?raw'
 
+const appCss = readFileSync(fileURLToPath(new URL('../../app.css', import.meta.url)), 'utf8')
+
 describe('World Select background transition', () => {
-  it('keeps previous and current backdrop layers for a crossfade', () => {
+  it('delegates selected background transitions to CrossFadeImage', () => {
+    expect(worldSelectSource).toContain("import CrossFadeImage from '../shared/CrossFadeImage.svelte'")
     expect(worldSelectSource).toContain('world-backdrop-stack')
-    expect(worldSelectSource).toContain('world-backdrop-layer previous')
-    expect(worldSelectSource).toContain('world-backdrop-layer current')
     expect(worldSelectSource).toContain('assetRefs.stageSelectBackground')
-    expect(worldSelectSource).toContain('{#key previousBackdropImage}')
+    expect(worldSelectSource).toContain('<CrossFadeImage')
+    expect(worldSelectSource).not.toContain('previousBackdropTimer')
 
     expect(appCss).toContain('.world-backdrop-stack')
-    expect(appCss).toContain('.world-backdrop-layer')
+    expect(appCss).toContain('.crossfade-image-layer')
     expect(appCss).toContain('transition:')
     expect(appCss).toContain('opacity 420ms ease')
-    expect(appCss).toContain('@keyframes world-backdrop-previous-out')
+    expect(appCss).toContain('@keyframes crossfade-image-previous-out')
   })
 })
 ```
@@ -45,82 +80,34 @@ describe('World Select background transition', () => {
 
 Run: `npm run test -- src/ui/world/worldSelectBackgroundTransition.test.ts`
 
-Expected: FAIL because the component still renders a single `.world-backdrop` and the CSS does not define backdrop crossfade layers.
+Expected: FAIL because World Select still owns backdrop timer state and has not imported `CrossFadeImage`.
 
-### Task 2: Implement The Crossfade
+### Task 3: Implement The Shared Crossfade
 
 **Files:**
+- Create: `src/ui/shared/CrossFadeImage.svelte`
 - Modify: `src/ui/world/WorldSelectScreen.svelte`
 - Modify: `src/app.css`
 
-- [ ] **Step 1: Update the component**
+- [ ] **Step 1: Create `CrossFadeImage.svelte`**
 
-Add previous/current background tracking in `WorldSelectScreen.svelte`:
+Implement the component with `src`, `durationMs`, and optional `class` props. Track `currentSrc` and `previousSrc`, clear previous after `durationMs`, and key the current layer by `currentSrc`.
 
-```svelte
-  let currentBackdropImage = $state('')
-  let previousBackdropImage = $state<string | null>(null)
-  let previousBackdropTimer: ReturnType<typeof setTimeout> | null = null
+- [ ] **Step 2: Wire World Select**
 
-  const selectedBackdropImage = $derived(selectedWorld.assetRefs.stageSelectBackground)
+Import `CrossFadeImage`, remove backdrop timer state from `WorldSelectScreen.svelte`, keep `selectedBackdropImage`, and render the shared component inside `.world-backdrop-stack`.
 
-  $effect(() => {
-    if (!selectedBackdropImage) return
+- [ ] **Step 3: Update CSS**
 
-    if (!currentBackdropImage) {
-      currentBackdropImage = selectedBackdropImage
-      return
-    }
+Move generic layer rules to `.crossfade-image` and `.crossfade-image-layer`. Keep World Select overlay rules on `.world-backdrop-stack::before`. Keep the current layer visible and fade the previous layer out above it.
 
-    if (selectedBackdropImage === currentBackdropImage) return
+- [ ] **Step 4: Run focused tests**
 
-    previousBackdropImage = currentBackdropImage
-    currentBackdropImage = selectedBackdropImage
-
-    if (previousBackdropTimer) clearTimeout(previousBackdropTimer)
-    previousBackdropTimer = setTimeout(() => {
-      previousBackdropImage = null
-      previousBackdropTimer = null
-    }, 460)
-  })
-
-  onMount(() => {
-    return () => {
-      if (previousBackdropTimer) clearTimeout(previousBackdropTimer)
-    }
-  })
-```
-
-Replace the single backdrop node with:
-
-```svelte
-  <div class="world-backdrop-stack" aria-hidden="true">
-    {#if previousBackdropImage}
-      {#key previousBackdropImage}
-        <div
-          class="world-backdrop-layer previous"
-          style={`--world-backdrop-image: url("${previousBackdropImage}")`}
-        ></div>
-      {/key}
-    {/if}
-    <div
-      class="world-backdrop-layer current"
-      style={`--world-backdrop-image: url("${currentBackdropImage || selectedBackdropImage}")`}
-    ></div>
-  </div>
-```
-
-- [ ] **Step 2: Update CSS**
-
-Replace the `.world-backdrop` block with stack/layer CSS that fills the screen, applies cover backgrounds, crossfades opacity, and keeps the existing overlay gradients on `.world-backdrop-stack::before`.
-
-- [ ] **Step 3: Run the focused test**
-
-Run: `npm run test -- src/ui/world/worldSelectBackgroundTransition.test.ts`
+Run: `npm run test -- src/ui/shared/crossFadeImage.test.ts src/ui/world/worldSelectBackgroundTransition.test.ts`
 
 Expected: PASS.
 
-### Task 3: Verify The Slice
+### Task 4: Verify The Slice
 
 **Files:**
 - Verify: all changed files

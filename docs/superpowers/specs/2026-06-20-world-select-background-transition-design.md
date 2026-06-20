@@ -2,44 +2,47 @@
 
 ## Goal
 
-Restore the World Select selected-background transition so changing worlds has a gradual visual fade like the prototype instead of an instant image swap.
+Restore the World Select selected-background transition so changing worlds has a visible gradual crossfade like the prototype instead of an instant image swap.
 
 ## Scope
 
-This slice covers only the World Select background transition in the rebuild. It does not change app-flow selection behavior, audio, stage select, world data, or prototype files.
+This slice covers the shared image crossfade presentation primitive and its World Select use. It does not change app-flow selection behavior, audio, stage select, world data, or prototype files.
 
 ## Reference Behavior
 
-The prototype World Select keeps a dedicated `.world-backdrop` with transition styling while the selected world theme changes. The rebuild currently uses one backdrop whose `--world-background` variable changes with the selected theme, which makes browsers replace the image immediately.
+The prototype World Select keeps a dedicated `.world-backdrop` with transition styling while the selected world theme changes. The rebuild's first attempt kept previous/current layers inside `WorldSelectScreen.svelte`, but the incoming layer was not keyed by the active image URL and could visually replace the image before a fade became visible.
 
 ## Design
 
-`src/ui/world/WorldSelectScreen.svelte` should keep the previously selected world's stage-select background long enough to render it as a fading layer. The selected world background is rendered as the active layer. When `selectedWorldIndex` changes, the previous layer receives the outgoing background URL and fades out while the active layer fades in.
+`src/ui/shared/CrossFadeImage.svelte` owns the reusable image crossfade behavior. It receives a `src` string, keeps the previous `src` during one animation window, and keys the current layer by `currentSrc` so Svelte remounts the incoming layer and reliably restarts the fade-in animation.
 
-The component should derive background image URLs from `world.assetRefs.stageSelectBackground` rather than duplicating theme-to-file mappings. This keeps the presentation tied to catalog data and avoids adding selection state to the domain layer.
+`src/ui/world/WorldSelectScreen.svelte` derives the selected background URL from `world.assetRefs.stageSelectBackground` and passes it to `CrossFadeImage`. World Select should not manage backdrop timers or previous image state. This keeps animation state local to the presentation primitive and avoids leaking visual transition behavior into domain or application state.
 
-`src/app.css` should define a small, testable CSS contract:
+`src/app.css` defines the shared CSS contract:
 
-- `.world-backdrop-stack` fills the screen behind the existing content.
-- `.world-backdrop-layer` renders a cover background image from `--world-backdrop-image`.
-- `.world-backdrop-layer.previous` is visible at first and fades to transparent.
-- `.world-backdrop-layer.current` fades in with the selected background.
-- The existing cinematic dark overlays remain on the current visible backdrop stack.
+- `.crossfade-image` fills its parent.
+- `.crossfade-image-layer` renders a cover background image from `--crossfade-image`.
+- `.crossfade-image-layer.current` is visible as the destination image.
+- `.crossfade-image-layer.previous` sits above the current layer while fading to transparent, creating the crossfade.
+- `.world-backdrop-stack` owns World Select layout and cinematic dark overlays around the shared component.
 - `prefers-reduced-motion: reduce` continues to collapse transition duration through the existing global reduced-motion rule.
 
 ## Testing
 
-Add a focused UI contract test that imports `WorldSelectScreen.svelte?raw` and `app.css?raw`. The test should verify:
+Add focused UI contract tests that import Svelte components as raw source and read the real stylesheet. The tests verify:
 
-- The component renders a `world-backdrop-stack`.
-- The component renders a keyed previous backdrop layer.
-- The component uses `world.assetRefs.stageSelectBackground` for background image URLs.
-- CSS contains opacity transitions for backdrop layers.
-- CSS defines a previous-layer fade-out animation.
+- `CrossFadeImage.svelte` exposes `src` and `durationMs` props.
+- `CrossFadeImage.svelte` renders previous and current layers.
+- `CrossFadeImage.svelte` keys the current layer by `currentSrc`.
+- `CrossFadeImage.svelte` removes the outgoing previous layer after the configured duration.
+- `WorldSelectScreen.svelte` imports and uses `CrossFadeImage`.
+- `WorldSelectScreen.svelte` uses `world.assetRefs.stageSelectBackground` for the image URL.
+- CSS contains opacity transitions for shared crossfade layers.
+- CSS defines a previous-layer fade-out animation and keeps the current layer visible under it.
 
 Run:
 
-- `npm run test -- src/ui/world/worldSelectBackgroundTransition.test.ts`
+- `npm run test -- src/ui/shared/crossFadeImage.test.ts src/ui/world/worldSelectBackgroundTransition.test.ts`
 - `npm run test`
 - `npm run check`
 - `npm run build`
@@ -47,4 +50,4 @@ Run:
 
 ## Risks
 
-The main risk is writing a decorative fade that does not actually keep the outgoing image in the DOM. The test checks for a previous keyed layer so the implementation preserves both images during the transition.
+The main risk is writing a decorative fade that does not actually keep the outgoing image in the DOM or accidentally leaving the active image transparent. The tests and browser verification check for a previous layer above a visible keyed current layer so the implementation preserves both images during the transition.

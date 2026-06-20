@@ -6,17 +6,17 @@ import worldSelectSource from './WorldSelectScreen.svelte?raw'
 const appCss = readFileSync(fileURLToPath(new URL('../../app.css', import.meta.url)), 'utf8')
 
 describe('World Select background transition', () => {
-  it('keeps previous and current backdrop layers for a crossfade', () => {
+  it('delegates selected background transitions to CrossFadeImage', () => {
+    expect(worldSelectSource).toContain("import CrossFadeImage from '../shared/CrossFadeImage.svelte'")
     expect(worldSelectSource).toContain('world-backdrop-stack')
-    expect(worldSelectSource).toContain('world-backdrop-layer previous')
-    expect(worldSelectSource).toContain('world-backdrop-layer current')
     expect(worldSelectSource).toContain('assetRefs.stageSelectBackground')
-    expect(worldSelectSource).toContain('{#key previousBackdropImage}')
+    expect(worldSelectSource).toContain('<CrossFadeImage')
+    expect(worldSelectSource).not.toContain('previousBackdropTimer')
 
     expect(appCss).toContain('.world-backdrop-stack')
-    expect(appCss).toContain('.world-backdrop-layer')
+    expect(appCss).toContain('.crossfade-image-layer')
     expect(appCss).toContain('transition:')
     expect(appCss).toContain('opacity 420ms ease')
-    expect(appCss).toContain('@keyframes world-backdrop-previous-out')
+    expect(appCss).toContain('@keyframes crossfade-image-previous-out')
   })
 })
