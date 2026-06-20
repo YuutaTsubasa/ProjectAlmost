@@ -3,6 +3,15 @@ import stageSelectSource from './StageSelectScreen.svelte?raw'
 
 describe('Stage Select localization contract', () => {
   it('avoids hard-coded visible text in placeholders, node labels, and control hints', () => {
+    expect(stageSelectSource).toContain('function worldTitle(world: WorldData): string')
+    expect(stageSelectSource).toContain('return text(world.titleRef)')
+    expect(stageSelectSource).toContain('function worldSubtitle(world: WorldData): string')
+    expect(stageSelectSource).toContain('return text(world.subtitleRef)')
+    expect(stageSelectSource).toContain('<span class="stage-world-title">{worldTitle(selectedWorld)}</span>')
+    expect(stageSelectSource).toContain(
+      '<span class="stage-world-subtitle">{worldSubtitle(selectedWorld)}</span>',
+    )
+
     expect(stageSelectSource).toContain('<b>{text(stageSelectRefs.recordUnavailable)}</b>')
     expect(stageSelectSource).not.toContain('--:--.--')
 

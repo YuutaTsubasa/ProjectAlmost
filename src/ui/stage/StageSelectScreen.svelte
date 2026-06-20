@@ -61,6 +61,14 @@
     return text(stage.titleRef)
   }
 
+  function worldTitle(world: WorldData): string {
+    return text(world.titleRef)
+  }
+
+  function worldSubtitle(world: WorldData): string {
+    return text(world.subtitleRef)
+  }
+
   function stageSubtitle(stage: StageData): string {
     return text(stage.subtitleRef)
   }
@@ -162,6 +170,8 @@
       style={`background-image: url("${selectedStage.previewAssetRef}")`}
       aria-hidden="true"
     ></div>
+    <span class="stage-world-title">{worldTitle(selectedWorld)}</span>
+    <span class="stage-world-subtitle">{worldSubtitle(selectedWorld)}</span>
     <strong class="stage-title">{stageTitle(selectedStage)}</strong>
     <span class="stage-subtitle">{stageSubtitle(selectedStage)}</span>
 
