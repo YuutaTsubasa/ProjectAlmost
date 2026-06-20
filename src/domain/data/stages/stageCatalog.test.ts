@@ -22,15 +22,23 @@ describe('stages', () => {
       order: [...worlds.order].reverse(),
     }
 
+    await import('./stageCatalog')
+    vi.resetModules()
+
     vi.doMock('../worlds/worldCatalog', () => ({
       worlds: reversedWorlds,
     }))
 
-    const { stages: stagesFromWorldCatalog } = await import('./stageCatalog')
+    try {
+      const { stages: stagesFromWorldCatalog } = await import('./stageCatalog')
 
-    expect(stagesFromWorldCatalog.order).toEqual(
-      reversedWorlds.order.flatMap((worldId) => reversedWorlds.items[worldId].stageIds),
-    )
+      expect(stagesFromWorldCatalog.order).toEqual(
+        reversedWorlds.order.flatMap((worldId) => reversedWorlds.items[worldId].stageIds),
+      )
+    } finally {
+      vi.doUnmock('../worlds/worldCatalog')
+      vi.resetModules()
+    }
   })
 
   it('indexes every stage by stable id with UI-ready metadata', () => {
