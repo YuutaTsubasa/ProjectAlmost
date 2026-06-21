@@ -1,6 +1,11 @@
 import Phaser from 'phaser'
 import type { GameplayStageMap } from '../../domain/gameplay/gameplayMapTypes'
 import {
+  getPlayerCenterY,
+  getPlayerHorizontalMovementDecision,
+  playerActorDefinition,
+} from '../../domain/gameplay/playerActor'
+import {
   buildTerrainTileGrid,
   getTileColumnCount,
   getTileRowCount,
@@ -20,6 +25,14 @@ type BackgroundRuntimeLayer = {
 class GameplayMapScene extends Phaser.Scene {
   private readonly stageMap: GameplayStageMap
   private backgroundLayers: BackgroundRuntimeLayer[] = []
+  private terrainLayer: Phaser.Tilemaps.TilemapLayer | null = null
+  private player: Phaser.Physics.Arcade.Sprite | null = null
+  private playerKeys: {
+    left: Phaser.Input.Keyboard.Key
+    right: Phaser.Input.Keyboard.Key
+    a: Phaser.Input.Keyboard.Key
+    d: Phaser.Input.Keyboard.Key
+  } | null = null
 
   constructor(stage: GameplayStageMap) {
     super(`GameplayMapScene:${stage.id}`)
@@ -32,6 +45,13 @@ class GameplayMapScene extends Phaser.Scene {
     }
 
     this.load.image('terrain-tiles', this.stageMap.terrain.tilesetAssetRef)
+
+    for (const sprite of Object.values(playerActorDefinition.sprites)) {
+      this.load.spritesheet(sprite.key, sprite.assetRef, {
+        frameWidth: sprite.frameWidth,
+        frameHeight: sprite.frameHeight,
+      })
+    }
   }
 
   create(): void {
@@ -57,13 +77,18 @@ class GameplayMapScene extends Phaser.Scene {
     this.cameras.main.setBounds(0, 0, this.stageMap.world.width, this.stageMap.world.height)
 
     this.createBackgroundLayers()
-    this.createTerrainLayer(columns, rows)
+    this.terrainLayer = this.createTerrainLayer(columns, rows)
+    this.createPlayerAnimations()
+    this.playerKeys = this.createPlayerKeys()
+    this.createPlayer()
   }
 
   update(): void {
     for (const layer of this.backgroundLayers) {
       layer.sprite.setTilePosition(this.cameras.main.scrollX * layer.parallaxFactor, 0)
     }
+
+    this.updatePlayerMovement()
   }
 
   private createBackgroundLayers(): void {
@@ -78,7 +103,7 @@ class GameplayMapScene extends Phaser.Scene {
     })
   }
 
-  private createTerrainLayer(columns: number, rows: number): void {
+  private createTerrainLayer(columns: number, rows: number): Phaser.Tilemaps.TilemapLayer {
     const map = this.make.tilemap({
       data: buildTerrainTileGrid({
         columns,
@@ -104,6 +129,87 @@ class GameplayMapScene extends Phaser.Scene {
 
     layer.setCollision([...this.stageMap.terrain.solidTileIndexes])
     layer.setDepth(5)
+
+    return layer
+  }
+
+  private createPlayerAnimations(): void {
+    for (const sprite of Object.values(playerActorDefinition.sprites)) {
+      this.anims.create({
+        key: sprite.key,
+        frames: this.anims.generateFrameNumbers(sprite.key, {
+          start: sprite.frameStart,
+          end: sprite.frameEnd,
+        }),
+        frameRate: sprite.frameRate,
+        repeat: sprite.repeat,
+      })
+    }
+  }
+
+  private createPlayerKeys(): NonNullable<GameplayMapScene['playerKeys']> {
+    if (!this.input.keyboard) {
+      throw new Error(`Unable to create player keyboard controls for stage ${this.stageMap.id}.`)
+    }
+
+    const keys = this.input.keyboard.addKeys({
+      left: Phaser.Input.Keyboard.KeyCodes.LEFT,
+      right: Phaser.Input.Keyboard.KeyCodes.RIGHT,
+      a: Phaser.Input.Keyboard.KeyCodes.A,
+      d: Phaser.Input.Keyboard.KeyCodes.D,
+    }) as NonNullable<GameplayMapScene['playerKeys']>
+
+    return keys
+  }
+
+  private createPlayer(): void {
+    if (!this.terrainLayer) {
+      throw new Error(`Unable to create player collider before terrain for stage ${this.stageMap.id}.`)
+    }
+
+    const player = this.physics.add.sprite(
+      this.stageMap.player.spawn.x,
+      getPlayerCenterY({ surfaceY: this.stageMap.player.spawn.surfaceY }),
+      playerActorDefinition.sprites.idle.key,
+    )
+
+    player
+      .setOrigin(playerActorDefinition.origin.x, playerActorDefinition.origin.y)
+      .setScale(playerActorDefinition.scale)
+      .setCollideWorldBounds(true)
+      .setDragX(playerActorDefinition.movement.idleDragX)
+      .setMaxVelocity(playerActorDefinition.maxVelocity.x, playerActorDefinition.maxVelocity.y)
+      .setDepth(10)
+
+    player.body.setSize(playerActorDefinition.body.width, playerActorDefinition.body.height)
+    player.body.setOffset(playerActorDefinition.body.offsetX, playerActorDefinition.body.offsetY)
+    player.play(playerActorDefinition.sprites.idle.key)
+
+    this.physics.add.collider(player, this.terrainLayer)
+    this.cameras.main.startFollow(player, true, 0.12, 0.12)
+    this.player = player
+  }
+
+  private updatePlayerMovement(): void {
+    if (!this.player || !this.playerKeys) return
+
+    const decision = getPlayerHorizontalMovementDecision({
+      left: this.playerKeys.left.isDown || this.playerKeys.a.isDown,
+      right: this.playerKeys.right.isDown || this.playerKeys.d.isDown,
+    })
+
+    this.player.setDragX(decision.dragX)
+    this.player.setAccelerationX(decision.accelerationX)
+
+    if (decision.direction === 'left') {
+      this.player.setFlipX(true)
+      this.player.play(playerActorDefinition.sprites.run.key, true)
+    } else if (decision.direction === 'right') {
+      this.player.setFlipX(false)
+      this.player.play(playerActorDefinition.sprites.run.key, true)
+    } else {
+      this.player.play(playerActorDefinition.sprites.idle.key, true)
+    }
   }
 }
 
@@ -119,7 +225,7 @@ export function createGameplayRendererConfig(
     physics: {
       default: 'arcade',
       arcade: {
-        gravity: { x: 0, y: 0 },
+        gravity: { x: 0, y: playerActorDefinition.gravityY },
         debug: false,
       },
     },

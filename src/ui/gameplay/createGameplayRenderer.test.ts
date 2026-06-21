@@ -36,6 +36,13 @@ describe('createGameplayRendererConfig', () => {
     expect(config.width).toBe(1280)
     expect(config.height).toBe(720)
     expect(config.backgroundColor).toBe('#05070d')
+    expect(config.physics).toEqual({
+      default: 'arcade',
+      arcade: {
+        gravity: { x: 0, y: 1500 },
+        debug: false,
+      },
+    })
     expect(config.scene).toHaveLength(1)
   })
 })
