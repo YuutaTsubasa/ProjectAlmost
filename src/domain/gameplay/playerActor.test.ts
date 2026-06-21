@@ -30,6 +30,16 @@ describe('playerActorDefinition', () => {
           frameRate: 9,
           repeat: -1,
         },
+        jump: {
+          key: 'player-jump',
+          assetRef: '/assets/sprites/player_jump/sheet-transparent.webp',
+          frameWidth: 128,
+          frameHeight: 128,
+          frameStart: 1,
+          frameEnd: 1,
+          frameRate: 1,
+          repeat: 0,
+        },
       },
       origin: { x: 0.5, y: 0.5 },
       body: { width: 34, height: 72, offsetX: 47, offsetY: 42 },
@@ -41,6 +51,12 @@ describe('playerActorDefinition', () => {
       movement: {
         groundAcceleration: 950,
         idleDragX: 1500,
+      },
+      jump: {
+        coyoteTimeMs: 120,
+        jumpBufferMs: 140,
+        maxAirJumps: 1,
+        velocityY: -640,
       },
     })
   })
