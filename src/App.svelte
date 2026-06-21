@@ -21,6 +21,7 @@
   import { createProjectIdentity } from './domain/app/projectIdentity'
   import { projectData } from './domain/data/projectData'
   import type { LocaleCode } from './domain/data/localize/localize'
+  import { getGameplayStageMap } from './domain/gameplay/gameplayStageMaps'
   import type { ControlIntent } from './domain/input/controlIntents'
   import {
     adjustSettingsRow,
@@ -30,6 +31,7 @@
     type GameSettings,
   } from './domain/settings/settings'
   import ResolutionFrame from './ui/layout/ResolutionFrame.svelte'
+  import GameplayScreen from './ui/gameplay/GameplayScreen.svelte'
   import SettingsScreen from './ui/settings/SettingsScreen.svelte'
   import StageSelectScreen from './ui/stage/StageSelectScreen.svelte'
   import TitleScreen from './ui/title/TitleScreen.svelte'
@@ -40,6 +42,9 @@
   let audio: BrowserAudioController | undefined
   const identity = createProjectIdentity()
   const locale: LocaleCode = $derived(settings.language)
+  const gameplayStageMap = $derived(
+    appState.screen.type === 'gameplay' ? getGameplayStageMap(appState.screen.stageId) : undefined,
+  )
 
   function syncMusicForCurrentState() {
     audio?.execute(createMusicCommand(appState.screen, settings))
@@ -268,6 +273,8 @@
         onConfirmStage={handleConfirmStage}
         onBack={handleBackFromStageSelect}
       />
+    {:else if appState.screen.type === 'gameplay' && gameplayStageMap}
+      <GameplayScreen stage={gameplayStageMap} />
     {:else if appState.screen.type === 'settings'}
       <SettingsScreen
         screen={appState.screen}
