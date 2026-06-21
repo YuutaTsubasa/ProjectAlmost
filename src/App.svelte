@@ -275,6 +275,10 @@
       />
     {:else if appState.screen.type === 'gameplay' && gameplayStageMap}
       <GameplayScreen stage={gameplayStageMap} />
+    {:else if appState.screen.type === 'gameplay'}
+      <div class="gameplay-unavailable" role="status">
+        Gameplay map unavailable for this stage.
+      </div>
     {:else if appState.screen.type === 'settings'}
       <SettingsScreen
         screen={appState.screen}
@@ -291,3 +295,16 @@
     {/if}
   </ResolutionFrame>
 </main>
+
+<style>
+  .gameplay-unavailable {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+    padding: 24px;
+    color: #f4f7fb;
+    font-size: 1.125rem;
+    text-align: center;
+  }
+</style>
