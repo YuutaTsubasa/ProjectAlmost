@@ -179,7 +179,7 @@ class GameplayMapScene extends Phaser.Scene {
       .setCollideWorldBounds(true)
       .setDragX(playerActorDefinition.movement.idleDragX)
       .setMaxVelocity(playerActorDefinition.maxVelocity.x, playerActorDefinition.maxVelocity.y)
-      .setDepth(10)
+      .setDepth(playerActorDefinition.depth)
 
     player.body.setSize(playerActorDefinition.body.width, playerActorDefinition.body.height)
     player.body.setOffset(playerActorDefinition.body.offsetX, playerActorDefinition.body.offsetY)

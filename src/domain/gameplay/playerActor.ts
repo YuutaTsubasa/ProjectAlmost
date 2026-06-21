@@ -20,6 +20,7 @@ export type PlayerActorDefinition = {
   body: { width: number; height: number; offsetX: number; offsetY: number }
   centerAboveSurface: number
   scale: number
+  depth: number
   maxVelocity: { x: number; y: number }
   gravityY: number
   movement: {
@@ -67,6 +68,7 @@ export const playerActorDefinition: PlayerActorDefinition = {
   body: { width: 34, height: 72, offsetX: 47, offsetY: 42 },
   centerAboveSurface: 76,
   scale: 0.78,
+  depth: 10,
   maxVelocity: { x: 500, y: 900 },
   gravityY: 1500,
   movement: {

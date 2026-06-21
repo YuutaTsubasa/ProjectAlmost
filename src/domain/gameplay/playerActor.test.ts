@@ -35,6 +35,7 @@ describe('playerActorDefinition', () => {
       body: { width: 34, height: 72, offsetX: 47, offsetY: 42 },
       centerAboveSurface: 76,
       scale: 0.78,
+      depth: 10,
       maxVelocity: { x: 500, y: 900 },
       gravityY: 1500,
       movement: {
