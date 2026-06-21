@@ -1,12 +1,16 @@
 import { describe, expect, it } from 'vitest'
 import {
-  getAttackInputDecision,
   canStartMeleeAttack,
-  getMeleeAttackEntryState,
+  getAttackInputDecision,
   getMeleeAttackEndState,
+  getMeleeAttackEntryState,
   getMeleeAttackReadyState,
   getMeleeHitboxGeometry,
   isMeleeHitCandidate,
+  MELEE_HITBOX_FORWARD_OFFSET_X,
+  MELEE_HITBOX_HEIGHT,
+  MELEE_HITBOX_OFFSET_Y,
+  MELEE_HITBOX_WIDTH,
   meleeAttackTiming,
 } from './playerAttack'
 
@@ -45,6 +49,13 @@ describe('melee attack state transitions', () => {
       readyDelayMs: 360,
     })
   })
+
+  it('exports hitbox constants that match the prototype values', () => {
+    expect(MELEE_HITBOX_FORWARD_OFFSET_X).toBe(48)
+    expect(MELEE_HITBOX_OFFSET_Y).toBe(-4)
+    expect(MELEE_HITBOX_WIDTH).toBe(56)
+    expect(MELEE_HITBOX_HEIGHT).toBe(36)
+  })
 })
 
 describe('getMeleeHitboxGeometry', () => {
@@ -54,6 +65,7 @@ describe('getMeleeHitboxGeometry', () => {
       y: 196,
       width: 56,
       height: 36,
+      direction: 1,
       flipX: false,
     })
   })
@@ -64,6 +76,7 @@ describe('getMeleeHitboxGeometry', () => {
       y: 196,
       width: 56,
       height: 36,
+      direction: -1,
       flipX: true,
     })
   })

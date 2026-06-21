@@ -24,8 +24,14 @@ export type MeleeHitboxGeometry = {
   y: number
   width: number
   height: number
+  direction: -1 | 1
   flipX: boolean
 }
+
+export const MELEE_HITBOX_FORWARD_OFFSET_X = 48
+export const MELEE_HITBOX_OFFSET_Y = -4
+export const MELEE_HITBOX_WIDTH = 56
+export const MELEE_HITBOX_HEIGHT = 36
 
 export const meleeAttackTiming = {
   hitboxLifetimeMs: 120,
@@ -34,12 +40,9 @@ export const meleeAttackTiming = {
 } as const
 
 export const meleeHitboxSize = {
-  width: 56,
-  height: 36,
+  width: MELEE_HITBOX_WIDTH,
+  height: MELEE_HITBOX_HEIGHT,
 } as const
-
-const MELEE_HITBOX_FORWARD_OFFSET_X = 48
-const MELEE_HITBOX_OFFSET_Y = -4
 
 export function getAttackInputDecision(input: AttackInput): AttackInputDecision {
   if (!input.attackPressed || input.crouching) return 'none'
@@ -79,6 +82,7 @@ export function getMeleeHitboxGeometry(input: {
     y: input.playerY + MELEE_HITBOX_OFFSET_Y,
     width: meleeHitboxSize.width,
     height: meleeHitboxSize.height,
+    direction,
     flipX: input.playerFlipX,
   }
 }

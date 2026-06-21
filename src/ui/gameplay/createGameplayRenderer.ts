@@ -58,6 +58,11 @@ type EnemyRuntime = {
   defeated: boolean
 }
 
+type ActiveMeleeHitbox = {
+  image: Phaser.GameObjects.Image
+  consumed: boolean
+}
+
 type PlayerFacingDirection = 'left' | 'right'
 
 class GameplayMapScene extends Phaser.Scene {
@@ -82,7 +87,7 @@ class GameplayMapScene extends Phaser.Scene {
   private attackReady = true
   private isAttacking = false
   private wasAttackDown = false
-  private activeMeleeHitboxes: Phaser.GameObjects.Image[] = []
+  private activeMeleeHitboxes: ActiveMeleeHitbox[] = []
 
   constructor(stage: GameplayStageMap) {
     super(`GameplayMapScene:${stage.id}`)
@@ -500,11 +505,12 @@ class GameplayMapScene extends Phaser.Scene {
       .image(geometry.x, geometry.y, 'attack-hitbox')
       .setFlipX(geometry.flipX)
       .setVisible(false)
-    this.activeMeleeHitboxes.push(hitbox)
-    this.processEnemyHitsForHitbox(hitbox)
+    const activeHitbox = { image: hitbox, consumed: false }
+    this.activeMeleeHitboxes.push(activeHitbox)
+    this.processEnemyHitsForHitbox(activeHitbox)
 
     this.time.delayedCall(meleeAttackTiming.hitboxLifetimeMs, () => {
-      this.activeMeleeHitboxes = this.activeMeleeHitboxes.filter((activeHitbox) => activeHitbox !== hitbox)
+      this.activeMeleeHitboxes = this.activeMeleeHitboxes.filter((candidate) => candidate !== activeHitbox)
       hitbox.destroy()
     })
   }
@@ -515,18 +521,23 @@ class GameplayMapScene extends Phaser.Scene {
     }
   }
 
-  private processEnemyHitsForHitbox(hitbox: Phaser.GameObjects.Image): void {
+  private processEnemyHitsForHitbox(hitbox: ActiveMeleeHitbox): void {
+    if (hitbox.consumed) {
+      return
+    }
+
     const enemy = this.enemies.find((candidate) =>
       isMeleeHitCandidate({
         defeated: candidate.defeated,
         intersectsHitbox: Phaser.Geom.Intersects.RectangleToRectangle(
-          hitbox.getBounds(),
+          hitbox.image.getBounds(),
           candidate.sprite.getBounds(),
         ),
       }),
     )
 
     if (enemy && shouldProcessEnemyDefeat({ enemyExists: true, defeated: enemy.defeated })) {
+      hitbox.consumed = true
       this.defeatEnemy(enemy)
     }
   }

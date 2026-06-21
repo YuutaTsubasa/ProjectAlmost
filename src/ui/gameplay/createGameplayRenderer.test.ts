@@ -890,6 +890,37 @@ describe('createGameplayRendererConfig', () => {
     expect(guard.playCalls.at(-1)).toEqual({ key: 'enemy-guard-death', ignoreIfPlaying: true })
   })
 
+  it('allows only one defeat from a single melee hitbox across frames', () => {
+    const runtime = createSceneRuntime()
+    runtime.scene.create()
+    const guard = runtime.sprites.find((sprite) => sprite.texture === 'enemy-guard-walk')
+    const core = runtime.sprites.find((sprite) => sprite.texture === 'azure-core')
+    expect(guard).toBeDefined()
+    expect(core).toBeDefined()
+    if (!guard || !core || !runtime.playerSprite) return
+
+    runtime.playerSprite.x = 540
+    runtime.playerSprite.y = guard.y
+    guard.x = 610
+    runtime.playerKeys.j.isDown = true
+    runtime.scene.update()
+
+    expect(guard.body.enable).toBe(false)
+    expect(guard.playCalls.at(-1)).toEqual({ key: 'enemy-guard-death', ignoreIfPlaying: true })
+
+    runtime.playerKeys.j.isDown = false
+    core.x = 610
+    core.y = guard.y
+    runtime.scene.update()
+
+    expect(core.body.enable).toBe(true)
+    expect(
+      runtime.tweenCalls.filter(
+        (call) => call.targets === core && 'scale' in call && call.scale === 1.8,
+      ),
+    ).toHaveLength(0)
+  })
+
   it('stops checking a melee hitbox after its delayed destroy runs', () => {
     const runtime = createSceneRuntime()
     runtime.scene.create()
