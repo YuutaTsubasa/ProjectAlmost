@@ -63,7 +63,7 @@ export type MovableActorGroundState = 'grounded' | 'airborne'
 
 export type MovableActorJumpState = {
   groundState: MovableActorGroundState
-  lastGroundedAt: number
+  lastGroundedAt: number | null
   jumpBufferedUntil: number | null
   remainingAirJumps: number
 }
