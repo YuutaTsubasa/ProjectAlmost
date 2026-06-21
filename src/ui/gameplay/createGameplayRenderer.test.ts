@@ -589,7 +589,7 @@ describe('createGameplayRendererConfig', () => {
     })
     expect(guard.body.offset).toEqual({
       x: guardDefinition.body.offsetX,
-      y: guardDefinition.body.offsetY,
+      y: guardDefinition.body.offsetY + guardDefinition.visualLiftY,
     })
     expect(guard.velocityX).toBe(-80)
     expect(guard.playCalls).toContainEqual({

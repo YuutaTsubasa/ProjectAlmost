@@ -314,7 +314,10 @@ class GameplayMapScene extends Phaser.Scene {
           .setDepth(definition.depth)
 
         sprite.body.setSize(definition.body.width, definition.body.height)
-        sprite.body.setOffset(definition.body.offsetX, definition.body.offsetY)
+        sprite.body.setOffset(
+          definition.body.offsetX,
+          definition.body.offsetY + definition.visualLiftY,
+        )
 
         const direction = definition.patrol.initialDirection
         const walk = definition.sprites?.walk

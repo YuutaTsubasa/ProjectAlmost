@@ -121,7 +121,7 @@ Required domain exports:
 - `getNextEnemyPatrolDirection(input)`
 - `shouldUpdateEnemyPatrol(enemyType)`
 
-`getEnemySpawnY` returns authored `y` for Azure Core and `surfaceY - centerAboveSurface - visualLiftY` for Armor Guard. The lift keeps the prototype guard art from overlapping the rebuilt platform tiles while preserving the prototype center-above-surface value.
+`getEnemySpawnY` returns authored `y` for Azure Core and `surfaceY - centerAboveSurface - visualLiftY` for Armor Guard. The same lift is also applied to the Armor Guard Arcade body Y offset so the post-gravity collision rest position keeps the prototype guard art from overlapping the rebuilt platform tiles while preserving the prototype center-above-surface and body values.
 
 `getNextEnemyPatrolDirection` matches the prototype rules:
 
