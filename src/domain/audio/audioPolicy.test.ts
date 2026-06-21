@@ -67,16 +67,24 @@ describe('screen music policy', () => {
     })
   })
 
+  it('returns no music decision for gameplay so the current stage-select track is preserved', () => {
+    expect(getMusicForScreen({ type: 'gameplay', stageId: '1-1' }, DEFAULT_SETTINGS)).toBeNull()
+  })
+
   it('falls back to world one music for out-of-range world indexes', () => {
-    expect(getMusicForScreen({ type: 'world-select', selectedWorldIndex: 99 }, DEFAULT_SETTINGS).track).toBe(
-      'world01Bgm',
-    )
+    expect(getMusicForScreen({ type: 'world-select', selectedWorldIndex: 99 }, DEFAULT_SETTINGS)).toEqual({
+      track: 'world01Bgm',
+      volume: 0.336,
+    })
     expect(
       getMusicForScreen(
         { type: 'stage-select', selectedWorldIndex: 99, worldId: 'world01', selectedStageIndex: 0 },
         DEFAULT_SETTINGS,
-      ).track,
-    ).toBe('world01Map')
+      ),
+    ).toEqual({
+      track: 'world01Map',
+      volume: 0.336,
+    })
   })
 })
 

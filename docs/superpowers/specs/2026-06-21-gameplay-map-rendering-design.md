@@ -113,6 +113,16 @@ For stage `1-1`, the Phaser scene:
 
 The camera may start at the stage origin. Following a player and user-controlled camera movement are out of scope.
 
+## Audio Policy
+
+Gameplay music remains out of scope for this slice, but entering gameplay must not switch the active music back to the title track. The app audio policy should treat `gameplay` as "preserve current music" by returning no music decision/command for that screen. In practice, confirming a stage from Stage Select keeps the selected world map track playing until a later gameplay-audio spec defines an explicit gameplay track policy.
+
+Title intro still owns the initial autoplay volume decision. Any widening of audio return types for gameplay must keep title intro autoplay type-safe and deterministic.
+
+## Gameplay Screen Lifecycle
+
+`GameplayScreen.svelte` owns Phaser teardown only for the lifetime of one stage map render. If the active gameplay stage id changes while the app remains on the gameplay route, Svelte must remount `GameplayScreen` so the old Phaser instance is destroyed and a fresh one is created for the new stage data.
+
 ## App Flow
 
 Extend the app screen union with:
@@ -191,6 +201,6 @@ Report any command that cannot run and why.
 - Player sprite, input, movement, camera follow, gravity, crouch, jump, attack, hurt, death, or respawn.
 - Enemy, boss, projectile, hazard, coin, checkpoint, goal, HUD, timer, score, rank, or stage-clear systems.
 - Save data, unlocks, or records.
-- Audio changes for gameplay music.
+- Defining a gameplay-specific BGM track or transition.
 - Tauri Rust changes.
 - Importing runtime code from `__prototype__/src`.

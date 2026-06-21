@@ -38,7 +38,7 @@ export function computeSfxVolume(settings: GameSettings): number {
   return (settings.masterVolume / 100) * (settings.sfxVolume / 100)
 }
 
-export function getMusicForScreen(screen: AppScreen, settings: GameSettings): MusicDecision {
+export function getMusicForScreen(screen: AppScreen, settings: GameSettings): MusicDecision | null {
   if (screen.type === 'title-intro') {
     return { track: 'title', volume: computeMusicVolume(settings, TITLE_INTRO_VOLUME_MULTIPLIER) }
   }
@@ -55,6 +55,10 @@ export function getMusicForScreen(screen: AppScreen, settings: GameSettings): Mu
       track: WORLD_MAP_TRACKS[screen.selectedWorldIndex] ?? 'world01Map',
       volume: computeMusicVolume(settings),
     }
+  }
+
+  if (screen.type === 'gameplay') {
+    return null
   }
 
   return { track: 'title', volume: computeMusicVolume(settings) }

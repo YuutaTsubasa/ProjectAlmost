@@ -10,6 +10,10 @@ describe('createMusicCommand', () => {
       volume: 0.336,
     })
   })
+
+  it('returns null for gameplay so the current music keeps playing', () => {
+    expect(createMusicCommand({ type: 'gameplay', stageId: '1-1' }, DEFAULT_SETTINGS)).toBeNull()
+  })
 })
 
 describe('createSfxCommand', () => {

@@ -212,7 +212,10 @@
   onMount(() => {
     audio = createBrowserAudioController()
     syncSettings(parseStoredSettings(localStorage.getItem(SETTINGS_STORAGE_KEY), actualFullscreen()))
-    void audio.attemptAutoplay(createMusicCommand(appState.screen, settings).volume)
+    const initialMusicCommand = createMusicCommand(appState.screen, settings)
+    if (initialMusicCommand) {
+      void audio.attemptAutoplay(initialMusicCommand.volume)
+    }
 
     const unlockAudio = () => {
       audio?.unlock()
@@ -274,7 +277,9 @@
         onBack={handleBackFromStageSelect}
       />
     {:else if appState.screen.type === 'gameplay' && gameplayStageMap}
-      <GameplayScreen stage={gameplayStageMap} />
+      {#key gameplayStageMap.id}
+        <GameplayScreen stage={gameplayStageMap} />
+      {/key}
     {:else if appState.screen.type === 'gameplay'}
       <div class="gameplay-unavailable" role="status">
         Gameplay map unavailable for this stage.

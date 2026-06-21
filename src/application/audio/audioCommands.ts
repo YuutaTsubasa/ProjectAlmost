@@ -14,8 +14,11 @@ export type PlaySfxCommand = { type: 'play-sfx'; sound: SfxId; volume: number }
 
 export type AudioCommand = SetMusicCommand | PrepareMusicCommand | PlaySfxCommand
 
-export function createMusicCommand(screen: AppScreen, settings: GameSettings): SetMusicCommand {
-  return { type: 'set-music', ...getMusicForScreen(screen, settings) }
+export function createMusicCommand(screen: AppScreen, settings: GameSettings): SetMusicCommand | null {
+  const decision = getMusicForScreen(screen, settings)
+  if (!decision) return null
+
+  return { type: 'set-music', ...decision }
 }
 
 export function createPrepareMusicCommand(track: MusicTrackId): PrepareMusicCommand {
