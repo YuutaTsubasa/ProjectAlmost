@@ -578,7 +578,7 @@ describe('createGameplayRendererConfig', () => {
     if (!guard) return
 
     expect(guard.x).toBe(720)
-    expect(guard.y).toBe(430)
+    expect(guard.y).toBe(432)
     expect(guard.origin).toEqual(guardDefinition.origin)
     expect(guard.scale).toBe(guardDefinition.scale)
     expect(guard.depth).toBe(guardDefinition.depth)

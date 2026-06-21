@@ -15,7 +15,7 @@ describe('enemyActorDefinitions', () => {
       origin: { x: 0.5, y: 0.5 },
       body: { width: 46, height: 54, offsetX: 41, offsetY: 54 },
       centerAboveSurface: 70,
-      visualLiftY: 12,
+      visualLiftY: 10,
       gravity: true,
       depth: 9,
       scale: 0.82,
@@ -80,7 +80,7 @@ describe('getEnemySpawnY', () => {
         type: 'armor-guard',
         surfaceY: 512,
       }),
-    ).toBe(430)
+    ).toBe(432)
   })
 
   it('uses the authored y position for Azure Cores', () => {
