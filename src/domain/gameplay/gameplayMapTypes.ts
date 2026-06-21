@@ -12,6 +12,7 @@ export type GameplayStageMap = {
   }
   backgroundLayers: readonly BackgroundLayer[]
   player: GameplayPlayerSpawn
+  enemies: readonly GameplayEnemySpawn[]
   terrain: TerrainDefinition
 }
 
@@ -21,6 +22,26 @@ export type GameplayPlayerSpawn = {
     x: number
     surfaceY: number
   }
+}
+
+export type GameplayEnemySpawn = ArmorGuardSpawn | AzureCoreSpawn
+
+export type ArmorGuardSpawn = {
+  id: string
+  type: 'armor-guard'
+  x: number
+  surfaceY: number
+  patrolMinX: number
+  patrolMaxX: number
+}
+
+export type AzureCoreSpawn = {
+  id: string
+  type: 'azure-core'
+  x: number
+  y: number
+  patrolMinX: number
+  patrolMaxX: number
 }
 
 export type BackgroundLayer = {

@@ -50,6 +50,24 @@ const stageOneOne: GameplayStageMap = {
       surfaceY: 512,
     },
   },
+  enemies: [
+    {
+      id: 'first-armor-guard',
+      type: 'armor-guard',
+      x: 720,
+      surfaceY: 512,
+      patrolMinX: 608,
+      patrolMaxX: 832,
+    },
+    {
+      id: 'first-azure-core',
+      type: 'azure-core',
+      x: 1760,
+      y: 320,
+      patrolMinX: 1760,
+      patrolMaxX: 1760,
+    },
+  ],
   terrain: {
     tilesetAssetRef: '/assets/tiles/white_palace_platform_tiles.webp',
     solidTileIndexes: [0, 1, 2],
