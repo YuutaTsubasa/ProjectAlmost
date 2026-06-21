@@ -2,7 +2,7 @@ export type MovableActorGroundState = 'grounded' | 'airborne'
 
 export type MovableActorJumpState = {
   groundState: MovableActorGroundState
-  lastGroundedAt: number
+  lastGroundedAt: number | null
   jumpBufferedUntil: number
   remainingAirJumps: number
 }
@@ -25,7 +25,7 @@ export function createMovableActorJumpState(input: {
 }): MovableActorJumpState {
   return {
     groundState: input.grounded ? 'grounded' : 'airborne',
-    lastGroundedAt: input.grounded ? input.now : 0,
+    lastGroundedAt: input.grounded ? input.now : null,
     jumpBufferedUntil: 0,
     remainingAirJumps: input.config.maxAirJumps,
   }
@@ -74,7 +74,7 @@ export function getMovableActorJumpDecision(input: {
 
   if (
     input.state.groundState === 'grounded' ||
-    (input.state.lastGroundedAt > 0 &&
+    (input.state.lastGroundedAt !== null &&
       input.now - input.state.lastGroundedAt <= input.config.coyoteTimeMs)
   ) {
     return {
@@ -82,7 +82,7 @@ export function getMovableActorJumpDecision(input: {
       state: {
         ...input.state,
         groundState: 'airborne',
-        lastGroundedAt: 0,
+        lastGroundedAt: null,
         jumpBufferedUntil: 0,
       },
     }
@@ -94,7 +94,7 @@ export function getMovableActorJumpDecision(input: {
       state: {
         ...input.state,
         groundState: 'airborne',
-        lastGroundedAt: 0,
+        lastGroundedAt: null,
         jumpBufferedUntil: 0,
         remainingAirJumps: input.state.remainingAirJumps - 1,
       },

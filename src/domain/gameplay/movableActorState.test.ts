@@ -26,7 +26,7 @@ describe('createMovableActorJumpState', () => {
   it('creates an airborne state without a grounded timestamp', () => {
     expect(createMovableActorJumpState({ now: 25, grounded: false, config })).toEqual({
       groundState: 'airborne',
-      lastGroundedAt: 0,
+      lastGroundedAt: null,
       jumpBufferedUntil: 0,
       remainingAirJumps: 1,
     })
@@ -105,7 +105,7 @@ describe('getMovableActorJumpDecision', () => {
       type: 'ground-jump',
       state: {
         groundState: 'airborne',
-        lastGroundedAt: 0,
+        lastGroundedAt: null,
         jumpBufferedUntil: 0,
         remainingAirJumps: 1,
       },
@@ -124,7 +124,26 @@ describe('getMovableActorJumpDecision', () => {
       type: 'ground-jump',
       state: {
         groundState: 'airborne',
-        lastGroundedAt: 0,
+        lastGroundedAt: null,
+        jumpBufferedUntil: 0,
+        remainingAirJumps: 1,
+      },
+    })
+  })
+
+  it('returns ground-jump when the grounded timestamp is zero and coyote time is active', () => {
+    const state = {
+      groundState: 'airborne' as const,
+      lastGroundedAt: 0,
+      jumpBufferedUntil: 140,
+      remainingAirJumps: 1,
+    }
+
+    expect(getMovableActorJumpDecision({ state, now: 120, config })).toEqual({
+      type: 'ground-jump',
+      state: {
+        groundState: 'airborne',
+        lastGroundedAt: null,
         jumpBufferedUntil: 0,
         remainingAirJumps: 1,
       },
@@ -143,7 +162,7 @@ describe('getMovableActorJumpDecision', () => {
       type: 'air-jump',
       state: {
         groundState: 'airborne',
-        lastGroundedAt: 0,
+        lastGroundedAt: null,
         jumpBufferedUntil: 0,
         remainingAirJumps: 0,
       },
@@ -180,7 +199,7 @@ describe('getMovableActorJumpDecision', () => {
       type: 'ground-jump',
       state: {
         groundState: 'airborne',
-        lastGroundedAt: 0,
+        lastGroundedAt: null,
         jumpBufferedUntil: 0,
         remainingAirJumps: 1,
       },
@@ -196,7 +215,7 @@ describe('getMovableActorJumpDecision', () => {
       type: 'air-jump',
       state: {
         groundState: 'airborne',
-        lastGroundedAt: 0,
+        lastGroundedAt: null,
         jumpBufferedUntil: 0,
         remainingAirJumps: 0,
       },
