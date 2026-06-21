@@ -250,10 +250,18 @@ describe('selectStage', () => {
 })
 
 describe('confirmSelectedStage', () => {
-  it('preserves selected stage until gameplay entry exists', () => {
+  it('opens gameplay for the selected stage', () => {
     const state = {
       screen: { type: 'stage-select', selectedWorldIndex: 1, worldId: 'world02', selectedStageIndex: 4 },
     } as const
+
+    expect(confirmSelectedStage(state)).toEqual({
+      screen: { type: 'gameplay', stageId: '2-5' },
+    })
+  })
+
+  it('does not open gameplay outside stage select', () => {
+    const state = createInitialAppState()
 
     expect(confirmSelectedStage(state)).toBe(state)
   })

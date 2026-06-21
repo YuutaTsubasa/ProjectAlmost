@@ -4,7 +4,7 @@ import {
   openDeleteConfirm,
   type DeleteConfirmState,
 } from '../settings/settings'
-import type { WorldId } from '../data/worlds/worldTypes'
+import type { StageId, WorldId } from '../data/worlds/worldTypes'
 
 export const TITLE_MENU_ITEMS = ['start', 'settings', 'back'] as const
 
@@ -27,6 +27,11 @@ export type StageSelectScreen = {
   selectedStageIndex: number
 }
 
+export type GameplayScreen = {
+  type: 'gameplay'
+  stageId: StageId
+}
+
 export type SettingsScreen = {
   type: 'settings'
   selectedItemIndex: number
@@ -38,6 +43,7 @@ export type AppScreen =
   | TitleMenuScreen
   | WorldSelectScreen
   | StageSelectScreen
+  | GameplayScreen
   | SettingsScreen
 
 export type AppState = {
@@ -47,6 +53,12 @@ export type AppState = {
 const WORLD_COUNT = 6
 const WORLD_IDS = ['world01', 'world02', 'world03', 'world04', 'world05', 'world06'] as const
 const STAGES_PER_WORLD = 6
+
+function getStageIdForSelection(screen: StageSelectScreen): StageId {
+  const worldNumber = screen.selectedWorldIndex + 1
+  const stageNumber = screen.selectedStageIndex + 1
+  return `${worldNumber}-${stageNumber}` as StageId
+}
 
 export function createInitialAppState(): AppState {
   return {
@@ -162,7 +174,9 @@ export function selectStage(state: AppState, selectedStageIndex: number): AppSta
 export function confirmSelectedStage(state: AppState): AppState {
   if (state.screen.type !== 'stage-select') return state
 
-  return state
+  return {
+    screen: { type: 'gameplay', stageId: getStageIdForSelection(state.screen) },
+  }
 }
 
 export function backFromStageSelect(state: AppState): AppState {
