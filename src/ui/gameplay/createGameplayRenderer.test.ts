@@ -677,26 +677,27 @@ describe('createGameplayRendererConfig', () => {
 
   it('preloads and registers the player attack animation', () => {
     const runtime = createSceneRuntime()
+    const attackSprite = playerActorDefinition.sprites.attack
 
     runtime.scene.preload()
     runtime.scene.create()
 
     expect(runtime.spritesheetCalls).toContainEqual({
-      key: 'player-attack',
-      assetRef: '/assets/sprites/player_attack/sheet-transparent.webp',
-      frameWidth: 128,
-      frameHeight: 128,
+      key: attackSprite.key,
+      assetRef: attackSprite.assetRef,
+      frameWidth: attackSprite.frameWidth,
+      frameHeight: attackSprite.frameHeight,
     })
     expect(runtime.animationCreateCalls).toContainEqual({
-      key: 'player-attack',
+      key: attackSprite.key,
       frames: [
-        { key: 'player-attack', frame: 0 },
-        { key: 'player-attack', frame: 1 },
-        { key: 'player-attack', frame: 2 },
-        { key: 'player-attack', frame: 3 },
+        { key: attackSprite.key, frame: attackSprite.frameStart + 0 },
+        { key: attackSprite.key, frame: attackSprite.frameStart + 1 },
+        { key: attackSprite.key, frame: attackSprite.frameStart + 2 },
+        { key: attackSprite.key, frame: attackSprite.frameStart + 3 },
       ],
-      frameRate: 12,
-      repeat: 0,
+      frameRate: attackSprite.frameRate,
+      repeat: attackSprite.repeat,
     })
   })
 
@@ -823,6 +824,28 @@ describe('createGameplayRendererConfig', () => {
     })
   })
 
+  it('faces and spawns the melee hitbox left when left and J are pressed on the same frame', () => {
+    const runtime = createSceneRuntime()
+    runtime.scene.create()
+
+    runtime.playerKeys.left.isDown = true
+    runtime.playerKeys.j.isDown = true
+    runtime.scene.update()
+
+    expect(runtime.images[0]).toMatchObject({
+      x: 208,
+      y: 432,
+      texture: 'attack-hitbox',
+      visible: false,
+      flipX: true,
+    })
+    expect(runtime.playerSprite?.flipX).toBe(true)
+    expect(runtime.playerSprite?.playCalls.at(-1)).toEqual({
+      key: 'player-attack',
+      ignoreIfPlaying: true,
+    })
+  })
+
   it('destroys the hitbox, ends attack, and restores readiness on prototype delays', () => {
     const runtime = createSceneRuntime()
     runtime.scene.create()
@@ -843,6 +866,49 @@ describe('createGameplayRendererConfig', () => {
     runtime.playerKeys.j.isDown = true
     runtime.scene.update()
     expect(runtime.images).toHaveLength(2)
+  })
+
+  it('defeats an enemy that moves into an active melee hitbox before the lifetime ends', () => {
+    const runtime = createSceneRuntime()
+    runtime.scene.create()
+    const guard = runtime.sprites.find((sprite) => sprite.texture === 'enemy-guard-walk')
+    expect(guard).toBeDefined()
+    if (!guard || !runtime.playerSprite) return
+
+    runtime.playerSprite.x = 540
+    runtime.playerSprite.y = guard.y
+    runtime.playerKeys.j.isDown = true
+    runtime.scene.update()
+
+    expect(guard.body.enable).toBe(true)
+
+    guard.x = 610
+    runtime.playerKeys.j.isDown = false
+    runtime.scene.update()
+
+    expect(guard.body.enable).toBe(false)
+    expect(guard.playCalls.at(-1)).toEqual({ key: 'enemy-guard-death', ignoreIfPlaying: true })
+  })
+
+  it('stops checking a melee hitbox after its delayed destroy runs', () => {
+    const runtime = createSceneRuntime()
+    runtime.scene.create()
+    const guard = runtime.sprites.find((sprite) => sprite.texture === 'enemy-guard-walk')
+    expect(guard).toBeDefined()
+    if (!guard || !runtime.playerSprite) return
+
+    runtime.playerSprite.x = 540
+    runtime.playerSprite.y = guard.y
+    runtime.playerKeys.j.isDown = true
+    runtime.scene.update()
+
+    runtime.runDelayedCalls(120)
+    guard.x = 610
+    runtime.playerKeys.j.isDown = false
+    runtime.scene.update()
+
+    expect(guard.body.enable).toBe(true)
+    expect(guard.playCalls.at(-1)).not.toEqual({ key: 'enemy-guard-death', ignoreIfPlaying: true })
   })
 
   it('defeats Armor Guard with the guard death presentation and stops patrol updates', () => {

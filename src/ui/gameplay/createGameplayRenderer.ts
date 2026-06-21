@@ -58,6 +58,8 @@ type EnemyRuntime = {
   defeated: boolean
 }
 
+type PlayerFacingDirection = 'left' | 'right'
+
 class GameplayMapScene extends Phaser.Scene {
   private readonly stageMap: GameplayStageMap
   private backgroundLayers: BackgroundRuntimeLayer[] = []
@@ -80,6 +82,7 @@ class GameplayMapScene extends Phaser.Scene {
   private attackReady = true
   private isAttacking = false
   private wasAttackDown = false
+  private activeMeleeHitboxes: Phaser.GameObjects.Image[] = []
 
   constructor(stage: GameplayStageMap) {
     super(`GameplayMapScene:${stage.id}`)
@@ -153,6 +156,7 @@ class GameplayMapScene extends Phaser.Scene {
     }
 
     this.updateEnemyPatrol()
+    this.processActiveMeleeHitboxes()
     this.updatePlayerMovement()
   }
 
@@ -317,6 +321,7 @@ class GameplayMapScene extends Phaser.Scene {
     this.isAttacking = false
     this.wasAttackDown = false
     this.wasJumpDown = false
+    this.activeMeleeHitboxes = []
     this.player = player
   }
 
@@ -440,7 +445,7 @@ class GameplayMapScene extends Phaser.Scene {
     return this.playerKeys.j.isDown || this.playerKeys.z.isDown
   }
 
-  private tryStartPlayerAttack(grounded: boolean): void {
+  private tryStartPlayerAttack(grounded: boolean, facing: PlayerFacingDirection): void {
     if (!this.player || !this.playerKeys) return
 
     const attackDown = this.isAttackDown()
@@ -468,6 +473,7 @@ class GameplayMapScene extends Phaser.Scene {
     const entry = getMeleeAttackEntryState()
     this.attackReady = entry.attackReady
     this.isAttacking = entry.attacking
+    this.player.setFlipX(facing === 'left')
     this.player.play(playerActorDefinition.sprites.attack.key, true)
 
     this.spawnMeleeHitbox()
@@ -494,7 +500,22 @@ class GameplayMapScene extends Phaser.Scene {
       .image(geometry.x, geometry.y, 'attack-hitbox')
       .setFlipX(geometry.flipX)
       .setVisible(false)
+    this.activeMeleeHitboxes.push(hitbox)
+    this.processEnemyHitsForHitbox(hitbox)
 
+    this.time.delayedCall(meleeAttackTiming.hitboxLifetimeMs, () => {
+      this.activeMeleeHitboxes = this.activeMeleeHitboxes.filter((activeHitbox) => activeHitbox !== hitbox)
+      hitbox.destroy()
+    })
+  }
+
+  private processActiveMeleeHitboxes(): void {
+    for (const hitbox of this.activeMeleeHitboxes) {
+      this.processEnemyHitsForHitbox(hitbox)
+    }
+  }
+
+  private processEnemyHitsForHitbox(hitbox: Phaser.GameObjects.Image): void {
     const enemy = this.enemies.find((candidate) =>
       isMeleeHitCandidate({
         defeated: candidate.defeated,
@@ -508,10 +529,6 @@ class GameplayMapScene extends Phaser.Scene {
     if (enemy && shouldProcessEnemyDefeat({ enemyExists: true, defeated: enemy.defeated })) {
       this.defeatEnemy(enemy)
     }
-
-    this.time.delayedCall(meleeAttackTiming.hitboxLifetimeMs, () => {
-      hitbox.destroy()
-    })
   }
 
   private defeatEnemy(enemy: EnemyRuntime): void {
@@ -556,8 +573,6 @@ class GameplayMapScene extends Phaser.Scene {
       grounded,
       config: playerActorDefinition.jump,
     })
-    this.tryStartPlayerAttack(grounded)
-
     const jumpDown = this.isJumpDown()
     if (jumpDown && !this.wasJumpDown) {
       this.playerJumpState = bufferMovableActorJump({
@@ -583,19 +598,32 @@ class GameplayMapScene extends Phaser.Scene {
       left: this.playerKeys.left.isDown || this.playerKeys.a.isDown,
       right: this.playerKeys.right.isDown || this.playerKeys.d.isDown,
     })
+    const facing: PlayerFacingDirection =
+      decision.direction === 'left'
+        ? 'left'
+        : decision.direction === 'right'
+          ? 'right'
+          : this.player.flipX
+            ? 'left'
+            : 'right'
+
+    this.tryStartPlayerAttack(grounded, facing)
 
     this.player.setDragX(decision.dragX)
     this.player.setAccelerationX(decision.accelerationX)
+    if (decision.direction === 'left') {
+      this.player.setFlipX(true)
+    } else if (decision.direction === 'right') {
+      this.player.setFlipX(false)
+    }
 
     if (this.isAttacking) {
       this.player.play(playerActorDefinition.sprites.attack.key, true)
     } else if (!grounded || jumpingThisFrame) {
       this.player.play(playerActorDefinition.sprites.jump.key, true)
     } else if (decision.direction === 'left') {
-      this.player.setFlipX(true)
       this.player.play(playerActorDefinition.sprites.run.key, true)
     } else if (decision.direction === 'right') {
-      this.player.setFlipX(false)
       this.player.play(playerActorDefinition.sprites.run.key, true)
     } else {
       this.player.play(playerActorDefinition.sprites.idle.key, true)
