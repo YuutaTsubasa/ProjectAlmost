@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { playerActorDefinition } from './playerActor'
 import { getTileColumnCount, getTileRowCount, validatePlatformBounds } from './terrain'
 import { gameplayStageMaps, getGameplayStageMap } from './gameplayStageMaps'
 
@@ -16,6 +17,8 @@ describe('gameplayStageMaps', () => {
     const assetRefs = [
       ...stage.backgroundLayers.map((layer) => layer.assetRef),
       stage.terrain.tilesetAssetRef,
+      playerActorDefinition.sprites.idle.assetRef,
+      playerActorDefinition.sprites.run.assetRef,
     ]
 
     expect(assetRefs).toEqual([
@@ -23,9 +26,25 @@ describe('gameplayStageMaps', () => {
       '/assets/maps/white_palace_far_bg.webp',
       '/assets/maps/white_palace_mid_bg_loop.webp',
       '/assets/tiles/white_palace_platform_tiles.webp',
+      '/assets/sprites/player_idle/sheet-transparent.webp',
+      '/assets/sprites/player_run/sheet-transparent.webp',
     ])
     expect(assetRefs.every((assetRef) => assetRef.startsWith('/assets/'))).toBe(true)
     expect(assetRefs.every((assetRef) => !assetRef.includes('__prototype__'))).toBe(true)
+  })
+
+  it('defines the player spawn on the first platform surface', () => {
+    const stage = getGameplayStageMap('1-1')
+    expect(stage).toBeDefined()
+    if (!stage) return
+
+    expect(stage.player).toEqual({
+      actorId: 'player',
+      spawn: {
+        x: 256,
+        surfaceY: 512,
+      },
+    })
   })
 
   it('defines sky, far, and mid background layers in depth order', () => {

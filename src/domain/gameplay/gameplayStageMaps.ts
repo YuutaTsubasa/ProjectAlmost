@@ -43,6 +43,13 @@ const stageOneOne: GameplayStageMap = {
       parallaxFactor: 0.18,
     },
   ],
+  player: {
+    actorId: 'player',
+    spawn: {
+      x: 256,
+      surfaceY: 512,
+    },
+  },
   terrain: {
     tilesetAssetRef: '/assets/tiles/white_palace_platform_tiles.webp',
     solidTileIndexes: [0, 1, 2],

@@ -11,7 +11,16 @@ export type GameplayStageMap = {
     tileSize: number
   }
   backgroundLayers: readonly BackgroundLayer[]
+  player: GameplayPlayerSpawn
   terrain: TerrainDefinition
+}
+
+export type GameplayPlayerSpawn = {
+  actorId: 'player'
+  spawn: {
+    x: number
+    surfaceY: number
+  }
 }
 
 export type BackgroundLayer = {
