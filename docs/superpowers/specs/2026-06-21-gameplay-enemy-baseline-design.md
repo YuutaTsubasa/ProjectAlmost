@@ -22,7 +22,7 @@ Armor Guard prototype values:
 - origin: `{ x: 0.5, y: 0.5 }`
 - body: `{ width: 46, height: 54, offsetX: 41, offsetY: 54 }`
 - center above surface: `70`
-- rebuilt terrain visual lift: `8`
+- rebuilt terrain visual lift: `16`
 - gravity: `true`
 - behavior: `patrol`
 - initial patrol direction: `-1`
@@ -254,7 +254,7 @@ Domain tests:
 
 - Armor Guard definition matches prototype placement/body/origin/center/gravity/patrol/sprite metadata.
 - Azure Core definition matches prototype placement/body/origin/gravity/depth/generated texture/floating metadata.
-- `getEnemySpawnY` uses `surfaceY - 70 - 8` for Armor Guard.
+- `getEnemySpawnY` uses `surfaceY - 70 - 16` for Armor Guard.
 - `getEnemySpawnY` uses authored `y` for Azure Core.
 - `getNextEnemyPatrolDirection` turns right below min, left above max, and preserves current direction inside bounds.
 - `shouldUpdateEnemyPatrol` returns true for Armor Guard and false for Azure Core.
