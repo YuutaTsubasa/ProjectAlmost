@@ -85,4 +85,56 @@ describe('validatePlatformBounds', () => {
       reason: 'Platform at index 0 exceeds terrain rows.',
     })
   })
+
+  it('rejects platforms with zero width', () => {
+    const result = validatePlatformBounds({
+      columns: 6,
+      rows: 4,
+      platforms: [{ col: 1, row: 1, width: 0, height: 2 }],
+    })
+
+    expect(result).toEqual({
+      valid: false,
+      reason: 'Platform at index 0 must have positive width and height.',
+    })
+  })
+
+  it('rejects platforms with zero height', () => {
+    const result = validatePlatformBounds({
+      columns: 6,
+      rows: 4,
+      platforms: [{ col: 1, row: 1, width: 2, height: 0 }],
+    })
+
+    expect(result).toEqual({
+      valid: false,
+      reason: 'Platform at index 0 must have positive width and height.',
+    })
+  })
+
+  it('rejects platforms with negative width', () => {
+    const result = validatePlatformBounds({
+      columns: 6,
+      rows: 4,
+      platforms: [{ col: 1, row: 1, width: -2, height: 2 }],
+    })
+
+    expect(result).toEqual({
+      valid: false,
+      reason: 'Platform at index 0 must have positive width and height.',
+    })
+  })
+
+  it('rejects platforms with negative height', () => {
+    const result = validatePlatformBounds({
+      columns: 6,
+      rows: 4,
+      platforms: [{ col: 1, row: 1, width: 2, height: -1 }],
+    })
+
+    expect(result).toEqual({
+      valid: false,
+      reason: 'Platform at index 0 must have positive width and height.',
+    })
+  })
 })

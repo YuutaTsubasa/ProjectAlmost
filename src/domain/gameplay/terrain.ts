@@ -26,6 +26,12 @@ export function validatePlatformBounds(input: {
 }): PlatformBoundsValidation {
   for (let index = 0; index < input.platforms.length; index += 1) {
     const platform = input.platforms[index]
+    if (platform.width <= 0 || platform.height <= 0) {
+      return {
+        valid: false,
+        reason: `Platform at index ${index} must have positive width and height.`,
+      }
+    }
     if (platform.col < 0 || platform.col + platform.width > input.columns) {
       return { valid: false, reason: `Platform at index ${index} exceeds terrain columns.` }
     }
