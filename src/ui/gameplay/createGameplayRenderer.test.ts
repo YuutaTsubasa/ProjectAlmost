@@ -559,6 +559,20 @@ describe('createGameplayRendererConfig', () => {
     expect(runtime.playerSprite?.velocityY).toBe(playerActorDefinition.jump.velocityY)
   })
 
+  it('plays the jump animation on the grounded jump launch frame', () => {
+    const runtime = createSceneRuntime()
+
+    runtime.scene.create()
+    runtime.playerKeys.space.isDown = true
+
+    runtime.scene.update()
+
+    expect(runtime.playerSprite?.playCalls.at(-1)).toEqual({
+      key: playerActorDefinition.sprites.jump.key,
+      ignoreIfPlaying: true,
+    })
+  })
+
   it('maps ArrowUp and W to jump press rising edges', () => {
     const upRuntime = createSceneRuntime()
     upRuntime.scene.create()

@@ -254,6 +254,7 @@ class GameplayMapScene extends Phaser.Scene {
       config: playerActorDefinition.jump,
     })
     this.playerJumpState = jumpDecision.state
+    const jumpingThisFrame = jumpDecision.type !== 'none'
     if (jumpDecision.type !== 'none') {
       this.player.setVelocityY(playerActorDefinition.jump.velocityY)
     }
@@ -266,7 +267,7 @@ class GameplayMapScene extends Phaser.Scene {
     this.player.setDragX(decision.dragX)
     this.player.setAccelerationX(decision.accelerationX)
 
-    if (!grounded) {
+    if (!grounded || jumpingThisFrame) {
       this.player.play(playerActorDefinition.sprites.jump.key, true)
     } else if (decision.direction === 'left') {
       this.player.setFlipX(true)
