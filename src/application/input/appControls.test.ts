@@ -65,7 +65,9 @@ describe('applyControlIntent', () => {
     expect(applyControlIntent(state, 'move-up')).toEqual({
       screen: { type: 'stage-select', selectedWorldIndex: 2, worldId: 'world03', selectedStageIndex: 5 },
     })
-    expect(applyControlIntent(state, 'confirm')).toBe(state)
+    expect(applyControlIntent(state, 'confirm')).toEqual({
+      screen: { type: 'gameplay', stageId: '3-1' },
+    })
     expect(applyControlIntent(state, 'back')).toEqual({
       screen: { type: 'world-select', selectedWorldIndex: 2 },
     })
