@@ -24,6 +24,7 @@ export type EnemyActorDefinition = {
   depth: number
   scale: number
   centerAboveSurface?: number
+  visualLiftY?: number
   sprites?: {
     walk?: EnemySpriteDefinition
     death?: EnemySpriteDefinition
@@ -65,6 +66,7 @@ export const enemyActorDefinitions = {
     origin: { x: 0.5, y: 0.5 },
     body: { width: 46, height: 54, offsetX: 41, offsetY: 54 },
     centerAboveSurface: 70,
+    visualLiftY: 8,
     gravity: true,
     depth: 9,
     scale: 0.82,
@@ -123,7 +125,9 @@ export function getEnemySpawnY(input: EnemySpawnYInput): number {
     return input.y
   }
 
-  return input.surfaceY - enemyActorDefinitions['armor-guard'].centerAboveSurface
+  const definition = enemyActorDefinitions['armor-guard']
+
+  return input.surfaceY - definition.centerAboveSurface - definition.visualLiftY
 }
 
 export function getNextEnemyPatrolDirection(input: {

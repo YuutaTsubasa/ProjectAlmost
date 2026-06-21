@@ -15,6 +15,7 @@ describe('enemyActorDefinitions', () => {
       origin: { x: 0.5, y: 0.5 },
       body: { width: 46, height: 54, offsetX: 41, offsetY: 54 },
       centerAboveSurface: 70,
+      visualLiftY: 8,
       gravity: true,
       depth: 9,
       scale: 0.82,
@@ -73,13 +74,13 @@ describe('enemyActorDefinitions', () => {
 })
 
 describe('getEnemySpawnY', () => {
-  it('places Armor Guards above the authored platform surface', () => {
+  it('lifts Armor Guards above the authored platform surface for rebuilt terrain art', () => {
     expect(
       getEnemySpawnY({
         type: 'armor-guard',
         surfaceY: 512,
       }),
-    ).toBe(442)
+    ).toBe(434)
   })
 
   it('uses the authored y position for Azure Cores', () => {
