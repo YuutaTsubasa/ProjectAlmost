@@ -74,7 +74,8 @@ export function getMovableActorJumpDecision(input: {
 
   if (
     input.state.groundState === 'grounded' ||
-    input.now - input.state.lastGroundedAt <= input.config.coyoteTimeMs
+    (input.state.lastGroundedAt > 0 &&
+      input.now - input.state.lastGroundedAt <= input.config.coyoteTimeMs)
   ) {
     return {
       type: 'ground-jump',

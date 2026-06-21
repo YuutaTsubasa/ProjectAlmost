@@ -163,4 +163,43 @@ describe('getMovableActorJumpDecision', () => {
       state,
     })
   })
+
+  it('does not reuse coyote time for a buffered jump after a successful ground jump', () => {
+    const stateAfterGroundJump = getMovableActorJumpDecision({
+      state: {
+        groundState: 'grounded',
+        lastGroundedAt: 25,
+        jumpBufferedUntil: 165,
+        remainingAirJumps: 1,
+      },
+      now: 25,
+      config,
+    })
+
+    expect(stateAfterGroundJump).toEqual({
+      type: 'ground-jump',
+      state: {
+        groundState: 'airborne',
+        lastGroundedAt: 0,
+        jumpBufferedUntil: 0,
+        remainingAirJumps: 1,
+      },
+    })
+
+    const bufferedSecondJump = bufferMovableActorJump({
+      state: stateAfterGroundJump.state,
+      now: 30,
+      config,
+    })
+
+    expect(getMovableActorJumpDecision({ state: bufferedSecondJump, now: 30, config })).toEqual({
+      type: 'air-jump',
+      state: {
+        groundState: 'airborne',
+        lastGroundedAt: 0,
+        jumpBufferedUntil: 0,
+        remainingAirJumps: 0,
+      },
+    })
+  })
 })
