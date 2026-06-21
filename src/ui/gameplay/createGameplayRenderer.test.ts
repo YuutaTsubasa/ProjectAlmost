@@ -40,6 +40,20 @@ type SpritesheetCall = {
   frameHeight: number
 }
 
+type AnimationCreateCall = {
+  key: string
+  frames: Array<{ key: string; frame: number }>
+  frameRate: number
+  repeat: number
+}
+
+type FakePlayerKeys = {
+  left: { isDown: boolean }
+  right: { isDown: boolean }
+  a: { isDown: boolean }
+  d: { isDown: boolean }
+}
+
 type FakeRuntime = ReturnType<typeof createSceneRuntime>
 
 const originalGravityY = playerActorDefinition.gravityY
@@ -220,8 +234,15 @@ function createSceneRuntime() {
 
   const imageCalls: Array<{ key: string; assetRef: string }> = []
   const spritesheetCalls: SpritesheetCall[] = []
+  const animationCreateCalls: AnimationCreateCall[] = []
   const colliderCalls: Array<{ a: unknown; b: unknown }> = []
   const terrainLayer = createFakeTerrainLayer()
+  const playerKeys: FakePlayerKeys = {
+    left: { isDown: false },
+    right: { isDown: false },
+    a: { isDown: false },
+    d: { isDown: false },
+  }
   let playerSprite: ReturnType<typeof createFakePlayerSprite> | null = null
   let cameraFollowTarget: unknown = null
 
@@ -276,7 +297,9 @@ function createSceneRuntime() {
   }
 
   scene.anims = {
-    create: () => {},
+    create: (config) => {
+      animationCreateCalls.push(config as AnimationCreateCall)
+    },
     generateFrameNumbers: (key, range) =>
       Array.from({ length: range.end - range.start + 1 }, (_, index) => ({
         key,
@@ -286,12 +309,7 @@ function createSceneRuntime() {
 
   scene.input = {
     keyboard: {
-      addKeys: () => ({
-        left: { isDown: false },
-        right: { isDown: false },
-        a: { isDown: false },
-        d: { isDown: false },
-      }),
+      addKeys: () => playerKeys,
     },
   }
 
@@ -301,8 +319,10 @@ function createSceneRuntime() {
     scene,
     imageCalls,
     spritesheetCalls,
+    animationCreateCalls,
     colliderCalls,
     terrainLayer,
+    playerKeys,
     get playerSprite() {
       return playerSprite
     },
@@ -364,5 +384,72 @@ describe('createGameplayRendererConfig', () => {
     expect(runtime.playerSprite?.depth).toBe(17)
     expect(runtime.colliderCalls).toEqual([{ a: runtime.playerSprite, b: runtime.terrainLayer }])
     expect(runtime.cameraFollowTarget).toBe(runtime.playerSprite)
+  })
+
+  it('registers idle and run animations from the domain actor definition', () => {
+    const runtime = createSceneRuntime()
+
+    runtime.scene.create()
+
+    expect(runtime.animationCreateCalls).toEqual(
+      Object.values(playerActorDefinition.sprites).map((sprite) => ({
+        key: sprite.key,
+        frames: Array.from({ length: sprite.frameEnd - sprite.frameStart + 1 }, (_, index) => ({
+          key: sprite.key,
+          frame: sprite.frameStart + index,
+        })),
+        frameRate: sprite.frameRate,
+        repeat: sprite.repeat,
+      })),
+    )
+  })
+
+  it('updates left movement with drag, negative acceleration, flip, and run animation', () => {
+    const runtime = createSceneRuntime()
+
+    runtime.scene.create()
+    runtime.playerKeys.left.isDown = true
+
+    runtime.scene.update()
+
+    expect(runtime.playerSprite?.dragX).toBe(playerActorDefinition.movement.idleDragX)
+    expect(runtime.playerSprite?.accelerationX).toBe(-playerActorDefinition.movement.groundAcceleration)
+    expect(runtime.playerSprite?.flipX).toBe(true)
+    expect(runtime.playerSprite?.playCalls.at(-1)).toEqual({
+      key: playerActorDefinition.sprites.run.key,
+      ignoreIfPlaying: true,
+    })
+  })
+
+  it('updates right movement with drag, positive acceleration, flip, and run animation', () => {
+    const runtime = createSceneRuntime()
+
+    runtime.scene.create()
+    runtime.playerKeys.right.isDown = true
+
+    runtime.scene.update()
+
+    expect(runtime.playerSprite?.dragX).toBe(playerActorDefinition.movement.idleDragX)
+    expect(runtime.playerSprite?.accelerationX).toBe(playerActorDefinition.movement.groundAcceleration)
+    expect(runtime.playerSprite?.flipX).toBe(false)
+    expect(runtime.playerSprite?.playCalls.at(-1)).toEqual({
+      key: playerActorDefinition.sprites.run.key,
+      ignoreIfPlaying: true,
+    })
+  })
+
+  it('updates idle movement with drag, zero acceleration, and idle animation', () => {
+    const runtime = createSceneRuntime()
+
+    runtime.scene.create()
+
+    runtime.scene.update()
+
+    expect(runtime.playerSprite?.dragX).toBe(playerActorDefinition.movement.idleDragX)
+    expect(runtime.playerSprite?.accelerationX).toBe(0)
+    expect(runtime.playerSprite?.playCalls.at(-1)).toEqual({
+      key: playerActorDefinition.sprites.idle.key,
+      ignoreIfPlaying: true,
+    })
   })
 })
