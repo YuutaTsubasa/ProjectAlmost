@@ -438,6 +438,55 @@ describe('createGameplayRendererConfig', () => {
     })
   })
 
+  it('updates A-key movement as left movement', () => {
+    const runtime = createSceneRuntime()
+
+    runtime.scene.create()
+    runtime.playerKeys.a.isDown = true
+
+    runtime.scene.update()
+
+    expect(runtime.playerSprite?.accelerationX).toBe(-playerActorDefinition.movement.groundAcceleration)
+    expect(runtime.playerSprite?.flipX).toBe(true)
+    expect(runtime.playerSprite?.playCalls.at(-1)).toEqual({
+      key: playerActorDefinition.sprites.run.key,
+      ignoreIfPlaying: true,
+    })
+  })
+
+  it('updates D-key movement as right movement', () => {
+    const runtime = createSceneRuntime()
+
+    runtime.scene.create()
+    runtime.playerKeys.d.isDown = true
+
+    runtime.scene.update()
+
+    expect(runtime.playerSprite?.accelerationX).toBe(playerActorDefinition.movement.groundAcceleration)
+    expect(runtime.playerSprite?.flipX).toBe(false)
+    expect(runtime.playerSprite?.playCalls.at(-1)).toEqual({
+      key: playerActorDefinition.sprites.run.key,
+      ignoreIfPlaying: true,
+    })
+  })
+
+  it('keeps left priority when both horizontal directions are active', () => {
+    const runtime = createSceneRuntime()
+
+    runtime.scene.create()
+    runtime.playerKeys.left.isDown = true
+    runtime.playerKeys.right.isDown = true
+
+    runtime.scene.update()
+
+    expect(runtime.playerSprite?.accelerationX).toBe(-playerActorDefinition.movement.groundAcceleration)
+    expect(runtime.playerSprite?.flipX).toBe(true)
+    expect(runtime.playerSprite?.playCalls.at(-1)).toEqual({
+      key: playerActorDefinition.sprites.run.key,
+      ignoreIfPlaying: true,
+    })
+  })
+
   it('updates idle movement with drag, zero acceleration, and idle animation', () => {
     const runtime = createSceneRuntime()
 
