@@ -1,5 +1,13 @@
 import Phaser from 'phaser'
+import {
+  enemyActorDefinitions,
+  getEnemySpawnY,
+  getNextEnemyPatrolDirection,
+  shouldUpdateEnemyPatrol,
+  type EnemyPatrolDirection,
+} from '../../domain/gameplay/enemyActor'
 import type { GameplayStageMap } from '../../domain/gameplay/gameplayMapTypes'
+import type { GameplayEnemySpawn } from '../../domain/gameplay/gameplayMapTypes'
 import {
   bufferMovableActorJump,
   createMovableActorJumpState,
@@ -29,10 +37,17 @@ type BackgroundRuntimeLayer = {
   parallaxFactor: number
 }
 
+type EnemyRuntime = {
+  sprite: Phaser.Physics.Arcade.Sprite
+  spawn: GameplayEnemySpawn
+  direction: EnemyPatrolDirection
+}
+
 class GameplayMapScene extends Phaser.Scene {
   private readonly stageMap: GameplayStageMap
   private backgroundLayers: BackgroundRuntimeLayer[] = []
   private terrainLayer: Phaser.Tilemaps.TilemapLayer | null = null
+  private enemies: EnemyRuntime[] = []
   private player: Phaser.Physics.Arcade.Sprite | null = null
   private playerKeys: {
     left: Phaser.Input.Keyboard.Key
@@ -64,6 +79,19 @@ class GameplayMapScene extends Phaser.Scene {
         frameHeight: sprite.frameHeight,
       })
     }
+
+    for (const definition of Object.values(enemyActorDefinitions)) {
+      if (!('sprites' in definition) || !definition.sprites) {
+        continue
+      }
+
+      for (const sprite of Object.values(definition.sprites)) {
+        this.load.spritesheet(sprite.key, sprite.assetRef, {
+          frameWidth: sprite.frameWidth,
+          frameHeight: sprite.frameHeight,
+        })
+      }
+    }
   }
 
   create(): void {
@@ -91,6 +119,9 @@ class GameplayMapScene extends Phaser.Scene {
     this.createBackgroundLayers()
     this.terrainLayer = this.createTerrainLayer(columns, rows)
     this.createPlayerAnimations()
+    this.createEnemyTextures()
+    this.createEnemyAnimations()
+    this.createEnemies()
     this.playerKeys = this.createPlayerKeys()
     this.createPlayer()
   }
@@ -100,6 +131,7 @@ class GameplayMapScene extends Phaser.Scene {
       layer.sprite.setTilePosition(this.cameras.main.scrollX * layer.parallaxFactor, 0)
     }
 
+    this.updateEnemyPatrol()
     this.updatePlayerMovement()
   }
 
@@ -159,6 +191,49 @@ class GameplayMapScene extends Phaser.Scene {
     }
   }
 
+  private createEnemyTextures(): void {
+    this.createAzureCoreTexture()
+  }
+
+  private createEnemyAnimations(): void {
+    const guardSprites = enemyActorDefinitions['armor-guard'].sprites
+    if (!guardSprites) return
+
+    for (const sprite of Object.values(guardSprites)) {
+      this.anims.create({
+        key: sprite.key,
+        frames: this.anims.generateFrameNumbers(sprite.key, {
+          start: sprite.frameStart,
+          end: sprite.frameEnd,
+        }),
+        frameRate: sprite.frameRate,
+        repeat: sprite.repeat,
+      })
+    }
+  }
+
+  private createAzureCoreTexture(): void {
+    const texture = enemyActorDefinitions['azure-core'].generatedTexture
+    if (!texture) return
+
+    const graphics = this.make.graphics()
+    graphics.fillStyle(0xffffff, 0.88)
+    graphics.fillCircle(38, 38, 28)
+    graphics.lineStyle(6, 0xb7dfff, 0.95)
+    graphics.strokeCircle(38, 38, 29)
+    graphics.lineStyle(3, 0x4f7dff, 0.9)
+    graphics.strokeCircle(38, 38, 20)
+    graphics.fillStyle(0x4be8ff, 0.95)
+    graphics.fillCircle(38, 38, 13)
+    graphics.fillStyle(0xffffff, 0.9)
+    graphics.fillCircle(34, 34, 5)
+    graphics.lineStyle(4, 0x4be8ff, 0.7)
+    graphics.lineBetween(4, 38, 16, 38)
+    graphics.lineBetween(60, 38, 72, 38)
+    graphics.generateTexture(texture.key, texture.width, texture.height)
+    graphics.destroy()
+  }
+
   private createPlayerKeys(): NonNullable<GameplayMapScene['playerKeys']> {
     if (!this.input.keyboard) {
       throw new Error(`Unable to create player keyboard controls for stage ${this.stageMap.id}.`)
@@ -209,6 +284,99 @@ class GameplayMapScene extends Phaser.Scene {
     })
     this.wasJumpDown = false
     this.player = player
+  }
+
+  private createEnemies(): void {
+    if (!this.terrainLayer) {
+      throw new Error(`Unable to create enemy colliders before terrain for stage ${this.stageMap.id}.`)
+    }
+
+    const terrainLayer = this.terrainLayer
+
+    this.enemies = this.stageMap.enemies.map((spawn) => {
+      if (spawn.type === 'armor-guard') {
+        const definition = enemyActorDefinitions['armor-guard']
+        const textureKey = definition.sprites.walk?.key
+        if (!textureKey) {
+          throw new Error(`Enemy ${spawn.id} has no renderable texture.`)
+        }
+
+        const sprite = this.physics.add.sprite(
+          spawn.x,
+          getEnemySpawnY(spawn),
+          textureKey,
+        )
+
+        sprite
+          .setOrigin(definition.origin.x, definition.origin.y)
+          .setScale(definition.scale)
+          .setCollideWorldBounds(true)
+          .setDepth(definition.depth)
+
+        sprite.body.setSize(definition.body.width, definition.body.height)
+        sprite.body.setOffset(definition.body.offsetX, definition.body.offsetY)
+
+        const direction = definition.patrol.initialDirection
+        const walk = definition.sprites?.walk
+        if (walk) {
+          sprite.play(walk.key)
+        }
+        sprite.setVelocityX(direction * definition.patrol.speed)
+        this.physics.add.collider(sprite, terrainLayer)
+
+        return {
+          sprite,
+          spawn,
+          direction,
+        }
+      } else {
+        const definition = enemyActorDefinitions['azure-core']
+        const textureKey = definition.generatedTexture?.key
+        if (!textureKey) {
+          throw new Error(`Enemy ${spawn.id} has no renderable texture.`)
+        }
+
+        const sprite = this.physics.add.sprite(
+          spawn.x,
+          getEnemySpawnY(spawn),
+          textureKey,
+        )
+
+        sprite
+          .setOrigin(definition.origin.x, definition.origin.y)
+          .setScale(definition.scale)
+          .setCollideWorldBounds(true)
+          .setDepth(definition.depth)
+
+        sprite.body.setSize(definition.body.width, definition.body.height)
+        sprite.body.setOffset(definition.body.offsetX, definition.body.offsetY)
+
+        sprite.body.allowGravity = false
+        sprite.setImmovable(true)
+        this.createAzureCoreFloat(sprite, spawn.y)
+
+        return {
+          sprite,
+          spawn,
+          direction: -1,
+        }
+      }
+    })
+  }
+
+  private createAzureCoreFloat(sprite: Phaser.Physics.Arcade.Sprite, spawnY: number): void {
+    const floating = enemyActorDefinitions['azure-core'].floating
+    if (!floating) return
+
+    this.tweens.add({
+      targets: sprite,
+      y: spawnY + floating.yOffset,
+      angle: floating.angle,
+      duration: floating.durationMs,
+      ease: floating.ease,
+      yoyo: true,
+      repeat: -1,
+    })
   }
 
   private isPlayerGrounded(): boolean {
@@ -277,6 +445,25 @@ class GameplayMapScene extends Phaser.Scene {
       this.player.play(playerActorDefinition.sprites.run.key, true)
     } else {
       this.player.play(playerActorDefinition.sprites.idle.key, true)
+    }
+  }
+
+  private updateEnemyPatrol(): void {
+    for (const enemy of this.enemies) {
+      if (!shouldUpdateEnemyPatrol(enemy.spawn.type) || enemy.spawn.type !== 'armor-guard') {
+        continue
+      }
+
+      const speed = enemyActorDefinitions['armor-guard'].patrol.speed
+      enemy.direction = getNextEnemyPatrolDirection({
+        x: enemy.sprite.x,
+        patrolMinX: enemy.spawn.patrolMinX,
+        patrolMaxX: enemy.spawn.patrolMaxX,
+        currentDirection: enemy.direction,
+      })
+
+      enemy.sprite.setVelocityX(enemy.direction * speed)
+      enemy.sprite.setFlipX(enemy.direction > 0)
     }
   }
 }

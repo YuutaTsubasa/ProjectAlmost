@@ -16,7 +16,13 @@ describe('gameplayStageMaps', () => {
     if (!stage) return
 
     const enemyAssetRefs = Object.values(enemyActorDefinitions)
-      .flatMap((definition) => Object.values(definition.sprites ?? {}))
+      .flatMap((definition) => {
+        if (!('sprites' in definition) || !definition.sprites) {
+          return []
+        }
+
+        return Object.values(definition.sprites)
+      })
       .map((sprite) => sprite.assetRef)
 
     const assetRefs = [
