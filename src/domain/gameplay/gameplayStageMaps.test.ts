@@ -28,9 +28,7 @@ describe('gameplayStageMaps', () => {
     const assetRefs = [
       ...stage.backgroundLayers.map((layer) => layer.assetRef),
       stage.terrain.tilesetAssetRef,
-      playerActorDefinition.sprites.idle.assetRef,
-      playerActorDefinition.sprites.run.assetRef,
-      playerActorDefinition.sprites.jump.assetRef,
+      ...Object.values(playerActorDefinition.sprites).map((sprite) => sprite.assetRef),
       ...enemyAssetRefs,
     ]
 
@@ -42,6 +40,7 @@ describe('gameplayStageMaps', () => {
       '/assets/sprites/player_idle/sheet-transparent.webp',
       '/assets/sprites/player_run/sheet-transparent.webp',
       '/assets/sprites/player_jump/sheet-transparent.webp',
+      '/assets/sprites/player_attack/sheet-transparent.webp',
       '/assets/sprites/enemy_guard_walk/sheet-transparent.webp',
       '/assets/sprites/enemy_guard_death/sheet-transparent.webp',
     ])

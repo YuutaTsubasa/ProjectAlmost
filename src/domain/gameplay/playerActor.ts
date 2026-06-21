@@ -1,5 +1,5 @@
 export type PlayerActorId = 'player'
-export type PlayerAnimationKey = 'idle' | 'run' | 'jump'
+export type PlayerAnimationKey = 'idle' | 'run' | 'jump' | 'attack'
 export type PlayerMovementDirection = 'left' | 'right' | 'none'
 
 export type PlayerAnimationDefinition = {
@@ -77,6 +77,16 @@ export const playerActorDefinition: PlayerActorDefinition = {
       frameStart: 1,
       frameEnd: 1,
       frameRate: 1,
+      repeat: 0,
+    },
+    attack: {
+      key: 'player-attack',
+      assetRef: '/assets/sprites/player_attack/sheet-transparent.webp',
+      frameWidth: 128,
+      frameHeight: 128,
+      frameStart: 0,
+      frameEnd: 3,
+      frameRate: 12,
       repeat: 0,
     },
   },
