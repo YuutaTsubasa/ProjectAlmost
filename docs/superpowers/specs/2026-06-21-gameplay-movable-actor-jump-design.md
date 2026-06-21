@@ -64,7 +64,7 @@ export type MovableActorGroundState = 'grounded' | 'airborne'
 export type MovableActorJumpState = {
   groundState: MovableActorGroundState
   lastGroundedAt: number
-  jumpBufferedUntil: number
+  jumpBufferedUntil: number | null
   remainingAirJumps: number
 }
 
@@ -92,11 +92,11 @@ Rules:
 - When grounded, `groundState` becomes `grounded`, `lastGroundedAt` becomes `now`, and `remainingAirJumps` resets to `maxAirJumps`.
 - When not grounded, `groundState` becomes `airborne` and air jumps are not reset.
 - A jump press sets `jumpBufferedUntil = now + jumpBufferMs`.
-- If `jumpBufferedUntil < now`, decision is `none`.
+- If `jumpBufferedUntil` is `null` or `< now`, decision is `none`.
 - If grounded, decision is `ground-jump`.
 - If airborne and `now - lastGroundedAt <= coyoteTimeMs`, decision is `ground-jump`.
 - If outside coyote time and `remainingAirJumps > 0`, decision is `air-jump` and decrements `remainingAirJumps`.
-- A successful jump clears `jumpBufferedUntil` and `lastGroundedAt` to `0`, matching the prototype.
+- A successful jump clears `jumpBufferedUntil` and `lastGroundedAt` to `null` to represent the unset state explicitly.
 
 This module is not player-specific. It does not know about sprites, Phaser, velocity values, controls, enemies, attacks, or animation keys.
 

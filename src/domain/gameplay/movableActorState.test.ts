@@ -18,7 +18,7 @@ describe('createMovableActorJumpState', () => {
     expect(createMovableActorJumpState({ now: 25, grounded: true, config })).toEqual({
       groundState: 'grounded',
       lastGroundedAt: 25,
-      jumpBufferedUntil: 0,
+      jumpBufferedUntil: null,
       remainingAirJumps: 1,
     })
   })
@@ -27,8 +27,24 @@ describe('createMovableActorJumpState', () => {
     expect(createMovableActorJumpState({ now: 25, grounded: false, config })).toEqual({
       groundState: 'airborne',
       lastGroundedAt: null,
-      jumpBufferedUntil: 0,
+      jumpBufferedUntil: null,
       remainingAirJumps: 1,
+    })
+  })
+
+  it('does not jump immediately at time zero without input', () => {
+    const state = createMovableActorJumpState({ now: 0, grounded: true, config })
+
+    expect(state).toEqual({
+      groundState: 'grounded',
+      lastGroundedAt: 0,
+      jumpBufferedUntil: null,
+      remainingAirJumps: 1,
+    })
+
+    expect(getMovableActorJumpDecision({ state, now: 0, config })).toEqual({
+      type: 'none',
+      state,
     })
   })
 })
@@ -38,14 +54,14 @@ describe('updateMovableActorGroundContact', () => {
     const state = {
       groundState: 'airborne' as const,
       lastGroundedAt: 50,
-      jumpBufferedUntil: 0,
+      jumpBufferedUntil: null,
       remainingAirJumps: 0,
     }
 
     expect(updateMovableActorGroundContact({ state, now: 200, grounded: true, config })).toEqual({
       groundState: 'grounded',
       lastGroundedAt: 200,
-      jumpBufferedUntil: 0,
+      jumpBufferedUntil: null,
       remainingAirJumps: 1,
     })
   })
@@ -54,14 +70,14 @@ describe('updateMovableActorGroundContact', () => {
     const state = {
       groundState: 'grounded' as const,
       lastGroundedAt: 100,
-      jumpBufferedUntil: 0,
+      jumpBufferedUntil: null,
       remainingAirJumps: 0,
     }
 
     expect(updateMovableActorGroundContact({ state, now: 180, grounded: false, config })).toEqual({
       groundState: 'airborne',
       lastGroundedAt: 100,
-      jumpBufferedUntil: 0,
+      jumpBufferedUntil: null,
       remainingAirJumps: 0,
     })
   })
@@ -69,7 +85,7 @@ describe('updateMovableActorGroundContact', () => {
 
 describe('bufferMovableActorJump', () => {
   it('buffers a jump until now plus the configured buffer duration', () => {
-    const state = createMovableActorJumpState({ now: 10, grounded: true, config })
+    const state = createMovableActorJumpState({ now: 0, grounded: true, config })
 
     expect(bufferMovableActorJump({ state, now: 300, config })).toEqual({
       ...state,
@@ -93,6 +109,24 @@ describe('getMovableActorJumpDecision', () => {
     })
   })
 
+  it('returns ground-jump when a jump is buffered at time zero', () => {
+    const state = bufferMovableActorJump({
+      state: createMovableActorJumpState({ now: 0, grounded: true, config }),
+      now: 0,
+      config,
+    })
+
+    expect(getMovableActorJumpDecision({ state, now: 0, config })).toEqual({
+      type: 'ground-jump',
+      state: {
+        groundState: 'airborne',
+        lastGroundedAt: null,
+        jumpBufferedUntil: null,
+        remainingAirJumps: 1,
+      },
+    })
+  })
+
   it('returns ground-jump while grounded and clears consumed timing state', () => {
     const state = {
       groundState: 'grounded' as const,
@@ -106,7 +140,7 @@ describe('getMovableActorJumpDecision', () => {
       state: {
         groundState: 'airborne',
         lastGroundedAt: null,
-        jumpBufferedUntil: 0,
+        jumpBufferedUntil: null,
         remainingAirJumps: 1,
       },
     })
@@ -125,7 +159,7 @@ describe('getMovableActorJumpDecision', () => {
       state: {
         groundState: 'airborne',
         lastGroundedAt: null,
-        jumpBufferedUntil: 0,
+        jumpBufferedUntil: null,
         remainingAirJumps: 1,
       },
     })
@@ -144,7 +178,7 @@ describe('getMovableActorJumpDecision', () => {
       state: {
         groundState: 'airborne',
         lastGroundedAt: null,
-        jumpBufferedUntil: 0,
+        jumpBufferedUntil: null,
         remainingAirJumps: 1,
       },
     })
@@ -163,7 +197,7 @@ describe('getMovableActorJumpDecision', () => {
       state: {
         groundState: 'airborne',
         lastGroundedAt: null,
-        jumpBufferedUntil: 0,
+        jumpBufferedUntil: null,
         remainingAirJumps: 0,
       },
     })
@@ -200,7 +234,7 @@ describe('getMovableActorJumpDecision', () => {
       state: {
         groundState: 'airborne',
         lastGroundedAt: null,
-        jumpBufferedUntil: 0,
+        jumpBufferedUntil: null,
         remainingAirJumps: 1,
       },
     })
@@ -216,7 +250,7 @@ describe('getMovableActorJumpDecision', () => {
       state: {
         groundState: 'airborne',
         lastGroundedAt: null,
-        jumpBufferedUntil: 0,
+        jumpBufferedUntil: null,
         remainingAirJumps: 0,
       },
     })
