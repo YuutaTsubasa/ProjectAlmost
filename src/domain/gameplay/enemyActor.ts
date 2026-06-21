@@ -2,6 +2,7 @@ export type EnemyActorType = 'armor-guard' | 'azure-core'
 export type EnemyPlacement = 'grounded' | 'airborne'
 export type EnemyBehavior = 'patrol' | 'homing-target'
 export type EnemyPatrolDirection = -1 | 1
+export type EnemyDefeatPresentation = 'armor-guard-death' | 'azure-core-burst'
 
 export type EnemySpriteDefinition = {
   key: string
@@ -120,6 +121,17 @@ export const enemyActorDefinitions = {
   },
 } as const satisfies Record<EnemyActorType, EnemyActorDefinition>
 
+export const enemyDefeatPresentation = {
+  hideDelayMs: 520,
+  azureCoreBurst: {
+    scale: 1.8,
+    alpha: 0,
+    angleDelta: 90,
+    durationMs: 260,
+    ease: 'Quad.easeOut',
+  },
+} as const
+
 export function getEnemySpawnY(input: EnemySpawnYInput): number {
   if (input.type === 'azure-core') {
     return input.y
@@ -141,6 +153,24 @@ export function getNextEnemyPatrolDirection(input: {
   return input.currentDirection
 }
 
-export function shouldUpdateEnemyPatrol(type: EnemyActorType): boolean {
-  return type === 'armor-guard'
+export function getEnemyDefeatPresentation(type: EnemyActorType): EnemyDefeatPresentation {
+  if (type === 'armor-guard') {
+    return 'armor-guard-death'
+  }
+
+  return 'azure-core-burst'
+}
+
+export function shouldProcessEnemyDefeat(input: {
+  enemyExists: boolean
+  defeated: boolean
+}): boolean {
+  return input.enemyExists && !input.defeated
+}
+
+export function shouldUpdateEnemyPatrol(input: {
+  type: EnemyActorType
+  defeated: boolean
+}): boolean {
+  return input.type === 'armor-guard' && !input.defeated
 }

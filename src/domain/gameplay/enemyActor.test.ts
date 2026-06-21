@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import {
   enemyActorDefinitions,
+  enemyDefeatPresentation,
+  getEnemyDefeatPresentation,
   getEnemySpawnY,
   getNextEnemyPatrolDirection,
+  shouldProcessEnemyDefeat,
   shouldUpdateEnemyPatrol,
 } from './enemyActor'
 
@@ -137,8 +140,37 @@ describe('getNextEnemyPatrolDirection', () => {
 })
 
 describe('shouldUpdateEnemyPatrol', () => {
-  it('updates Armor Guard patrol and skips Azure Core patrol', () => {
-    expect(shouldUpdateEnemyPatrol('armor-guard')).toBe(true)
-    expect(shouldUpdateEnemyPatrol('azure-core')).toBe(false)
+  it('updates active Armor Guard patrol and skips defeated enemies or Azure Cores', () => {
+    expect(shouldUpdateEnemyPatrol({ type: 'armor-guard', defeated: false })).toBe(true)
+    expect(shouldUpdateEnemyPatrol({ type: 'armor-guard', defeated: true })).toBe(false)
+    expect(shouldUpdateEnemyPatrol({ type: 'azure-core', defeated: false })).toBe(false)
+  })
+})
+
+describe('enemy defeat presentation', () => {
+  it('defines prototype presentation timings for defeated enemies', () => {
+    expect(enemyDefeatPresentation).toEqual({
+      hideDelayMs: 520,
+      azureCoreBurst: {
+        scale: 1.8,
+        alpha: 0,
+        angleDelta: 90,
+        durationMs: 260,
+        ease: 'Quad.easeOut',
+      },
+    })
+  })
+
+  it('routes each enemy type to its defeat presentation', () => {
+    expect(getEnemyDefeatPresentation('armor-guard')).toBe('armor-guard-death')
+    expect(getEnemyDefeatPresentation('azure-core')).toBe('azure-core-burst')
+  })
+})
+
+describe('shouldProcessEnemyDefeat', () => {
+  it('processes only existing active enemies', () => {
+    expect(shouldProcessEnemyDefeat({ enemyExists: true, defeated: false })).toBe(true)
+    expect(shouldProcessEnemyDefeat({ enemyExists: true, defeated: true })).toBe(false)
+    expect(shouldProcessEnemyDefeat({ enemyExists: false, defeated: false })).toBe(false)
   })
 })

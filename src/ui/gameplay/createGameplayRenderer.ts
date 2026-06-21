@@ -453,7 +453,13 @@ class GameplayMapScene extends Phaser.Scene {
 
   private updateEnemyPatrol(): void {
     for (const enemy of this.enemies) {
-      if (!shouldUpdateEnemyPatrol(enemy.spawn.type) || enemy.spawn.type !== 'armor-guard') {
+      if (
+        !shouldUpdateEnemyPatrol({
+          type: enemy.spawn.type,
+          defeated: false,
+        }) ||
+        enemy.spawn.type !== 'armor-guard'
+      ) {
         continue
       }
 
