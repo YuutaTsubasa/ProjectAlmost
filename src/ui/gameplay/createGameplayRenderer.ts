@@ -1,6 +1,13 @@
 import Phaser from 'phaser'
 import type { GameplayStageMap } from '../../domain/gameplay/gameplayMapTypes'
 import {
+  bufferMovableActorJump,
+  createMovableActorJumpState,
+  getMovableActorJumpDecision,
+  updateMovableActorGroundContact,
+  type MovableActorJumpState,
+} from '../../domain/gameplay/movableActorState'
+import {
   getPlayerCenterY,
   getPlayerHorizontalMovementDecision,
   playerActorDefinition,
@@ -32,7 +39,12 @@ class GameplayMapScene extends Phaser.Scene {
     right: Phaser.Input.Keyboard.Key
     a: Phaser.Input.Keyboard.Key
     d: Phaser.Input.Keyboard.Key
+    space: Phaser.Input.Keyboard.Key
+    up: Phaser.Input.Keyboard.Key
+    w: Phaser.Input.Keyboard.Key
   } | null = null
+  private playerJumpState: MovableActorJumpState | null = null
+  private wasJumpDown = false
 
   constructor(stage: GameplayStageMap) {
     super(`GameplayMapScene:${stage.id}`)
@@ -157,6 +169,9 @@ class GameplayMapScene extends Phaser.Scene {
       right: Phaser.Input.Keyboard.KeyCodes.RIGHT,
       a: Phaser.Input.Keyboard.KeyCodes.A,
       d: Phaser.Input.Keyboard.KeyCodes.D,
+      space: Phaser.Input.Keyboard.KeyCodes.SPACE,
+      up: Phaser.Input.Keyboard.KeyCodes.UP,
+      w: Phaser.Input.Keyboard.KeyCodes.W,
     }) as NonNullable<GameplayMapScene['playerKeys']>
 
     return keys
@@ -187,11 +202,61 @@ class GameplayMapScene extends Phaser.Scene {
 
     this.physics.add.collider(player, this.terrainLayer)
     this.cameras.main.startFollow(player, true, 0.12, 0.12)
+    this.playerJumpState = createMovableActorJumpState({
+      now: this.time.now,
+      grounded: true,
+      config: playerActorDefinition.jump,
+    })
+    this.wasJumpDown = false
     this.player = player
   }
 
+  private isPlayerGrounded(): boolean {
+    if (!this.player) return false
+
+    const body = this.player.body as Phaser.Physics.Arcade.Body | null
+
+    if (!body) return false
+
+    return body.blocked.down || body.touching.down
+  }
+
+  private isJumpDown(): boolean {
+    if (!this.playerKeys) return false
+
+    return this.playerKeys.space.isDown || this.playerKeys.up.isDown || this.playerKeys.w.isDown
+  }
+
   private updatePlayerMovement(): void {
-    if (!this.player || !this.playerKeys) return
+    if (!this.player || !this.playerKeys || !this.playerJumpState) return
+
+    const grounded = this.isPlayerGrounded()
+    this.playerJumpState = updateMovableActorGroundContact({
+      state: this.playerJumpState,
+      now: this.time.now,
+      grounded,
+      config: playerActorDefinition.jump,
+    })
+
+    const jumpDown = this.isJumpDown()
+    if (jumpDown && !this.wasJumpDown) {
+      this.playerJumpState = bufferMovableActorJump({
+        state: this.playerJumpState,
+        now: this.time.now,
+        config: playerActorDefinition.jump,
+      })
+    }
+    this.wasJumpDown = jumpDown
+
+    const jumpDecision = getMovableActorJumpDecision({
+      state: this.playerJumpState,
+      now: this.time.now,
+      config: playerActorDefinition.jump,
+    })
+    this.playerJumpState = jumpDecision.state
+    if (jumpDecision.type !== 'none') {
+      this.player.setVelocityY(playerActorDefinition.jump.velocityY)
+    }
 
     const decision = getPlayerHorizontalMovementDecision({
       left: this.playerKeys.left.isDown || this.playerKeys.a.isDown,
@@ -201,7 +266,9 @@ class GameplayMapScene extends Phaser.Scene {
     this.player.setDragX(decision.dragX)
     this.player.setAccelerationX(decision.accelerationX)
 
-    if (decision.direction === 'left') {
+    if (!grounded) {
+      this.player.play(playerActorDefinition.sprites.jump.key, true)
+    } else if (decision.direction === 'left') {
       this.player.setFlipX(true)
       this.player.play(playerActorDefinition.sprites.run.key, true)
     } else if (decision.direction === 'right') {

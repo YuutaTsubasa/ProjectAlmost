@@ -22,6 +22,9 @@ vi.mock('phaser', () => {
             RIGHT: 39,
             A: 65,
             D: 68,
+            SPACE: 32,
+            UP: 38,
+            W: 87,
           },
         },
       },
@@ -52,6 +55,9 @@ type FakePlayerKeys = {
   right: { isDown: boolean }
   a: { isDown: boolean }
   d: { isDown: boolean }
+  space: { isDown: boolean }
+  up: { isDown: boolean }
+  w: { isDown: boolean }
 }
 
 type FakeRuntime = ReturnType<typeof createSceneRuntime>
@@ -113,12 +119,15 @@ function createFakePlayerSprite(input: { x: number; y: number; texture: string }
     scale: 1,
     collideWorldBounds: false,
     dragX: 0,
+    velocityY: 0,
     maxVelocity: { x: 0, y: 0 },
     depth: 0,
     accelerationX: 0,
     flipX: false,
     playCalls: [] as Array<{ key: string; ignoreIfPlaying?: boolean }>,
     body: {
+      blocked: { down: true },
+      touching: { down: true },
       size: { width: 0, height: 0 },
       offset: { x: 0, y: 0 },
       setSize: (width: number, height: number) => {
@@ -142,6 +151,10 @@ function createFakePlayerSprite(input: { x: number; y: number; texture: string }
     },
     setDragX: (value: number) => {
       sprite.dragX = value
+      return sprite
+    },
+    setVelocityY: (value: number) => {
+      sprite.velocityY = value
       return sprite
     },
     setMaxVelocity: (x: number, y: number) => {
@@ -220,6 +233,9 @@ function createSceneRuntime() {
       create: (config: unknown) => void
       generateFrameNumbers: (key: string, range: { start: number; end: number }) => Array<{ key: string; frame: number }>
     }
+    time: {
+      now: number
+    }
     input: {
       keyboard: {
         addKeys: (mapping: Record<string, number>) => {
@@ -227,6 +243,9 @@ function createSceneRuntime() {
           right: { isDown: boolean }
           a: { isDown: boolean }
           d: { isDown: boolean }
+          space: { isDown: boolean }
+          up: { isDown: boolean }
+          w: { isDown: boolean }
         }
       } | null
     }
@@ -242,6 +261,9 @@ function createSceneRuntime() {
     right: { isDown: false },
     a: { isDown: false },
     d: { isDown: false },
+    space: { isDown: false },
+    up: { isDown: false },
+    w: { isDown: false },
   }
   let playerSprite: ReturnType<typeof createFakePlayerSprite> | null = null
   let cameraFollowTarget: unknown = null
@@ -305,6 +327,10 @@ function createSceneRuntime() {
         key,
         frame: range.start + index,
       })),
+  }
+
+  scene.time = {
+    now: 0,
   }
 
   scene.input = {
@@ -404,6 +430,26 @@ describe('createGameplayRendererConfig', () => {
     )
   })
 
+  it('preloads and registers the player jump animation from the domain actor definition', () => {
+    const runtime = createSceneRuntime()
+
+    runtime.scene.preload()
+    runtime.scene.create()
+
+    expect(runtime.spritesheetCalls).toContainEqual({
+      key: playerActorDefinition.sprites.jump.key,
+      assetRef: playerActorDefinition.sprites.jump.assetRef,
+      frameWidth: playerActorDefinition.sprites.jump.frameWidth,
+      frameHeight: playerActorDefinition.sprites.jump.frameHeight,
+    })
+    expect(runtime.animationCreateCalls).toContainEqual({
+      key: playerActorDefinition.sprites.jump.key,
+      frames: [{ key: playerActorDefinition.sprites.jump.key, frame: 1 }],
+      frameRate: playerActorDefinition.sprites.jump.frameRate,
+      repeat: playerActorDefinition.sprites.jump.repeat,
+    })
+  })
+
   it('updates left movement with drag, negative acceleration, flip, and run animation', () => {
     const runtime = createSceneRuntime()
 
@@ -496,6 +542,88 @@ describe('createGameplayRendererConfig', () => {
 
     expect(runtime.playerSprite?.dragX).toBe(playerActorDefinition.movement.idleDragX)
     expect(runtime.playerSprite?.accelerationX).toBe(0)
+    expect(runtime.playerSprite?.playCalls.at(-1)).toEqual({
+      key: playerActorDefinition.sprites.idle.key,
+      ignoreIfPlaying: true,
+    })
+  })
+
+  it('applies jump velocity for a grounded Space press', () => {
+    const runtime = createSceneRuntime()
+
+    runtime.scene.create()
+    runtime.playerKeys.space.isDown = true
+
+    runtime.scene.update()
+
+    expect(runtime.playerSprite?.velocityY).toBe(playerActorDefinition.jump.velocityY)
+  })
+
+  it('maps ArrowUp and W to jump press rising edges', () => {
+    const upRuntime = createSceneRuntime()
+    upRuntime.scene.create()
+    upRuntime.playerKeys.up.isDown = true
+    upRuntime.scene.update()
+
+    const wRuntime = createSceneRuntime()
+    wRuntime.scene.create()
+    wRuntime.playerKeys.w.isDown = true
+    wRuntime.scene.update()
+
+    expect(upRuntime.playerSprite?.velocityY).toBe(playerActorDefinition.jump.velocityY)
+    expect(wRuntime.playerSprite?.velocityY).toBe(playerActorDefinition.jump.velocityY)
+  })
+
+  it('allows one air jump and rejects a third jump until landing', () => {
+    const runtime = createSceneRuntime()
+
+    runtime.scene.create()
+    runtime.playerKeys.space.isDown = true
+    runtime.scene.update()
+    expect(runtime.playerSprite?.velocityY).toBe(playerActorDefinition.jump.velocityY)
+
+    runtime.playerSprite!.velocityY = 0
+    runtime.playerSprite!.body.blocked.down = false
+    runtime.playerSprite!.body.touching.down = false
+    runtime.playerKeys.space.isDown = false
+    runtime.scene.update()
+
+    runtime.playerKeys.space.isDown = true
+    runtime.scene.time.now += playerActorDefinition.jump.coyoteTimeMs + 1
+    runtime.scene.update()
+    expect(runtime.playerSprite?.velocityY).toBe(playerActorDefinition.jump.velocityY)
+
+    runtime.playerSprite!.velocityY = 0
+    runtime.playerKeys.space.isDown = false
+    runtime.scene.update()
+    runtime.playerKeys.space.isDown = true
+    runtime.scene.update()
+    expect(runtime.playerSprite?.velocityY).toBe(0)
+
+    runtime.playerSprite!.body.blocked.down = true
+    runtime.playerSprite!.body.touching.down = true
+    runtime.playerKeys.space.isDown = false
+    runtime.scene.update()
+    runtime.playerKeys.space.isDown = true
+    runtime.scene.update()
+    expect(runtime.playerSprite?.velocityY).toBe(playerActorDefinition.jump.velocityY)
+  })
+
+  it('uses jump animation while airborne and idle animation when grounded without movement', () => {
+    const runtime = createSceneRuntime()
+
+    runtime.scene.create()
+    runtime.playerSprite!.body.blocked.down = false
+    runtime.playerSprite!.body.touching.down = false
+    runtime.scene.update()
+    expect(runtime.playerSprite?.playCalls.at(-1)).toEqual({
+      key: playerActorDefinition.sprites.jump.key,
+      ignoreIfPlaying: true,
+    })
+
+    runtime.playerSprite!.body.blocked.down = true
+    runtime.playerSprite!.body.touching.down = true
+    runtime.scene.update()
     expect(runtime.playerSprite?.playCalls.at(-1)).toEqual({
       key: playerActorDefinition.sprites.idle.key,
       ignoreIfPlaying: true,
