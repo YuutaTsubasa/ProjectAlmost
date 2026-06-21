@@ -19,6 +19,7 @@ describe('playerActorDefinition', () => {
           frameEnd: 3,
           frameRate: 5,
           repeat: -1,
+          scale: 0.78,
         },
         run: {
           key: 'player-run',
@@ -29,6 +30,7 @@ describe('playerActorDefinition', () => {
           frameEnd: 3,
           frameRate: 9,
           repeat: -1,
+          scale: 0.78,
         },
         jump: {
           key: 'player-jump',
@@ -39,6 +41,7 @@ describe('playerActorDefinition', () => {
           frameEnd: 1,
           frameRate: 1,
           repeat: 0,
+          scale: 0.78,
         },
         attack: {
           key: 'player-attack',
@@ -49,6 +52,7 @@ describe('playerActorDefinition', () => {
           frameEnd: 3,
           frameRate: 12,
           repeat: 0,
+          scale: 0.88,
         },
       },
       origin: { x: 0.5, y: 0.5 },

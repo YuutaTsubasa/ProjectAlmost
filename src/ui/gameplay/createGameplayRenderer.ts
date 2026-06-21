@@ -22,6 +22,7 @@ import {
   getPlayerCenterY,
   getPlayerHorizontalMovementDecision,
   playerActorDefinition,
+  type PlayerAnimationKey,
 } from '../../domain/gameplay/playerActor'
 import {
   canStartMeleeAttack,
@@ -313,7 +314,7 @@ class GameplayMapScene extends Phaser.Scene {
 
     player.body.setSize(playerActorDefinition.body.width, playerActorDefinition.body.height)
     player.body.setOffset(playerActorDefinition.body.offsetX, playerActorDefinition.body.offsetY)
-    player.play(playerActorDefinition.sprites.idle.key)
+    this.playPlayerAnimation(player, 'idle')
 
     this.physics.add.collider(player, this.terrainLayer)
     this.cameras.main.startFollow(player, true, 0.12, 0.12)
@@ -479,7 +480,7 @@ class GameplayMapScene extends Phaser.Scene {
     this.attackReady = entry.attackReady
     this.isAttacking = entry.attacking
     this.player.setFlipX(facing === 'left')
-    this.player.play(playerActorDefinition.sprites.attack.key, true)
+    this.playPlayerAnimation(this.player, 'attack')
 
     this.spawnMeleeHitbox()
 
@@ -629,16 +630,26 @@ class GameplayMapScene extends Phaser.Scene {
     }
 
     if (this.isAttacking) {
-      this.player.play(playerActorDefinition.sprites.attack.key, true)
+      this.playPlayerAnimation(this.player, 'attack')
     } else if (!grounded || jumpingThisFrame) {
-      this.player.play(playerActorDefinition.sprites.jump.key, true)
+      this.playPlayerAnimation(this.player, 'jump')
     } else if (decision.direction === 'left') {
-      this.player.play(playerActorDefinition.sprites.run.key, true)
+      this.playPlayerAnimation(this.player, 'run')
     } else if (decision.direction === 'right') {
-      this.player.play(playerActorDefinition.sprites.run.key, true)
+      this.playPlayerAnimation(this.player, 'run')
     } else {
-      this.player.play(playerActorDefinition.sprites.idle.key, true)
+      this.playPlayerAnimation(this.player, 'idle')
     }
+  }
+
+  private playPlayerAnimation(
+    player: Phaser.Physics.Arcade.Sprite,
+    animationKey: PlayerAnimationKey,
+  ): void {
+    const sprite = playerActorDefinition.sprites[animationKey]
+
+    player.setScale(sprite.scale)
+    player.play(sprite.key, true)
   }
 
   private updateEnemyPatrol(): void {

@@ -11,6 +11,7 @@ export type PlayerAnimationDefinition = {
   frameEnd: number
   frameRate: number
   repeat: number
+  scale: number
 }
 
 export type PlayerActorDefinition = {
@@ -58,6 +59,7 @@ export const playerActorDefinition: PlayerActorDefinition = {
       frameEnd: 3,
       frameRate: 5,
       repeat: -1,
+      scale: 0.78,
     },
     run: {
       key: 'player-run',
@@ -68,6 +70,7 @@ export const playerActorDefinition: PlayerActorDefinition = {
       frameEnd: 3,
       frameRate: 9,
       repeat: -1,
+      scale: 0.78,
     },
     jump: {
       key: 'player-jump',
@@ -78,6 +81,7 @@ export const playerActorDefinition: PlayerActorDefinition = {
       frameEnd: 1,
       frameRate: 1,
       repeat: 0,
+      scale: 0.78,
     },
     attack: {
       key: 'player-attack',
@@ -88,6 +92,7 @@ export const playerActorDefinition: PlayerActorDefinition = {
       frameEnd: 3,
       frameRate: 12,
       repeat: 0,
+      scale: 0.88,
     },
   },
   origin: { x: 0.5, y: 0.5 },

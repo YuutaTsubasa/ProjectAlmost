@@ -822,6 +822,7 @@ describe('createGameplayRendererConfig', () => {
       key: 'player-attack',
       ignoreIfPlaying: true,
     })
+    expect(runtime.playerSprite?.scale).toBe(playerActorDefinition.sprites.attack.scale)
   })
 
   it('faces and spawns the melee hitbox left when left and J are pressed on the same frame', () => {
@@ -861,6 +862,7 @@ describe('createGameplayRendererConfig', () => {
     runtime.playerKeys.j.isDown = false
     runtime.scene.update()
     expect(runtime.playerSprite?.playCalls.at(-1)?.key).toBe('player-idle')
+    expect(runtime.playerSprite?.scale).toBe(playerActorDefinition.sprites.idle.scale)
 
     runtime.runDelayedCalls(360)
     runtime.playerKeys.j.isDown = true

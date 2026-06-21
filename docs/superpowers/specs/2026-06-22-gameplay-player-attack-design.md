@@ -151,6 +151,9 @@ Extend `src/domain/gameplay/playerActor.ts`:
   - frames: `0..3`
   - frame rate: `12`
   - repeat: `0`
+- Player sprite metadata owns visual scale because the value compensates for each sprite sheet's authored proportions:
+  - idle/run/jump scale: `0.78`
+  - attack scale: `0.88`
 
 Copy the attack sprite from:
 
@@ -199,6 +202,7 @@ Attack flow:
 Animation priority:
 
 - While `isAttacking`, player movement update preserves attack animation and must not replace it with idle/run/jump.
+- Player animation playback applies the selected sprite metadata scale. Attack uses the attack sprite scale; non-attack states restore their own sprite scales.
 - Attack does not disable horizontal movement in this slice.
 - Attack does not change jump behavior in this slice.
 
