@@ -12,6 +12,18 @@ vi.mock('phaser', () => {
   return {
     default: {
       AUTO: 'AUTO',
+      Geom: {
+        Intersects: {
+          RectangleToRectangle: (
+            a: { x: number; y: number; width: number; height: number },
+            b: { x: number; y: number; width: number; height: number },
+          ) =>
+            a.x < b.x + b.width &&
+            a.x + a.width > b.x &&
+            a.y < b.y + b.height &&
+            a.y + a.height > b.y,
+        },
+      },
       Scale: {
         FIT: 'FIT',
         CENTER_BOTH: 'CENTER_BOTH',
@@ -23,9 +35,11 @@ vi.mock('phaser', () => {
             RIGHT: 39,
             A: 65,
             D: 68,
+            J: 74,
             SPACE: 32,
             UP: 38,
             W: 87,
+            Z: 90,
           },
         },
       },
@@ -59,12 +73,14 @@ type GenerateTextureCall = {
 
 type TweenCall = {
   targets: unknown
-  y: number
+  y?: number
   angle: number
   duration: number
   ease: string
-  yoyo: boolean
-  repeat: number
+  yoyo?: boolean
+  repeat?: number
+  scale?: number
+  alpha?: number
 }
 
 type FakePlayerKeys = {
@@ -72,9 +88,11 @@ type FakePlayerKeys = {
   right: { isDown: boolean }
   a: { isDown: boolean }
   d: { isDown: boolean }
+  j: { isDown: boolean }
   space: { isDown: boolean }
   up: { isDown: boolean }
   w: { isDown: boolean }
+  z: { isDown: boolean }
 }
 
 type FakeRuntime = ReturnType<typeof createSceneRuntime>
@@ -142,9 +160,14 @@ function createFakeArcadeSprite(input: { x: number; y: number; texture: string }
     depth: 0,
     accelerationX: 0,
     flipX: false,
+    angle: 0,
+    alpha: 1,
+    visible: true,
+    destroyed: false,
     immovable: false,
     playCalls: [] as Array<{ key: string; ignoreIfPlaying?: boolean }>,
     body: {
+      enable: true,
       allowGravity: true,
       blocked: { down: true },
       touching: { down: true },
@@ -181,6 +204,11 @@ function createFakeArcadeSprite(input: { x: number; y: number; texture: string }
       sprite.velocityY = value
       return sprite
     },
+    setVelocity: (x: number, y: number) => {
+      sprite.velocityX = x
+      sprite.velocityY = y
+      return sprite
+    },
     setMaxVelocity: (x: number, y: number) => {
       sprite.maxVelocity = { x, y }
       return sprite
@@ -197,6 +225,18 @@ function createFakeArcadeSprite(input: { x: number; y: number; texture: string }
       sprite.flipX = value
       return sprite
     },
+    setVisible: (value: boolean) => {
+      sprite.visible = value
+      return sprite
+    },
+    setAlpha: (value: number) => {
+      sprite.alpha = value
+      return sprite
+    },
+    setAngle: (value: number) => {
+      sprite.angle = value
+      return sprite
+    },
     setImmovable: (value: boolean) => {
       sprite.immovable = value
       return sprite
@@ -205,9 +245,48 @@ function createFakeArcadeSprite(input: { x: number; y: number; texture: string }
       sprite.playCalls.push({ key, ignoreIfPlaying })
       return sprite
     },
+    destroy: () => {
+      sprite.destroyed = true
+    },
+    getBounds: () => ({
+      x: sprite.x - sprite.body.size.width / 2,
+      y: sprite.y - sprite.body.size.height / 2,
+      width: sprite.body.size.width,
+      height: sprite.body.size.height,
+    }),
   }
 
   return sprite
+}
+
+function createFakeImage(input: { x: number; y: number; texture: string }) {
+  const image = {
+    ...input,
+    width: 56,
+    height: 36,
+    visible: true,
+    flipX: false,
+    destroyed: false,
+    setVisible: (value: boolean) => {
+      image.visible = value
+      return image
+    },
+    setFlipX: (value: boolean) => {
+      image.flipX = value
+      return image
+    },
+    destroy: () => {
+      image.destroyed = true
+    },
+    getBounds: () => ({
+      x: image.x - image.width / 2,
+      y: image.y - image.height / 2,
+      width: image.width,
+      height: image.height,
+    }),
+  }
+
+  return image
 }
 
 function createSceneRuntime() {
@@ -250,6 +329,7 @@ function createSceneRuntime() {
         height: number,
         key: string,
       ) => ReturnType<typeof createFakeTileSprite>
+      image: (x: number, y: number, texture: string) => ReturnType<typeof createFakeImage>
     }
     make: {
       graphics: () => {
@@ -272,9 +352,11 @@ function createSceneRuntime() {
     }
     time: {
       now: number
+      delayedCall: (delay: number, callback: () => void) => void
     }
     tweens: {
       add: (config: TweenCall) => void
+      killTweensOf: (target: unknown) => void
     }
     input: {
       keyboard: {
@@ -283,9 +365,11 @@ function createSceneRuntime() {
           right: { isDown: boolean }
           a: { isDown: boolean }
           d: { isDown: boolean }
+          j: { isDown: boolean }
           space: { isDown: boolean }
           up: { isDown: boolean }
           w: { isDown: boolean }
+          z: { isDown: boolean }
         }
       } | null
     }
@@ -296,6 +380,9 @@ function createSceneRuntime() {
   const animationCreateCalls: AnimationCreateCall[] = []
   const generateTextureCalls: GenerateTextureCall[] = []
   const tweenCalls: TweenCall[] = []
+  const images: Array<ReturnType<typeof createFakeImage>> = []
+  const delayedCalls: Array<{ delay: number; callback: () => void }> = []
+  const killedTweenTargets: unknown[] = []
   const colliderCalls: Array<{ a: unknown; b: unknown }> = []
   const sprites: Array<ReturnType<typeof createFakeArcadeSprite>> = []
   const terrainLayer = createFakeTerrainLayer()
@@ -304,9 +391,11 @@ function createSceneRuntime() {
     right: { isDown: false },
     a: { isDown: false },
     d: { isDown: false },
+    j: { isDown: false },
     space: { isDown: false },
     up: { isDown: false },
     w: { isDown: false },
+    z: { isDown: false },
   }
   let playerSprite: ReturnType<typeof createFakeArcadeSprite> | null = null
   let cameraFollowTarget: unknown = null
@@ -356,6 +445,11 @@ function createSceneRuntime() {
 
   scene.add = {
     tileSprite: () => createFakeTileSprite(),
+    image: (x, y, texture) => {
+      const image = createFakeImage({ x, y, texture })
+      images.push(image)
+      return image
+    },
   }
 
   scene.make = {
@@ -389,11 +483,17 @@ function createSceneRuntime() {
 
   scene.time = {
     now: 0,
+    delayedCall: (delay, callback) => {
+      delayedCalls.push({ delay, callback })
+    },
   }
 
   scene.tweens = {
     add: (config) => {
       tweenCalls.push(config)
+    },
+    killTweensOf: (target) => {
+      killedTweenTargets.push(target)
     },
   }
 
@@ -413,9 +513,17 @@ function createSceneRuntime() {
     sprites,
     generateTextureCalls,
     tweenCalls,
+    images,
+    delayedCalls,
+    killedTweenTargets,
     colliderCalls,
     terrainLayer,
     playerKeys,
+    runDelayedCalls: (delay: number) => {
+      for (const call of delayedCalls.filter((candidate) => candidate.delay === delay)) {
+        call.callback()
+      }
+    },
     get enemySprites() {
       return sprites.filter((sprite) => sprite !== playerSprite)
     },
@@ -567,6 +675,31 @@ describe('createGameplayRendererConfig', () => {
     })
   })
 
+  it('preloads and registers the player attack animation', () => {
+    const runtime = createSceneRuntime()
+
+    runtime.scene.preload()
+    runtime.scene.create()
+
+    expect(runtime.spritesheetCalls).toContainEqual({
+      key: 'player-attack',
+      assetRef: '/assets/sprites/player_attack/sheet-transparent.webp',
+      frameWidth: 128,
+      frameHeight: 128,
+    })
+    expect(runtime.animationCreateCalls).toContainEqual({
+      key: 'player-attack',
+      frames: [
+        { key: 'player-attack', frame: 0 },
+        { key: 'player-attack', frame: 1 },
+        { key: 'player-attack', frame: 2 },
+        { key: 'player-attack', frame: 3 },
+      ],
+      frameRate: 12,
+      repeat: 0,
+    })
+  })
+
   it('creates Armor Guard with grounded spawn, body setup, animation, velocity, and terrain collider', () => {
     const runtime = createSceneRuntime()
     const guardDefinition = enemyActorDefinitions['armor-guard']
@@ -668,6 +801,107 @@ describe('createGameplayRendererConfig', () => {
     runtime.scene.update()
 
     expect(core.velocityX).toBe(12)
+  })
+
+  it('creates an invisible melee hitbox and keeps attack animation priority on J press', () => {
+    const runtime = createSceneRuntime()
+    runtime.scene.create()
+
+    runtime.playerKeys.j.isDown = true
+    runtime.scene.update()
+
+    expect(runtime.images[0]).toMatchObject({
+      x: 304,
+      y: 432,
+      texture: 'attack-hitbox',
+      visible: false,
+      flipX: false,
+    })
+    expect(runtime.playerSprite?.playCalls.at(-1)).toEqual({
+      key: 'player-attack',
+      ignoreIfPlaying: true,
+    })
+  })
+
+  it('destroys the hitbox, ends attack, and restores readiness on prototype delays', () => {
+    const runtime = createSceneRuntime()
+    runtime.scene.create()
+
+    runtime.playerKeys.j.isDown = true
+    runtime.scene.update()
+    const hitbox = runtime.images[0]
+
+    runtime.runDelayedCalls(120)
+    expect(hitbox.destroyed).toBe(true)
+
+    runtime.runDelayedCalls(340)
+    runtime.playerKeys.j.isDown = false
+    runtime.scene.update()
+    expect(runtime.playerSprite?.playCalls.at(-1)?.key).toBe('player-idle')
+
+    runtime.runDelayedCalls(360)
+    runtime.playerKeys.j.isDown = true
+    runtime.scene.update()
+    expect(runtime.images).toHaveLength(2)
+  })
+
+  it('defeats Armor Guard with the guard death presentation and stops patrol updates', () => {
+    const runtime = createSceneRuntime()
+    runtime.scene.create()
+    const guard = runtime.sprites.find((sprite) => sprite.texture === 'enemy-guard-walk')
+    expect(guard).toBeDefined()
+    if (!guard) return
+
+    runtime.playerSprite!.x = 672
+    runtime.playerSprite!.y = guard.y
+    runtime.playerKeys.j.isDown = true
+    runtime.scene.update()
+
+    expect(guard.body.enable).toBe(false)
+    expect(guard.velocityX).toBe(0)
+    expect(guard.playCalls.at(-1)).toEqual({ key: 'enemy-guard-death', ignoreIfPlaying: true })
+
+    guard.x = 999
+    runtime.scene.update()
+    expect(guard.velocityX).toBe(0)
+
+    runtime.runDelayedCalls(520)
+    expect(guard.visible).toBe(false)
+  })
+
+  it('defeats Azure Core with a burst tween and ignores defeated enemies on later attacks', () => {
+    const runtime = createSceneRuntime()
+    runtime.scene.create()
+    const core = runtime.sprites.find((sprite) => sprite.texture === 'azure-core')
+    expect(core).toBeDefined()
+    if (!core) return
+
+    runtime.playerSprite!.x = 1712
+    runtime.playerSprite!.y = core.y
+    runtime.playerKeys.z.isDown = true
+    runtime.scene.update()
+
+    expect(core.body.enable).toBe(false)
+    expect(runtime.killedTweenTargets).toContain(core)
+    expect(runtime.tweenCalls.at(-1)).toMatchObject({
+      targets: core,
+      scale: 1.8,
+      alpha: 0,
+      angle: 90,
+      duration: 260,
+      ease: 'Quad.easeOut',
+    })
+
+    runtime.runDelayedCalls(360)
+    runtime.playerKeys.z.isDown = false
+    runtime.scene.update()
+    runtime.playerKeys.z.isDown = true
+    runtime.scene.update()
+    expect(
+      runtime.tweenCalls.filter(
+        (call) => call.targets === core && 'scale' in call && call.scale === 1.8,
+      ),
+    ).toHaveLength(1)
   })
 
   it('updates left movement with drag, negative acceleration, flip, and run animation', () => {

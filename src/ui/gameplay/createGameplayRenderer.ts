@@ -1,8 +1,11 @@
 import Phaser from 'phaser'
 import {
   enemyActorDefinitions,
+  enemyDefeatPresentation,
   getEnemySpawnY,
+  getEnemyDefeatPresentation,
   getNextEnemyPatrolDirection,
+  shouldProcessEnemyDefeat,
   shouldUpdateEnemyPatrol,
   type EnemyPatrolDirection,
 } from '../../domain/gameplay/enemyActor'
@@ -20,6 +23,17 @@ import {
   getPlayerHorizontalMovementDecision,
   playerActorDefinition,
 } from '../../domain/gameplay/playerActor'
+import {
+  canStartMeleeAttack,
+  getAttackInputDecision,
+  getMeleeAttackEndState,
+  getMeleeAttackEntryState,
+  getMeleeAttackReadyState,
+  getMeleeHitboxGeometry,
+  isMeleeHitCandidate,
+  meleeAttackTiming,
+  meleeHitboxSize,
+} from '../../domain/gameplay/playerAttack'
 import {
   buildTerrainTileGrid,
   getTileColumnCount,
@@ -41,6 +55,7 @@ type EnemyRuntime = {
   sprite: Phaser.Physics.Arcade.Sprite
   spawn: GameplayEnemySpawn
   direction: EnemyPatrolDirection
+  defeated: boolean
 }
 
 class GameplayMapScene extends Phaser.Scene {
@@ -54,12 +69,17 @@ class GameplayMapScene extends Phaser.Scene {
     right: Phaser.Input.Keyboard.Key
     a: Phaser.Input.Keyboard.Key
     d: Phaser.Input.Keyboard.Key
+    j: Phaser.Input.Keyboard.Key
     space: Phaser.Input.Keyboard.Key
     up: Phaser.Input.Keyboard.Key
     w: Phaser.Input.Keyboard.Key
+    z: Phaser.Input.Keyboard.Key
   } | null = null
   private playerJumpState: MovableActorJumpState | null = null
   private wasJumpDown = false
+  private attackReady = true
+  private isAttacking = false
+  private wasAttackDown = false
 
   constructor(stage: GameplayStageMap) {
     super(`GameplayMapScene:${stage.id}`)
@@ -120,6 +140,7 @@ class GameplayMapScene extends Phaser.Scene {
     this.terrainLayer = this.createTerrainLayer(columns, rows)
     this.createPlayerAnimations()
     this.createEnemyTextures()
+    this.createAttackHitboxTexture()
     this.createEnemyAnimations()
     this.createEnemies()
     this.playerKeys = this.createPlayerKeys()
@@ -195,6 +216,14 @@ class GameplayMapScene extends Phaser.Scene {
     this.createAzureCoreTexture()
   }
 
+  private createAttackHitboxTexture(): void {
+    const graphics = this.make.graphics()
+    graphics.fillStyle(0x4be8ff, 0.2)
+    graphics.lineStyle(2, 0x4f7dff, 0.8)
+    graphics.generateTexture('attack-hitbox', meleeHitboxSize.width, meleeHitboxSize.height)
+    graphics.destroy()
+  }
+
   private createEnemyAnimations(): void {
     const guardSprites = enemyActorDefinitions['armor-guard'].sprites
     if (!guardSprites) return
@@ -244,9 +273,11 @@ class GameplayMapScene extends Phaser.Scene {
       right: Phaser.Input.Keyboard.KeyCodes.RIGHT,
       a: Phaser.Input.Keyboard.KeyCodes.A,
       d: Phaser.Input.Keyboard.KeyCodes.D,
+      j: Phaser.Input.Keyboard.KeyCodes.J,
       space: Phaser.Input.Keyboard.KeyCodes.SPACE,
       up: Phaser.Input.Keyboard.KeyCodes.UP,
       w: Phaser.Input.Keyboard.KeyCodes.W,
+      z: Phaser.Input.Keyboard.KeyCodes.Z,
     }) as NonNullable<GameplayMapScene['playerKeys']>
 
     return keys
@@ -282,6 +313,9 @@ class GameplayMapScene extends Phaser.Scene {
       grounded: true,
       config: playerActorDefinition.jump,
     })
+    this.attackReady = true
+    this.isAttacking = false
+    this.wasAttackDown = false
     this.wasJumpDown = false
     this.player = player
   }
@@ -331,6 +365,7 @@ class GameplayMapScene extends Phaser.Scene {
           sprite,
           spawn,
           direction,
+          defeated: false,
         }
       } else {
         const definition = enemyActorDefinitions['azure-core']
@@ -362,6 +397,7 @@ class GameplayMapScene extends Phaser.Scene {
           sprite,
           spawn,
           direction: -1,
+          defeated: false,
         }
       }
     })
@@ -398,6 +434,118 @@ class GameplayMapScene extends Phaser.Scene {
     return this.playerKeys.space.isDown || this.playerKeys.up.isDown || this.playerKeys.w.isDown
   }
 
+  private isAttackDown(): boolean {
+    if (!this.playerKeys) return false
+
+    return this.playerKeys.j.isDown || this.playerKeys.z.isDown
+  }
+
+  private tryStartPlayerAttack(grounded: boolean): void {
+    if (!this.player || !this.playerKeys) return
+
+    const attackDown = this.isAttackDown()
+    const attackPressed = attackDown && !this.wasAttackDown
+    this.wasAttackDown = attackDown
+
+    const decision = getAttackInputDecision({
+      attackPressed,
+      crouching: false,
+      grounded,
+    })
+
+    if (decision !== 'melee') return
+
+    if (
+      !canStartMeleeAttack({
+        attackReady: this.attackReady,
+        hurting: false,
+        homingAttacking: false,
+      })
+    ) {
+      return
+    }
+
+    const entry = getMeleeAttackEntryState()
+    this.attackReady = entry.attackReady
+    this.isAttacking = entry.attacking
+    this.player.play(playerActorDefinition.sprites.attack.key, true)
+
+    this.spawnMeleeHitbox()
+
+    this.time.delayedCall(meleeAttackTiming.attackEndDelayMs, () => {
+      const end = getMeleeAttackEndState()
+      this.isAttacking = end.attacking
+    })
+    this.time.delayedCall(meleeAttackTiming.readyDelayMs, () => {
+      const ready = getMeleeAttackReadyState()
+      this.attackReady = ready.attackReady
+    })
+  }
+
+  private spawnMeleeHitbox(): void {
+    if (!this.player) return
+
+    const geometry = getMeleeHitboxGeometry({
+      playerX: this.player.x,
+      playerY: this.player.y,
+      playerFlipX: this.player.flipX,
+    })
+    const hitbox = this.add
+      .image(geometry.x, geometry.y, 'attack-hitbox')
+      .setFlipX(geometry.flipX)
+      .setVisible(false)
+
+    const enemy = this.enemies.find((candidate) =>
+      isMeleeHitCandidate({
+        defeated: candidate.defeated,
+        intersectsHitbox: Phaser.Geom.Intersects.RectangleToRectangle(
+          hitbox.getBounds(),
+          candidate.sprite.getBounds(),
+        ),
+      }),
+    )
+
+    if (enemy && shouldProcessEnemyDefeat({ enemyExists: true, defeated: enemy.defeated })) {
+      this.defeatEnemy(enemy)
+    }
+
+    this.time.delayedCall(meleeAttackTiming.hitboxLifetimeMs, () => {
+      hitbox.destroy()
+    })
+  }
+
+  private defeatEnemy(enemy: EnemyRuntime): void {
+    enemy.defeated = true
+    enemy.sprite.setVelocity(0, 0)
+    const body = enemy.sprite.body as Phaser.Physics.Arcade.Body | null
+    if (body) {
+      body.enable = false
+    }
+
+    const presentation = getEnemyDefeatPresentation(enemy.spawn.type)
+    if (presentation === 'armor-guard-death') {
+      const death = enemyActorDefinitions['armor-guard'].sprites?.death
+      if (death) {
+        enemy.sprite.play(death.key, true)
+      }
+    } else {
+      const burst = enemyDefeatPresentation.azureCoreBurst
+      this.tweens.killTweensOf(enemy.sprite)
+      this.tweens.add({
+        targets: enemy.sprite,
+        scale: burst.scale,
+        alpha: burst.alpha,
+        angle: enemy.sprite.angle + burst.angleDelta,
+        duration: burst.durationMs,
+        ease: burst.ease,
+      })
+    }
+
+    this.time.delayedCall(enemyDefeatPresentation.hideDelayMs, () => {
+      enemy.sprite.setVisible(false)
+    })
+  }
+
   private updatePlayerMovement(): void {
     if (!this.player || !this.playerKeys || !this.playerJumpState) return
 
@@ -408,6 +556,7 @@ class GameplayMapScene extends Phaser.Scene {
       grounded,
       config: playerActorDefinition.jump,
     })
+    this.tryStartPlayerAttack(grounded)
 
     const jumpDown = this.isJumpDown()
     if (jumpDown && !this.wasJumpDown) {
@@ -438,7 +587,9 @@ class GameplayMapScene extends Phaser.Scene {
     this.player.setDragX(decision.dragX)
     this.player.setAccelerationX(decision.accelerationX)
 
-    if (!grounded || jumpingThisFrame) {
+    if (this.isAttacking) {
+      this.player.play(playerActorDefinition.sprites.attack.key, true)
+    } else if (!grounded || jumpingThisFrame) {
       this.player.play(playerActorDefinition.sprites.jump.key, true)
     } else if (decision.direction === 'left') {
       this.player.setFlipX(true)
@@ -456,7 +607,7 @@ class GameplayMapScene extends Phaser.Scene {
       if (
         !shouldUpdateEnemyPatrol({
           type: enemy.spawn.type,
-          defeated: false,
+          defeated: enemy.defeated,
         }) ||
         enemy.spawn.type !== 'armor-guard'
       ) {
