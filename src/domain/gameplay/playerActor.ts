@@ -1,5 +1,5 @@
 export type PlayerActorId = 'player'
-export type PlayerAnimationKey = 'idle' | 'run' | 'jump' | 'attack'
+export type PlayerAnimationKey = 'idle' | 'run' | 'jump' | 'attack' | 'hurt' | 'death'
 export type PlayerMovementDirection = 'left' | 'right' | 'none'
 
 export type PlayerAnimationDefinition = {
@@ -93,6 +93,28 @@ export const playerActorDefinition: PlayerActorDefinition = {
       frameRate: 12,
       repeat: 0,
       scale: 0.88,
+    },
+    hurt: {
+      key: 'player-hurt',
+      assetRef: '/assets/sprites/player_hurt/sheet-transparent.webp',
+      frameWidth: 128,
+      frameHeight: 128,
+      frameStart: 0,
+      frameEnd: 3,
+      frameRate: 10,
+      repeat: 0,
+      scale: 0.78,
+    },
+    death: {
+      key: 'player-death',
+      assetRef: '/assets/sprites/player_death/sheet-transparent.webp',
+      frameWidth: 128,
+      frameHeight: 128,
+      frameStart: 0,
+      frameEnd: 3,
+      frameRate: 7,
+      repeat: 0,
+      scale: 0.78,
     },
   },
   origin: { x: 0.5, y: 0.5 },

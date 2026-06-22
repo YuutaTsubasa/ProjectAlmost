@@ -41,6 +41,8 @@ describe('gameplayStageMaps', () => {
       '/assets/sprites/player_run/sheet-transparent.webp',
       '/assets/sprites/player_jump/sheet-transparent.webp',
       '/assets/sprites/player_attack/sheet-transparent.webp',
+      '/assets/sprites/player_hurt/sheet-transparent.webp',
+      '/assets/sprites/player_death/sheet-transparent.webp',
       '/assets/sprites/enemy_guard_walk/sheet-transparent.webp',
       '/assets/sprites/enemy_guard_death/sheet-transparent.webp',
     ])
