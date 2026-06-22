@@ -26,15 +26,22 @@ import {
 } from '../../domain/gameplay/playerActor'
 import {
   PLAYER_MAX_HEALTH,
+  PLAYER_OUT_OF_BOUNDS_MARGIN,
   canApplyPlayerEnemyHit,
+  canEnterPlayerDefeat,
   getPlayerDamageOutcome,
+  getPlayerDefeatEntryState,
+  getPlayerDefeatOutcome,
   getPlayerHurtEntryState,
   getPlayerHurtRecoveryState,
   getPlayerHurtVelocity,
   getPlayerInvulnerabilityRecoveryState,
   getPlayerKnockbackDirection,
+  getPlayerRespawnState,
+  isPlayerOutsideWorldBounds,
   playerHurtPresentation,
   playerLifeTiming,
+  type PlayerDefeatReason,
 } from '../../domain/gameplay/playerLife'
 import {
   canStartMeleeAttack,
@@ -179,6 +186,7 @@ class GameplayMapScene extends Phaser.Scene {
 
     this.updateEnemyPatrol()
     this.processActiveMeleeHitboxes()
+    this.checkPlayerOutOfBounds()
     this.updatePlayerMovement()
   }
 
@@ -630,6 +638,7 @@ class GameplayMapScene extends Phaser.Scene {
     const damageOutcome = getPlayerDamageOutcome({ currentHealth: this.playerHealth })
     this.playerHealth = damageOutcome.nextHealth
     if (damageOutcome.type === 'defeated') {
+      this.defeatPlayer('damage')
       return
     }
 
@@ -669,6 +678,80 @@ class GameplayMapScene extends Phaser.Scene {
       this.isPlayerInvulnerable = recovery.invulnerable
       this.player?.setAlpha(1)
     })
+  }
+
+  private checkPlayerOutOfBounds(): void {
+    if (!this.player) return
+
+    if (
+      isPlayerOutsideWorldBounds({
+        x: this.player.x,
+        y: this.player.y,
+        worldWidth: this.stageMap.world.width,
+        worldHeight: this.stageMap.world.height,
+        margin: PLAYER_OUT_OF_BOUNDS_MARGIN,
+      })
+    ) {
+      this.defeatPlayer('fall')
+    }
+  }
+
+  private defeatPlayer(reason: PlayerDefeatReason): void {
+    if (!this.player) return
+
+    if (!canEnterPlayerDefeat({ dead: this.isPlayerDead })) {
+      return
+    }
+
+    const entry = getPlayerDefeatEntryState()
+    this.isPlayerDead = entry.dead
+    this.isPlayerHurting = entry.hurting
+    this.isPlayerInvulnerable = entry.invulnerable
+    this.isAttacking = entry.attacking
+    this.attackReady = entry.attackReady
+    this.clearActiveMeleeHitboxes()
+
+    const outcome = getPlayerDefeatOutcome({
+      reason,
+      gravitySign: 1,
+    })
+
+    this.player.setAccelerationX(0)
+    this.player.setVelocity(0, outcome.velocityY)
+    this.playPlayerAnimation(this.player, 'death')
+
+    this.time.delayedCall(playerLifeTiming.deathRespawnDelayMs, () => {
+      this.respawnPlayer()
+    })
+  }
+
+  private respawnPlayer(): void {
+    if (!this.player) return
+
+    const state = getPlayerRespawnState()
+    this.playerHealth = state.health
+    this.isPlayerHurting = state.hurting
+    this.isPlayerInvulnerable = state.invulnerable
+    this.isPlayerDead = state.dead
+    this.isAttacking = state.attacking
+    this.attackReady = state.attackReady
+    this.wasAttackDown = false
+    this.wasJumpDown = false
+
+    this.player.x = this.stageMap.player.spawn.x
+    this.player.y = getPlayerCenterY({ surfaceY: this.stageMap.player.spawn.surfaceY })
+    this.player.setVelocity(0, 0)
+    this.player.setAccelerationX(0)
+    this.player.setAlpha(1)
+    if (this.player.body) {
+      this.player.body.enable = true
+    }
+    this.playerJumpState = createMovableActorJumpState({
+      now: this.time.now,
+      grounded: true,
+      config: playerActorDefinition.jump,
+    })
+    this.playPlayerAnimation(this.player, 'idle')
   }
 
   private updatePlayerMovement(): void {

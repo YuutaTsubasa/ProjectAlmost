@@ -2,7 +2,11 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { enemyActorDefinitions } from '../../domain/gameplay/enemyActor'
 import { getGameplayStageMap } from '../../domain/gameplay/gameplayStageMaps'
 import { playerActorDefinition } from '../../domain/gameplay/playerActor'
-import { playerHurtPresentation, playerLifeTiming } from '../../domain/gameplay/playerLife'
+import {
+  PLAYER_OUT_OF_BOUNDS_MARGIN,
+  playerHurtPresentation,
+  playerLifeTiming,
+} from '../../domain/gameplay/playerLife'
 import { createGameplayRendererConfig } from './createGameplayRenderer'
 
 vi.mock('phaser', () => {
@@ -554,6 +558,11 @@ function createSceneRuntime() {
       return cameraFollowTarget
     },
   }
+}
+
+function recoverFromSurvivedHurt(runtime: FakeRuntime): void {
+  runtime.runDelayedCalls(playerLifeTiming.hurtRecoveryDelayMs)
+  runtime.runDelayedCalls(playerLifeTiming.invulnerabilityRecoveryDelayMs)
 }
 
 describe('createGameplayRendererConfig', () => {
@@ -1159,6 +1168,112 @@ describe('createGameplayRendererConfig', () => {
 
     expect(hitbox.destroyed).toBe(true)
     expect(guard.body.enable).toBe(true)
+  })
+
+  it('plays death on the third enemy hit and respawns at the stage spawn with full health', () => {
+    const runtime = createSceneRuntime()
+    runtime.scene.create()
+    const guard = runtime.sprites.find((sprite) => sprite.texture === 'enemy-guard-walk')
+    expect(guard).toBeDefined()
+    if (!guard || !runtime.playerSprite) return
+
+    runtime.playerSprite.x = 650
+    guard.x = 720
+    runtime.triggerEnemyOverlap(guard)
+    recoverFromSurvivedHurt(runtime)
+    runtime.triggerEnemyOverlap(guard)
+    recoverFromSurvivedHurt(runtime)
+    runtime.triggerEnemyOverlap(guard)
+
+    expect(runtime.playerSprite.velocityX).toBe(0)
+    expect(runtime.playerSprite.velocityY).toBe(-160)
+    expect(runtime.playerSprite.accelerationX).toBe(0)
+    expect(runtime.playerSprite.playCalls.at(-1)).toEqual({
+      key: playerActorDefinition.sprites.death.key,
+      ignoreIfPlaying: true,
+    })
+    expect(runtime.playerSprite.scale).toBe(playerActorDefinition.sprites.death.scale)
+
+    runtime.runDelayedCalls(playerLifeTiming.deathRespawnDelayMs)
+
+    expect(runtime.playerSprite.x).toBe(runtime.stage.player.spawn.x)
+    expect(runtime.playerSprite.y).toBe(436)
+    expect(runtime.playerSprite.velocityX).toBe(0)
+    expect(runtime.playerSprite.velocityY).toBe(0)
+    expect(runtime.playerSprite.alpha).toBe(1)
+    expect(runtime.playerSprite.playCalls.at(-1)).toEqual({
+      key: playerActorDefinition.sprites.idle.key,
+      ignoreIfPlaying: true,
+    })
+
+    runtime.triggerEnemyOverlap(guard)
+    expect(runtime.playerSprite.playCalls.at(-1)).toEqual({
+      key: playerActorDefinition.sprites.hurt.key,
+      ignoreIfPlaying: true,
+    })
+  })
+
+  it('prevents movement, attack, and repeated contact damage while dead before respawn', () => {
+    const runtime = createSceneRuntime()
+    runtime.scene.create()
+    const guard = runtime.sprites.find((sprite) => sprite.texture === 'enemy-guard-walk')
+    expect(guard).toBeDefined()
+    if (!guard || !runtime.playerSprite) return
+
+    runtime.triggerEnemyOverlap(guard)
+    recoverFromSurvivedHurt(runtime)
+    runtime.triggerEnemyOverlap(guard)
+    recoverFromSurvivedHurt(runtime)
+    runtime.triggerEnemyOverlap(guard)
+
+    runtime.playerSprite.velocityX = 0
+    runtime.playerSprite.velocityY = 0
+    runtime.playerKeys.right.isDown = true
+    runtime.playerKeys.j.isDown = true
+    runtime.scene.update()
+    runtime.triggerEnemyOverlap(guard)
+
+    expect(runtime.images).toHaveLength(0)
+    expect(runtime.playerSprite.accelerationX).toBe(0)
+    expect(runtime.playerSprite.velocityX).toBe(0)
+    expect(runtime.playerSprite.velocityY).toBe(0)
+    expect(runtime.playerSprite.playCalls.filter((call) => call.key === playerActorDefinition.sprites.death.key)).toHaveLength(1)
+  })
+
+  it('kills and respawns the player after leaving any side of the world bounds', () => {
+    const cases = [
+      { x: -PLAYER_OUT_OF_BOUNDS_MARGIN - 1, y: 500 },
+      { x: 9600 + PLAYER_OUT_OF_BOUNDS_MARGIN + 1, y: 500 },
+      { x: 500, y: -PLAYER_OUT_OF_BOUNDS_MARGIN - 1 },
+      { x: 500, y: 1080 + PLAYER_OUT_OF_BOUNDS_MARGIN + 1 },
+    ]
+
+    for (const position of cases) {
+      const runtime = createSceneRuntime()
+      runtime.scene.create()
+      expect(runtime.playerSprite).toBeDefined()
+      if (!runtime.playerSprite) return
+
+      runtime.playerSprite.x = position.x
+      runtime.playerSprite.y = position.y
+      runtime.scene.update()
+
+      expect(runtime.playerSprite.velocityX).toBe(0)
+      expect(runtime.playerSprite.velocityY).toBe(0)
+      expect(runtime.playerSprite.playCalls.at(-1)).toEqual({
+        key: playerActorDefinition.sprites.death.key,
+        ignoreIfPlaying: true,
+      })
+
+      runtime.runDelayedCalls(playerLifeTiming.deathRespawnDelayMs)
+
+      expect(runtime.playerSprite.x).toBe(runtime.stage.player.spawn.x)
+      expect(runtime.playerSprite.y).toBe(436)
+      expect(runtime.playerSprite.playCalls.at(-1)).toEqual({
+        key: playerActorDefinition.sprites.idle.key,
+        ignoreIfPlaying: true,
+      })
+    }
   })
 
   it('updates left movement with drag, negative acceleration, flip, and run animation', () => {
