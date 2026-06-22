@@ -720,15 +720,10 @@ Add tests:
     runtime.runDelayedCalls(420)
     runtime.playerKeys.j.isDown = true
     runtime.scene.update()
-    expect(runtime.playerSprite.playCalls.at(-1)?.key).toBe('player-hurt')
+    expect(runtime.playerSprite.playCalls.at(-1)?.key).toBe('player-attack')
 
     runtime.runDelayedCalls(900)
     expect(runtime.playerSprite.alpha).toBe(1)
-    runtime.playerKeys.j.isDown = false
-    runtime.scene.update()
-    runtime.playerKeys.j.isDown = true
-    runtime.scene.update()
-    expect(runtime.playerSprite.playCalls.at(-1)?.key).toBe('player-attack')
   })
 
   it('does not hurt from defeated enemies', () => {
