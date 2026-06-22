@@ -631,6 +631,7 @@ describe('createGameplayRendererConfig', () => {
 
     expect(runtime.playerSprite).not.toBeNull()
     expect(runtime.playerSprite?.depth).toBe(17)
+    expect(runtime.playerSprite?.collideWorldBounds).toBe(false)
     expect(runtime.colliderCalls).toContainEqual({ a: runtime.playerSprite, b: runtime.terrainLayer })
     expect(runtime.cameraFollowTarget).toBe(runtime.playerSprite)
   })

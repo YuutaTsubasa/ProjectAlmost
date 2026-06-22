@@ -331,7 +331,7 @@ class GameplayMapScene extends Phaser.Scene {
     player
       .setOrigin(playerActorDefinition.origin.x, playerActorDefinition.origin.y)
       .setScale(playerActorDefinition.scale)
-      .setCollideWorldBounds(true)
+      .setCollideWorldBounds(false)
       .setDragX(playerActorDefinition.movement.idleDragX)
       .setMaxVelocity(playerActorDefinition.maxVelocity.x, playerActorDefinition.maxVelocity.y)
       .setDepth(playerActorDefinition.depth)
