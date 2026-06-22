@@ -1050,6 +1050,24 @@ describe('createGameplayRendererConfig', () => {
     })
   })
 
+  it('applies enemy contact damage from Azure Core overlaps', () => {
+    const runtime = createSceneRuntime()
+    runtime.scene.create()
+    const core = runtime.sprites.find((sprite) => sprite.texture === 'azure-core')
+    expect(core).toBeDefined()
+    if (!core || !runtime.playerSprite) return
+
+    runtime.playerSprite.x = 1810
+    core.x = 1760
+    runtime.triggerEnemyOverlap(core)
+
+    expect(runtime.playerSprite.velocityX).toBe(360)
+    expect(runtime.playerSprite.playCalls.at(-1)).toEqual({
+      key: playerActorDefinition.sprites.hurt.key,
+      ignoreIfPlaying: true,
+    })
+  })
+
   it('ignores repeated enemy contact while invulnerable and restores attack after hurt recovery', () => {
     const runtime = createSceneRuntime()
     runtime.scene.create()
@@ -1077,6 +1095,70 @@ describe('createGameplayRendererConfig', () => {
       key: playerActorDefinition.sprites.attack.key,
       ignoreIfPlaying: true,
     })
+  })
+
+  it('restores player alpha after invulnerability recovery', () => {
+    const runtime = createSceneRuntime()
+    runtime.scene.create()
+    const guard = runtime.sprites.find((sprite) => sprite.texture === 'enemy-guard-walk')
+    expect(guard).toBeDefined()
+    if (!guard || !runtime.playerSprite) return
+
+    runtime.triggerEnemyOverlap(guard)
+    runtime.playerSprite.alpha = 0.35
+    runtime.runDelayedCalls(playerLifeTiming.invulnerabilityRecoveryDelayMs)
+
+    expect(runtime.playerSprite.alpha).toBe(1)
+  })
+
+  it('ignores defeated enemy contact damage', () => {
+    const runtime = createSceneRuntime()
+    runtime.scene.create()
+    const guard = runtime.sprites.find((sprite) => sprite.texture === 'enemy-guard-walk')
+    expect(guard).toBeDefined()
+    if (!guard || !runtime.playerSprite) return
+
+    runtime.playerSprite.x = 672
+    runtime.playerSprite.y = guard.y
+    runtime.playerKeys.j.isDown = true
+    runtime.scene.update()
+    expect(guard.body.enable).toBe(false)
+
+    runtime.playerSprite.velocityX = 0
+    runtime.playerSprite.velocityY = 0
+    runtime.triggerEnemyOverlap(guard)
+
+    expect(runtime.playerSprite.velocityX).toBe(0)
+    expect(runtime.playerSprite.velocityY).toBe(0)
+    expect(runtime.playerSprite.playCalls.at(-1)).not.toEqual({
+      key: playerActorDefinition.sprites.hurt.key,
+      ignoreIfPlaying: true,
+    })
+  })
+
+  it('clears an active melee hitbox when enemy contact hurts the player', () => {
+    const runtime = createSceneRuntime()
+    runtime.scene.create()
+    const guard = runtime.sprites.find((sprite) => sprite.texture === 'enemy-guard-walk')
+    const core = runtime.sprites.find((sprite) => sprite.texture === 'azure-core')
+    expect(guard).toBeDefined()
+    expect(core).toBeDefined()
+    if (!guard || !core || !runtime.playerSprite) return
+
+    runtime.playerSprite.x = 540
+    runtime.playerSprite.y = guard.y
+    runtime.playerKeys.j.isDown = true
+    runtime.scene.update()
+    const hitbox = runtime.images[0]
+    expect(hitbox.destroyed).toBe(false)
+
+    runtime.triggerEnemyOverlap(core)
+    guard.x = 610
+    runtime.playerKeys.j.isDown = false
+    runtime.scene.update()
+
+    expect(hitbox.destroyed).toBe(true)
+    expect(guard.body.enable).toBe(true)
   })
 
   it('updates left movement with drag, negative acceleration, flip, and run animation', () => {

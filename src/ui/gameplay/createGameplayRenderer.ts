@@ -551,6 +551,14 @@ class GameplayMapScene extends Phaser.Scene {
     }
   }
 
+  private clearActiveMeleeHitboxes(): void {
+    for (const hitbox of this.activeMeleeHitboxes) {
+      hitbox.consumed = true
+      hitbox.image.destroy()
+    }
+    this.activeMeleeHitboxes = []
+  }
+
   private processEnemyHitsForHitbox(hitbox: ActiveMeleeHitbox): void {
     if (hitbox.consumed) {
       return
@@ -630,6 +638,7 @@ class GameplayMapScene extends Phaser.Scene {
     this.isPlayerInvulnerable = entry.invulnerable
     this.isAttacking = entry.attacking
     this.attackReady = entry.attackReady
+    this.clearActiveMeleeHitboxes()
 
     const direction = getPlayerKnockbackDirection({
       playerX: this.player.x,
