@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { enemyActorDefinitions } from '../../domain/gameplay/enemyActor'
 import { getGameplayStageMap } from '../../domain/gameplay/gameplayStageMaps'
 import { playerActorDefinition } from '../../domain/gameplay/playerActor'
+import { playerHurtPresentation, playerLifeTiming } from '../../domain/gameplay/playerLife'
 import { createGameplayRendererConfig } from './createGameplayRenderer'
 
 vi.mock('phaser', () => {
@@ -74,13 +75,19 @@ type GenerateTextureCall = {
 type TweenCall = {
   targets: unknown
   y?: number
-  angle: number
+  angle?: number
   duration: number
-  ease: string
+  ease?: string
   yoyo?: boolean
   repeat?: number
   scale?: number
   alpha?: number
+}
+
+type OverlapCall = {
+  a: unknown
+  b: unknown
+  callback: () => void
 }
 
 type FakePlayerKeys = {
@@ -312,6 +319,7 @@ function createSceneRuntime() {
       add: {
         sprite: (x: number, y: number, texture: string) => ReturnType<typeof createFakeArcadeSprite>
         collider: (a: unknown, b: unknown) => void
+        overlap: (a: unknown, b: unknown, callback: () => void) => void
       }
     }
     cameras: {
@@ -384,6 +392,7 @@ function createSceneRuntime() {
   const delayedCalls: Array<{ delay: number; callback: () => void }> = []
   const killedTweenTargets: unknown[] = []
   const colliderCalls: Array<{ a: unknown; b: unknown }> = []
+  const overlapCalls: OverlapCall[] = []
   const sprites: Array<ReturnType<typeof createFakeArcadeSprite>> = []
   const terrainLayer = createFakeTerrainLayer()
   const playerKeys: FakePlayerKeys = {
@@ -429,6 +438,9 @@ function createSceneRuntime() {
       },
       collider: (a, b) => {
         colliderCalls.push({ a, b })
+      },
+      overlap: (a, b, callback) => {
+        overlapCalls.push({ a, b, callback })
       },
     },
   }
@@ -517,12 +529,20 @@ function createSceneRuntime() {
     delayedCalls,
     killedTweenTargets,
     colliderCalls,
+    overlapCalls,
     terrainLayer,
     playerKeys,
     runDelayedCalls: (delay: number) => {
       for (const call of delayedCalls.filter((candidate) => candidate.delay === delay)) {
         call.callback()
       }
+    },
+    triggerEnemyOverlap: (enemy: ReturnType<typeof createFakeArcadeSprite>) => {
+      const overlap = overlapCalls.find((candidate) => candidate.a === playerSprite && candidate.b === enemy)
+      if (!overlap) {
+        throw new Error(`Missing player overlap for enemy texture ${enemy.texture}.`)
+      }
+      overlap.callback()
     },
     get enemySprites() {
       return sprites.filter((sprite) => sprite !== playerSprite)
@@ -1001,6 +1021,62 @@ describe('createGameplayRendererConfig', () => {
         (call) => call.targets === core && 'scale' in call && call.scale === 1.8,
       ),
     ).toHaveLength(1)
+  })
+
+  it('applies survived enemy contact damage with hurt knockback, animation, and blink', () => {
+    const runtime = createSceneRuntime()
+    runtime.scene.create()
+    const guard = runtime.sprites.find((sprite) => sprite.texture === 'enemy-guard-walk')
+    expect(guard).toBeDefined()
+    if (!guard || !runtime.playerSprite) return
+
+    runtime.playerSprite.x = 650
+    guard.x = 720
+    runtime.triggerEnemyOverlap(guard)
+
+    expect(runtime.playerSprite.velocityX).toBe(-360)
+    expect(runtime.playerSprite.velocityY).toBe(-360)
+    expect(runtime.playerSprite.playCalls.at(-1)).toEqual({
+      key: playerActorDefinition.sprites.hurt.key,
+      ignoreIfPlaying: true,
+    })
+    expect(runtime.playerSprite.scale).toBe(playerActorDefinition.sprites.hurt.scale)
+    expect(runtime.tweenCalls.at(-1)).toMatchObject({
+      targets: runtime.playerSprite,
+      alpha: playerHurtPresentation.blinkAlpha,
+      duration: playerHurtPresentation.blinkDurationMs,
+      yoyo: playerHurtPresentation.blinkYoyo,
+      repeat: playerHurtPresentation.blinkRepeat,
+    })
+  })
+
+  it('ignores repeated enemy contact while invulnerable and restores attack after hurt recovery', () => {
+    const runtime = createSceneRuntime()
+    runtime.scene.create()
+    const guard = runtime.sprites.find((sprite) => sprite.texture === 'enemy-guard-walk')
+    expect(guard).toBeDefined()
+    if (!guard || !runtime.playerSprite) return
+
+    runtime.playerSprite.x = 650
+    guard.x = 720
+    runtime.triggerEnemyOverlap(guard)
+    runtime.playerSprite.velocityX = 0
+    runtime.playerSprite.velocityY = 0
+    runtime.triggerEnemyOverlap(guard)
+
+    expect(runtime.playerSprite.velocityX).toBe(0)
+    expect(runtime.playerSprite.velocityY).toBe(0)
+    expect(runtime.tweenCalls.filter((call) => call.targets === runtime.playerSprite && call.alpha === 0.35)).toHaveLength(1)
+
+    runtime.runDelayedCalls(playerLifeTiming.hurtRecoveryDelayMs)
+    runtime.playerKeys.j.isDown = true
+    runtime.scene.update()
+
+    expect(runtime.images[0]).toMatchObject({ texture: 'attack-hitbox' })
+    expect(runtime.playerSprite.playCalls.at(-1)).toEqual({
+      key: playerActorDefinition.sprites.attack.key,
+      ignoreIfPlaying: true,
+    })
   })
 
   it('updates left movement with drag, negative acceleration, flip, and run animation', () => {

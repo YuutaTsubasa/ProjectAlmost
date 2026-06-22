@@ -25,6 +25,18 @@ import {
   type PlayerAnimationKey,
 } from '../../domain/gameplay/playerActor'
 import {
+  PLAYER_MAX_HEALTH,
+  canApplyPlayerEnemyHit,
+  getPlayerDamageOutcome,
+  getPlayerHurtEntryState,
+  getPlayerHurtRecoveryState,
+  getPlayerHurtVelocity,
+  getPlayerInvulnerabilityRecoveryState,
+  getPlayerKnockbackDirection,
+  playerHurtPresentation,
+  playerLifeTiming,
+} from '../../domain/gameplay/playerLife'
+import {
   canStartMeleeAttack,
   getAttackInputDecision,
   getMeleeAttackEndState,
@@ -89,6 +101,10 @@ class GameplayMapScene extends Phaser.Scene {
   private isAttacking = false
   private wasAttackDown = false
   private activeMeleeHitboxes: ActiveMeleeHitbox[] = []
+  private playerHealth = PLAYER_MAX_HEALTH
+  private isPlayerHurting = false
+  private isPlayerInvulnerable = false
+  private isPlayerDead = false
 
   constructor(stage: GameplayStageMap) {
     super(`GameplayMapScene:${stage.id}`)
@@ -328,7 +344,20 @@ class GameplayMapScene extends Phaser.Scene {
     this.wasAttackDown = false
     this.wasJumpDown = false
     this.activeMeleeHitboxes = []
+    this.playerHealth = PLAYER_MAX_HEALTH
+    this.isPlayerHurting = false
+    this.isPlayerInvulnerable = false
+    this.isPlayerDead = false
     this.player = player
+    this.createPlayerEnemyOverlaps(player)
+  }
+
+  private createPlayerEnemyOverlaps(player: Phaser.Physics.Arcade.Sprite): void {
+    for (const enemy of this.enemies) {
+      this.physics.add.overlap(player, enemy.sprite, () => {
+        this.handlePlayerEnemyContact(enemy)
+      })
+    }
   }
 
   private createEnemies(): void {
@@ -575,8 +604,70 @@ class GameplayMapScene extends Phaser.Scene {
     })
   }
 
+  private handlePlayerEnemyContact(enemy: EnemyRuntime): void {
+    if (!this.player) return
+
+    if (
+      !canApplyPlayerEnemyHit({
+        invulnerable: this.isPlayerInvulnerable,
+        hurting: this.isPlayerHurting,
+        enemyDefeated: enemy.defeated,
+        homingAttacking: false,
+        dead: this.isPlayerDead,
+      })
+    ) {
+      return
+    }
+
+    const damageOutcome = getPlayerDamageOutcome({ currentHealth: this.playerHealth })
+    this.playerHealth = damageOutcome.nextHealth
+    if (damageOutcome.type === 'defeated') {
+      return
+    }
+
+    const entry = getPlayerHurtEntryState()
+    this.isPlayerHurting = entry.hurting
+    this.isPlayerInvulnerable = entry.invulnerable
+    this.isAttacking = entry.attacking
+    this.attackReady = entry.attackReady
+
+    const direction = getPlayerKnockbackDirection({
+      playerX: this.player.x,
+      sourceX: enemy.sprite.x,
+    })
+    const velocity = getPlayerHurtVelocity({
+      direction,
+      gravitySign: 1,
+    })
+
+    this.player.setVelocity(velocity.x, velocity.y)
+    this.playPlayerAnimation(this.player, 'hurt')
+    this.tweens.add({
+      targets: this.player,
+      alpha: playerHurtPresentation.blinkAlpha,
+      duration: playerHurtPresentation.blinkDurationMs,
+      yoyo: playerHurtPresentation.blinkYoyo,
+      repeat: playerHurtPresentation.blinkRepeat,
+    })
+
+    this.time.delayedCall(playerLifeTiming.hurtRecoveryDelayMs, () => {
+      const recovery = getPlayerHurtRecoveryState()
+      this.isPlayerHurting = recovery.hurting
+      this.attackReady = recovery.attackReady
+    })
+    this.time.delayedCall(playerLifeTiming.invulnerabilityRecoveryDelayMs, () => {
+      const recovery = getPlayerInvulnerabilityRecoveryState()
+      this.isPlayerInvulnerable = recovery.invulnerable
+      this.player?.setAlpha(1)
+    })
+  }
+
   private updatePlayerMovement(): void {
     if (!this.player || !this.playerKeys || !this.playerJumpState) return
+
+    if (this.isPlayerHurting || this.isPlayerDead) {
+      return
+    }
 
     const grounded = this.isPlayerGrounded()
     this.playerJumpState = updateMovableActorGroundContact({
