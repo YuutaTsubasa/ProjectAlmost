@@ -15,6 +15,12 @@ export const playerHurtPresentation = {
   blinkRepeat: 4,
 } as const
 
+export const playerDeathTransitionPresentation = {
+  fadeOutDurationMs: 350,
+  fadeInDurationMs: 450,
+  color: { red: 245, green: 250, blue: 255 },
+} as const
+
 export type PlayerDefeatReason = 'damage' | 'fall'
 export type PlayerDamageOutcome =
   | { type: 'survived'; nextHealth: number }

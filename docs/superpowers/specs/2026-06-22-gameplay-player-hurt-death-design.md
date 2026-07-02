@@ -57,6 +57,9 @@ Prototype constants and timings to preserve:
 - hurt recovery delay: `420ms`
 - invulnerability recovery delay: `900ms`
 - death respawn delay: `700ms`
+- death transition fade-out duration: `350ms`
+- death transition fade-in duration: `450ms`
+- death transition fade color: RGB `(245, 250, 255)`
 - hurt blink tween values: alpha `0.35`, duration `80ms`, yoyo `true`, repeat `4`
 
 Prototype damage gates:
@@ -252,7 +255,9 @@ Death flow:
 7. Set velocity to `{ x: 0, y: defeatOutcome.velocityY }`.
 8. Disable or ignore player control while dead.
 9. Play `player-death`.
-10. After `700ms`, respawn.
+10. After `700ms`, start the prototype camera fade-out transition.
+11. On camera fade-out complete, respawn.
+12. After respawn, start the prototype camera fade-in transition.
 
 Respawn flow:
 
@@ -265,7 +270,7 @@ Respawn flow:
 7. Reset jump state using the existing movable actor jump state factory.
 8. Keep existing enemy defeat state as-is.
 
-This slice uses a direct delayed respawn after `700ms`; camera fade is not included.
+This slice uses the prototype camera transition around respawn: after the death delay, fade out over `350ms` with RGB `(245, 250, 255)`, respawn when fade-out completes, then fade in over `450ms` with the same color.
 
 ## Bounds Rule
 
@@ -325,9 +330,9 @@ Renderer tests:
 - while hurting, repeated enemy overlap does not reduce health again.
 - after `420ms`, hurting clears and attack readiness returns.
 - after `900ms`, invulnerability clears and alpha returns to `1`.
-- third enemy hit plays death animation and schedules respawn.
+- third enemy hit plays death animation and schedules the prototype fade-out before respawn.
 - damage death respawns at stage spawn with full health.
-- moving outside each world edge by more than margin causes fall death and respawn.
+- moving outside each world edge by more than margin causes fall death, prototype fade-out, and respawn.
 - defeated enemies do not hurt the player.
 - hurt/death cancels active attack and clears active hitboxes.
 - dead players do not move, attack, or take further contact damage before respawn.

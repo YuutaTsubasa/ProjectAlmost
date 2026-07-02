@@ -39,6 +39,7 @@ import {
   getPlayerKnockbackDirection,
   getPlayerRespawnState,
   isPlayerOutsideWorldBounds,
+  playerDeathTransitionPresentation,
   playerHurtPresentation,
   playerLifeTiming,
   type PlayerDefeatReason,
@@ -721,7 +722,21 @@ class GameplayMapScene extends Phaser.Scene {
     this.playPlayerAnimation(this.player, 'death')
 
     this.time.delayedCall(playerLifeTiming.deathRespawnDelayMs, () => {
-      this.respawnPlayer()
+      this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
+        this.respawnPlayer()
+        this.cameras.main.fadeIn(
+          playerDeathTransitionPresentation.fadeInDurationMs,
+          playerDeathTransitionPresentation.color.red,
+          playerDeathTransitionPresentation.color.green,
+          playerDeathTransitionPresentation.color.blue,
+        )
+      })
+      this.cameras.main.fadeOut(
+        playerDeathTransitionPresentation.fadeOutDurationMs,
+        playerDeathTransitionPresentation.color.red,
+        playerDeathTransitionPresentation.color.green,
+        playerDeathTransitionPresentation.color.blue,
+      )
     })
   }
 

@@ -16,6 +16,7 @@ import {
   getPlayerKnockbackDirection,
   getPlayerRespawnState,
   isPlayerOutsideWorldBounds,
+  playerDeathTransitionPresentation,
 } from './playerLife'
 
 describe('player life constants', () => {
@@ -23,6 +24,14 @@ describe('player life constants', () => {
     expect(PLAYER_MAX_HEALTH).toBe(3)
     expect(PLAYER_HIT_DAMAGE).toBe(1)
     expect(PLAYER_OUT_OF_BOUNDS_MARGIN).toBe(128)
+  })
+
+  it('keeps prototype death camera transition values explicit', () => {
+    expect(playerDeathTransitionPresentation).toEqual({
+      fadeOutDurationMs: 350,
+      fadeInDurationMs: 450,
+      color: { red: 245, green: 250, blue: 255 },
+    })
   })
 })
 

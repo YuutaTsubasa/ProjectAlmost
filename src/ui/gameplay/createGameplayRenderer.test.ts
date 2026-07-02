@@ -4,6 +4,7 @@ import { getGameplayStageMap } from '../../domain/gameplay/gameplayStageMaps'
 import { playerActorDefinition } from '../../domain/gameplay/playerActor'
 import {
   PLAYER_OUT_OF_BOUNDS_MARGIN,
+  playerDeathTransitionPresentation,
   playerHurtPresentation,
   playerLifeTiming,
 } from '../../domain/gameplay/playerLife'
@@ -45,6 +46,13 @@ vi.mock('phaser', () => {
             UP: 38,
             W: 87,
             Z: 90,
+          },
+        },
+      },
+      Cameras: {
+        Scene2D: {
+          Events: {
+            FADE_OUT_COMPLETE: 'fadeoutcomplete',
           },
         },
       },
@@ -92,6 +100,13 @@ type OverlapCall = {
   a: unknown
   b: unknown
   callback: () => void
+}
+
+type CameraFadeCall = {
+  duration: number
+  red: number
+  green: number
+  blue: number
 }
 
 type FakePlayerKeys = {
@@ -331,6 +346,9 @@ function createSceneRuntime() {
         scrollX: number
         setBounds: (...args: number[]) => void
         startFollow: (target: unknown, roundPixels?: boolean, lerpX?: number, lerpY?: number) => void
+        once: (event: string, callback: () => void) => void
+        fadeOut: (duration: number, red: number, green: number, blue: number) => void
+        fadeIn: (duration: number, red: number, green: number, blue: number) => void
       }
     }
     add: {
@@ -397,6 +415,8 @@ function createSceneRuntime() {
   const killedTweenTargets: unknown[] = []
   const colliderCalls: Array<{ a: unknown; b: unknown }> = []
   const overlapCalls: OverlapCall[] = []
+  const cameraFadeOutCalls: CameraFadeCall[] = []
+  const cameraFadeInCalls: CameraFadeCall[] = []
   const sprites: Array<ReturnType<typeof createFakeArcadeSprite>> = []
   const terrainLayer = createFakeTerrainLayer()
   const playerKeys: FakePlayerKeys = {
@@ -412,6 +432,7 @@ function createSceneRuntime() {
   }
   let playerSprite: ReturnType<typeof createFakeArcadeSprite> | null = null
   let cameraFollowTarget: unknown = null
+  let fadeOutCompleteCallback: (() => void) | null = null
 
   scene.load = {
     image: (key, assetRef) => {
@@ -455,6 +476,17 @@ function createSceneRuntime() {
       setBounds: () => {},
       startFollow: (target) => {
         cameraFollowTarget = target
+      },
+      once: (event, callback) => {
+        if (event === 'fadeoutcomplete') {
+          fadeOutCompleteCallback = callback
+        }
+      },
+      fadeOut: (duration, red, green, blue) => {
+        cameraFadeOutCalls.push({ duration, red, green, blue })
+      },
+      fadeIn: (duration, red, green, blue) => {
+        cameraFadeInCalls.push({ duration, red, green, blue })
       },
     },
   }
@@ -534,6 +566,8 @@ function createSceneRuntime() {
     killedTweenTargets,
     colliderCalls,
     overlapCalls,
+    cameraFadeOutCalls,
+    cameraFadeInCalls,
     terrainLayer,
     playerKeys,
     runDelayedCalls: (delay: number) => {
@@ -547,6 +581,12 @@ function createSceneRuntime() {
         throw new Error(`Missing player overlap for enemy texture ${enemy.texture}.`)
       }
       overlap.callback()
+    },
+    triggerFadeOutComplete: () => {
+      if (!fadeOutCompleteCallback) {
+        throw new Error('Missing fade-out completion callback.')
+      }
+      fadeOutCompleteCallback()
     },
     get enemySprites() {
       return sprites.filter((sprite) => sprite !== playerSprite)
@@ -1197,6 +1237,21 @@ describe('createGameplayRendererConfig', () => {
 
     runtime.runDelayedCalls(playerLifeTiming.deathRespawnDelayMs)
 
+    expect(runtime.cameraFadeOutCalls).toEqual([{
+      duration: playerDeathTransitionPresentation.fadeOutDurationMs,
+      red: playerDeathTransitionPresentation.color.red,
+      green: playerDeathTransitionPresentation.color.green,
+      blue: playerDeathTransitionPresentation.color.blue,
+    }])
+    expect(runtime.playerSprite.x).toBe(650)
+    expect(runtime.cameraFadeInCalls).toHaveLength(0)
+    expect(runtime.playerSprite.playCalls.at(-1)).toEqual({
+      key: playerActorDefinition.sprites.death.key,
+      ignoreIfPlaying: true,
+    })
+
+    runtime.triggerFadeOutComplete()
+
     expect(runtime.playerSprite.x).toBe(runtime.stage.player.spawn.x)
     expect(runtime.playerSprite.y).toBe(436)
     expect(runtime.playerSprite.velocityX).toBe(0)
@@ -1206,6 +1261,12 @@ describe('createGameplayRendererConfig', () => {
       key: playerActorDefinition.sprites.idle.key,
       ignoreIfPlaying: true,
     })
+    expect(runtime.cameraFadeInCalls).toEqual([{
+      duration: playerDeathTransitionPresentation.fadeInDurationMs,
+      red: playerDeathTransitionPresentation.color.red,
+      green: playerDeathTransitionPresentation.color.green,
+      blue: playerDeathTransitionPresentation.color.blue,
+    }])
 
     runtime.triggerEnemyOverlap(guard)
     expect(runtime.playerSprite.playCalls.at(-1)).toEqual({
@@ -1268,12 +1329,29 @@ describe('createGameplayRendererConfig', () => {
 
       runtime.runDelayedCalls(playerLifeTiming.deathRespawnDelayMs)
 
+      expect(runtime.cameraFadeOutCalls).toEqual([{
+        duration: playerDeathTransitionPresentation.fadeOutDurationMs,
+        red: playerDeathTransitionPresentation.color.red,
+        green: playerDeathTransitionPresentation.color.green,
+        blue: playerDeathTransitionPresentation.color.blue,
+      }])
+      expect(runtime.playerSprite.x).toBe(position.x)
+      expect(runtime.playerSprite.y).toBe(position.y)
+
+      runtime.triggerFadeOutComplete()
+
       expect(runtime.playerSprite.x).toBe(runtime.stage.player.spawn.x)
       expect(runtime.playerSprite.y).toBe(436)
       expect(runtime.playerSprite.playCalls.at(-1)).toEqual({
         key: playerActorDefinition.sprites.idle.key,
         ignoreIfPlaying: true,
       })
+      expect(runtime.cameraFadeInCalls).toEqual([{
+        duration: playerDeathTransitionPresentation.fadeInDurationMs,
+        red: playerDeathTransitionPresentation.color.red,
+        green: playerDeathTransitionPresentation.color.green,
+        blue: playerDeathTransitionPresentation.color.blue,
+      }])
     }
   })
 
