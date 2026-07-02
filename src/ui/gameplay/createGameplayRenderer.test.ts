@@ -8,6 +8,7 @@ import {
   playerHurtPresentation,
   playerLifeTiming,
 } from '../../domain/gameplay/playerLife'
+import { homingAttackPresentation } from '../../domain/gameplay/playerHomingAttack'
 import { createGameplayRendererConfig } from './createGameplayRenderer'
 
 vi.mock('phaser', () => {
@@ -55,6 +56,15 @@ vi.mock('phaser', () => {
             FADE_OUT_COMPLETE: 'fadeoutcomplete',
           },
         },
+      },
+      Math: {
+        Distance: {
+          Between: (x1: number, y1: number, x2: number, y2: number) =>
+            Math.hypot(x2 - x1, y2 - y1),
+        },
+      },
+      BlendModes: {
+        ADD: 'ADD',
       },
       Scene,
       Game: class Game {
@@ -179,6 +189,9 @@ function createFakeArcadeSprite(input: { x: number; y: number; texture: string }
     origin: { x: 0, y: 0 },
     scale: 1,
     collideWorldBounds: false,
+    frame: undefined as number | undefined,
+    tint: undefined as number | undefined,
+    blendMode: undefined as string | undefined,
     dragX: 0,
     velocityX: 0,
     velocityY: 0,
@@ -186,6 +199,9 @@ function createFakeArcadeSprite(input: { x: number; y: number; texture: string }
     depth: 0,
     accelerationX: 0,
     flipX: false,
+    scaleX: 1,
+    scaleY: 1,
+    active: true,
     angle: 0,
     alpha: 1,
     visible: true,
@@ -212,6 +228,13 @@ function createFakeArcadeSprite(input: { x: number; y: number; texture: string }
     },
     setScale: (value: number) => {
       sprite.scale = value
+      sprite.scaleX = value
+      sprite.scaleY = value
+      return sprite
+    },
+    setPosition: (x: number, y: number) => {
+      sprite.x = x
+      sprite.y = y
       return sprite
     },
     setCollideWorldBounds: (value: boolean) => {
@@ -263,6 +286,19 @@ function createFakeArcadeSprite(input: { x: number; y: number; texture: string }
       sprite.angle = value
       return sprite
     },
+    setTexture: (texture: string, frame?: number) => {
+      sprite.texture = texture
+      sprite.frame = frame
+      return sprite
+    },
+    setTint: (value: number) => {
+      sprite.tint = value
+      return sprite
+    },
+    setBlendMode: (value: string) => {
+      sprite.blendMode = value
+      return sprite
+    },
     setImmovable: (value: boolean) => {
       sprite.immovable = value
       return sprite
@@ -292,7 +328,27 @@ function createFakeImage(input: { x: number; y: number; texture: string }) {
     height: 36,
     visible: true,
     flipX: false,
+    depth: 0,
+    angle: 0,
+    blendMode: undefined as string | undefined,
     destroyed: false,
+    setDepth: (value: number) => {
+      image.depth = value
+      return image
+    },
+    setBlendMode: (value: string) => {
+      image.blendMode = value
+      return image
+    },
+    setPosition: (x: number, y: number) => {
+      image.x = x
+      image.y = y
+      return image
+    },
+    setAngle: (value: number) => {
+      image.angle = value
+      return image
+    },
     setVisible: (value: boolean) => {
       image.visible = value
       return image
@@ -360,6 +416,7 @@ function createSceneRuntime() {
         key: string,
       ) => ReturnType<typeof createFakeTileSprite>
       image: (x: number, y: number, texture: string) => ReturnType<typeof createFakeImage>
+      sprite: (x: number, y: number, texture: string, frame?: number) => ReturnType<typeof createFakeArcadeSprite>
     }
     make: {
       graphics: () => {
@@ -418,6 +475,7 @@ function createSceneRuntime() {
   const cameraFadeOutCalls: CameraFadeCall[] = []
   const cameraFadeInCalls: CameraFadeCall[] = []
   const sprites: Array<ReturnType<typeof createFakeArcadeSprite>> = []
+  const spriteCalls: Array<ReturnType<typeof createFakeArcadeSprite>> = []
   const terrainLayer = createFakeTerrainLayer()
   const playerKeys: FakePlayerKeys = {
     left: { isDown: false },
@@ -455,6 +513,7 @@ function createSceneRuntime() {
     add: {
       sprite: (x, y, texture) => {
         const sprite = createFakeArcadeSprite({ x, y, texture })
+        spriteCalls.push(sprite)
         sprites.push(sprite)
         if (texture === playerActorDefinition.sprites.idle.key) {
           playerSprite = sprite
@@ -497,6 +556,12 @@ function createSceneRuntime() {
       const image = createFakeImage({ x, y, texture })
       images.push(image)
       return image
+    },
+    sprite: (x, y, texture, frame) => {
+      const sprite = createFakeArcadeSprite({ x, y, texture })
+      sprite.frame = frame
+      spriteCalls.push(sprite)
+      return sprite
     },
   }
 
@@ -559,6 +624,7 @@ function createSceneRuntime() {
     spritesheetCalls,
     animationCreateCalls,
     sprites,
+    spriteCalls,
     generateTextureCalls,
     tweenCalls,
     images,
@@ -723,6 +789,84 @@ describe('createGameplayRendererConfig', () => {
       width: enemyActorDefinitions['azure-core'].generatedTexture?.width,
       height: enemyActorDefinitions['azure-core'].generatedTexture?.height,
     })
+  })
+
+  it('creates the generated Homing reticle texture from prototype dimensions', () => {
+    const runtime = createSceneRuntime()
+
+    runtime.scene.create()
+
+    expect(runtime.generateTextureCalls).toContainEqual({
+      key: homingAttackPresentation.reticleTextureKey,
+      width: homingAttackPresentation.reticleSize,
+      height: homingAttackPresentation.reticleSize,
+    })
+  })
+
+  it('shows the Homing reticle over the nearest eligible airborne target', () => {
+    const runtime = createSceneRuntime()
+    runtime.scene.create()
+    const guard = runtime.sprites.find((sprite) => sprite.texture === 'enemy-guard-walk')
+    const core = runtime.sprites.find((sprite) => sprite.texture === 'azure-core')
+    expect(guard).toBeDefined()
+    expect(core).toBeDefined()
+    if (!guard || !core || !runtime.playerSprite) return
+
+    runtime.playerSprite.body.blocked.down = false
+    runtime.playerSprite.body.touching.down = false
+    runtime.playerSprite.x = 1600
+    runtime.playerSprite.y = 320
+    runtime.playerSprite.setFlipX(false)
+    guard.x = 1800
+    guard.y = 432
+    core.x = 1760
+    core.y = 320
+
+    runtime.scene.update()
+
+    const reticle = runtime.images.find((image) => image.texture === homingAttackPresentation.reticleTextureKey)
+    expect(reticle).toMatchObject({
+      x: 1760,
+      y: 320 + homingAttackPresentation.reticleYOffset,
+      visible: true,
+      depth: 20,
+      blendMode: 'ADD',
+    })
+    expect(reticle?.angle).toBe(3)
+  })
+
+  it('hides the Homing reticle while grounded or when the target is defeated', () => {
+    const runtime = createSceneRuntime()
+    runtime.scene.create()
+    const core = runtime.sprites.find((sprite) => sprite.texture === 'azure-core')
+    expect(core).toBeDefined()
+    if (!core || !runtime.playerSprite) return
+
+    runtime.playerSprite.body.blocked.down = false
+    runtime.playerSprite.body.touching.down = false
+    runtime.playerSprite.x = 1600
+    runtime.playerSprite.y = 320
+    core.x = 1760
+    core.y = 320
+    runtime.scene.update()
+    const reticle = runtime.images.find((image) => image.texture === homingAttackPresentation.reticleTextureKey)
+    expect(reticle?.visible).toBe(true)
+
+    runtime.playerSprite.body.blocked.down = true
+    runtime.playerSprite.body.touching.down = true
+    runtime.scene.update()
+    expect(reticle?.visible).toBe(false)
+
+    runtime.playerSprite.body.blocked.down = false
+    runtime.playerSprite.body.touching.down = false
+    runtime.playerSprite.x = 1712
+    runtime.playerSprite.y = core.y
+    runtime.playerKeys.z.isDown = true
+    runtime.scene.update()
+    expect(core.body.enable).toBe(false)
+    runtime.playerKeys.z.isDown = false
+    runtime.scene.update()
+    expect(reticle?.visible).toBe(false)
   })
 
   it('preloads and registers the player jump animation from the domain actor definition', () => {

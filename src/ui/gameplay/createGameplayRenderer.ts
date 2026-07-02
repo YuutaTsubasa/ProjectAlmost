@@ -56,6 +56,12 @@ import {
   meleeHitboxSize,
 } from '../../domain/gameplay/playerAttack'
 import {
+  canShowHomingReticle,
+  homingAttackPresentation,
+  isHomingTargetAvailable,
+  selectNearestHomingTarget,
+} from '../../domain/gameplay/playerHomingAttack'
+import {
   buildTerrainTileGrid,
   getTileColumnCount,
   getTileRowCount,
@@ -113,6 +119,9 @@ class GameplayMapScene extends Phaser.Scene {
   private isPlayerHurting = false
   private isPlayerInvulnerable = false
   private isPlayerDead = false
+  private isHomingAttacking = false
+  private homingTarget: Phaser.Physics.Arcade.Sprite | null = null
+  private homingReticle: Phaser.GameObjects.Image | null = null
 
   constructor(stage: GameplayStageMap) {
     super(`GameplayMapScene:${stage.id}`)
@@ -174,6 +183,7 @@ class GameplayMapScene extends Phaser.Scene {
     this.createPlayerAnimations()
     this.createEnemyTextures()
     this.createAttackHitboxTexture()
+    this.createHomingReticleTexture()
     this.createEnemyAnimations()
     this.createEnemies()
     this.playerKeys = this.createPlayerKeys()
@@ -256,6 +266,22 @@ class GameplayMapScene extends Phaser.Scene {
     graphics.fillStyle(0x4be8ff, 0.2)
     graphics.lineStyle(2, 0x4f7dff, 0.8)
     graphics.generateTexture('attack-hitbox', meleeHitboxSize.width, meleeHitboxSize.height)
+    graphics.destroy()
+  }
+
+  private createHomingReticleTexture(): void {
+    const graphics = this.make.graphics()
+    const size = homingAttackPresentation.reticleSize
+    const center = size / 2
+    graphics.lineStyle(3, homingAttackPresentation.trailTint, 1)
+    graphics.strokeCircle(center, center, 14)
+    graphics.lineBetween(center, 3, center, 13)
+    graphics.lineBetween(center, 35, center, 45)
+    graphics.lineBetween(3, center, 13, center)
+    graphics.lineBetween(35, center, 45, center)
+    graphics.lineStyle(1, 0xffffff, 0.9)
+    graphics.strokeCircle(center, center, 8)
+    graphics.generateTexture(homingAttackPresentation.reticleTextureKey, size, size)
     graphics.destroy()
   }
 
@@ -502,13 +528,13 @@ class GameplayMapScene extends Phaser.Scene {
       grounded,
     })
 
-    if (decision !== 'melee') return
+    if (decision !== 'melee' && decision !== 'homing-then-melee') return
 
     if (
       !canStartMeleeAttack({
         attackReady: this.attackReady,
         hurting: false,
-        homingAttacking: false,
+        homingAttacking: this.isHomingAttacking,
       })
     ) {
       return
@@ -777,6 +803,7 @@ class GameplayMapScene extends Phaser.Scene {
     }
 
     const grounded = this.isPlayerGrounded()
+    this.updateHomingReticle(grounded)
     this.playerJumpState = updateMovableActorGroundContact({
       state: this.playerJumpState,
       now: this.time.now,
@@ -873,6 +900,69 @@ class GameplayMapScene extends Phaser.Scene {
       enemy.sprite.setVelocityX(enemy.direction * speed)
       enemy.sprite.setFlipX(enemy.direction > 0)
     }
+  }
+
+  private getPlayerFacingSign(): -1 | 1 {
+    return this.player?.flipX ? -1 : 1
+  }
+
+  private findHomingTarget(): Phaser.Physics.Arcade.Sprite | undefined {
+    if (!this.player) return undefined
+
+    const candidates = this.enemies
+      .filter((enemy) => isHomingTargetAvailable({
+        defeated: enemy.defeated,
+        active: enemy.sprite.active,
+        visible: enemy.sprite.visible,
+      }))
+      .map((enemy) => ({
+        target: enemy.sprite,
+        targetX: enemy.sprite.x,
+        distance: Phaser.Math.Distance.Between(this.player!.x, this.player!.y, enemy.sprite.x, enemy.sprite.y),
+      }))
+
+    return selectNearestHomingTarget({
+      playerX: this.player.x,
+      facing: this.getPlayerFacingSign(),
+      candidates,
+    })
+  }
+
+  private updateHomingReticle(grounded: boolean): void {
+    if (
+      !this.player ||
+      !canShowHomingReticle({
+        grounded,
+        dead: this.isPlayerDead,
+        attacking: this.isAttacking,
+        hurting: this.isPlayerHurting,
+        homingAttacking: this.isHomingAttacking,
+      })
+    ) {
+      this.homingReticle?.setVisible(false)
+      this.homingTarget = null
+      return
+    }
+
+    const target = this.findHomingTarget()
+    if (!target) {
+      this.homingReticle?.setVisible(false)
+      this.homingTarget = null
+      return
+    }
+
+    this.homingTarget = target
+    if (!this.homingReticle) {
+      this.homingReticle = this.add
+        .image(target.x, target.y + homingAttackPresentation.reticleYOffset, homingAttackPresentation.reticleTextureKey)
+        .setDepth(20)
+        .setBlendMode(Phaser.BlendModes.ADD)
+    }
+
+    this.homingReticle
+      .setPosition(target.x, target.y + homingAttackPresentation.reticleYOffset)
+      .setVisible(true)
+      .setAngle(this.homingReticle.angle + 3)
   }
 }
 
