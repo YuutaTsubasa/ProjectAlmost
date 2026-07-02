@@ -900,6 +900,31 @@ describe('createGameplayRendererConfig', () => {
     expect(runtime.playerSprite.velocityY).toBe(-420)
   })
 
+  it('can Homing Attack Armor Guard through the existing defeat presentation', () => {
+    const runtime = createSceneRuntime()
+    runtime.scene.create()
+    const guard = runtime.sprites.find(
+      (sprite) => sprite.texture === enemyActorDefinitions['armor-guard'].sprites?.walk?.key,
+    )
+    expect(guard).toBeDefined()
+    if (!guard || !runtime.playerSprite) return
+
+    runtime.playerSprite.body.blocked.down = false
+    runtime.playerSprite.body.touching.down = false
+    runtime.playerSprite.x = 560
+    runtime.playerSprite.y = guard.y
+    runtime.playerSprite.setFlipX(false)
+    guard.x = 720
+    runtime.playerKeys.j.isDown = true
+    runtime.scene.update()
+
+    expect(guard.body.enable).toBe(false)
+    expect(guard.playCalls.at(-1)).toEqual({
+      key: enemyActorDefinitions['armor-guard'].sprites?.death?.key,
+      ignoreIfPlaying: true,
+    })
+  })
+
   it('does not apply enemy contact damage during Homing Attack', () => {
     const runtime = createSceneRuntime()
     runtime.scene.create()
