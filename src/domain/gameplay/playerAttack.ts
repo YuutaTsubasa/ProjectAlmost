@@ -1,4 +1,4 @@
-export type AttackInputDecision = 'none' | 'melee'
+export type AttackInputDecision = 'none' | 'melee' | 'homing-then-melee'
 
 export type AttackInput = {
   attackPressed: boolean
@@ -47,7 +47,7 @@ export const meleeHitboxSize = {
 export function getAttackInputDecision(input: AttackInput): AttackInputDecision {
   if (!input.attackPressed || input.crouching) return 'none'
 
-  return 'melee'
+  return input.grounded ? 'melee' : 'homing-then-melee'
 }
 
 export function canStartMeleeAttack(input: {

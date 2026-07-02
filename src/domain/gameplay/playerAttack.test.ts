@@ -23,9 +23,9 @@ describe('getAttackInputDecision', () => {
     expect(getAttackInputDecision({ attackPressed: true, crouching: true, grounded: true })).toBe('none')
   })
 
-  it('uses melee for grounded and airborne presses until homing attack exists in the rebuild', () => {
+  it('uses melee on the ground and Homing-first while airborne', () => {
     expect(getAttackInputDecision({ attackPressed: true, crouching: false, grounded: true })).toBe('melee')
-    expect(getAttackInputDecision({ attackPressed: true, crouching: false, grounded: false })).toBe('melee')
+    expect(getAttackInputDecision({ attackPressed: true, crouching: false, grounded: false })).toBe('homing-then-melee')
   })
 })
 
