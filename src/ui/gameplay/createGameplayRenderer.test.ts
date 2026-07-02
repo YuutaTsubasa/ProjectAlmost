@@ -8,7 +8,10 @@ import {
   playerHurtPresentation,
   playerLifeTiming,
 } from '../../domain/gameplay/playerLife'
-import { homingAttackPresentation } from '../../domain/gameplay/playerHomingAttack'
+import {
+  homingAttackPresentation,
+  homingAttackTiming,
+} from '../../domain/gameplay/playerHomingAttack'
 import { createGameplayRendererConfig } from './createGameplayRenderer'
 
 vi.mock('phaser', () => {
@@ -104,6 +107,8 @@ type TweenCall = {
   repeat?: number
   scale?: number
   alpha?: number
+  delay?: number
+  onComplete?: () => void
 }
 
 type OverlapCall = {
@@ -867,6 +872,123 @@ describe('createGameplayRendererConfig', () => {
     runtime.playerKeys.z.isDown = false
     runtime.scene.update()
     expect(reticle?.visible).toBe(false)
+  })
+
+  it('starts Homing Attack while airborne instead of spawning a melee hitbox', () => {
+    const runtime = createSceneRuntime()
+    runtime.scene.create()
+    const core = runtime.sprites.find((sprite) => sprite.texture === 'azure-core')
+    expect(core).toBeDefined()
+    if (!core || !runtime.playerSprite) return
+
+    runtime.playerSprite.body.blocked.down = false
+    runtime.playerSprite.body.touching.down = false
+    runtime.playerSprite.x = 1600
+    runtime.playerSprite.y = 320
+    core.x = 1760
+    core.y = 320
+    runtime.playerKeys.j.isDown = true
+    runtime.scene.update()
+
+    expect(runtime.images.filter((image) => image.texture === 'attack-hitbox')).toHaveLength(0)
+    expect(core.body.enable).toBe(false)
+    expect(runtime.playerSprite.texture).toBe(playerActorDefinition.sprites.attack.key)
+    expect(runtime.playerSprite.frame).toBe(homingAttackPresentation.attackFrame)
+    expect(runtime.playerSprite.x).toBe(1726)
+    expect(runtime.playerSprite.y).toBe(320)
+    expect(runtime.playerSprite.velocityX).toBe(0)
+    expect(runtime.playerSprite.velocityY).toBe(-420)
+  })
+
+  it('falls back to airborne melee when no Homing target can be acquired', () => {
+    const runtime = createSceneRuntime()
+    runtime.scene.create()
+    expect(runtime.playerSprite).toBeDefined()
+    if (!runtime.playerSprite) return
+
+    runtime.playerSprite.body.blocked.down = false
+    runtime.playerSprite.body.touching.down = false
+    runtime.playerSprite.x = 3000
+    runtime.playerSprite.y = 320
+    runtime.playerKeys.z.isDown = true
+    runtime.scene.update()
+
+    expect(runtime.images[0]).toMatchObject({
+      texture: 'attack-hitbox',
+      visible: false,
+    })
+  })
+
+  it('recovers Homing attack readiness after prototype delay', () => {
+    const runtime = createSceneRuntime()
+    runtime.scene.create()
+    const core = runtime.sprites.find((sprite) => sprite.texture === 'azure-core')
+    expect(core).toBeDefined()
+    if (!core || !runtime.playerSprite) return
+
+    runtime.playerSprite.body.blocked.down = false
+    runtime.playerSprite.body.touching.down = false
+    runtime.playerSprite.x = 1600
+    runtime.playerSprite.y = 320
+    core.x = 1760
+    core.y = 320
+    runtime.playerKeys.j.isDown = true
+    runtime.scene.update()
+    runtime.playerKeys.j.isDown = false
+    runtime.scene.update()
+    runtime.playerKeys.j.isDown = true
+    runtime.scene.update()
+    expect(runtime.images.filter((image) => image.texture === 'attack-hitbox')).toHaveLength(0)
+
+    runtime.runDelayedCalls(homingAttackTiming.recoveryDelayMs)
+    runtime.playerKeys.j.isDown = false
+    runtime.scene.update()
+    runtime.playerKeys.j.isDown = true
+    runtime.scene.update()
+    expect(runtime.images.some((image) => image.texture === 'attack-hitbox')).toBe(true)
+  })
+
+  it('emits Homing trail sprites using attack frame and fades them out', () => {
+    const runtime = createSceneRuntime()
+    runtime.scene.create()
+    const core = runtime.sprites.find((sprite) => sprite.texture === 'azure-core')
+    expect(core).toBeDefined()
+    if (!core || !runtime.playerSprite) return
+
+    runtime.playerSprite.body.blocked.down = false
+    runtime.playerSprite.body.touching.down = false
+    runtime.playerSprite.x = 1600
+    runtime.playerSprite.y = 320
+    core.x = 1760
+    core.y = 320
+    runtime.playerKeys.j.isDown = true
+    runtime.scene.update()
+
+    const trailSprites = runtime.spriteCalls.filter(
+      (sprite) => sprite.texture === playerActorDefinition.sprites.attack.key && sprite !== runtime.playerSprite,
+    )
+    expect(trailSprites.length).toBeGreaterThan(2)
+    expect(trailSprites[0]).toMatchObject({
+      frame: homingAttackPresentation.attackFrame,
+      tint: homingAttackPresentation.trailTint,
+      blendMode: 'ADD',
+      flipX: false,
+    })
+    expect(runtime.tweenCalls).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          targets: trailSprites[0],
+          alpha: 0,
+          duration: homingAttackTiming.trailFadeMs,
+          delay: homingAttackTiming.trailHoldMs,
+        }),
+      ]),
+    )
+
+    const trailTween = runtime.tweenCalls.find((call) => call.targets === trailSprites[0])
+    expect(trailSprites[0]?.destroyed).toBe(false)
+    trailTween?.onComplete?.()
+    expect(trailSprites[0]?.destroyed).toBe(true)
   })
 
   it('preloads and registers the player jump animation from the domain actor definition', () => {

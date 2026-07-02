@@ -57,9 +57,19 @@ import {
 } from '../../domain/gameplay/playerAttack'
 import {
   canShowHomingReticle,
+  canStartHomingAttack,
   homingAttackPresentation,
+  getHomingAttackEntryState,
+  getHomingContactPoint,
+  getHomingFinishOutcome,
+  getHomingRecoveryState,
+  getHomingTargetAcquisitionDecision,
+  getHomingTrailSamples,
+  homingAttackTiming,
   isHomingTargetAvailable,
+  isHomingTargetLost,
   selectNearestHomingTarget,
+  shouldUpdateHomingAttack,
 } from '../../domain/gameplay/playerHomingAttack'
 import {
   buildTerrainTileGrid,
@@ -197,6 +207,7 @@ class GameplayMapScene extends Phaser.Scene {
 
     this.updateEnemyPatrol()
     this.processActiveMeleeHitboxes()
+    this.updateHomingAttack()
     this.checkPlayerOutOfBounds()
     this.updatePlayerMovement()
   }
@@ -376,6 +387,9 @@ class GameplayMapScene extends Phaser.Scene {
     })
     this.attackReady = true
     this.isAttacking = false
+    this.isHomingAttacking = false
+    this.homingTarget = null
+    this.homingReticle?.setVisible(false)
     this.wasAttackDown = false
     this.wasJumpDown = false
     this.activeMeleeHitboxes = []
@@ -528,12 +542,18 @@ class GameplayMapScene extends Phaser.Scene {
       grounded,
     })
 
+    if (decision === 'none') return
+
+    if (decision === 'homing-then-melee' && this.tryHomingAttack()) {
+      return
+    }
+
     if (decision !== 'melee' && decision !== 'homing-then-melee') return
 
     if (
       !canStartMeleeAttack({
         attackReady: this.attackReady,
-        hurting: false,
+        hurting: this.isPlayerHurting,
         homingAttacking: this.isHomingAttacking,
       })
     ) {
@@ -556,6 +576,113 @@ class GameplayMapScene extends Phaser.Scene {
       const ready = getMeleeAttackReadyState()
       this.attackReady = ready.attackReady
     })
+  }
+
+  private tryHomingAttack(): boolean {
+    if (!this.player) return false
+
+    if (
+      !canStartHomingAttack({
+        attackReady: this.attackReady,
+        hurting: this.isPlayerHurting,
+        homingAttacking: this.isHomingAttacking,
+        dead: this.isPlayerDead,
+      })
+    ) {
+      return false
+    }
+
+    const target = this.findHomingTarget()
+    if (getHomingTargetAcquisitionDecision({ hasTarget: target !== undefined }) === 'fail' || !target) {
+      return false
+    }
+
+    const entry = getHomingAttackEntryState()
+    this.attackReady = entry.attackReady
+    this.isAttacking = entry.attacking
+    this.isHomingAttacking = entry.homingAttacking
+    this.homingTarget = target
+    this.homingReticle?.setVisible(false)
+    this.resolveHomingAttack(target)
+
+    return true
+  }
+
+  private resolveHomingAttack(target: Phaser.Physics.Arcade.Sprite): void {
+    if (!this.player) return
+
+    const startX = this.player.x
+    const startY = this.player.y
+    const contact = getHomingContactPoint({
+      startX,
+      startY,
+      targetX: target.x,
+      targetY: target.y,
+    })
+
+    this.player.setFlipX(target.x < startX)
+    this.player.setTexture(playerActorDefinition.sprites.attack.key, homingAttackPresentation.attackFrame)
+    this.emitHomingTrail(startX, startY, contact.x, contact.y)
+    this.player.setPosition(contact.x, contact.y)
+    this.player.setVelocity(0, 0)
+
+    const enemy = this.enemies.find((candidate) => candidate.sprite === target)
+    if (enemy && shouldProcessEnemyDefeat({ enemyExists: true, defeated: enemy.defeated })) {
+      this.defeatEnemy(enemy)
+    }
+
+    this.finishHomingAttack(true)
+  }
+
+  private finishHomingAttack(hit: boolean): void {
+    if (!this.player) return
+
+    this.isHomingAttacking = false
+    this.homingTarget = null
+    const outcome = getHomingFinishOutcome({
+      hit,
+      gravitySign: 1,
+    })
+
+    if (outcome.remainingAirJumps !== undefined && this.playerJumpState) {
+      this.playerJumpState = {
+        ...this.playerJumpState,
+        remainingAirJumps: outcome.remainingAirJumps,
+      }
+    }
+
+    this.player.setVelocity(0, outcome.velocityY)
+
+    this.time.delayedCall(homingAttackTiming.recoveryDelayMs, () => {
+      const recovery = getHomingRecoveryState({ hurting: this.isPlayerHurting })
+      this.isAttacking = recovery.attacking
+      if (recovery.attackReady !== undefined) {
+        this.attackReady = recovery.attackReady
+      }
+    })
+  }
+
+  private emitHomingTrail(startX: number, startY: number, endX: number, endY: number): void {
+    if (!this.player) return
+
+    for (const sample of getHomingTrailSamples({ startX, startY, endX, endY })) {
+      const trail = this.add
+        .sprite(sample.x, sample.y, playerActorDefinition.sprites.attack.key, homingAttackPresentation.attackFrame)
+        .setDepth(this.player.depth - 1)
+        .setScale(this.player.scale)
+        .setFlipX(this.player.flipX)
+        .setTint(homingAttackPresentation.trailTint)
+        .setAlpha(sample.alpha)
+        .setBlendMode(Phaser.BlendModes.ADD)
+
+      this.tweens.add({
+        targets: trail,
+        alpha: 0,
+        duration: homingAttackTiming.trailFadeMs,
+        delay: homingAttackTiming.trailHoldMs,
+        onComplete: () => trail.destroy(),
+      })
+    }
   }
 
   private spawnMeleeHitbox(): void {
@@ -904,6 +1031,23 @@ class GameplayMapScene extends Phaser.Scene {
 
   private getPlayerFacingSign(): -1 | 1 {
     return this.player?.flipX ? -1 : 1
+  }
+
+  private updateHomingAttack(): void {
+    const target = this.homingTarget
+    if (!shouldUpdateHomingAttack({
+      homingAttacking: this.isHomingAttacking,
+      hasTarget: target !== null,
+    })) {
+      return
+    }
+
+    if (!target) return
+
+    const enemy = this.enemies.find((candidate) => candidate.sprite === target)
+    if (!enemy || isHomingTargetLost({ defeated: enemy.defeated, active: target.active, visible: target.visible })) {
+      this.finishHomingAttack(false)
+    }
   }
 
   private findHomingTarget(): Phaser.Physics.Arcade.Sprite | undefined {
