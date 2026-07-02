@@ -387,9 +387,7 @@ class GameplayMapScene extends Phaser.Scene {
     })
     this.attackReady = true
     this.isAttacking = false
-    this.isHomingAttacking = false
-    this.homingTarget = null
-    this.homingReticle?.setVisible(false)
+    this.clearHomingState()
     this.wasAttackDown = false
     this.wasJumpDown = false
     this.activeMeleeHitboxes = []
@@ -637,8 +635,6 @@ class GameplayMapScene extends Phaser.Scene {
   private finishHomingAttack(hit: boolean): void {
     if (!this.player) return
 
-    this.isHomingAttacking = false
-    this.homingTarget = null
     const outcome = getHomingFinishOutcome({
       hit,
       gravitySign: 1,
@@ -656,9 +652,10 @@ class GameplayMapScene extends Phaser.Scene {
     this.time.delayedCall(homingAttackTiming.recoveryDelayMs, () => {
       const recovery = getHomingRecoveryState({ hurting: this.isPlayerHurting })
       this.isAttacking = recovery.attacking
-      if (recovery.attackReady !== undefined) {
+      if (!this.isPlayerDead && recovery.attackReady !== undefined) {
         this.attackReady = recovery.attackReady
       }
+      this.clearHomingState()
     })
   }
 
@@ -782,7 +779,7 @@ class GameplayMapScene extends Phaser.Scene {
         invulnerable: this.isPlayerInvulnerable,
         hurting: this.isPlayerHurting,
         enemyDefeated: enemy.defeated,
-        homingAttacking: false,
+        homingAttacking: this.isHomingAttacking,
         dead: this.isPlayerDead,
       })
     ) {
@@ -797,6 +794,7 @@ class GameplayMapScene extends Phaser.Scene {
     }
 
     const entry = getPlayerHurtEntryState()
+    this.clearHomingState()
     this.isPlayerHurting = entry.hurting
     this.isPlayerInvulnerable = entry.invulnerable
     this.isAttacking = entry.attacking
@@ -863,6 +861,7 @@ class GameplayMapScene extends Phaser.Scene {
     this.isPlayerInvulnerable = entry.invulnerable
     this.isAttacking = entry.attacking
     this.attackReady = entry.attackReady
+    this.clearHomingState()
     this.clearActiveMeleeHitboxes()
 
     const outcome = getPlayerDefeatOutcome({
@@ -914,12 +913,19 @@ class GameplayMapScene extends Phaser.Scene {
     if (this.player.body) {
       this.player.body.enable = true
     }
+    this.clearHomingState()
     this.playerJumpState = createMovableActorJumpState({
       now: this.time.now,
       grounded: true,
       config: playerActorDefinition.jump,
     })
     this.playPlayerAnimation(this.player, 'idle')
+  }
+
+  private clearHomingState(): void {
+    this.isHomingAttacking = false
+    this.homingTarget = null
+    this.homingReticle?.setVisible(false)
   }
 
   private updatePlayerMovement(): void {

@@ -900,6 +900,35 @@ describe('createGameplayRendererConfig', () => {
     expect(runtime.playerSprite.velocityY).toBe(-420)
   })
 
+  it('does not apply enemy contact damage during Homing Attack', () => {
+    const runtime = createSceneRuntime()
+    runtime.scene.create()
+    const guard = runtime.sprites.find((sprite) => sprite.texture === 'enemy-guard-walk')
+    const core = runtime.sprites.find((sprite) => sprite.texture === 'azure-core')
+    expect(guard).toBeDefined()
+    expect(core).toBeDefined()
+    if (!guard || !core || !runtime.playerSprite) return
+
+    runtime.playerSprite.body.blocked.down = false
+    runtime.playerSprite.body.touching.down = false
+    runtime.playerSprite.x = 1600
+    runtime.playerSprite.y = 320
+    core.x = 1760
+    core.y = 320
+    runtime.playerKeys.j.isDown = true
+    runtime.scene.update()
+    runtime.playerSprite.velocityX = 0
+    runtime.playerSprite.velocityY = 0
+
+    runtime.triggerEnemyOverlap(guard)
+
+    expect(runtime.playerSprite.playCalls.at(-1)).not.toEqual({
+      key: playerActorDefinition.sprites.hurt.key,
+      ignoreIfPlaying: true,
+    })
+    expect(runtime.playerSprite.velocityY).toBe(0)
+  })
+
   it('falls back to airborne melee when no Homing target can be acquired', () => {
     const runtime = createSceneRuntime()
     runtime.scene.create()
@@ -946,6 +975,68 @@ describe('createGameplayRendererConfig', () => {
     runtime.playerKeys.j.isDown = true
     runtime.scene.update()
     expect(runtime.images.some((image) => image.texture === 'attack-hitbox')).toBe(true)
+  })
+
+  it('clears Homing reticle and target when hurt, dead, and respawned', () => {
+    const runtime = createSceneRuntime()
+    runtime.scene.create()
+    const guard = runtime.sprites.find((sprite) => sprite.texture === 'enemy-guard-walk')
+    const core = runtime.sprites.find((sprite) => sprite.texture === 'azure-core')
+    expect(guard).toBeDefined()
+    expect(core).toBeDefined()
+    if (!guard || !core || !runtime.playerSprite) return
+
+    runtime.playerSprite.body.blocked.down = false
+    runtime.playerSprite.body.touching.down = false
+    runtime.playerSprite.x = 1600
+    runtime.playerSprite.y = 320
+    core.x = 1760
+    core.y = 320
+    runtime.scene.update()
+    const reticle = runtime.images.find((image) => image.texture === homingAttackPresentation.reticleTextureKey)
+    expect(reticle?.visible).toBe(true)
+
+    runtime.triggerEnemyOverlap(guard)
+    expect(reticle?.visible).toBe(false)
+
+    runtime.runDelayedCalls(playerLifeTiming.hurtRecoveryDelayMs)
+    runtime.runDelayedCalls(playerLifeTiming.invulnerabilityRecoveryDelayMs)
+    runtime.triggerEnemyOverlap(guard)
+    runtime.runDelayedCalls(playerLifeTiming.hurtRecoveryDelayMs)
+    runtime.runDelayedCalls(playerLifeTiming.invulnerabilityRecoveryDelayMs)
+    runtime.triggerEnemyOverlap(guard)
+    runtime.runDelayedCalls(playerLifeTiming.deathRespawnDelayMs)
+    runtime.triggerFadeOutComplete()
+
+    expect(reticle?.visible).toBe(false)
+  })
+
+  it('does not re-arm attack readiness from homing recovery while dead', () => {
+    const runtime = createSceneRuntime()
+    runtime.scene.create()
+    const core = runtime.sprites.find((sprite) => sprite.texture === 'azure-core')
+    expect(core).toBeDefined()
+    if (!core || !runtime.playerSprite) return
+
+    runtime.playerSprite.body.blocked.down = false
+    runtime.playerSprite.body.touching.down = false
+    runtime.playerSprite.x = 1600
+    runtime.playerSprite.y = 320
+    core.x = 1760
+    core.y = 320
+    runtime.playerKeys.j.isDown = true
+    runtime.scene.update()
+
+    const scene = runtime.scene as typeof runtime.scene & {
+      attackReady: boolean
+      isPlayerDead: boolean
+    }
+    expect(scene.attackReady).toBe(false)
+    scene.isPlayerDead = true
+
+    runtime.runDelayedCalls(homingAttackTiming.recoveryDelayMs)
+
+    expect(scene.attackReady).toBe(false)
   })
 
   it('emits Homing trail sprites using attack frame and fades them out', () => {
