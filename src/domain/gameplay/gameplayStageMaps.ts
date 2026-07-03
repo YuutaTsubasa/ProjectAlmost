@@ -75,6 +75,7 @@ const stageOneOne: GameplayStageMap = {
     { id: 'coin-homing-line-2', x: 1720, y: 320 },
     { id: 'coin-route-1', x: 1504, y: 430 },
   ],
+  hazards: [],
   terrain: {
     tilesetAssetRef: '/assets/tiles/white_palace_platform_tiles.webp',
     solidTileIndexes: [0, 1, 2],

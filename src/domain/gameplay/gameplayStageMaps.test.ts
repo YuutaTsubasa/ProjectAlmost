@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { hazardActorDefinitions } from './hazardActor'
 import { enemyActorDefinitions } from './enemyActor'
 import { playerActorDefinition } from './playerActor'
 import { getTileColumnCount, getTileRowCount, validatePlatformBounds } from './terrain'
@@ -24,12 +25,15 @@ describe('gameplayStageMaps', () => {
         return Object.values(definition.sprites)
       })
       .map((sprite) => sprite.assetRef)
+    const hazardAssetRefs = Object.values(hazardActorDefinitions)
+      .map((definition) => definition.sprite.assetRef)
 
     const assetRefs = [
       ...stage.backgroundLayers.map((layer) => layer.assetRef),
       stage.terrain.tilesetAssetRef,
       ...Object.values(playerActorDefinition.sprites).map((sprite) => sprite.assetRef),
       ...enemyAssetRefs,
+      ...hazardAssetRefs,
     ]
 
     expect(assetRefs).toEqual([
@@ -45,6 +49,7 @@ describe('gameplayStageMaps', () => {
       '/assets/sprites/player_death/sheet-transparent.webp',
       '/assets/sprites/enemy_guard_walk/sheet-transparent.webp',
       '/assets/sprites/enemy_guard_death/sheet-transparent.webp',
+      '/assets/props/emerald_sanctuary_spikes.webp',
     ])
     expect(assetRefs.every((assetRef) => assetRef.startsWith('/assets/'))).toBe(true)
     expect(assetRefs.every((assetRef) => !assetRef.includes('__prototype__'))).toBe(true)
@@ -161,6 +166,14 @@ describe('gameplayStageMaps', () => {
     ])
   })
 
+  it('defines fixed hazard data for every gameplay stage map', () => {
+    const stage = getGameplayStageMap('1-1')
+    expect(stage).toBeDefined()
+    if (!stage) return
+
+    expect(stage.hazards).toEqual([])
+  })
+
   it('keeps gameplay coin ids unique within the first stage', () => {
     const stage = getGameplayStageMap('1-1')
     expect(stage).toBeDefined()
@@ -186,5 +199,37 @@ describe('gameplayStageMaps', () => {
         && coin.y <= stage.world.height,
       ),
     ).toBe(true)
+  })
+
+  it('keeps gameplay hazard ids unique within each stage', () => {
+    for (const stageId of gameplayStageMaps.order) {
+      const stage = getGameplayStageMap(stageId)
+      expect(stage).toBeDefined()
+      if (!stage) continue
+
+      const ids = stage.hazards.map((hazard) => hazard.id)
+      expect(new Set(ids).size).toBe(ids.length)
+    }
+  })
+
+  it('places gameplay hazards inside their stage world bounds', () => {
+    for (const stageId of gameplayStageMaps.order) {
+      const stage = getGameplayStageMap(stageId)
+      expect(stage).toBeDefined()
+      if (!stage) continue
+
+      expect(
+        stage.hazards.every((hazard) =>
+          Number.isFinite(hazard.x)
+          && Number.isFinite(hazard.surfaceY)
+          && hazard.x >= 0
+          && hazard.x <= stage.world.width
+          && hazard.surfaceY >= 0
+          && hazard.surfaceY <= stage.world.height
+          && hazard.width > 0
+          && hazard.height > 0,
+        ),
+      ).toBe(true)
+    }
   })
 })
