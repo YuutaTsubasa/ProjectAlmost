@@ -966,6 +966,138 @@ describe('createGameplayRendererConfig', () => {
     })
   })
 
+  it('emits HUD coin statistics when a coin is collected', () => {
+    const runtime = createSceneRuntime()
+    runtime.scene.create()
+    expect(runtime.playerSprite).toBeDefined()
+    if (!runtime.playerSprite) return
+
+    const coin = runtime.images.find((image) => image.texture === 'coin')
+    expect(coin).toBeDefined()
+    if (!coin) return
+
+    runtime.playerSprite.x = coin.x
+    runtime.playerSprite.y = coin.y
+    runtime.scene.update()
+
+    expect(runtime.hudUpdates).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ coins: 1 }),
+      ]),
+    )
+  })
+
+  it('emits HUD damage statistics and restored HP after respawn', () => {
+    const runtime = createSceneRuntime({ stage: createHazardStage() })
+    runtime.scene.create()
+    expect(runtime.playerSprite).toBeDefined()
+    if (!runtime.playerSprite) return
+
+    const spike = runtime.staticImageCalls.find(
+      (sprite) => sprite.texture === hazardActorDefinitions.spikes.sprite.key,
+    )
+    expect(spike).toBeDefined()
+    if (!spike) return
+
+    runtime.triggerHazardOverlap(spike)
+
+    expect(runtime.hudUpdates).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ hp: 2, damageTaken: 1 }),
+      ]),
+    )
+
+    recoverFromSurvivedHurt(runtime)
+    runtime.triggerHazardOverlap(spike)
+    recoverFromSurvivedHurt(runtime)
+    runtime.triggerHazardOverlap(spike)
+    runtime.runDelayedCalls(playerLifeTiming.deathRespawnDelayMs)
+    runtime.triggerFadeOutComplete()
+
+    expect(runtime.hudUpdates).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ hp: 3 }),
+      ]),
+    )
+  })
+
+  it('emits HUD fall count when the player respawns from out-of-bounds', () => {
+    const runtime = createSceneRuntime()
+    runtime.scene.create()
+    expect(runtime.playerSprite).toBeDefined()
+    if (!runtime.playerSprite) return
+
+    runtime.playerSprite.y = runtime.stage.world.height + PLAYER_OUT_OF_BOUNDS_MARGIN + 1
+    runtime.scene.update()
+
+    expect(runtime.hudUpdates).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ falls: 1 }),
+      ]),
+    )
+  })
+
+  it('emits enemy and checkpoint HUD stats', () => {
+    const runtime = createSceneRuntime()
+    runtime.scene.create()
+    expect(runtime.playerSprite).toBeDefined()
+    if (!runtime.playerSprite) return
+
+    const core = runtime.sprites.find((sprite) => sprite.texture === 'azure-core')
+    expect(core).toBeDefined()
+    if (!core) return
+
+    runtime.playerSprite.x = core.x
+    runtime.playerSprite.y = core.y
+    runtime.playerKeys.j.isDown = true
+    runtime.scene.update()
+
+    expect(runtime.hudUpdates).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ enemiesDefeated: 1 }),
+      ]),
+    )
+
+    runtime.playerSprite.x = runtime.stage.checkpoints[0].x
+    runtime.scene.update()
+
+    expect(runtime.hudUpdates).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          activeCheckpointIndex: 0,
+          checkpointsReached: 1,
+        }),
+      ]),
+    )
+  })
+
+  it('emits HUD clear state and suppresses later HUD-changing patches after clear', () => {
+    const runtime = createSceneRuntime({ stage: createHazardStage() })
+    runtime.scene.create()
+    expect(runtime.playerSprite).toBeDefined()
+    if (!runtime.playerSprite) return
+
+    runtime.triggerGoalOverlap(getGoalSprite(runtime))
+    const updateCountAfterClear = runtime.hudUpdates.length
+
+    const spike = runtime.staticImageCalls.find(
+      (sprite) => sprite.texture === hazardActorDefinitions.spikes.sprite.key,
+    )
+    expect(spike).toBeDefined()
+    if (!spike) return
+
+    runtime.triggerHazardOverlap(spike)
+    runtime.playerSprite.x = runtime.stage.checkpoints[0].x
+    runtime.scene.update()
+
+    expect(runtime.hudUpdates).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ cleared: true }),
+      ]),
+    )
+    expect(runtime.hudUpdates).toHaveLength(updateCountAfterClear)
+  })
+
   it('uses the domain player gravity in Phaser config', () => {
     const stage = getGameplayStageMap('1-1')
 

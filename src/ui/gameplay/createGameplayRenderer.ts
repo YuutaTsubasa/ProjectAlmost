@@ -209,6 +209,9 @@ class GameplayMapScene extends Phaser.Scene {
   private currentRespawnPoint: CurrentRespawnPoint
   private coins: CoinRuntime[] = []
   private collectedCoins = 0
+  private damageTaken = 0
+  private falls = 0
+  private enemiesDefeated = 0
   private stageCleared = false
 
   constructor(stage: GameplayStageMap, onHudUpdate?: (patch: GameplayHudPatch) => void) {
@@ -301,6 +304,9 @@ class GameplayMapScene extends Phaser.Scene {
     this.createCoins()
     this.playerKeys = this.createPlayerKeys()
     this.createPlayer()
+    this.damageTaken = 0
+    this.falls = 0
+    this.enemiesDefeated = 0
     this.emitHudPatch(createInitialGameplayHudState(this.stageMap))
   }
 
@@ -650,6 +656,10 @@ class GameplayMapScene extends Phaser.Scene {
     if (checkpoint.activated) return
 
     this.activeCheckpointIndex = index
+    this.emitHudPatch({
+      activeCheckpointIndex: this.activeCheckpointIndex,
+      checkpointsReached: this.activeCheckpointIndex + 1,
+    })
     checkpoint.activated = true
     this.currentRespawnPoint = getCheckpointRespawnState({
       checkpoint: checkpoint.spawn,
@@ -675,6 +685,7 @@ class GameplayMapScene extends Phaser.Scene {
 
     coin.collected = true
     this.collectedCoins += 1
+    this.emitHudPatch({ coins: this.collectedCoins })
     this.tweens.killTweensOf(coin.sprite)
     this.tweens.add({
       targets: coin.sprite,
@@ -841,6 +852,8 @@ class GameplayMapScene extends Phaser.Scene {
       this.goal.cleared = true
       this.goal.sprite.setTint(goalActorDefinition.activatedTint)
     }
+
+    this.emitHudPatch({ cleared: true })
   }
 
   private createEnemies(): void {
@@ -1200,6 +1213,19 @@ class GameplayMapScene extends Phaser.Scene {
 
   private defeatEnemy(enemy: EnemyRuntime): void {
     enemy.defeated = true
+    this.enemiesDefeated += 1
+    this.emitHudPatch({
+      enemiesDefeated: this.enemiesDefeated,
+      enemyMarkers: getHudEnemyMarkers({
+        enemies: this.enemies.map((candidate) => ({
+          x: candidate.sprite.x,
+          y: candidate.sprite.y,
+          defeated: candidate.defeated,
+        })),
+        worldWidth: this.stageMap.world.width,
+        worldHeight: this.stageMap.world.height,
+      }),
+    })
     enemy.sprite.setVelocity(0, 0)
     const body = enemy.sprite.body as Phaser.Physics.Arcade.Body | null
     if (body) {
@@ -1253,6 +1279,11 @@ class GameplayMapScene extends Phaser.Scene {
 
     const damageOutcome = getPlayerDamageOutcome({ currentHealth: this.playerHealth })
     this.playerHealth = damageOutcome.nextHealth
+    this.damageTaken += 1
+    this.emitHudPatch({
+      hp: Math.max(0, this.playerHealth),
+      damageTaken: this.damageTaken,
+    })
     if (damageOutcome.type === 'defeated') {
       this.defeatPlayer('damage')
       return
@@ -1346,6 +1377,10 @@ class GameplayMapScene extends Phaser.Scene {
     this.attackReady = entry.attackReady
     this.clearHomingState()
     this.clearActiveMeleeHitboxes()
+    if (reason === 'fall') {
+      this.falls += 1
+      this.emitHudPatch({ falls: this.falls })
+    }
 
     const outcome = getPlayerDefeatOutcome({
       reason,
@@ -1380,6 +1415,7 @@ class GameplayMapScene extends Phaser.Scene {
 
     const state = getPlayerRespawnState()
     this.playerHealth = state.health
+    this.emitHudPatch({ hp: this.playerHealth })
     this.isPlayerHurting = state.hurting
     this.isPlayerInvulnerable = state.invulnerable
     this.isPlayerDead = state.dead
