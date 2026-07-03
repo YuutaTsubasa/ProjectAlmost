@@ -5,6 +5,7 @@ import {
   PLAYER_OUT_OF_BOUNDS_MARGIN,
   canApplyPlayerDamage,
   canApplyPlayerEnemyHit,
+  canApplyPlayerHazardHit,
   canEnterPlayerDefeat,
   getPlayerDamageOutcome,
   getPlayerDefeatEntryState,
@@ -79,6 +80,44 @@ describe('canApplyPlayerEnemyHit', () => {
       invulnerable: false,
       hurting: false,
       enemyDefeated: false,
+      homingAttacking: false,
+      dead: true,
+    })).toBe(false)
+  })
+})
+
+describe('canApplyPlayerHazardHit', () => {
+  it('allows hazard contact when no blocking state is active', () => {
+    expect(canApplyPlayerHazardHit({
+      invulnerable: false,
+      hurting: false,
+      homingAttacking: false,
+      dead: false,
+    })).toBe(true)
+  })
+
+  it('blocks hazard contact while protected or dead', () => {
+    expect(canApplyPlayerHazardHit({
+      invulnerable: true,
+      hurting: false,
+      homingAttacking: false,
+      dead: false,
+    })).toBe(false)
+    expect(canApplyPlayerHazardHit({
+      invulnerable: false,
+      hurting: true,
+      homingAttacking: false,
+      dead: false,
+    })).toBe(false)
+    expect(canApplyPlayerHazardHit({
+      invulnerable: false,
+      hurting: false,
+      homingAttacking: true,
+      dead: false,
+    })).toBe(false)
+    expect(canApplyPlayerHazardHit({
+      invulnerable: false,
+      hurting: false,
       homingAttacking: false,
       dead: true,
     })).toBe(false)
