@@ -1,6 +1,12 @@
 <script lang="ts">
   import { onMount } from 'svelte'
+  import {
+    applyGameplayHudPatch,
+    createInitialGameplayHudState,
+    type GameplayHudState,
+  } from '../../domain/gameplay/gameplayHud'
   import type { GameplayStageMap } from '../../domain/gameplay/gameplayMapTypes'
+  import GameplayHud from './GameplayHud.svelte'
   import { createGameplayRenderer } from './createGameplayRenderer'
 
   type Props = {
@@ -10,9 +16,20 @@
   let { stage }: Props = $props()
 
   let container: HTMLDivElement
+  let hudState = $state<GameplayHudState | null>(null)
+
+  $effect(() => {
+    hudState = createInitialGameplayHudState(stage)
+  })
 
   onMount(() => {
-    const game = createGameplayRenderer({ parent: container, stage })
+    const game = createGameplayRenderer({
+      parent: container,
+      stage,
+      onHudUpdate: (patch) => {
+        hudState = applyGameplayHudPatch(hudState ?? createInitialGameplayHudState(stage), patch)
+      },
+    })
 
     return () => {
       game.destroy(true)
@@ -22,6 +39,9 @@
 
 <section class="gameplay-screen" aria-label={`Gameplay ${stage.id}`}>
   <div bind:this={container} class="gameplay-canvas"></div>
+  {#if hudState}
+    <GameplayHud state={hudState} stageLabel={stage.id} />
+  {/if}
 </section>
 
 <style>

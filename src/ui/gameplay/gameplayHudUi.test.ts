@@ -1,0 +1,37 @@
+import { describe, expect, it } from 'vitest'
+import hudSource from './GameplayHud.svelte?raw'
+import screenSource from './GameplayScreen.svelte?raw'
+
+describe('Gameplay HUD Svelte UI', () => {
+  it('renders gameplay HUD panels and mini-map marker loops', () => {
+    expect(hudSource).toContain('class="gameplay-hud"')
+    expect(hudSource).toContain('class="hud-status-panel"')
+    expect(hudSource).toContain('class="hud-map-panel"')
+    expect(hudSource).toContain('class="hud-readouts"')
+    expect(hudSource).toContain('{#each state.mapPlatforms as platform}')
+    expect(hudSource).toContain('{#each state.checkpointMarkers as checkpoint, index}')
+    expect(hudSource).toContain('{#each state.enemyMarkers as enemy}')
+    expect(hudSource).toContain('state.goalProgress')
+    expect(hudSource).toContain('state.playerProgress')
+    expect(hudSource).toContain('pointer-events: none')
+  })
+
+  it('renders required HUD readouts and three-HP state', () => {
+    expect(hudSource).toContain('HP')
+    expect(hudSource).toContain('{state.hp} / {state.hpMax}')
+    expect(hudSource).toContain('COINS')
+    expect(hudSource).toContain('DAMAGE')
+    expect(hudSource).toContain('FALLS')
+    expect(hudSource).toContain('ENEMIES')
+    expect(hudSource).toContain('CHECKPOINTS')
+    expect(hudSource).toContain('TIME')
+  })
+
+  it('wires GameplayScreen state to renderer HUD patches', () => {
+    expect(screenSource).toContain("import GameplayHud from './GameplayHud.svelte'")
+    expect(screenSource).toContain('createInitialGameplayHudState')
+    expect(screenSource).toContain('applyGameplayHudPatch')
+    expect(screenSource).toContain('onHudUpdate')
+    expect(screenSource).toContain('<GameplayHud')
+  })
+})
