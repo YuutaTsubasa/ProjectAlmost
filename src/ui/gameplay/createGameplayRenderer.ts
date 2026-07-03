@@ -98,6 +98,7 @@ import {
   getCheckpointRespawnState,
   type PlayerCheckpointGravity,
 } from '../../domain/gameplay/playerCheckpoint'
+import { canCompleteStage, getStageClearState } from '../../domain/gameplay/stageClear'
 import {
   buildTerrainTileGrid,
   getTileColumnCount,
@@ -199,6 +200,7 @@ class GameplayMapScene extends Phaser.Scene {
   private currentRespawnPoint: CurrentRespawnPoint
   private coins: CoinRuntime[] = []
   private collectedCoins = 0
+  private stageCleared = false
 
   constructor(stage: GameplayStageMap) {
     super(`GameplayMapScene:${stage.id}`)
@@ -560,7 +562,7 @@ class GameplayMapScene extends Phaser.Scene {
     if (!this.player) return
 
     if (!shouldScanPlayerCoins({
-      stageCleared: false,
+      stageCleared: this.stageCleared,
       dead: this.isPlayerDead,
     })) {
       return
@@ -582,7 +584,7 @@ class GameplayMapScene extends Phaser.Scene {
   }
 
   private updateCheckpoints(): void {
-    if (!this.player || this.isPlayerDead) return
+    if (!this.player || this.isPlayerDead || this.stageCleared) return
 
     const nextCheckpointIndex = findNextCheckpointIndex({
       checkpoints: this.stageMap.checkpoints,
@@ -764,7 +766,34 @@ class GameplayMapScene extends Phaser.Scene {
     }
   }
 
-  private completeStage(): void {}
+  private completeStage(): void {
+    if (!canCompleteStage({ stageCleared: this.stageCleared })) {
+      return
+    }
+
+    const clearState = getStageClearState()
+    this.stageCleared = clearState.stageCleared
+    this.isAttacking = clearState.attacking
+    this.isHomingAttacking = clearState.homingAttacking
+    this.attackReady = clearState.attackReady
+    this.clearHomingState()
+    this.clearActiveMeleeHitboxes()
+
+    if (this.player) {
+      this.player.setVelocity(0, 0)
+      this.player.setAccelerationX(0)
+      this.playPlayerAnimation(this.player, 'idle')
+    }
+
+    for (const enemy of this.enemies) {
+      enemy.sprite.setVelocityX(0)
+    }
+
+    if (this.goal) {
+      this.goal.cleared = true
+      this.goal.sprite.setTint(goalActorDefinition.activatedTint)
+    }
+  }
 
   private createEnemies(): void {
     if (!this.terrainLayer) {
@@ -936,7 +965,7 @@ class GameplayMapScene extends Phaser.Scene {
   }
 
   private tryHomingAttack(): boolean {
-    if (!this.player) return false
+    if (!this.player || this.stageCleared) return false
 
     if (
       !canStartHomingAttack({
@@ -1151,7 +1180,7 @@ class GameplayMapScene extends Phaser.Scene {
   }
 
   private handlePlayerEnemyContact(enemy: EnemyRuntime): void {
-    if (!this.player) return
+    if (!this.player || this.stageCleared) return
 
     if (
       !canApplyPlayerEnemyHit({
@@ -1218,7 +1247,7 @@ class GameplayMapScene extends Phaser.Scene {
   }
 
   private handlePlayerHazardContact(hazard: HazardRuntime): void {
-    if (!this.player) return
+    if (!this.player || this.stageCleared) return
 
     if (
       !canApplyPlayerHazardHit({
@@ -1235,7 +1264,7 @@ class GameplayMapScene extends Phaser.Scene {
   }
 
   private checkPlayerOutOfBounds(): void {
-    if (!this.player) return
+    if (!this.player || this.stageCleared) return
 
     if (
       isPlayerOutsideWorldBounds({
@@ -1333,7 +1362,7 @@ class GameplayMapScene extends Phaser.Scene {
   private updatePlayerMovement(): void {
     if (!this.player || !this.playerKeys || !this.playerJumpState) return
 
-    if (this.isPlayerHurting || this.isPlayerDead) {
+    if (this.stageCleared || this.isPlayerHurting || this.isPlayerDead) {
       return
     }
 
@@ -1486,6 +1515,7 @@ class GameplayMapScene extends Phaser.Scene {
   private updateHomingReticle(grounded: boolean): void {
     if (
       !this.player ||
+      this.stageCleared ||
       !canShowHomingReticle({
         grounded,
         dead: this.isPlayerDead,

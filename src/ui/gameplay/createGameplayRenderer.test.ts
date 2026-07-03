@@ -819,6 +819,13 @@ function createSceneRuntime(input: { stage?: GameplayStageMap } = {}) {
       }
       overlap.callback()
     },
+    triggerGoalOverlap: (goal: ReturnType<typeof createFakeArcadeSprite>) => {
+      const overlap = overlapCalls.find((candidate) => candidate.a === playerSprite && candidate.b === goal)
+      if (!overlap) {
+        throw new Error(`Missing player overlap for goal texture ${goal.texture}.`)
+      }
+      overlap.callback()
+    },
     triggerFadeOutComplete: () => {
       if (!fadeOutCompleteCallback) {
         throw new Error('Missing fade-out completion callback.')
@@ -1046,6 +1053,89 @@ describe('createGameplayRendererConfig', () => {
         }),
       ]),
     )
+  })
+
+  it('clears the stage once when the player overlaps the goal', () => {
+    const runtime = createSceneRuntime()
+    runtime.scene.create()
+    expect(runtime.playerSprite).toBeDefined()
+    if (!runtime.playerSprite) return
+
+    const goal = getGoalSprite(runtime)
+    const guard = runtime.sprites.find((sprite) => sprite.texture === 'enemy-guard-walk')
+    expect(guard).toBeDefined()
+    if (!guard) return
+    guard.velocityX = 80
+    runtime.playerSprite.velocityX = 120
+    runtime.playerSprite.velocityY = -60
+    runtime.playerSprite.accelerationX = 400
+
+    runtime.triggerGoalOverlap(goal)
+
+    expect(runtime.playerSprite.velocityX).toBe(0)
+    expect(runtime.playerSprite.velocityY).toBe(0)
+    expect(runtime.playerSprite.accelerationX).toBe(0)
+    expect(runtime.playerSprite.playCalls.at(-1)).toEqual({
+      key: playerActorDefinition.sprites.idle.key,
+      ignoreIfPlaying: true,
+    })
+    expect(guard.velocityX).toBe(0)
+    expect(goal.tint).toBe(goalActorDefinition.activatedTint)
+
+    runtime.triggerGoalOverlap(goal)
+
+    expect(
+      runtime.playerSprite.playCalls.filter(
+        (call) => call.key === playerActorDefinition.sprites.idle.key,
+      ),
+    ).toHaveLength(2)
+  })
+
+  it('stops gameplay scanning and damage after stage clear', () => {
+    const runtime = createSceneRuntime({ stage: createHazardStage() })
+    runtime.scene.create()
+    expect(runtime.playerSprite).toBeDefined()
+    if (!runtime.playerSprite) return
+
+    const goal = getGoalSprite(runtime)
+    const spike = runtime.staticImageCalls.find(
+      (sprite) => sprite.texture === hazardActorDefinitions.spikes.sprite.key,
+    )
+    const guard = runtime.sprites.find((sprite) => sprite.texture === 'enemy-guard-walk')
+    expect(spike).toBeDefined()
+    expect(guard).toBeDefined()
+    if (!spike || !guard) return
+
+    runtime.triggerGoalOverlap(goal)
+    const hurtCallsAfterClear = runtime.playerSprite.playCalls.length
+
+    runtime.triggerHazardOverlap(spike)
+    runtime.triggerEnemyOverlap(guard)
+    runtime.playerSprite.x = runtime.stage.checkpoints[0].x
+    runtime.scene.update()
+
+    expect(runtime.playerSprite.playCalls).toHaveLength(hurtCallsAfterClear)
+    expect(getCheckpointSprite(runtime, 'combat-gate').sprite.alpha).toBe(
+      checkpointActorDefinition.inactiveAlpha,
+    )
+  })
+
+  it('does not defeat the player for out-of-bounds position after stage clear', () => {
+    const runtime = createSceneRuntime()
+    runtime.scene.create()
+    expect(runtime.playerSprite).toBeDefined()
+    if (!runtime.playerSprite) return
+
+    runtime.triggerGoalOverlap(getGoalSprite(runtime))
+    runtime.playerSprite.y = runtime.stage.world.height + PLAYER_OUT_OF_BOUNDS_MARGIN + 10
+
+    runtime.scene.update()
+
+    expect(runtime.cameraFadeOutCalls).toHaveLength(0)
+    expect(runtime.playerSprite.playCalls.at(-1)).toEqual({
+      key: playerActorDefinition.sprites.idle.key,
+      ignoreIfPlaying: true,
+    })
   })
 
   it('creates static spike hazards from stage data', () => {
