@@ -1024,6 +1024,58 @@ describe('createGameplayRendererConfig', () => {
     expect(runtime.playerSprite.velocityY).toBe(-420)
   })
 
+  it('collects coins crossed by the Homing Attack line', () => {
+    const runtime = createSceneRuntime()
+    runtime.scene.create()
+    const core = runtime.sprites.find((sprite) => sprite.texture === 'azure-core')
+    const lineCoin = runtime.images.find((image) => image.texture === 'coin' && image.x === 1680)
+    expect(core).toBeDefined()
+    expect(lineCoin).toBeDefined()
+    if (!core || !lineCoin || !runtime.playerSprite) return
+
+    runtime.playerSprite.body.blocked.down = false
+    runtime.playerSprite.body.touching.down = false
+    runtime.playerSprite.x = 1600
+    runtime.playerSprite.y = 320
+    core.x = 1760
+    core.y = 320
+    runtime.playerKeys.j.isDown = true
+    runtime.scene.update()
+
+    expect(runtime.killedTweenTargets).toContain(lineCoin)
+    expect(runtime.tweenCalls).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          targets: lineCoin,
+          duration: 260,
+          ease: 'Quad.easeOut',
+        }),
+      ]),
+    )
+  })
+
+  it('does not collect coins outside the Homing Attack line radius', () => {
+    const runtime = createSceneRuntime()
+    runtime.scene.create()
+    const core = runtime.sprites.find((sprite) => sprite.texture === 'azure-core')
+    const offLineCoin = runtime.images.find((image) => image.texture === 'coin' && image.x === 1504)
+    expect(core).toBeDefined()
+    expect(offLineCoin).toBeDefined()
+    if (!core || !offLineCoin || !runtime.playerSprite) return
+
+    runtime.playerSprite.body.blocked.down = false
+    runtime.playerSprite.body.touching.down = false
+    runtime.playerSprite.x = 1600
+    runtime.playerSprite.y = 320
+    core.x = 1760
+    core.y = 320
+    runtime.playerKeys.j.isDown = true
+    runtime.scene.update()
+
+    const collectionTweens = runtime.tweenCalls.filter((call) => call.targets === offLineCoin && call.duration === 260)
+    expect(collectionTweens).toHaveLength(0)
+  })
+
   it('keeps Homing hit bounce on the next update before recovery', () => {
     const runtime = createSceneRuntime()
     runtime.scene.create()

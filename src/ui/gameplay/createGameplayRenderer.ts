@@ -65,6 +65,7 @@ import {
   getHomingRecoveryState,
   getHomingTargetAcquisitionDecision,
   getHomingTrailSamples,
+  getHomingLineCoinCollectionDecision,
   homingAttackTiming,
   isHomingTargetAvailable,
   isHomingTargetLost,
@@ -714,6 +715,7 @@ class GameplayMapScene extends Phaser.Scene {
     this.player.setFlipX(target.x < startX)
     this.player.setScale(playerActorDefinition.sprites.attack.scale)
     this.player.setTexture(playerActorDefinition.sprites.attack.key, homingAttackPresentation.attackFrame)
+    this.collectCoinsAlongLine(startX, startY, contact.x, contact.y)
     this.emitHomingTrail(startX, startY, contact.x, contact.y)
     this.player.setPosition(contact.x, contact.y)
     this.player.setVelocity(0, 0)
@@ -774,6 +776,23 @@ class GameplayMapScene extends Phaser.Scene {
         delay: homingAttackTiming.trailHoldMs,
         onComplete: () => trail.destroy(),
       })
+    }
+  }
+
+  private collectCoinsAlongLine(startX: number, startY: number, endX: number, endY: number): void {
+    for (const coin of this.coins) {
+      const collectionDecision = getHomingLineCoinCollectionDecision({
+        collected: coin.collected,
+        startX,
+        startY,
+        endX,
+        endY,
+        pointX: coin.sprite.x,
+        pointY: coin.sprite.y,
+      })
+      if (collectionDecision === 'collect') {
+        this.collectCoin(coin)
+      }
     }
   }
 
