@@ -409,7 +409,7 @@ Add this helper after `getCheckpointSprite`:
 
 ```ts
 function getGoalSprite(runtime: FakeRuntime) {
-  const goal = runtime.staticImageCalls.find(
+  const goal = runtime.staticSpriteCalls.find(
     (sprite) => sprite.texture === goalActorDefinition.sprite.key,
   )
   expect(goal).toBeDefined()
@@ -420,6 +420,11 @@ function getGoalSprite(runtime: FakeRuntime) {
   return goal
 }
 ```
+
+Extend the fake scene runtime with `physics.add.staticSprite` support and expose
+`staticSpriteCalls`, using the same fake Arcade sprite shape as the existing
+static image helper. Goal rendering must use this fake static sprite collection
+because the goal is an animated static Arcade sprite.
 
 Add these tests in `describe('createGameplayRendererConfig', ...)`:
 
@@ -565,7 +570,7 @@ Add:
 
 ```ts
   private createGoal(): void {
-    const sprite = this.physics.add.staticImage(
+    const sprite = this.physics.add.staticSprite(
       this.stageMap.goal.x,
       getGoalBottomY({ surfaceY: this.stageMap.goal.surfaceY }),
       goalActorDefinition.sprite.key,
