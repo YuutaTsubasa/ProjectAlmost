@@ -13,7 +13,14 @@ export type GameplayStageMap = {
   backgroundLayers: readonly BackgroundLayer[]
   player: GameplayPlayerSpawn
   enemies: readonly GameplayEnemySpawn[]
+  coins: readonly GameplayCoinPoint[]
   terrain: TerrainDefinition
+}
+
+export type GameplayCoinPoint = {
+  id: string
+  x: number
+  y: number
 }
 
 export type GameplayPlayerSpawn = {

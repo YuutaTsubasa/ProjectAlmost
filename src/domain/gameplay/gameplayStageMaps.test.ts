@@ -146,4 +146,45 @@ describe('gameplayStageMaps', () => {
   it('does not return a map for stages outside this slice', () => {
     expect(getGameplayStageMap('1-2')).toBeUndefined()
   })
+
+  it('defines collectible coins for the first gameplay stage', () => {
+    const stage = getGameplayStageMap('1-1')
+    expect(stage).toBeDefined()
+    if (!stage) return
+
+    expect(stage.coins).toEqual([
+      { id: 'coin-start-1', x: 320, y: 430 },
+      { id: 'coin-start-2', x: 384, y: 430 },
+      { id: 'coin-homing-line-1', x: 1680, y: 320 },
+      { id: 'coin-homing-line-2', x: 1720, y: 320 },
+      { id: 'coin-route-1', x: 1504, y: 430 },
+    ])
+  })
+
+  it('keeps gameplay coin ids unique within the first stage', () => {
+    const stage = getGameplayStageMap('1-1')
+    expect(stage).toBeDefined()
+    if (!stage) return
+
+    const ids = stage.coins.map((coin) => coin.id)
+
+    expect(new Set(ids).size).toBe(ids.length)
+  })
+
+  it('places gameplay coins inside the first stage world bounds', () => {
+    const stage = getGameplayStageMap('1-1')
+    expect(stage).toBeDefined()
+    if (!stage) return
+
+    expect(
+      stage.coins.every((coin) =>
+        Number.isFinite(coin.x)
+        && Number.isFinite(coin.y)
+        && coin.x >= 0
+        && coin.x <= stage.world.width
+        && coin.y >= 0
+        && coin.y <= stage.world.height,
+      ),
+    ).toBe(true)
+  })
 })
