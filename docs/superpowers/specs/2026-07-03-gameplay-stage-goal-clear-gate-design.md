@@ -89,7 +89,7 @@ goal: {
 - Goal bottom Y is `surfaceY + visualBottomInset`.
 - Goal sprite key is `stage-goal`.
 - Goal asset ref is `/assets/props/white_palace_goal_idle.webp`.
-- Goal spritesheet frame size is `128 x 160`.
+- Goal spritesheet frame size is `256 x 256`.
 - Goal idle animation:
   - key `stage-goal-idle`
   - frames `0..3`
@@ -204,8 +204,8 @@ Rules:
 
 - `sprite.key` is `stage-goal`.
 - `sprite.assetRef` is `/assets/props/white_palace_goal_idle.webp`.
-- `sprite.frameWidth` is `128`.
-- `sprite.frameHeight` is `160`.
+- `sprite.frameWidth` is `256`.
+- `sprite.frameHeight` is `256`.
 - `animation.idleKey` is `stage-goal-idle`.
 - `animation.frameStart` is `0`.
 - `animation.frameEnd` is `3`.

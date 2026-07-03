@@ -8,8 +8,8 @@ describe('goal actor definition', () => {
       sprite: {
         key: 'stage-goal',
         assetRef: '/assets/props/white_palace_goal_idle.webp',
-        frameWidth: 128,
-        frameHeight: 160,
+        frameWidth: 256,
+        frameHeight: 256,
       },
       animation: {
         idleKey: 'stage-goal-idle',
