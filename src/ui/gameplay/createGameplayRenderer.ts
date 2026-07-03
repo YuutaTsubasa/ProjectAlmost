@@ -15,6 +15,13 @@ import {
 } from '../../domain/gameplay/checkpointActor'
 import { getGoalBottomY, goalActorDefinition } from '../../domain/gameplay/goalActor'
 import {
+  createInitialGameplayHudState,
+  formatGameplayHudTime,
+  getHudEnemyMarkers,
+  getHudPositionProgress,
+  type GameplayHudPatch,
+} from '../../domain/gameplay/gameplayHud'
+import {
   getGroundedHazardCenterY,
   getHazardBodyPresentation,
   getHazardFrameIndex,
@@ -109,6 +116,7 @@ import {
 type GameplayRendererInput = {
   parent: HTMLElement
   stage: GameplayStageMap
+  onHudUpdate?: (patch: GameplayHudPatch) => void
 }
 
 type BackgroundRuntimeLayer = {
@@ -165,6 +173,7 @@ const checkpointActivatedTint = 0xfff0a8
 
 class GameplayMapScene extends Phaser.Scene {
   private readonly stageMap: GameplayStageMap
+  private readonly onHudUpdate?: (patch: GameplayHudPatch) => void
   private backgroundLayers: BackgroundRuntimeLayer[] = []
   private terrainLayer: Phaser.Tilemaps.TilemapLayer | null = null
   private enemies: EnemyRuntime[] = []
@@ -202,9 +211,10 @@ class GameplayMapScene extends Phaser.Scene {
   private collectedCoins = 0
   private stageCleared = false
 
-  constructor(stage: GameplayStageMap) {
+  constructor(stage: GameplayStageMap, onHudUpdate?: (patch: GameplayHudPatch) => void) {
     super(`GameplayMapScene:${stage.id}`)
     this.stageMap = stage
+    this.onHudUpdate = onHudUpdate
     this.currentRespawnPoint = {
       x: stage.player.spawn.x,
       surfaceY: stage.player.spawn.surfaceY,
@@ -291,6 +301,7 @@ class GameplayMapScene extends Phaser.Scene {
     this.createCoins()
     this.playerKeys = this.createPlayerKeys()
     this.createPlayer()
+    this.emitHudPatch(createInitialGameplayHudState(this.stageMap))
   }
 
   update(): void {
@@ -305,6 +316,38 @@ class GameplayMapScene extends Phaser.Scene {
     this.updateCheckpoints()
     this.checkPlayerOutOfBounds()
     this.updatePlayerMovement()
+    this.emitHudPositionPatch()
+  }
+
+  private emitHudPatch(patch: GameplayHudPatch): void {
+    this.onHudUpdate?.(patch)
+  }
+
+  private emitHudPositionPatch(): void {
+    if (!this.player || this.stageCleared) {
+      return
+    }
+
+    this.emitHudPatch({
+      playerProgress: getHudPositionProgress({
+        position: this.player.x,
+        worldSize: this.stageMap.world.width,
+      }),
+      playerProgressY: getHudPositionProgress({
+        position: this.player.y,
+        worldSize: this.stageMap.world.height,
+      }),
+      enemyMarkers: getHudEnemyMarkers({
+        enemies: this.enemies.map((enemy) => ({
+          x: enemy.sprite.x,
+          y: enemy.sprite.y,
+          defeated: enemy.defeated,
+        })),
+        worldWidth: this.stageMap.world.width,
+        worldHeight: this.stageMap.world.height,
+      }),
+      time: formatGameplayHudTime(this.time.now),
+    })
   }
 
   private createBackgroundLayers(): void {
@@ -1584,7 +1627,7 @@ export function createGameplayRendererConfig(
       mode: Phaser.Scale.FIT,
       autoCenter: Phaser.Scale.CENTER_BOTH,
     },
-    scene: [new GameplayMapScene(input.stage)],
+    scene: [new GameplayMapScene(input.stage, input.onHudUpdate)],
   }
 }
 

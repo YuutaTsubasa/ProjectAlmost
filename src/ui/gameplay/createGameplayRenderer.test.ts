@@ -18,6 +18,13 @@ import {
   playerLifeTiming,
 } from '../../domain/gameplay/playerLife'
 import {
+  createInitialGameplayHudState,
+  formatGameplayHudTime,
+  getHudEnemyMarkers,
+  getHudPositionProgress,
+  type GameplayHudPatch,
+} from '../../domain/gameplay/gameplayHud'
+import {
   meleeAttackTiming,
 } from '../../domain/gameplay/playerAttack'
 import {
@@ -489,7 +496,10 @@ function createFakeEllipse(input: {
   return ellipse
 }
 
-function createSceneRuntime(input: { stage?: GameplayStageMap } = {}) {
+function createSceneRuntime(input: {
+  stage?: GameplayStageMap
+  onHudUpdate?: (patch: GameplayHudPatch) => void
+} = {}) {
   const stage = input.stage ?? getGameplayStageMap('1-1')
 
   expect(stage).toBeDefined()
@@ -497,7 +507,15 @@ function createSceneRuntime(input: { stage?: GameplayStageMap } = {}) {
     throw new Error('Missing gameplay stage map 1-1.')
   }
 
-  const config = createGameplayRendererConfig({ parent: {} as HTMLElement, stage })
+  const hudUpdates: GameplayHudPatch[] = []
+  const config = createGameplayRendererConfig({
+    parent: {} as HTMLElement,
+    stage,
+    onHudUpdate: (patch) => {
+      hudUpdates.push(patch)
+      input.onHudUpdate?.(patch)
+    },
+  })
   const configuredScenes = Array.isArray(config.scene) ? config.scene : [config.scene]
   const scene = configuredScenes[0] as {
     preload: () => void
@@ -784,6 +802,7 @@ function createSceneRuntime(input: { stage?: GameplayStageMap } = {}) {
     stage,
     config,
     scene,
+    hudUpdates,
     imageCalls,
     spritesheetCalls,
     animationCreateCalls,
@@ -906,6 +925,47 @@ function getGoalSprite(runtime: FakeRuntime) {
 }
 
 describe('createGameplayRendererConfig', () => {
+  it('emits initial gameplay HUD state during scene creation', () => {
+    const runtime = createSceneRuntime()
+
+    runtime.scene.create()
+
+    expect(runtime.hudUpdates[0]).toEqual(createInitialGameplayHudState(runtime.stage))
+  })
+
+  it('emits player gameplay HUD progress and elapsed time during scene update before clear', () => {
+    const runtime = createSceneRuntime()
+    runtime.scene.create()
+    expect(runtime.playerSprite).toBeDefined()
+    if (!runtime.playerSprite) return
+
+    runtime.playerSprite.x = 640
+    runtime.playerSprite.y = 320
+    runtime.scene.time.now = 65_432
+    runtime.scene.update()
+
+    expect(runtime.hudUpdates.at(-1)).toMatchObject({
+      playerProgress: getHudPositionProgress({
+        position: 640,
+        worldSize: runtime.stage.world.width,
+      }),
+      playerProgressY: getHudPositionProgress({
+        position: 320,
+        worldSize: runtime.stage.world.height,
+      }),
+      enemyMarkers: getHudEnemyMarkers({
+        enemies: runtime.enemySprites.map((enemy) => ({
+          x: enemy.x,
+          y: enemy.y,
+          defeated: false,
+        })),
+        worldWidth: runtime.stage.world.width,
+        worldHeight: runtime.stage.world.height,
+      }),
+      time: formatGameplayHudTime(65_432),
+    })
+  })
+
   it('uses the domain player gravity in Phaser config', () => {
     const stage = getGameplayStageMap('1-1')
 
