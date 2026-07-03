@@ -1,5 +1,12 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { enemyActorDefinitions } from '../../domain/gameplay/enemyActor'
+import {
+  getGroundedHazardCenterY,
+  getHazardBodyPresentation,
+  getHazardFrameIndex,
+  hazardActorDefinitions,
+} from '../../domain/gameplay/hazardActor'
+import type { GameplayStageMap } from '../../domain/gameplay/gameplayMapTypes'
 import { getGameplayStageMap } from '../../domain/gameplay/gameplayStageMaps'
 import { playerActorDefinition } from '../../domain/gameplay/playerActor'
 import {
@@ -212,6 +219,8 @@ function createFakeArcadeSprite(input: { x: number; y: number; texture: string }
     visible: true,
     destroyed: false,
     immovable: false,
+    displaySize: { width: 0, height: 0 },
+    refreshedBody: false,
     playCalls: [] as Array<{ key: string; ignoreIfPlaying?: boolean }>,
     body: {
       enable: true,
@@ -235,6 +244,10 @@ function createFakeArcadeSprite(input: { x: number; y: number; texture: string }
       sprite.scale = value
       sprite.scaleX = value
       sprite.scaleY = value
+      return sprite
+    },
+    setDisplaySize: (width: number, height: number) => {
+      sprite.displaySize = { width, height }
       return sprite
     },
     setPosition: (x: number, y: number) => {
@@ -317,6 +330,10 @@ function createFakeArcadeSprite(input: { x: number; y: number; texture: string }
     destroy: () => {
       sprite.destroyed = true
     },
+    refreshBody: () => {
+      sprite.refreshedBody = true
+      return sprite
+    },
     getBounds: () => ({
       x: sprite.x - sprite.body.size.width / 2,
       y: sprite.y - sprite.body.size.height / 2,
@@ -396,8 +413,8 @@ function createFakeImage(input: { x: number; y: number; texture: string }) {
   return image
 }
 
-function createSceneRuntime() {
-  const stage = getGameplayStageMap('1-1')
+function createSceneRuntime(input: { stage?: GameplayStageMap } = {}) {
+  const stage = input.stage ?? getGameplayStageMap('1-1')
 
   expect(stage).toBeDefined()
   if (!stage) {
@@ -418,6 +435,12 @@ function createSceneRuntime() {
       world: { setBounds: (...args: number[]) => void }
       add: {
         sprite: (x: number, y: number, texture: string) => ReturnType<typeof createFakeArcadeSprite>
+        staticImage: (
+          x: number,
+          y: number,
+          texture: string,
+          frame?: number,
+        ) => ReturnType<typeof createFakeArcadeSprite>
         collider: (a: unknown, b: unknown) => void
         overlap: (a: unknown, b: unknown, callback: () => void) => void
       }
@@ -501,6 +524,7 @@ function createSceneRuntime() {
   const cameraFadeInCalls: CameraFadeCall[] = []
   const sprites: Array<ReturnType<typeof createFakeArcadeSprite>> = []
   const spriteCalls: Array<ReturnType<typeof createFakeArcadeSprite>> = []
+  const staticImageCalls: Array<ReturnType<typeof createFakeArcadeSprite>> = []
   const terrainLayer = createFakeTerrainLayer()
   const playerKeys: FakePlayerKeys = {
     left: { isDown: false },
@@ -543,6 +567,12 @@ function createSceneRuntime() {
         if (texture === playerActorDefinition.sprites.idle.key) {
           playerSprite = sprite
         }
+        return sprite
+      },
+      staticImage: (x, y, texture, frame) => {
+        const sprite = createFakeArcadeSprite({ x, y, texture })
+        sprite.frame = frame
+        staticImageCalls.push(sprite)
         return sprite
       },
       collider: (a, b) => {
@@ -652,6 +682,7 @@ function createSceneRuntime() {
     animationCreateCalls,
     sprites,
     spriteCalls,
+    staticImageCalls,
     generateTextureCalls,
     tweenCalls,
     images,
@@ -672,6 +703,13 @@ function createSceneRuntime() {
       const overlap = overlapCalls.find((candidate) => candidate.a === playerSprite && candidate.b === enemy)
       if (!overlap) {
         throw new Error(`Missing player overlap for enemy texture ${enemy.texture}.`)
+      }
+      overlap.callback()
+    },
+    triggerHazardOverlap: (hazard: ReturnType<typeof createFakeArcadeSprite>) => {
+      const overlap = overlapCalls.find((candidate) => candidate.a === playerSprite && candidate.b === hazard)
+      if (!overlap) {
+        throw new Error(`Missing player overlap for hazard texture ${hazard.texture}.`)
       }
       overlap.callback()
     },
@@ -696,6 +734,29 @@ function createSceneRuntime() {
 function recoverFromSurvivedHurt(runtime: FakeRuntime): void {
   runtime.runDelayedCalls(playerLifeTiming.hurtRecoveryDelayMs)
   runtime.runDelayedCalls(playerLifeTiming.invulnerabilityRecoveryDelayMs)
+}
+
+function createHazardStage(): GameplayStageMap {
+  const stage = getGameplayStageMap('1-1')
+  expect(stage).toBeDefined()
+  if (!stage) {
+    throw new Error('Missing gameplay stage map 1-1.')
+  }
+
+  return {
+    ...stage,
+    hazards: [
+      {
+        id: 'test-spike-bed',
+        type: 'spikes',
+        x: 760,
+        surfaceY: 512,
+        width: 180,
+        height: 62,
+        orientation: 'floor',
+      },
+    ],
+  }
 }
 
 describe('createGameplayRendererConfig', () => {
@@ -753,6 +814,67 @@ describe('createGameplayRendererConfig', () => {
         frameHeight: sprite.frameHeight,
       })
     }
+  })
+
+  it('preloads spike hazard spritesheets from the domain hazard definition', () => {
+    const runtime = createSceneRuntime()
+
+    runtime.scene.preload()
+
+    const sprite = hazardActorDefinitions.spikes.sprite
+    expect(runtime.spritesheetCalls).toContainEqual({
+      key: sprite.key,
+      assetRef: sprite.assetRef,
+      frameWidth: sprite.frameWidth,
+      frameHeight: sprite.frameHeight,
+    })
+  })
+
+  it('creates static spike hazards from stage data', () => {
+    const stage = createHazardStage()
+    const runtime = createSceneRuntime({ stage })
+
+    runtime.scene.create()
+
+    const hazardSpawn = stage.hazards[0]
+    const spike = runtime.staticImageCalls.find(
+      (sprite) => sprite.texture === hazardActorDefinitions.spikes.sprite.key,
+    )
+    expect(spike).toBeDefined()
+    if (!spike || !hazardSpawn) return
+
+    expect(spike).toMatchObject({
+      x: hazardSpawn.x,
+      y: getGroundedHazardCenterY({
+        surfaceY: hazardSpawn.surfaceY,
+        height: hazardSpawn.height,
+        type: hazardSpawn.type,
+      }),
+      frame: getHazardFrameIndex({ orientation: hazardSpawn.orientation }),
+      depth: 8,
+      origin: hazardActorDefinitions.spikes.origin,
+    })
+    const body = getHazardBodyPresentation({
+      width: hazardSpawn.width,
+      height: hazardSpawn.height,
+      type: hazardSpawn.type,
+    })
+    expect(spike.body.size).toEqual({
+      width: body.width,
+      height: body.height,
+    })
+    expect(spike.body.offset).toEqual({
+      x: body.offsetX,
+      y: body.offsetY,
+    })
+    expect(runtime.overlapCalls).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          a: runtime.playerSprite,
+          b: spike,
+        }),
+      ]),
+    )
   })
 
   it('creates the player with domain-owned depth and terrain collision wiring', () => {

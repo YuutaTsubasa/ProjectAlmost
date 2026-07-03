@@ -9,8 +9,14 @@ import {
   shouldUpdateEnemyPatrol,
   type EnemyPatrolDirection,
 } from '../../domain/gameplay/enemyActor'
+import {
+  getGroundedHazardCenterY,
+  getHazardBodyPresentation,
+  getHazardFrameIndex,
+  hazardActorDefinitions,
+} from '../../domain/gameplay/hazardActor'
 import type { GameplayStageMap } from '../../domain/gameplay/gameplayMapTypes'
-import type { GameplayCoinPoint, GameplayEnemySpawn } from '../../domain/gameplay/gameplayMapTypes'
+import type { GameplayCoinPoint, GameplayEnemySpawn, GameplayHazardSpawn } from '../../domain/gameplay/gameplayMapTypes'
 import {
   bufferMovableActorJump,
   createMovableActorJumpState,
@@ -106,6 +112,11 @@ type CoinRuntime = {
   collected: boolean
 }
 
+type HazardRuntime = {
+  sprite: Phaser.Types.Physics.Arcade.ImageWithStaticBody
+  spawn: GameplayHazardSpawn
+}
+
 type ActiveMeleeHitbox = {
   image: Phaser.GameObjects.Image
   consumed: boolean
@@ -143,6 +154,7 @@ class GameplayMapScene extends Phaser.Scene {
   private isHomingAttacking = false
   private homingTarget: Phaser.Physics.Arcade.Sprite | null = null
   private homingReticle: Phaser.GameObjects.Image | null = null
+  private hazards: HazardRuntime[] = []
   private coins: CoinRuntime[] = []
   private collectedCoins = 0
 
@@ -177,6 +189,13 @@ class GameplayMapScene extends Phaser.Scene {
         })
       }
     }
+
+    for (const definition of Object.values(hazardActorDefinitions)) {
+      this.load.spritesheet(definition.sprite.key, definition.sprite.assetRef, {
+        frameWidth: definition.sprite.frameWidth,
+        frameHeight: definition.sprite.frameHeight,
+      })
+    }
   }
 
   create(): void {
@@ -210,6 +229,7 @@ class GameplayMapScene extends Phaser.Scene {
     this.createCoinTexture()
     this.createEnemyAnimations()
     this.createEnemies()
+    this.createHazards()
     this.createCoins()
     this.playerKeys = this.createPlayerKeys()
     this.createPlayer()
@@ -342,6 +362,36 @@ class GameplayMapScene extends Phaser.Scene {
       })
 
       return { sprite, point, collected: false }
+    })
+  }
+
+  private createHazards(): void {
+    this.hazards = this.stageMap.hazards.map((spawn) => {
+      const definition = hazardActorDefinitions[spawn.type]
+      const sprite = this.physics.add.staticImage(
+        spawn.x,
+        getGroundedHazardCenterY({
+          surfaceY: spawn.surfaceY,
+          height: spawn.height,
+          type: spawn.type,
+        }),
+        definition.sprite.key,
+        getHazardFrameIndex({ orientation: spawn.orientation }),
+      )
+      sprite.setOrigin(definition.origin.x, definition.origin.y)
+      sprite.setDisplaySize(spawn.width, spawn.height)
+      sprite.setDepth(8)
+      sprite.refreshBody()
+
+      const body = getHazardBodyPresentation({
+        width: spawn.width,
+        height: spawn.height,
+        type: spawn.type,
+      })
+      sprite.body.setSize(body.width, body.height)
+      sprite.body.setOffset(body.offsetX, body.offsetY)
+
+      return { sprite, spawn }
     })
   }
 
@@ -498,6 +548,10 @@ class GameplayMapScene extends Phaser.Scene {
       this.physics.add.overlap(player, enemy.sprite, () => {
         this.handlePlayerEnemyContact(enemy)
       })
+    }
+
+    for (const hazard of this.hazards) {
+      this.physics.add.overlap(player, hazard.sprite, () => this.handlePlayerHazardContact(hazard))
     }
   }
 
@@ -944,6 +998,10 @@ class GameplayMapScene extends Phaser.Scene {
       this.isPlayerInvulnerable = recovery.invulnerable
       this.player?.setAlpha(1)
     })
+  }
+
+  private handlePlayerHazardContact(_hazard: HazardRuntime): void {
+    return
   }
 
   private checkPlayerOutOfBounds(): void {
