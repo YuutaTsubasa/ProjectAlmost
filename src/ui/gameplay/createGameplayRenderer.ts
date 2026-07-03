@@ -569,13 +569,6 @@ class GameplayMapScene extends Phaser.Scene {
     checkpoint.ring.setStrokeStyle(4, checkpointActivatedTint, 1)
 
     this.tweens.add({
-      targets: checkpoint.sprite,
-      scaleX: checkpoint.sprite.scaleX * checkpointActorDefinition.activationTween.spriteScaleMultiplier,
-      scaleY: checkpoint.sprite.scaleY * checkpointActorDefinition.activationTween.spriteScaleMultiplier,
-      duration: checkpointActorDefinition.activationTween.durationMs,
-      yoyo: true,
-    })
-    this.tweens.add({
       targets: [checkpoint.glow, checkpoint.ring],
       alpha: 1,
       duration: checkpointActorDefinition.activationTween.durationMs,

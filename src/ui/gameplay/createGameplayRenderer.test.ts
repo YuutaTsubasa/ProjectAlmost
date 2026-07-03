@@ -1087,14 +1087,22 @@ describe('createGameplayRendererConfig', () => {
 
     expect(sprite.alpha).toBe(checkpointActorDefinition.activatedAlpha)
     expect(sprite.tint).toBe(checkpointActorDefinition.activatedTint)
-    const activatedScaleX = sprite.scaleX * checkpointActorDefinition.activationTween.spriteScaleMultiplier
-    const activatedScaleY = sprite.scaleY * checkpointActorDefinition.activationTween.spriteScaleMultiplier
+    expect(
+      runtime.tweenCalls.some(
+        (call) => call.targets === sprite && (
+          'scale' in call
+          || 'scaleX' in call
+          || 'scaleY' in call
+        ),
+      ),
+    ).toBe(false)
     expect(runtime.tweenCalls).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          targets: sprite,
-          scaleX: activatedScaleX,
-          scaleY: activatedScaleY,
+          targets: expect.arrayContaining([
+            expect.objectContaining({ x: checkpoint.x }),
+          ]),
+          alpha: 1,
           duration: checkpointActorDefinition.activationTween.durationMs,
           yoyo: true,
         }),
