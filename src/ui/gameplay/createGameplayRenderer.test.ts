@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { enemyActorDefinitions } from '../../domain/gameplay/enemyActor'
 import { checkpointActorDefinition, getCheckpointBottomY } from '../../domain/gameplay/checkpointActor'
+import { getGoalBottomY, goalActorDefinition } from '../../domain/gameplay/goalActor'
 import {
   getGroundedHazardCenterY,
   getHazardBodyPresentation,
@@ -97,6 +98,7 @@ type AnimationCreateCall = {
   frames: Array<{ key: string; frame: number }>
   frameRate: number
   repeat: number
+  yoyo?: boolean
 }
 
 type GenerateTextureCall = {
@@ -506,6 +508,12 @@ function createSceneRuntime(input: { stage?: GameplayStageMap } = {}) {
       world: { setBounds: (...args: number[]) => void }
       add: {
         sprite: (x: number, y: number, texture: string) => ReturnType<typeof createFakeArcadeSprite>
+        staticSprite: (
+          x: number,
+          y: number,
+          texture: string,
+          frame?: number,
+        ) => ReturnType<typeof createFakeArcadeSprite>
         staticImage: (
           x: number,
           y: number,
@@ -604,6 +612,7 @@ function createSceneRuntime(input: { stage?: GameplayStageMap } = {}) {
   const cameraFadeInCalls: CameraFadeCall[] = []
   const sprites: Array<ReturnType<typeof createFakeArcadeSprite>> = []
   const spriteCalls: Array<ReturnType<typeof createFakeArcadeSprite>> = []
+  const staticSpriteCalls: Array<ReturnType<typeof createFakeArcadeSprite>> = []
   const staticImageCalls: Array<ReturnType<typeof createFakeArcadeSprite>> = []
   const terrainLayer = createFakeTerrainLayer()
   const playerKeys: FakePlayerKeys = {
@@ -647,6 +656,16 @@ function createSceneRuntime(input: { stage?: GameplayStageMap } = {}) {
         if (texture === playerActorDefinition.sprites.idle.key) {
           playerSprite = sprite
         }
+        return sprite
+      },
+      staticSprite: (x, y, texture, frame) => {
+        const sprite = createFakeArcadeSprite({ x, y, texture })
+        sprite.frame = frame
+        sprite.play = (key, ignoreIfPlaying) => {
+          sprite.playCalls.push({ key, ignoreIfPlaying })
+          return sprite
+        }
+        staticSpriteCalls.push(sprite)
         return sprite
       },
       staticImage: (x, y, texture, frame) => {
@@ -767,6 +786,7 @@ function createSceneRuntime(input: { stage?: GameplayStageMap } = {}) {
     animationCreateCalls,
     sprites,
     spriteCalls,
+    staticSpriteCalls,
     staticImageCalls,
     generateTextureCalls,
     tweenCalls,
@@ -863,6 +883,18 @@ function getCheckpointSprite(runtime: FakeRuntime, checkpointId: string) {
   return { checkpoint, sprite }
 }
 
+function getGoalSprite(runtime: FakeRuntime) {
+  const goal = runtime.staticSpriteCalls.find(
+    (sprite) => sprite.texture === goalActorDefinition.sprite.key,
+  )
+  expect(goal).toBeDefined()
+  if (!goal) {
+    throw new Error('Missing stage goal sprite.')
+  }
+
+  return goal
+}
+
 describe('createGameplayRendererConfig', () => {
   it('uses the domain player gravity in Phaser config', () => {
     const stage = getGameplayStageMap('1-1')
@@ -943,6 +975,77 @@ describe('createGameplayRendererConfig', () => {
       key: checkpointActorDefinition.sprite.key,
       assetRef: checkpointActorDefinition.sprite.assetRef,
     })
+  })
+
+  it('preloads the stage goal spritesheet from the domain actor definition', () => {
+    const runtime = createSceneRuntime()
+
+    runtime.scene.preload()
+
+    expect(runtime.spritesheetCalls).toContainEqual({
+      key: goalActorDefinition.sprite.key,
+      assetRef: goalActorDefinition.sprite.assetRef,
+      frameWidth: goalActorDefinition.sprite.frameWidth,
+      frameHeight: goalActorDefinition.sprite.frameHeight,
+    })
+  })
+
+  it('creates the stage goal idle animation from the domain actor definition', () => {
+    const runtime = createSceneRuntime()
+
+    runtime.scene.create()
+
+    expect(runtime.animationCreateCalls).toContainEqual({
+      key: goalActorDefinition.animation.idleKey,
+      frames: [
+        { key: goalActorDefinition.sprite.key, frame: 0 },
+        { key: goalActorDefinition.sprite.key, frame: 1 },
+        { key: goalActorDefinition.sprite.key, frame: 2 },
+        { key: goalActorDefinition.sprite.key, frame: 3 },
+      ],
+      frameRate: goalActorDefinition.animation.frameRate,
+      repeat: goalActorDefinition.animation.repeat,
+      yoyo: goalActorDefinition.animation.yoyo,
+    })
+  })
+
+  it('creates a static stage goal body from stage data', () => {
+    const runtime = createSceneRuntime()
+
+    runtime.scene.create()
+
+    const goal = getGoalSprite(runtime)
+    const bottomY = getGoalBottomY({ surfaceY: runtime.stage.goal.surfaceY })
+
+    expect(goal).toMatchObject({
+      x: runtime.stage.goal.x,
+      y: bottomY,
+      texture: goalActorDefinition.sprite.key,
+      origin: goalActorDefinition.origin,
+      displaySize: goalActorDefinition.displaySize,
+      depth: goalActorDefinition.depth,
+      refreshedBody: true,
+    })
+    expect(goal.body.size).toEqual({
+      width: goalActorDefinition.body.width,
+      height: goalActorDefinition.body.height,
+    })
+    expect(goal.body.offset).toEqual({
+      x: goalActorDefinition.body.offsetX,
+      y: goalActorDefinition.body.offsetY,
+    })
+    expect(goal.playCalls.at(-1)).toEqual({
+      key: goalActorDefinition.animation.idleKey,
+      ignoreIfPlaying: undefined,
+    })
+    expect(runtime.overlapCalls).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          a: runtime.playerSprite,
+          b: goal,
+        }),
+      ]),
+    )
   })
 
   it('creates static spike hazards from stage data', () => {

@@ -13,6 +13,7 @@ import {
   checkpointActorDefinition,
   getCheckpointBottomY,
 } from '../../domain/gameplay/checkpointActor'
+import { getGoalBottomY, goalActorDefinition } from '../../domain/gameplay/goalActor'
 import {
   getGroundedHazardCenterY,
   getHazardBodyPresentation,
@@ -140,6 +141,11 @@ type CheckpointRuntime = {
   activated: boolean
 }
 
+type GoalRuntime = {
+  sprite: Phaser.Types.Physics.Arcade.SpriteWithStaticBody
+  cleared: boolean
+}
+
 type CurrentRespawnPoint = {
   x: number
   surfaceY: number
@@ -188,6 +194,7 @@ class GameplayMapScene extends Phaser.Scene {
   private homingReticle: Phaser.GameObjects.Image | null = null
   private hazards: HazardRuntime[] = []
   private checkpoints: CheckpointRuntime[] = []
+  private goal: GoalRuntime | null = null
   private activeCheckpointIndex = -1
   private currentRespawnPoint: CurrentRespawnPoint
   private coins: CoinRuntime[] = []
@@ -238,6 +245,10 @@ class GameplayMapScene extends Phaser.Scene {
     }
 
     this.load.image(checkpointActorDefinition.sprite.key, checkpointActorDefinition.sprite.assetRef)
+    this.load.spritesheet(goalActorDefinition.sprite.key, goalActorDefinition.sprite.assetRef, {
+      frameWidth: goalActorDefinition.sprite.frameWidth,
+      frameHeight: goalActorDefinition.sprite.frameHeight,
+    })
   }
 
   create(): void {
@@ -265,6 +276,7 @@ class GameplayMapScene extends Phaser.Scene {
     this.createBackgroundLayers()
     this.terrainLayer = this.createTerrainLayer(columns, rows)
     this.createPlayerAnimations()
+    this.createGoalAnimation()
     this.createEnemyTextures()
     this.createAttackHitboxTexture()
     this.createHomingReticleTexture()
@@ -273,6 +285,7 @@ class GameplayMapScene extends Phaser.Scene {
     this.createEnemies()
     this.createHazards()
     this.createCheckpoints()
+    this.createGoal()
     this.createCoins()
     this.playerKeys = this.createPlayerKeys()
     this.createPlayer()
@@ -346,6 +359,19 @@ class GameplayMapScene extends Phaser.Scene {
         repeat: sprite.repeat,
       })
     }
+  }
+
+  private createGoalAnimation(): void {
+    this.anims.create({
+      key: goalActorDefinition.animation.idleKey,
+      frames: this.anims.generateFrameNumbers(goalActorDefinition.sprite.key, {
+        start: goalActorDefinition.animation.frameStart,
+        end: goalActorDefinition.animation.frameEnd,
+      }),
+      frameRate: goalActorDefinition.animation.frameRate,
+      repeat: goalActorDefinition.animation.repeat,
+      yoyo: goalActorDefinition.animation.yoyo,
+    })
   }
 
   private createEnemyTextures(): void {
@@ -505,6 +531,29 @@ class GameplayMapScene extends Phaser.Scene {
 
       return { sprite, spawn }
     })
+  }
+
+  private createGoal(): void {
+    const sprite = this.physics.add.staticSprite(
+      this.stageMap.goal.x,
+      getGoalBottomY({ surfaceY: this.stageMap.goal.surfaceY }),
+      goalActorDefinition.sprite.key,
+    )
+    sprite.setOrigin(goalActorDefinition.origin.x, goalActorDefinition.origin.y)
+    sprite.setDisplaySize(
+      goalActorDefinition.displaySize.width,
+      goalActorDefinition.displaySize.height,
+    )
+    sprite.refreshBody()
+    sprite.body.setSize(goalActorDefinition.body.width, goalActorDefinition.body.height)
+    sprite.body.setOffset(goalActorDefinition.body.offsetX, goalActorDefinition.body.offsetY)
+    sprite.setDepth(goalActorDefinition.depth)
+    sprite.play(goalActorDefinition.animation.idleKey)
+
+    this.goal = {
+      sprite,
+      cleared: false,
+    }
   }
 
   private updateCoins(): void {
@@ -697,6 +746,10 @@ class GameplayMapScene extends Phaser.Scene {
     this.collectedCoins = 0
     this.player = player
     this.createPlayerEnemyOverlaps(player)
+
+    if (this.goal) {
+      this.physics.add.overlap(player, this.goal.sprite, () => this.completeStage())
+    }
   }
 
   private createPlayerEnemyOverlaps(player: Phaser.Physics.Arcade.Sprite): void {
@@ -710,6 +763,8 @@ class GameplayMapScene extends Phaser.Scene {
       this.physics.add.overlap(player, hazard.sprite, () => this.handlePlayerHazardContact(hazard))
     }
   }
+
+  private completeStage(): void {}
 
   private createEnemies(): void {
     if (!this.terrainLayer) {
