@@ -619,6 +619,7 @@ class GameplayMapScene extends Phaser.Scene {
     })
 
     this.player.setFlipX(target.x < startX)
+    this.player.setScale(playerActorDefinition.sprites.attack.scale)
     this.player.setTexture(playerActorDefinition.sprites.attack.key, homingAttackPresentation.attackFrame)
     this.emitHomingTrail(startX, startY, contact.x, contact.y)
     this.player.setPosition(contact.x, contact.y)
@@ -635,6 +636,7 @@ class GameplayMapScene extends Phaser.Scene {
   private finishHomingAttack(hit: boolean): void {
     if (!this.player) return
 
+    this.homingTarget = null
     const outcome = getHomingFinishOutcome({
       hit,
       gravitySign: 1,
@@ -987,7 +989,10 @@ class GameplayMapScene extends Phaser.Scene {
       this.player.setFlipX(false)
     }
 
-    if (this.isAttacking) {
+    if (this.isHomingAttacking) {
+      this.player.setScale(playerActorDefinition.sprites.attack.scale)
+      this.player.setTexture(playerActorDefinition.sprites.attack.key, homingAttackPresentation.attackFrame)
+    } else if (this.isAttacking) {
       this.playPlayerAnimation(this.player, 'attack')
     } else if (!grounded || jumpingThisFrame) {
       this.playPlayerAnimation(this.player, 'jump')

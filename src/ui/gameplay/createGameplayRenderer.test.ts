@@ -310,6 +310,8 @@ function createFakeArcadeSprite(input: { x: number; y: number; texture: string }
     },
     play: (key: string, ignoreIfPlaying?: boolean) => {
       sprite.playCalls.push({ key, ignoreIfPlaying })
+      sprite.texture = key
+      sprite.frame = undefined
       return sprite
     },
     destroy: () => {
@@ -894,9 +896,32 @@ describe('createGameplayRendererConfig', () => {
     expect(core.body.enable).toBe(false)
     expect(runtime.playerSprite.texture).toBe(playerActorDefinition.sprites.attack.key)
     expect(runtime.playerSprite.frame).toBe(homingAttackPresentation.attackFrame)
+    expect(runtime.playerSprite.scale).toBe(playerActorDefinition.sprites.attack.scale)
     expect(runtime.playerSprite.x).toBe(1726)
     expect(runtime.playerSprite.y).toBe(320)
     expect(runtime.playerSprite.velocityX).toBe(0)
+    expect(runtime.playerSprite.velocityY).toBe(-420)
+  })
+
+  it('keeps Homing hit bounce on the next update before recovery', () => {
+    const runtime = createSceneRuntime()
+    runtime.scene.create()
+    const core = runtime.sprites.find((sprite) => sprite.texture === 'azure-core')
+    expect(core).toBeDefined()
+    if (!core || !runtime.playerSprite) return
+
+    runtime.playerSprite.body.blocked.down = false
+    runtime.playerSprite.body.touching.down = false
+    runtime.playerSprite.x = 1600
+    runtime.playerSprite.y = 320
+    core.x = 1760
+    core.y = 320
+    runtime.playerKeys.j.isDown = true
+    runtime.scene.update()
+
+    runtime.playerKeys.j.isDown = false
+    runtime.scene.update()
+
     expect(runtime.playerSprite.velocityY).toBe(-420)
   })
 
