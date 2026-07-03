@@ -99,6 +99,21 @@ describe('gameplay HUD state', () => {
     expect(state.enemyMarkers.length).toBe(stage.enemies.length)
   })
 
+  it('projects rebuilt 1-1 enemy markers from each enemy spawn field', () => {
+    const stage = getGameplayStageMap('1-1')
+    expect(stage).toBeDefined()
+    if (!stage) return
+
+    const state = createInitialGameplayHudState(stage)
+    const [armorGuard, azureCore] = stage.enemies
+
+    expect(armorGuard.type).toBe('armor-guard')
+    expect(azureCore.type).toBe('azure-core')
+    expect(state.enemyMarkers).toHaveLength(2)
+    expect(state.enemyMarkers[0].y).toBeCloseTo(armorGuard.surfaceY / stage.world.height)
+    expect(state.enemyMarkers[1].y).toBeCloseTo(azureCore.y / stage.world.height)
+  })
+
   it('applies HUD patches immutably', () => {
     const stage = getGameplayStageMap('1-1')
     expect(stage).toBeDefined()

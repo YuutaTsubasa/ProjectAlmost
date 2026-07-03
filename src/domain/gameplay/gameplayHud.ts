@@ -163,7 +163,7 @@ export function createInitialGameplayHudState(stage: GameplayStageMap): Gameplay
     enemyMarkers: getHudEnemyMarkers({
       enemies: stage.enemies.map((enemy) => ({
         x: enemy.x,
-        y: enemy.surfaceY,
+        y: enemy.type === 'armor-guard' ? enemy.surfaceY : enemy.y,
         defeated: false,
       })),
       worldWidth: stage.world.width,
