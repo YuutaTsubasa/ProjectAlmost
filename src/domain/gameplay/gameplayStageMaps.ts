@@ -76,6 +76,29 @@ const stageOneOne: GameplayStageMap = {
     { id: 'coin-route-1', x: 1504, y: 430 },
   ],
   hazards: [],
+  checkpoints: [
+    {
+      id: 'combat-gate',
+      x: 2540,
+      surfaceY: 512,
+      spawnX: 2600,
+      spawnSurfaceY: 512,
+    },
+    {
+      id: 'final-ascent',
+      x: 4320,
+      surfaceY: 512,
+      spawnX: 4380,
+      spawnSurfaceY: 512,
+    },
+    {
+      id: 'final-trial',
+      x: 7300,
+      surfaceY: 512,
+      spawnX: 7360,
+      spawnSurfaceY: 512,
+    },
+  ],
   terrain: {
     tilesetAssetRef: '/assets/tiles/white_palace_platform_tiles.webp',
     solidTileIndexes: [0, 1, 2],

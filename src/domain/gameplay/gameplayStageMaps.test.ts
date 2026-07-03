@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { hazardActorDefinitions } from './hazardActor'
 import { enemyActorDefinitions } from './enemyActor'
+import { checkpointActorDefinition } from './checkpointActor'
 import { playerActorDefinition } from './playerActor'
 import { getTileColumnCount, getTileRowCount, validatePlatformBounds } from './terrain'
 import { gameplayStageMaps, getGameplayStageMap } from './gameplayStageMaps'
@@ -34,6 +35,7 @@ describe('gameplayStageMaps', () => {
       ...Object.values(playerActorDefinition.sprites).map((sprite) => sprite.assetRef),
       ...enemyAssetRefs,
       ...hazardAssetRefs,
+      checkpointActorDefinition.sprite.assetRef,
     ]
 
     expect(assetRefs).toEqual([
@@ -50,6 +52,7 @@ describe('gameplayStageMaps', () => {
       '/assets/sprites/enemy_guard_walk/sheet-transparent.webp',
       '/assets/sprites/enemy_guard_death/sheet-transparent.webp',
       '/assets/props/emerald_sanctuary_spikes.webp',
+      '/assets/props/white_palace_checkpoint.webp',
     ])
     expect(assetRefs.every((assetRef) => assetRef.startsWith('/assets/'))).toBe(true)
     expect(assetRefs.every((assetRef) => !assetRef.includes('__prototype__'))).toBe(true)
@@ -228,6 +231,72 @@ describe('gameplayStageMaps', () => {
           && hazard.surfaceY <= stage.world.height
           && hazard.width > 0
           && hazard.height > 0,
+        ),
+      ).toBe(true)
+    }
+  })
+
+  it('defines prototype-inspired checkpoints for the first gameplay stage', () => {
+    const stage = getGameplayStageMap('1-1')
+    expect(stage).toBeDefined()
+    if (!stage) return
+
+    expect(stage.checkpoints).toEqual([
+      {
+        id: 'combat-gate',
+        x: 2540,
+        surfaceY: 512,
+        spawnX: 2600,
+        spawnSurfaceY: 512,
+      },
+      {
+        id: 'final-ascent',
+        x: 4320,
+        surfaceY: 512,
+        spawnX: 4380,
+        spawnSurfaceY: 512,
+      },
+      {
+        id: 'final-trial',
+        x: 7300,
+        surfaceY: 512,
+        spawnX: 7360,
+        spawnSurfaceY: 512,
+      },
+    ])
+  })
+
+  it('keeps gameplay checkpoint ids unique within each stage', () => {
+    for (const stageId of gameplayStageMaps.order) {
+      const stage = getGameplayStageMap(stageId)
+      expect(stage).toBeDefined()
+      if (!stage) continue
+
+      const ids = stage.checkpoints.map((checkpoint) => checkpoint.id)
+      expect(new Set(ids).size).toBe(ids.length)
+    }
+  })
+
+  it('places gameplay checkpoints and respawn points inside their stage world bounds', () => {
+    for (const stageId of gameplayStageMaps.order) {
+      const stage = getGameplayStageMap(stageId)
+      expect(stage).toBeDefined()
+      if (!stage) continue
+
+      expect(
+        stage.checkpoints.every((checkpoint) =>
+          Number.isFinite(checkpoint.x)
+          && Number.isFinite(checkpoint.surfaceY)
+          && Number.isFinite(checkpoint.spawnX)
+          && Number.isFinite(checkpoint.spawnSurfaceY)
+          && checkpoint.x >= 0
+          && checkpoint.x <= stage.world.width
+          && checkpoint.surfaceY >= 0
+          && checkpoint.surfaceY <= stage.world.height
+          && checkpoint.spawnX >= 0
+          && checkpoint.spawnX <= stage.world.width
+          && checkpoint.spawnSurfaceY >= 0
+          && checkpoint.spawnSurfaceY <= stage.world.height,
         ),
       ).toBe(true)
     }

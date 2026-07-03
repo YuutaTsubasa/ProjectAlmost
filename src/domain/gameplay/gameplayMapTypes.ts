@@ -15,6 +15,7 @@ export type GameplayStageMap = {
   enemies: readonly GameplayEnemySpawn[]
   coins: readonly GameplayCoinPoint[]
   hazards: readonly GameplayHazardSpawn[]
+  checkpoints: readonly GameplayCheckpointSpawn[]
   terrain: TerrainDefinition
 }
 
@@ -32,6 +33,15 @@ export type GameplayHazardSpawn = {
   width: number
   height: number
   orientation?: 'floor' | 'ceiling' | 'left-wall' | 'right-wall'
+}
+
+export type GameplayCheckpointSpawn = {
+  id: string
+  x: number
+  surfaceY: number
+  spawnX: number
+  spawnSurfaceY: number
+  spawnGravity?: 'down' | 'up'
 }
 
 export type GameplayPlayerSpawn = {
