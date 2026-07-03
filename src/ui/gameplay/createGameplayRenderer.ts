@@ -804,7 +804,13 @@ class GameplayMapScene extends Phaser.Scene {
     this.createPlayerEnemyOverlaps(player)
 
     if (this.goal) {
-      this.physics.add.overlap(player, this.goal.sprite, () => this.completeStage())
+      this.physics.add.overlap(player, this.goal.sprite, () => {
+        if (this.isPlayerDead) {
+          return
+        }
+
+        this.completeStage()
+      })
     }
   }
 
@@ -821,7 +827,7 @@ class GameplayMapScene extends Phaser.Scene {
   }
 
   private completeStage(): void {
-    if (!canCompleteStage({ stageCleared: this.stageCleared })) {
+    if (this.isPlayerDead || !canCompleteStage({ stageCleared: this.stageCleared })) {
       return
     }
 
@@ -1411,7 +1417,7 @@ class GameplayMapScene extends Phaser.Scene {
   }
 
   private respawnPlayer(): void {
-    if (!this.player) return
+    if (!this.player || this.stageCleared) return
 
     const state = getPlayerRespawnState()
     this.playerHealth = state.health

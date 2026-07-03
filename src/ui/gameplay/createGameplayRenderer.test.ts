@@ -1098,6 +1098,44 @@ describe('createGameplayRendererConfig', () => {
     expect(runtime.hudUpdates).toHaveLength(updateCountAfterClear)
   })
 
+  it('ignores goal overlap during the queued respawn death window', () => {
+    const runtime = createSceneRuntime({ stage: createHazardStage() })
+    runtime.scene.create()
+    expect(runtime.playerSprite).toBeDefined()
+    if (!runtime.playerSprite) return
+
+    const spike = runtime.staticImageCalls.find(
+      (sprite) => sprite.texture === hazardActorDefinitions.spikes.sprite.key,
+    )
+    expect(spike).toBeDefined()
+    if (!spike) return
+
+    runtime.triggerHazardOverlap(spike)
+    recoverFromSurvivedHurt(runtime)
+    runtime.triggerHazardOverlap(spike)
+    recoverFromSurvivedHurt(runtime)
+    runtime.triggerHazardOverlap(spike)
+
+    const updateCountBeforeGoalOverlap = runtime.hudUpdates.length
+
+    runtime.triggerGoalOverlap(getGoalSprite(runtime))
+
+    expect(runtime.hudUpdates).toHaveLength(updateCountBeforeGoalOverlap)
+    expect(runtime.hudUpdates.some((patch) => patch.cleared === true)).toBe(false)
+
+    runtime.runDelayedCalls(playerLifeTiming.deathRespawnDelayMs)
+    runtime.triggerFadeOutComplete()
+
+    expect(runtime.hudUpdates).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ hp: 3 }),
+      ]),
+    )
+    expect(runtime.hudUpdates.at(-1)).toEqual(
+      expect.objectContaining({ hp: 3 }),
+    )
+  })
+
   it('uses the domain player gravity in Phaser config', () => {
     const stage = getGameplayStageMap('1-1')
 
