@@ -1914,6 +1914,15 @@ describe('createGameplayRendererConfig', () => {
       green: playerDeathTransitionPresentation.color.green,
       blue: playerDeathTransitionPresentation.color.blue,
     })
+    expect(runtime.playerSprite.x).toBe(runtime.stage.player.spawn.x)
+    expect(runtime.playerSprite.y).toBe(436)
+    expect(runtime.playerSprite.velocityX).toBe(0)
+    expect(runtime.playerSprite.velocityY).toBe(0)
+    expect(runtime.playerSprite.alpha).toBe(1)
+    expect(runtime.playerSprite.playCalls.at(-1)).toEqual({
+      key: playerActorDefinition.sprites.idle.key,
+      ignoreIfPlaying: true,
+    })
   })
 
   it('blocks spike hazard damage during Homing Attack', () => {
