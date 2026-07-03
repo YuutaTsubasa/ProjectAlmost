@@ -284,7 +284,10 @@
     }
 
     .hud-stage-banner {
-      width: min(300px, calc(100vw - 32px));
+      top: 116px;
+      right: 16px;
+      left: 16px;
+      width: auto;
     }
 
     .hud-objective-panel {

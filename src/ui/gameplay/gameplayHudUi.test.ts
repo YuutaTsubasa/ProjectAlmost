@@ -27,6 +27,14 @@ describe('Gameplay HUD Svelte UI', () => {
     expect(hudSource).toContain('TIME')
   })
 
+  it('reflows the top HUD banner below side panels on narrower viewports', () => {
+    expect(hudSource).toContain('@media (max-width: 900px)')
+    expect(hudSource).toContain('top: 116px;')
+    expect(hudSource).toContain('right: 16px;')
+    expect(hudSource).toContain('left: 16px;')
+    expect(hudSource).toContain('width: auto;')
+  })
+
   it('wires GameplayScreen state to renderer HUD patches', () => {
     expect(screenSource).toContain("import GameplayHud from './GameplayHud.svelte'")
     expect(screenSource).toContain('createInitialGameplayHudState')
