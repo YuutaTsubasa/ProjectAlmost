@@ -18,6 +18,9 @@ import {
   playerLifeTiming,
 } from '../../domain/gameplay/playerLife'
 import {
+  meleeAttackTiming,
+} from '../../domain/gameplay/playerAttack'
+import {
   homingAttackPresentation,
   homingAttackTiming,
 } from '../../domain/gameplay/playerHomingAttack'
@@ -1091,6 +1094,21 @@ describe('createGameplayRendererConfig', () => {
     ).toHaveLength(2)
   })
 
+  it('keeps Armor Guard patrol frozen on the next update after stage clear', () => {
+    const runtime = createSceneRuntime()
+    runtime.scene.create()
+
+    const goal = getGoalSprite(runtime)
+    const guard = runtime.sprites.find((sprite) => sprite.texture === 'enemy-guard-walk')
+    expect(guard).toBeDefined()
+    if (!guard) return
+
+    runtime.triggerGoalOverlap(goal)
+    runtime.scene.update()
+
+    expect(guard.velocityX).toBe(0)
+  })
+
   it('stops gameplay scanning and damage after stage clear', () => {
     const runtime = createSceneRuntime({ stage: createHazardStage() })
     runtime.scene.create()
@@ -1136,6 +1154,65 @@ describe('createGameplayRendererConfig', () => {
       key: playerActorDefinition.sprites.idle.key,
       ignoreIfPlaying: true,
     })
+  })
+
+  it('keeps melee recovery callbacks from restoring combat state after stage clear', () => {
+    const runtime = createSceneRuntime()
+    runtime.scene.create()
+    expect(runtime.playerSprite).toBeDefined()
+    if (!runtime.playerSprite) return
+
+    runtime.playerKeys.j.isDown = true
+    runtime.scene.update()
+
+    const scene = runtime.scene as typeof runtime.scene & {
+      attackReady: boolean
+      isAttacking: boolean
+    }
+
+    expect(scene.attackReady).toBe(false)
+    expect(scene.isAttacking).toBe(true)
+
+    runtime.triggerGoalOverlap(getGoalSprite(runtime))
+    runtime.runDelayedCalls(meleeAttackTiming.attackEndDelayMs)
+    runtime.runDelayedCalls(meleeAttackTiming.readyDelayMs)
+
+    expect(scene.attackReady).toBe(false)
+    expect(scene.isAttacking).toBe(false)
+  })
+
+  it('keeps Homing recovery callbacks from restoring combat state after stage clear', () => {
+    const runtime = createSceneRuntime()
+    runtime.scene.create()
+    const core = runtime.sprites.find((sprite) => sprite.texture === 'azure-core')
+    expect(core).toBeDefined()
+    if (!core || !runtime.playerSprite) return
+
+    runtime.playerSprite.body.blocked.down = false
+    runtime.playerSprite.body.touching.down = false
+    runtime.playerSprite.x = 1600
+    runtime.playerSprite.y = 320
+    core.x = 1760
+    core.y = 320
+    runtime.playerKeys.j.isDown = true
+    runtime.scene.update()
+
+    const scene = runtime.scene as typeof runtime.scene & {
+      attackReady: boolean
+      isAttacking: boolean
+      isHomingAttacking: boolean
+    }
+
+    expect(scene.attackReady).toBe(false)
+    expect(scene.isAttacking).toBe(true)
+    expect(scene.isHomingAttacking).toBe(true)
+
+    runtime.triggerGoalOverlap(getGoalSprite(runtime))
+    runtime.runDelayedCalls(homingAttackTiming.recoveryDelayMs)
+
+    expect(scene.attackReady).toBe(false)
+    expect(scene.isAttacking).toBe(false)
+    expect(scene.isHomingAttacking).toBe(false)
   })
 
   it('creates static spike hazards from stage data', () => {

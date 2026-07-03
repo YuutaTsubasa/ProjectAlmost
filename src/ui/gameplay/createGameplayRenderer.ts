@@ -955,10 +955,12 @@ class GameplayMapScene extends Phaser.Scene {
     this.spawnMeleeHitbox()
 
     this.time.delayedCall(meleeAttackTiming.attackEndDelayMs, () => {
+      if (this.stageCleared) return
       const end = getMeleeAttackEndState()
       this.isAttacking = end.attacking
     })
     this.time.delayedCall(meleeAttackTiming.readyDelayMs, () => {
+      if (this.stageCleared) return
       const ready = getMeleeAttackReadyState()
       this.attackReady = ready.attackReady
     })
@@ -1041,6 +1043,7 @@ class GameplayMapScene extends Phaser.Scene {
     this.player.setVelocity(0, outcome.velocityY)
 
     this.time.delayedCall(homingAttackTiming.recoveryDelayMs, () => {
+      if (this.stageCleared) return
       const recovery = getHomingRecoveryState({ hurting: this.isPlayerHurting })
       this.isAttacking = recovery.attacking
       if (!this.isPlayerDead && recovery.attackReady !== undefined) {
@@ -1235,6 +1238,7 @@ class GameplayMapScene extends Phaser.Scene {
     })
 
     this.time.delayedCall(playerLifeTiming.hurtRecoveryDelayMs, () => {
+      if (this.stageCleared) return
       const recovery = getPlayerHurtRecoveryState()
       this.isPlayerHurting = recovery.hurting
       this.attackReady = recovery.attackReady
@@ -1445,6 +1449,10 @@ class GameplayMapScene extends Phaser.Scene {
   }
 
   private updateEnemyPatrol(): void {
+    if (this.stageCleared) {
+      return
+    }
+
     for (const enemy of this.enemies) {
       if (
         !shouldUpdateEnemyPatrol({
