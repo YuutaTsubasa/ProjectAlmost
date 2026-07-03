@@ -1872,6 +1872,50 @@ describe('createGameplayRendererConfig', () => {
     expect(hurtTweens).toHaveLength(1)
   })
 
+  it('starts the death transition when spike hazard damage defeats the player', () => {
+    const runtime = createSceneRuntime({ stage: createHazardStage() })
+    runtime.scene.create()
+    const spike = runtime.staticImageCalls.find(
+      (sprite) => sprite.texture === hazardActorDefinitions.spikes.sprite.key,
+    )
+    expect(spike).toBeDefined()
+    if (!spike || !runtime.playerSprite) return
+
+    runtime.triggerHazardOverlap(spike)
+    recoverFromSurvivedHurt(runtime)
+    runtime.triggerHazardOverlap(spike)
+    recoverFromSurvivedHurt(runtime)
+    runtime.triggerHazardOverlap(spike)
+
+    expect(runtime.playerSprite.playCalls).toContainEqual({
+      key: playerActorDefinition.sprites.death.key,
+      ignoreIfPlaying: true,
+    })
+    expect(runtime.delayedCalls).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          delay: playerLifeTiming.deathRespawnDelayMs,
+        }),
+      ]),
+    )
+
+    runtime.runDelayedCalls(playerLifeTiming.deathRespawnDelayMs)
+    expect(runtime.cameraFadeOutCalls).toContainEqual({
+      duration: playerDeathTransitionPresentation.fadeOutDurationMs,
+      red: playerDeathTransitionPresentation.color.red,
+      green: playerDeathTransitionPresentation.color.green,
+      blue: playerDeathTransitionPresentation.color.blue,
+    })
+
+    runtime.triggerFadeOutComplete()
+    expect(runtime.cameraFadeInCalls).toContainEqual({
+      duration: playerDeathTransitionPresentation.fadeInDurationMs,
+      red: playerDeathTransitionPresentation.color.red,
+      green: playerDeathTransitionPresentation.color.green,
+      blue: playerDeathTransitionPresentation.color.blue,
+    })
+  })
+
   it('blocks spike hazard damage during Homing Attack', () => {
     const runtime = createSceneRuntime({ stage: createHazardStage() })
     runtime.scene.create()
