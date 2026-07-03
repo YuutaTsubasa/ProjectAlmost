@@ -1094,6 +1094,44 @@ describe('createGameplayRendererConfig', () => {
     ).toHaveLength(2)
   })
 
+  it('restores player hurt state and blink visual when the stage clears during hurt recovery', () => {
+    const runtime = createSceneRuntime()
+    runtime.scene.create()
+    expect(runtime.playerSprite).toBeDefined()
+    if (!runtime.playerSprite) return
+
+    const goal = getGoalSprite(runtime)
+    const guard = runtime.sprites.find((sprite) => sprite.texture === 'enemy-guard-walk')
+    expect(guard).toBeDefined()
+    if (!guard) return
+
+    runtime.playerSprite.x = 650
+    guard.x = 720
+    runtime.triggerEnemyOverlap(guard)
+
+    const scene = runtime.scene as typeof runtime.scene & {
+      isPlayerHurting: boolean
+      isPlayerInvulnerable: boolean
+    }
+
+    expect(scene.isPlayerHurting).toBe(true)
+    expect(scene.isPlayerInvulnerable).toBe(true)
+    runtime.playerSprite.alpha = playerHurtPresentation.blinkAlpha
+
+    runtime.triggerGoalOverlap(goal)
+    runtime.runDelayedCalls(playerLifeTiming.hurtRecoveryDelayMs)
+    runtime.runDelayedCalls(playerLifeTiming.invulnerabilityRecoveryDelayMs)
+
+    expect(scene.isPlayerHurting).toBe(false)
+    expect(scene.isPlayerInvulnerable).toBe(false)
+    expect(runtime.killedTweenTargets).toContain(runtime.playerSprite)
+    expect(runtime.playerSprite.alpha).toBe(1)
+    expect(runtime.playerSprite.playCalls.at(-1)).toEqual({
+      key: playerActorDefinition.sprites.idle.key,
+      ignoreIfPlaying: true,
+    })
+  })
+
   it('keeps Armor Guard patrol frozen on the next update after stage clear', () => {
     const runtime = createSceneRuntime()
     runtime.scene.create()

@@ -776,12 +776,16 @@ class GameplayMapScene extends Phaser.Scene {
     this.isAttacking = clearState.attacking
     this.isHomingAttacking = clearState.homingAttacking
     this.attackReady = clearState.attackReady
+    this.isPlayerHurting = false
+    this.isPlayerInvulnerable = false
     this.clearHomingState()
     this.clearActiveMeleeHitboxes()
 
     if (this.player) {
+      this.tweens.killTweensOf(this.player)
       this.player.setVelocity(0, 0)
       this.player.setAccelerationX(0)
+      this.player.setAlpha(1)
       this.playPlayerAnimation(this.player, 'idle')
     }
 
