@@ -1258,8 +1258,8 @@ class GameplayMapScene extends Phaser.Scene {
     this.wasAttackDown = false
     this.wasJumpDown = false
 
-    this.player.x = this.stageMap.player.spawn.x
-    this.player.y = getPlayerCenterY({ surfaceY: this.stageMap.player.spawn.surfaceY })
+    this.player.x = this.currentRespawnPoint.x
+    this.player.y = getPlayerCenterY({ surfaceY: this.currentRespawnPoint.surfaceY })
     this.player.setVelocity(0, 0)
     this.player.setAccelerationX(0)
     this.player.setAlpha(1)

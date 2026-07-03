@@ -2378,6 +2378,64 @@ describe('createGameplayRendererConfig', () => {
     })
   })
 
+  it('keeps stage spawn respawn before activating any checkpoint', () => {
+    const runtime = createSceneRuntime()
+    runtime.scene.create()
+    const guard = runtime.sprites.find((sprite) => sprite.texture === 'enemy-guard-walk')
+    expect(guard).toBeDefined()
+    expect(runtime.playerSprite).toBeDefined()
+    if (!guard || !runtime.playerSprite) return
+
+    runtime.playerSprite.x = 2400
+    guard.x = 2460
+    runtime.triggerEnemyOverlap(guard)
+    recoverFromSurvivedHurt(runtime)
+    runtime.triggerEnemyOverlap(guard)
+    recoverFromSurvivedHurt(runtime)
+    runtime.triggerEnemyOverlap(guard)
+    runtime.runDelayedCalls(playerLifeTiming.deathRespawnDelayMs)
+    runtime.triggerFadeOutComplete()
+
+    expect(runtime.playerSprite.x).toBe(runtime.stage.player.spawn.x)
+    expect(runtime.playerSprite.y).toBe(436)
+  })
+
+  it('respawns at the activated checkpoint spawn after death', () => {
+    const runtime = createSceneRuntime()
+    runtime.scene.create()
+    const guard = runtime.sprites.find((sprite) => sprite.texture === 'enemy-guard-walk')
+    expect(guard).toBeDefined()
+    expect(runtime.playerSprite).toBeDefined()
+    if (!guard || !runtime.playerSprite) return
+
+    const { checkpoint } = getCheckpointSprite(runtime, 'combat-gate')
+    runtime.playerSprite.x = checkpoint.x
+    runtime.scene.update()
+
+    guard.x = checkpoint.spawnX + 60
+    runtime.triggerEnemyOverlap(guard)
+    recoverFromSurvivedHurt(runtime)
+    runtime.triggerEnemyOverlap(guard)
+    recoverFromSurvivedHurt(runtime)
+    runtime.triggerEnemyOverlap(guard)
+
+    runtime.runDelayedCalls(playerLifeTiming.deathRespawnDelayMs)
+    expect(runtime.playerSprite.x).toBe(checkpoint.x)
+    expect(runtime.cameraFadeInCalls).toHaveLength(0)
+
+    runtime.triggerFadeOutComplete()
+
+    expect(runtime.playerSprite.x).toBe(checkpoint.spawnX)
+    expect(runtime.playerSprite.y).toBe(436)
+    expect(runtime.playerSprite.velocityX).toBe(0)
+    expect(runtime.playerSprite.velocityY).toBe(0)
+    expect(runtime.playerSprite.alpha).toBe(1)
+    expect(runtime.playerSprite.playCalls.at(-1)).toEqual({
+      key: playerActorDefinition.sprites.idle.key,
+      ignoreIfPlaying: true,
+    })
+  })
+
   it('prevents movement, attack, and repeated contact damage while dead before respawn', () => {
     const runtime = createSceneRuntime()
     runtime.scene.create()
@@ -2418,6 +2476,10 @@ describe('createGameplayRendererConfig', () => {
       runtime.scene.create()
       expect(runtime.playerSprite).toBeDefined()
       if (!runtime.playerSprite) return
+      const expectedRespawnX =
+        position.x >= runtime.stage.checkpoints[0].x
+          ? runtime.stage.checkpoints[0].spawnX
+          : runtime.stage.player.spawn.x
 
       runtime.playerSprite.x = position.x
       runtime.playerSprite.y = position.y
@@ -2443,7 +2505,7 @@ describe('createGameplayRendererConfig', () => {
 
       runtime.triggerFadeOutComplete()
 
-      expect(runtime.playerSprite.x).toBe(runtime.stage.player.spawn.x)
+      expect(runtime.playerSprite.x).toBe(expectedRespawnX)
       expect(runtime.playerSprite.y).toBe(436)
       expect(runtime.playerSprite.playCalls.at(-1)).toEqual({
         key: playerActorDefinition.sprites.idle.key,
