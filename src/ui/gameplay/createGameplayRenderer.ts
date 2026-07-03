@@ -34,6 +34,7 @@ import {
   PLAYER_MAX_HEALTH,
   PLAYER_OUT_OF_BOUNDS_MARGIN,
   canApplyPlayerEnemyHit,
+  canApplyPlayerHazardHit,
   canEnterPlayerDefeat,
   getPlayerDamageOutcome,
   getPlayerDefeatEntryState,
@@ -954,6 +955,12 @@ class GameplayMapScene extends Phaser.Scene {
       return
     }
 
+    this.applyPlayerContactDamage(enemy.sprite.x)
+  }
+
+  private applyPlayerContactDamage(sourceX: number): void {
+    if (!this.player) return
+
     const damageOutcome = getPlayerDamageOutcome({ currentHealth: this.playerHealth })
     this.playerHealth = damageOutcome.nextHealth
     if (damageOutcome.type === 'defeated') {
@@ -971,7 +978,7 @@ class GameplayMapScene extends Phaser.Scene {
 
     const direction = getPlayerKnockbackDirection({
       playerX: this.player.x,
-      sourceX: enemy.sprite.x,
+      sourceX,
     })
     const velocity = getPlayerHurtVelocity({
       direction,
@@ -1000,8 +1007,21 @@ class GameplayMapScene extends Phaser.Scene {
     })
   }
 
-  private handlePlayerHazardContact(_hazard: HazardRuntime): void {
-    return
+  private handlePlayerHazardContact(hazard: HazardRuntime): void {
+    if (!this.player) return
+
+    if (
+      !canApplyPlayerHazardHit({
+        invulnerable: this.isPlayerInvulnerable,
+        hurting: this.isPlayerHurting,
+        homingAttacking: this.isHomingAttacking,
+        dead: this.isPlayerDead,
+      })
+    ) {
+      return
+    }
+
+    this.applyPlayerContactDamage(hazard.sprite.x)
   }
 
   private checkPlayerOutOfBounds(): void {

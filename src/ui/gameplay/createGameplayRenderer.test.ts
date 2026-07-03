@@ -1825,6 +1825,87 @@ describe('createGameplayRendererConfig', () => {
     })
   })
 
+  it('damages and hurts the player on spike hazard overlap', () => {
+    const runtime = createSceneRuntime({ stage: createHazardStage() })
+    runtime.scene.create()
+    const spike = runtime.staticImageCalls.find(
+      (sprite) => sprite.texture === hazardActorDefinitions.spikes.sprite.key,
+    )
+    expect(spike).toBeDefined()
+    if (!spike || !runtime.playerSprite) return
+
+    runtime.playerSprite.x = spike.x - 20
+    runtime.triggerHazardOverlap(spike)
+
+    expect(runtime.playerSprite.velocityX).toBe(-360)
+    expect(runtime.playerSprite.velocityY).toBe(-360)
+    expect(runtime.playerSprite.playCalls).toContainEqual({
+      key: playerActorDefinition.sprites.hurt.key,
+      ignoreIfPlaying: true,
+    })
+    expect(runtime.tweenCalls).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          targets: runtime.playerSprite,
+          alpha: playerHurtPresentation.blinkAlpha,
+          duration: playerHurtPresentation.blinkDurationMs,
+          yoyo: playerHurtPresentation.blinkYoyo,
+          repeat: playerHurtPresentation.blinkRepeat,
+        }),
+      ]),
+    )
+  })
+
+  it('does not apply repeated spike hazard damage while invulnerable', () => {
+    const runtime = createSceneRuntime({ stage: createHazardStage() })
+    runtime.scene.create()
+    const spike = runtime.staticImageCalls.find(
+      (sprite) => sprite.texture === hazardActorDefinitions.spikes.sprite.key,
+    )
+    expect(spike).toBeDefined()
+    if (!spike || !runtime.playerSprite) return
+
+    runtime.triggerHazardOverlap(spike)
+    runtime.triggerHazardOverlap(spike)
+
+    const hurtTweens = runtime.tweenCalls.filter((call) => call.targets === runtime.playerSprite)
+    expect(hurtTweens).toHaveLength(1)
+  })
+
+  it('blocks spike hazard damage during Homing Attack', () => {
+    const runtime = createSceneRuntime({ stage: createHazardStage() })
+    runtime.scene.create()
+    const spike = runtime.staticImageCalls.find(
+      (sprite) => sprite.texture === hazardActorDefinitions.spikes.sprite.key,
+    )
+    expect(spike).toBeDefined()
+    if (!spike || !runtime.playerSprite) return
+
+    const scene = runtime.scene as typeof runtime.scene & { isHomingAttacking: boolean }
+    scene.isHomingAttacking = true
+    runtime.triggerHazardOverlap(spike)
+
+    const hurtTweens = runtime.tweenCalls.filter((call) => call.targets === runtime.playerSprite)
+    expect(hurtTweens).toHaveLength(0)
+  })
+
+  it('blocks spike hazard damage after player death', () => {
+    const runtime = createSceneRuntime({ stage: createHazardStage() })
+    runtime.scene.create()
+    const spike = runtime.staticImageCalls.find(
+      (sprite) => sprite.texture === hazardActorDefinitions.spikes.sprite.key,
+    )
+    expect(spike).toBeDefined()
+    if (!spike || !runtime.playerSprite) return
+
+    const scene = runtime.scene as typeof runtime.scene & { isPlayerDead: boolean }
+    scene.isPlayerDead = true
+    runtime.triggerHazardOverlap(spike)
+
+    const hurtTweens = runtime.tweenCalls.filter((call) => call.targets === runtime.playerSprite)
+    expect(hurtTweens).toHaveLength(0)
+  })
+
   it('ignores repeated enemy contact while invulnerable and restores attack after hurt recovery', () => {
     const runtime = createSceneRuntime()
     runtime.scene.create()
