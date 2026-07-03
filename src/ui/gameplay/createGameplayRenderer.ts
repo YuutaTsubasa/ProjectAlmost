@@ -570,7 +570,8 @@ class GameplayMapScene extends Phaser.Scene {
 
     this.tweens.add({
       targets: checkpoint.sprite,
-      scale: checkpointActorDefinition.activationTween.spriteScaleMultiplier,
+      scaleX: checkpoint.sprite.scaleX * checkpointActorDefinition.activationTween.spriteScaleMultiplier,
+      scaleY: checkpoint.sprite.scaleY * checkpointActorDefinition.activationTween.spriteScaleMultiplier,
       duration: checkpointActorDefinition.activationTween.durationMs,
       yoyo: true,
     })

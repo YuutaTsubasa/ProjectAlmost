@@ -114,6 +114,8 @@ type TweenCall = {
   yoyo?: boolean
   repeat?: number
   scale?: number
+  scaleX?: number | { from: number; to: number }
+  scaleY?: number | { from: number; to: number }
   alpha?: number
   delay?: number
   onComplete?: () => void
@@ -358,6 +360,8 @@ function createFakeImage(input: { x: number; y: number; texture: string }) {
     origin: { x: 0, y: 0 },
     displaySize: { width: 0, height: 0 },
     scale: 1,
+    scaleX: 1,
+    scaleY: 1,
     visible: true,
     alpha: 1,
     flipX: false,
@@ -376,6 +380,8 @@ function createFakeImage(input: { x: number; y: number; texture: string }) {
     },
     setScale: (value: number) => {
       image.scale = value
+      image.scaleX = value
+      image.scaleY = value
       return image
     },
     setOrigin: (x: number, y: number) => {
@@ -384,6 +390,8 @@ function createFakeImage(input: { x: number; y: number; texture: string }) {
     },
     setDisplaySize: (width: number, height: number) => {
       image.displaySize = { width, height }
+      image.scaleX = width / image.width
+      image.scaleY = height / image.height
       return image
     },
     setAlpha: (value: number) => {
@@ -1079,11 +1087,14 @@ describe('createGameplayRendererConfig', () => {
 
     expect(sprite.alpha).toBe(checkpointActorDefinition.activatedAlpha)
     expect(sprite.tint).toBe(checkpointActorDefinition.activatedTint)
+    const activatedScaleX = sprite.scaleX * checkpointActorDefinition.activationTween.spriteScaleMultiplier
+    const activatedScaleY = sprite.scaleY * checkpointActorDefinition.activationTween.spriteScaleMultiplier
     expect(runtime.tweenCalls).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           targets: sprite,
-          scale: checkpointActorDefinition.activationTween.spriteScaleMultiplier,
+          scaleX: activatedScaleX,
+          scaleY: activatedScaleY,
           duration: checkpointActorDefinition.activationTween.durationMs,
           yoyo: true,
         }),
