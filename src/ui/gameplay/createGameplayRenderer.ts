@@ -10,13 +10,22 @@ import {
   type EnemyPatrolDirection,
 } from '../../domain/gameplay/enemyActor'
 import {
+  checkpointActorDefinition,
+  getCheckpointBottomY,
+} from '../../domain/gameplay/checkpointActor'
+import {
   getGroundedHazardCenterY,
   getHazardBodyPresentation,
   getHazardFrameIndex,
   hazardActorDefinitions,
 } from '../../domain/gameplay/hazardActor'
 import type { GameplayStageMap } from '../../domain/gameplay/gameplayMapTypes'
-import type { GameplayCoinPoint, GameplayEnemySpawn, GameplayHazardSpawn } from '../../domain/gameplay/gameplayMapTypes'
+import type {
+  GameplayCheckpointSpawn,
+  GameplayCoinPoint,
+  GameplayEnemySpawn,
+  GameplayHazardSpawn,
+} from '../../domain/gameplay/gameplayMapTypes'
 import {
   bufferMovableActorJump,
   createMovableActorJumpState,
@@ -118,12 +127,23 @@ type HazardRuntime = {
   spawn: GameplayHazardSpawn
 }
 
+type CheckpointRuntime = {
+  sprite: Phaser.GameObjects.Image
+  glow: Phaser.GameObjects.Ellipse
+  ring: Phaser.GameObjects.Ellipse
+  spawn: GameplayCheckpointSpawn
+  activated: boolean
+}
+
 type ActiveMeleeHitbox = {
   image: Phaser.GameObjects.Image
   consumed: boolean
 }
 
 type PlayerFacingDirection = 'left' | 'right'
+
+const checkpointInactiveTint = 0x4be8ff
+const checkpointActivatedTint = 0xfff0a8
 
 class GameplayMapScene extends Phaser.Scene {
   private readonly stageMap: GameplayStageMap
@@ -156,6 +176,7 @@ class GameplayMapScene extends Phaser.Scene {
   private homingTarget: Phaser.Physics.Arcade.Sprite | null = null
   private homingReticle: Phaser.GameObjects.Image | null = null
   private hazards: HazardRuntime[] = []
+  private checkpoints: CheckpointRuntime[] = []
   private coins: CoinRuntime[] = []
   private collectedCoins = 0
 
@@ -197,6 +218,8 @@ class GameplayMapScene extends Phaser.Scene {
         frameHeight: definition.sprite.frameHeight,
       })
     }
+
+    this.load.image(checkpointActorDefinition.sprite.key, checkpointActorDefinition.sprite.assetRef)
   }
 
   create(): void {
@@ -231,6 +254,7 @@ class GameplayMapScene extends Phaser.Scene {
     this.createEnemyAnimations()
     this.createEnemies()
     this.createHazards()
+    this.createCheckpoints()
     this.createCoins()
     this.playerKeys = this.createPlayerKeys()
     this.createPlayer()
@@ -363,6 +387,72 @@ class GameplayMapScene extends Phaser.Scene {
       })
 
       return { sprite, point, collected: false }
+    })
+  }
+
+  private createCheckpoints(): void {
+    this.checkpoints = this.stageMap.checkpoints.map((spawn, index) => {
+      const bottomY = getCheckpointBottomY({ surfaceY: spawn.surfaceY })
+      const glow = this.add
+        .ellipse(
+          spawn.x,
+          bottomY + checkpointActorDefinition.glow.yOffset,
+          checkpointActorDefinition.glow.width,
+          checkpointActorDefinition.glow.height,
+          checkpointInactiveTint,
+          checkpointActorDefinition.glow.alpha,
+        )
+        .setDepth(checkpointActorDefinition.glow.depth)
+        .setBlendMode(Phaser.BlendModes.ADD)
+      const ring = this.add
+        .ellipse(
+          spawn.x,
+          bottomY + checkpointActorDefinition.ring.yOffset,
+          checkpointActorDefinition.ring.width,
+          checkpointActorDefinition.ring.height,
+        )
+        .setStrokeStyle(
+          checkpointActorDefinition.ring.strokeWidth,
+          checkpointInactiveTint,
+          checkpointActorDefinition.ring.alpha,
+        )
+        .setDepth(checkpointActorDefinition.ring.depth)
+        .setBlendMode(Phaser.BlendModes.ADD)
+      const sprite = this.add
+        .image(spawn.x, bottomY, checkpointActorDefinition.sprite.key)
+        .setOrigin(checkpointActorDefinition.origin.x, checkpointActorDefinition.origin.y)
+        .setDisplaySize(
+          checkpointActorDefinition.displaySize.width,
+          checkpointActorDefinition.displaySize.height,
+        )
+        .setAlpha(checkpointActorDefinition.inactiveAlpha)
+        .setDepth(checkpointActorDefinition.depth)
+
+      this.tweens.add({
+        targets: [glow, ring],
+        alpha: {
+          from: checkpointActorDefinition.idleTween.alphaFrom,
+          to: checkpointActorDefinition.idleTween.alphaTo,
+        },
+        scale: {
+          from: checkpointActorDefinition.idleTween.scaleFrom,
+          to: checkpointActorDefinition.idleTween.scaleTo,
+        },
+        duration:
+          checkpointActorDefinition.idleTween.durationMs
+          + index * checkpointActorDefinition.idleTween.indexDelayMs,
+        ease: checkpointActorDefinition.idleTween.ease,
+        yoyo: true,
+        repeat: -1,
+      })
+
+      return {
+        sprite,
+        glow,
+        ring,
+        spawn,
+        activated: false,
+      }
     })
   }
 

@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { enemyActorDefinitions } from '../../domain/gameplay/enemyActor'
+import { checkpointActorDefinition, getCheckpointBottomY } from '../../domain/gameplay/checkpointActor'
 import {
   getGroundedHazardCenterY,
   getHazardBodyPresentation,
@@ -354,6 +355,8 @@ function createFakeImage(input: { x: number; y: number; texture: string }) {
     ...input,
     width: 56,
     height: 36,
+    origin: { x: 0, y: 0 },
+    displaySize: { width: 0, height: 0 },
     scale: 1,
     visible: true,
     alpha: 1,
@@ -372,6 +375,14 @@ function createFakeImage(input: { x: number; y: number; texture: string }) {
     },
     setScale: (value: number) => {
       image.scale = value
+      return image
+    },
+    setOrigin: (x: number, y: number) => {
+      image.origin = { x, y }
+      return image
+    },
+    setDisplaySize: (width: number, height: number) => {
+      image.displaySize = { width, height }
       return image
     },
     setAlpha: (value: number) => {
@@ -411,6 +422,53 @@ function createFakeImage(input: { x: number; y: number; texture: string }) {
   }
 
   return image
+}
+
+function createFakeEllipse(input: {
+  x: number
+  y: number
+  width: number
+  height: number
+  fillColor?: number
+  fillAlpha?: number
+}) {
+  const ellipse = {
+    ...input,
+    depth: 0,
+    alpha: input.fillAlpha ?? 1,
+    scale: 1,
+    blendMode: undefined as string | undefined,
+    strokeStyle: undefined as { width: number; color: number; alpha?: number } | undefined,
+    fillStyle: undefined as { color: number; alpha?: number } | undefined,
+    setDepth: (value: number) => {
+      ellipse.depth = value
+      return ellipse
+    },
+    setBlendMode: (value: string) => {
+      ellipse.blendMode = value
+      return ellipse
+    },
+    setAlpha: (value: number) => {
+      ellipse.alpha = value
+      return ellipse
+    },
+    setScale: (value: number) => {
+      ellipse.scale = value
+      return ellipse
+    },
+    setStrokeStyle: (width: number, color: number, alpha?: number) => {
+      ellipse.strokeStyle = { width, color, alpha }
+      return ellipse
+    },
+    setFillStyle: (color: number, alpha?: number) => {
+      ellipse.fillStyle = { color, alpha }
+      ellipse.fillColor = color
+      ellipse.fillAlpha = alpha
+      return ellipse
+    },
+  }
+
+  return ellipse
 }
 
 function createSceneRuntime(input: { stage?: GameplayStageMap } = {}) {
@@ -464,6 +522,14 @@ function createSceneRuntime(input: { stage?: GameplayStageMap } = {}) {
         key: string,
       ) => ReturnType<typeof createFakeTileSprite>
       image: (x: number, y: number, texture: string) => ReturnType<typeof createFakeImage>
+      ellipse: (
+        x: number,
+        y: number,
+        width: number,
+        height: number,
+        fillColor?: number,
+        fillAlpha?: number,
+      ) => ReturnType<typeof createFakeEllipse>
       sprite: (x: number, y: number, texture: string, frame?: number) => ReturnType<typeof createFakeArcadeSprite>
     }
     make: {
@@ -516,6 +582,7 @@ function createSceneRuntime(input: { stage?: GameplayStageMap } = {}) {
   const generateTextureCalls: GenerateTextureCall[] = []
   const tweenCalls: TweenCall[] = []
   const images: Array<ReturnType<typeof createFakeImage>> = []
+  const ellipses: Array<ReturnType<typeof createFakeEllipse>> = []
   const delayedCalls: Array<{ delay: number; callback: () => void }> = []
   const killedTweenTargets: unknown[] = []
   const colliderCalls: Array<{ a: unknown; b: unknown }> = []
@@ -612,6 +679,11 @@ function createSceneRuntime(input: { stage?: GameplayStageMap } = {}) {
       images.push(image)
       return image
     },
+    ellipse: (x, y, width, height, fillColor, fillAlpha) => {
+      const ellipse = createFakeEllipse({ x, y, width, height, fillColor, fillAlpha })
+      ellipses.push(ellipse)
+      return ellipse
+    },
     sprite: (x, y, texture, frame) => {
       const sprite = createFakeArcadeSprite({ x, y, texture })
       sprite.frame = frame
@@ -686,6 +758,7 @@ function createSceneRuntime(input: { stage?: GameplayStageMap } = {}) {
     generateTextureCalls,
     tweenCalls,
     images,
+    ellipses,
     delayedCalls,
     killedTweenTargets,
     colliderCalls,
@@ -830,6 +903,17 @@ describe('createGameplayRendererConfig', () => {
     })
   })
 
+  it('preloads the checkpoint beacon image from the domain actor definition', () => {
+    const runtime = createSceneRuntime()
+
+    runtime.scene.preload()
+
+    expect(runtime.imageCalls).toContainEqual({
+      key: checkpointActorDefinition.sprite.key,
+      assetRef: checkpointActorDefinition.sprite.assetRef,
+    })
+  })
+
   it('creates static spike hazards from stage data', () => {
     const stage = createHazardStage()
     const runtime = createSceneRuntime({ stage })
@@ -877,6 +961,82 @@ describe('createGameplayRendererConfig', () => {
         expect.objectContaining({
           a: runtime.playerSprite,
           b: spike,
+        }),
+      ]),
+    )
+  })
+
+  it('creates checkpoint beacon visuals from stage data', () => {
+    const runtime = createSceneRuntime()
+
+    runtime.scene.create()
+
+    const checkpoint = runtime.stage.checkpoints[0]
+    expect(checkpoint).toBeDefined()
+    if (!checkpoint) return
+
+    const bottomY = getCheckpointBottomY({ surfaceY: checkpoint.surfaceY })
+    const sprite = runtime.images.find(
+      (image) => image.texture === checkpointActorDefinition.sprite.key && image.x === checkpoint.x,
+    )
+    expect(sprite).toBeDefined()
+    if (!sprite) return
+
+    expect(sprite).toMatchObject({
+      x: checkpoint.x,
+      y: bottomY,
+      alpha: checkpointActorDefinition.inactiveAlpha,
+      depth: checkpointActorDefinition.depth,
+    })
+    expect(sprite.origin).toEqual(checkpointActorDefinition.origin)
+    expect(sprite.displaySize).toEqual(checkpointActorDefinition.displaySize)
+
+    expect(runtime.ellipses).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          x: checkpoint.x,
+          y: bottomY + checkpointActorDefinition.glow.yOffset,
+          width: checkpointActorDefinition.glow.width,
+          height: checkpointActorDefinition.glow.height,
+          fillColor: 0x4be8ff,
+          fillAlpha: checkpointActorDefinition.glow.alpha,
+          depth: checkpointActorDefinition.glow.depth,
+          blendMode: 'ADD',
+        }),
+        expect.objectContaining({
+          x: checkpoint.x,
+          y: bottomY + checkpointActorDefinition.ring.yOffset,
+          width: checkpointActorDefinition.ring.width,
+          height: checkpointActorDefinition.ring.height,
+          depth: checkpointActorDefinition.ring.depth,
+          blendMode: 'ADD',
+          strokeStyle: {
+            width: checkpointActorDefinition.ring.strokeWidth,
+            color: 0x4be8ff,
+            alpha: checkpointActorDefinition.ring.alpha,
+          },
+        }),
+      ]),
+    )
+    expect(runtime.tweenCalls).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          targets: expect.arrayContaining([
+            expect.objectContaining({ x: checkpoint.x, y: bottomY + checkpointActorDefinition.glow.yOffset }),
+            expect.objectContaining({ x: checkpoint.x, y: bottomY + checkpointActorDefinition.ring.yOffset }),
+          ]),
+          alpha: {
+            from: checkpointActorDefinition.idleTween.alphaFrom,
+            to: checkpointActorDefinition.idleTween.alphaTo,
+          },
+          scale: {
+            from: checkpointActorDefinition.idleTween.scaleFrom,
+            to: checkpointActorDefinition.idleTween.scaleTo,
+          },
+          duration: checkpointActorDefinition.idleTween.durationMs,
+          ease: checkpointActorDefinition.idleTween.ease,
+          yoyo: true,
+          repeat: -1,
         }),
       ]),
     )
