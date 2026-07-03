@@ -72,6 +72,10 @@ import {
   shouldUpdateHomingAttack,
 } from '../../domain/gameplay/playerHomingAttack'
 import {
+  getPlayerCoinPickupDecision,
+  shouldScanPlayerCoins,
+} from '../../domain/gameplay/playerCoinPickup'
+import {
   buildTerrainTileGrid,
   getTileColumnCount,
   getTileRowCount,
@@ -218,6 +222,7 @@ class GameplayMapScene extends Phaser.Scene {
     this.updateEnemyPatrol()
     this.processActiveMeleeHitboxes()
     this.updateHomingAttack()
+    this.updateCoins()
     this.checkPlayerOutOfBounds()
     this.updatePlayerMovement()
   }
@@ -339,6 +344,50 @@ class GameplayMapScene extends Phaser.Scene {
     })
   }
 
+  private updateCoins(): void {
+    if (!this.player) return
+
+    if (!shouldScanPlayerCoins({
+      stageCleared: false,
+      dead: this.isPlayerDead,
+    })) {
+      return
+    }
+
+    const playerCenter = this.player.getCenter()
+    for (const coin of this.coins) {
+      const pickupDecision = getPlayerCoinPickupDecision({
+        collected: coin.collected,
+        playerX: playerCenter.x,
+        playerY: playerCenter.y,
+        coinX: coin.sprite.x,
+        coinY: coin.sprite.y,
+      })
+      if (pickupDecision === 'collect') {
+        this.collectCoin(coin)
+      }
+    }
+  }
+
+  private collectCoin(coin: CoinRuntime): void {
+    if (coin.collected) return
+
+    coin.collected = true
+    this.collectedCoins += 1
+    this.tweens.killTweensOf(coin.sprite)
+    this.tweens.add({
+      targets: coin.sprite,
+      y: coin.sprite.y - 34,
+      scale: 1.8,
+      alpha: 0,
+      duration: 260,
+      ease: 'Quad.easeOut',
+      onComplete: () => {
+        coin.sprite.setVisible(false)
+      },
+    })
+  }
+
   private createEnemyAnimations(): void {
     const guardSprites = enemyActorDefinitions['armor-guard'].sprites
     if (!guardSprites) return
@@ -438,6 +487,7 @@ class GameplayMapScene extends Phaser.Scene {
     this.isPlayerHurting = false
     this.isPlayerInvulnerable = false
     this.isPlayerDead = false
+    this.collectedCoins = 0
     this.player = player
     this.createPlayerEnemyOverlaps(player)
   }

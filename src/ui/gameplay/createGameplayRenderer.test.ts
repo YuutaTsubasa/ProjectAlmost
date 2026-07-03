@@ -323,6 +323,10 @@ function createFakeArcadeSprite(input: { x: number; y: number; texture: string }
       width: sprite.body.size.width,
       height: sprite.body.size.height,
     }),
+    getCenter: () => ({
+      x: sprite.x,
+      y: sprite.y,
+    }),
   }
 
   return sprite
@@ -382,6 +386,10 @@ function createFakeImage(input: { x: number; y: number; texture: string }) {
       y: image.y - image.height / 2,
       width: image.width,
       height: image.height,
+    }),
+    getCenter: () => ({
+      x: image.x,
+      y: image.y,
     }),
   }
 
@@ -858,6 +866,69 @@ describe('createGameplayRendererConfig', () => {
         }),
       ]),
     )
+  })
+
+  it('collects a coin when the player moves inside the pickup radius', () => {
+    const runtime = createSceneRuntime()
+    runtime.scene.create()
+    const coin = runtime.images.find((image) => image.texture === 'coin')
+    expect(coin).toBeDefined()
+    if (!coin || !runtime.playerSprite) return
+
+    runtime.playerSprite.x = coin.x
+    runtime.playerSprite.y = coin.y
+    runtime.scene.update()
+
+    expect(runtime.killedTweenTargets).toContain(coin)
+    expect(runtime.tweenCalls).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          targets: coin,
+          y: coin.y - 34,
+          scale: 1.8,
+          alpha: 0,
+          duration: 260,
+          ease: 'Quad.easeOut',
+        }),
+      ]),
+    )
+    const collectionTween = runtime.tweenCalls.find((call) => call.targets === coin && call.duration === 260)
+    expect(coin.visible).toBe(true)
+    collectionTween?.onComplete?.()
+    expect(coin.visible).toBe(false)
+  })
+
+  it('does not collect the same coin twice', () => {
+    const runtime = createSceneRuntime()
+    runtime.scene.create()
+    const coin = runtime.images.find((image) => image.texture === 'coin')
+    expect(coin).toBeDefined()
+    if (!coin || !runtime.playerSprite) return
+
+    runtime.playerSprite.x = coin.x
+    runtime.playerSprite.y = coin.y
+    runtime.scene.update()
+    runtime.scene.update()
+
+    const collectionTweens = runtime.tweenCalls.filter((call) => call.targets === coin && call.duration === 260)
+    expect(collectionTweens).toHaveLength(1)
+  })
+
+  it('does not scan coins while the player is dead', () => {
+    const runtime = createSceneRuntime()
+    runtime.scene.create()
+    const coin = runtime.images.find((image) => image.texture === 'coin')
+    expect(coin).toBeDefined()
+    if (!coin || !runtime.playerSprite) return
+
+    const scene = runtime.scene as typeof runtime.scene & { isPlayerDead: boolean }
+    scene.isPlayerDead = true
+    runtime.playerSprite.x = coin.x
+    runtime.playerSprite.y = coin.y
+    runtime.scene.update()
+
+    const collectionTweens = runtime.tweenCalls.filter((call) => call.targets === coin && call.duration === 260)
+    expect(collectionTweens).toHaveLength(0)
   })
 
   it('shows the Homing reticle over the nearest eligible airborne target', () => {
