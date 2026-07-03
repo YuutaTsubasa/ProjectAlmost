@@ -1,0 +1,66 @@
+export type GameplayHazardType = 'spikes'
+export type GameplayHazardOrientation = 'floor' | 'ceiling' | 'left-wall' | 'right-wall'
+export type HazardBehavior = 'fixed-damage'
+
+export type HazardSpriteDefinition = {
+  key: string
+  assetRef: string
+  frameWidth: number
+  frameHeight: number
+}
+
+export type HazardActorDefinition = {
+  behavior: HazardBehavior
+  sprite: HazardSpriteDefinition
+  origin: { x: number; y: number }
+  visualBottomInset: number
+}
+
+export const hazardActorDefinitions = {
+  spikes: {
+    behavior: 'fixed-damage',
+    sprite: {
+      key: 'emerald-sanctuary-spikes',
+      assetRef: '/assets/props/emerald_sanctuary_spikes.webp',
+      frameWidth: 256,
+      frameHeight: 128,
+    },
+    origin: { x: 0.5, y: 0.5 },
+    visualBottomInset: 14,
+  },
+} as const satisfies Record<GameplayHazardType, HazardActorDefinition>
+
+export function getHazardFrameIndex(input: {
+  orientation?: GameplayHazardOrientation
+}): number {
+  if (input.orientation === 'ceiling') return 4
+  if (input.orientation === 'left-wall') return 3
+  if (input.orientation === 'right-wall') return 2
+  return 0
+}
+
+export function getGroundedHazardCenterY(input: {
+  surfaceY: number
+  height: number
+  type: GameplayHazardType
+}): number {
+  return input.surfaceY - input.height / 2 + hazardActorDefinitions[input.type].visualBottomInset
+}
+
+export function getHazardBodyPresentation(input: {
+  width: number
+  height: number
+  type: GameplayHazardType
+}): {
+  width: number
+  height: number
+  offsetX: number
+  offsetY: number
+} {
+  return {
+    width: input.width * 0.86,
+    height: Number((input.height * 0.56).toFixed(2)),
+    offsetX: input.width * 0.07,
+    offsetY: input.height * 0.36,
+  }
+}
