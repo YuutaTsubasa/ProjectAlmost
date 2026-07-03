@@ -29,7 +29,7 @@ describe('Gameplay HUD Svelte UI', () => {
 
   it('reflows the top HUD banner below side panels on narrower viewports', () => {
     expect(hudSource).toContain('@media (max-width: 900px)')
-    expect(hudSource).toContain('top: 116px;')
+    expect(hudSource).toContain('top: 152px;')
     expect(hudSource).toContain('right: 16px;')
     expect(hudSource).toContain('left: 16px;')
     expect(hudSource).toContain('width: auto;')

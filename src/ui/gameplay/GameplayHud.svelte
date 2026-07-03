@@ -284,7 +284,7 @@
     }
 
     .hud-stage-banner {
-      top: 116px;
+      top: 152px;
       right: 16px;
       left: 16px;
       width: auto;
