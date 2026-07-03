@@ -867,6 +867,11 @@ describe('createGameplayRendererConfig', () => {
       x: body.offsetX,
       y: body.offsetY,
     })
+    expect(spike.displaySize).toEqual({
+      width: hazardSpawn.width,
+      height: hazardSpawn.height,
+    })
+    expect(spike.refreshedBody).toBe(true)
     expect(runtime.overlapCalls).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
