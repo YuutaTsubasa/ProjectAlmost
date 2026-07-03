@@ -1109,6 +1109,26 @@ describe('createGameplayRendererConfig', () => {
     expect(guard.velocityX).toBe(0)
   })
 
+  it('stops Azure Core floating tween after stage clear', () => {
+    const runtime = createSceneRuntime()
+    runtime.scene.create()
+
+    const goal = getGoalSprite(runtime)
+    const core = runtime.sprites.find((sprite) => sprite.texture === 'azure-core')
+    expect(core).toBeDefined()
+    if (!core) return
+
+    expect(
+      runtime.tweenCalls.some(
+        (call) => call.targets === core && call.repeat === -1 && call.yoyo === true,
+      ),
+    ).toBe(true)
+
+    runtime.triggerGoalOverlap(goal)
+
+    expect(runtime.killedTweenTargets).toContain(core)
+  })
+
   it('stops gameplay scanning and damage after stage clear', () => {
     const runtime = createSceneRuntime({ stage: createHazardStage() })
     runtime.scene.create()

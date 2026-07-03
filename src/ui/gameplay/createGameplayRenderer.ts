@@ -787,6 +787,7 @@ class GameplayMapScene extends Phaser.Scene {
 
     for (const enemy of this.enemies) {
       enemy.sprite.setVelocityX(0)
+      this.tweens.killTweensOf(enemy.sprite)
     }
 
     if (this.goal) {
