@@ -10,7 +10,7 @@ import {
   type EnemyPatrolDirection,
 } from '../../domain/gameplay/enemyActor'
 import type { GameplayStageMap } from '../../domain/gameplay/gameplayMapTypes'
-import type { GameplayEnemySpawn } from '../../domain/gameplay/gameplayMapTypes'
+import type { GameplayCoinPoint, GameplayEnemySpawn } from '../../domain/gameplay/gameplayMapTypes'
 import {
   bufferMovableActorJump,
   createMovableActorJumpState,
@@ -95,6 +95,12 @@ type EnemyRuntime = {
   defeated: boolean
 }
 
+type CoinRuntime = {
+  sprite: Phaser.GameObjects.Image
+  point: GameplayCoinPoint
+  collected: boolean
+}
+
 type ActiveMeleeHitbox = {
   image: Phaser.GameObjects.Image
   consumed: boolean
@@ -132,6 +138,8 @@ class GameplayMapScene extends Phaser.Scene {
   private isHomingAttacking = false
   private homingTarget: Phaser.Physics.Arcade.Sprite | null = null
   private homingReticle: Phaser.GameObjects.Image | null = null
+  private coins: CoinRuntime[] = []
+  private collectedCoins = 0
 
   constructor(stage: GameplayStageMap) {
     super(`GameplayMapScene:${stage.id}`)
@@ -194,8 +202,10 @@ class GameplayMapScene extends Phaser.Scene {
     this.createEnemyTextures()
     this.createAttackHitboxTexture()
     this.createHomingReticleTexture()
+    this.createCoinTexture()
     this.createEnemyAnimations()
     this.createEnemies()
+    this.createCoins()
     this.playerKeys = this.createPlayerKeys()
     this.createPlayer()
   }
@@ -294,6 +304,39 @@ class GameplayMapScene extends Phaser.Scene {
     graphics.strokeCircle(center, center, 8)
     graphics.generateTexture(homingAttackPresentation.reticleTextureKey, size, size)
     graphics.destroy()
+  }
+
+  private createCoinTexture(): void {
+    const graphics = this.make.graphics()
+    graphics.fillStyle(0xf4c542)
+    graphics.fillCircle(22, 22, 18)
+    graphics.lineStyle(3, 0xfff3cf, 1)
+    graphics.strokeCircle(22, 22, 18)
+    graphics.lineStyle(2, 0xf4c542, 0.85)
+    graphics.fillStyle(0xffffff, 0.34)
+    graphics.fillEllipse(17, 15, 12, 8)
+    graphics.fillStyle(0xc5891f, 0.9)
+    graphics.fillRoundedRect(18, 11, 8, 22, 3)
+    graphics.generateTexture('coin', 44, 44)
+    graphics.destroy()
+  }
+
+  private createCoins(): void {
+    this.coins = this.stageMap.coins.map((point, index) => {
+      const sprite = this.add.image(point.x, point.y, 'coin')
+      sprite.setDepth(12)
+
+      this.tweens.add({
+        targets: sprite,
+        y: point.y - 8,
+        duration: 900 + index * 35,
+        ease: 'Sine.easeInOut',
+        yoyo: true,
+        repeat: -1,
+      })
+
+      return { sprite, point, collected: false }
+    })
   }
 
   private createEnemyAnimations(): void {

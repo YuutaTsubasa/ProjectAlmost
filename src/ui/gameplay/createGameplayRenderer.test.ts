@@ -333,7 +333,9 @@ function createFakeImage(input: { x: number; y: number; texture: string }) {
     ...input,
     width: 56,
     height: 36,
+    scale: 1,
     visible: true,
+    alpha: 1,
     flipX: false,
     depth: 0,
     angle: 0,
@@ -345,6 +347,14 @@ function createFakeImage(input: { x: number; y: number; texture: string }) {
     },
     setBlendMode: (value: string) => {
       image.blendMode = value
+      return image
+    },
+    setScale: (value: number) => {
+      image.scale = value
+      return image
+    },
+    setAlpha: (value: number) => {
+      image.alpha = value
       return image
     },
     setPosition: (x: number, y: number) => {
@@ -576,8 +586,10 @@ function createSceneRuntime() {
     graphics: () => ({
       fillStyle: () => {},
       fillCircle: () => {},
+      fillEllipse: () => {},
       lineStyle: () => {},
       strokeCircle: () => {},
+      fillRoundedRect: () => {},
       lineBetween: () => {},
       generateTexture: (key, width, height) => {
         generateTextureCalls.push({ key, width, height })
@@ -810,6 +822,44 @@ describe('createGameplayRendererConfig', () => {
     })
   })
 
+  it('creates the generated coin texture from prototype dimensions', () => {
+    const runtime = createSceneRuntime()
+
+    runtime.scene.create()
+
+    expect(runtime.generateTextureCalls).toContainEqual({
+      key: 'coin',
+      width: 44,
+      height: 44,
+    })
+  })
+
+  it('creates coin sprites from stage data with floating presentation', () => {
+    const runtime = createSceneRuntime()
+
+    runtime.scene.create()
+
+    const coinImages = runtime.images.filter((image) => image.texture === 'coin')
+    expect(coinImages).toHaveLength(runtime.stage.coins.length)
+    expect(coinImages[0]).toMatchObject({
+      x: runtime.stage.coins[0]?.x,
+      y: runtime.stage.coins[0]?.y,
+      depth: 12,
+    })
+    expect(runtime.tweenCalls).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          targets: coinImages[0],
+          y: (runtime.stage.coins[0]?.y ?? 0) - 8,
+          duration: 900,
+          ease: 'Sine.easeInOut',
+          yoyo: true,
+          repeat: -1,
+        }),
+      ]),
+    )
+  })
+
   it('shows the Homing reticle over the nearest eligible airborne target', () => {
     const runtime = createSceneRuntime()
     runtime.scene.create()
@@ -992,7 +1042,8 @@ describe('createGameplayRendererConfig', () => {
     runtime.playerKeys.z.isDown = true
     runtime.scene.update()
 
-    expect(runtime.images[0]).toMatchObject({
+    const hitbox = runtime.images.find((image) => image.texture === 'attack-hitbox')
+    expect(hitbox).toMatchObject({
       texture: 'attack-hitbox',
       visible: false,
     })
@@ -1288,7 +1339,8 @@ describe('createGameplayRendererConfig', () => {
     runtime.playerKeys.j.isDown = true
     runtime.scene.update()
 
-    expect(runtime.images[0]).toMatchObject({
+    const hitbox = runtime.images.find((image) => image.texture === 'attack-hitbox')
+    expect(hitbox).toMatchObject({
       x: 304,
       y: 432,
       texture: 'attack-hitbox',
@@ -1310,7 +1362,8 @@ describe('createGameplayRendererConfig', () => {
     runtime.playerKeys.j.isDown = true
     runtime.scene.update()
 
-    expect(runtime.images[0]).toMatchObject({
+    const hitbox = runtime.images.find((image) => image.texture === 'attack-hitbox')
+    expect(hitbox).toMatchObject({
       x: 208,
       y: 432,
       texture: 'attack-hitbox',
@@ -1330,7 +1383,9 @@ describe('createGameplayRendererConfig', () => {
 
     runtime.playerKeys.j.isDown = true
     runtime.scene.update()
-    const hitbox = runtime.images[0]
+    const hitbox = runtime.images.find((image) => image.texture === 'attack-hitbox')
+    expect(hitbox).toBeDefined()
+    if (!hitbox) return
 
     runtime.runDelayedCalls(120)
     expect(hitbox.destroyed).toBe(true)
@@ -1344,7 +1399,7 @@ describe('createGameplayRendererConfig', () => {
     runtime.runDelayedCalls(360)
     runtime.playerKeys.j.isDown = true
     runtime.scene.update()
-    expect(runtime.images).toHaveLength(2)
+    expect(runtime.images.filter((image) => image.texture === 'attack-hitbox')).toHaveLength(2)
   })
 
   it('defeats an enemy that moves into an active melee hitbox before the lifetime ends', () => {
@@ -1547,7 +1602,7 @@ describe('createGameplayRendererConfig', () => {
     runtime.playerKeys.j.isDown = true
     runtime.scene.update()
 
-    expect(runtime.images[0]).toMatchObject({ texture: 'attack-hitbox' })
+    expect(runtime.images.find((image) => image.texture === 'attack-hitbox')).toBeDefined()
     expect(runtime.playerSprite.playCalls.at(-1)).toEqual({
       key: playerActorDefinition.sprites.attack.key,
       ignoreIfPlaying: true,
@@ -1606,7 +1661,9 @@ describe('createGameplayRendererConfig', () => {
     runtime.playerSprite.y = guard.y
     runtime.playerKeys.j.isDown = true
     runtime.scene.update()
-    const hitbox = runtime.images[0]
+    const hitbox = runtime.images.find((image) => image.texture === 'attack-hitbox')
+    expect(hitbox).toBeDefined()
+    if (!hitbox) return
     expect(hitbox.destroyed).toBe(false)
 
     runtime.triggerEnemyOverlap(core)
@@ -1702,7 +1759,7 @@ describe('createGameplayRendererConfig', () => {
     runtime.scene.update()
     runtime.triggerEnemyOverlap(guard)
 
-    expect(runtime.images).toHaveLength(0)
+    expect(runtime.images.filter((image) => image.texture === 'attack-hitbox')).toHaveLength(0)
     expect(runtime.playerSprite.accelerationX).toBe(0)
     expect(runtime.playerSprite.velocityX).toBe(0)
     expect(runtime.playerSprite.velocityY).toBe(0)
