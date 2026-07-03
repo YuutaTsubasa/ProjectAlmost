@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { hazardActorDefinitions } from './hazardActor'
 import { enemyActorDefinitions } from './enemyActor'
 import { checkpointActorDefinition } from './checkpointActor'
+import { goalActorDefinition } from './goalActor'
 import { playerActorDefinition } from './playerActor'
 import { getTileColumnCount, getTileRowCount, validatePlatformBounds } from './terrain'
 import { gameplayStageMaps, getGameplayStageMap } from './gameplayStageMaps'
@@ -36,6 +37,7 @@ describe('gameplayStageMaps', () => {
       ...enemyAssetRefs,
       ...hazardAssetRefs,
       checkpointActorDefinition.sprite.assetRef,
+      goalActorDefinition.sprite.assetRef,
     ]
 
     expect(assetRefs).toEqual([
@@ -53,6 +55,7 @@ describe('gameplayStageMaps', () => {
       '/assets/sprites/enemy_guard_death/sheet-transparent.webp',
       '/assets/props/emerald_sanctuary_spikes.webp',
       '/assets/props/white_palace_checkpoint.webp',
+      '/assets/props/white_palace_goal_idle.webp',
     ])
     expect(assetRefs.every((assetRef) => assetRef.startsWith('/assets/'))).toBe(true)
     expect(assetRefs.every((assetRef) => !assetRef.includes('__prototype__'))).toBe(true)
@@ -266,6 +269,17 @@ describe('gameplayStageMaps', () => {
     ])
   })
 
+  it('defines the prototype-inspired goal for the first gameplay stage', () => {
+    const stage = getGameplayStageMap('1-1')
+    expect(stage).toBeDefined()
+    if (!stage) return
+
+    expect(stage.goal).toEqual({
+      x: 9340,
+      surfaceY: 512,
+    })
+  })
+
   it('keeps gameplay checkpoint ids unique within each stage', () => {
     for (const stageId of gameplayStageMaps.order) {
       const stage = getGameplayStageMap(stageId)
@@ -300,5 +314,35 @@ describe('gameplayStageMaps', () => {
         ),
       ).toBe(true)
     }
+  })
+
+  it('places gameplay goals inside their stage world bounds', () => {
+    for (const stageId of gameplayStageMaps.order) {
+      const stage = getGameplayStageMap(stageId)
+      expect(stage).toBeDefined()
+      if (!stage) continue
+
+      expect(Number.isFinite(stage.goal.x)).toBe(true)
+      expect(Number.isFinite(stage.goal.surfaceY)).toBe(true)
+      expect(stage.goal.x).toBeGreaterThanOrEqual(0)
+      expect(stage.goal.x).toBeLessThanOrEqual(stage.world.width)
+      expect(stage.goal.surfaceY).toBeGreaterThanOrEqual(0)
+      expect(stage.goal.surfaceY).toBeLessThanOrEqual(stage.world.height)
+    }
+  })
+
+  it('places the first gameplay goal on an authored platform surface', () => {
+    const stage = getGameplayStageMap('1-1')
+    expect(stage).toBeDefined()
+    if (!stage) return
+
+    const platform = stage.terrain.platforms.find(
+      (candidate) =>
+        candidate.row * stage.world.tileSize === stage.goal.surfaceY
+        && stage.goal.x >= candidate.col * stage.world.tileSize
+        && stage.goal.x <= (candidate.col + candidate.width) * stage.world.tileSize,
+    )
+
+    expect(platform).toBeDefined()
   })
 })

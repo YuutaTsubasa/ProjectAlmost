@@ -99,6 +99,10 @@ const stageOneOne: GameplayStageMap = {
       spawnSurfaceY: 512,
     },
   ],
+  goal: {
+    x: 9340,
+    surfaceY: 512,
+  },
   terrain: {
     tilesetAssetRef: '/assets/tiles/white_palace_platform_tiles.webp',
     solidTileIndexes: [0, 1, 2],
