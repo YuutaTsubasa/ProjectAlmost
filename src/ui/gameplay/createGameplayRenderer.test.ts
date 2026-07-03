@@ -1008,6 +1008,8 @@ describe('createGameplayRendererConfig', () => {
           y: bottomY + checkpointActorDefinition.ring.yOffset,
           width: checkpointActorDefinition.ring.width,
           height: checkpointActorDefinition.ring.height,
+          fillColor: 0x4be8ff,
+          fillAlpha: 0,
           depth: checkpointActorDefinition.ring.depth,
           blendMode: 'ADD',
           strokeStyle: {

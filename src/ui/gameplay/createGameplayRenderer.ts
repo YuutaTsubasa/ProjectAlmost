@@ -410,6 +410,8 @@ class GameplayMapScene extends Phaser.Scene {
           bottomY + checkpointActorDefinition.ring.yOffset,
           checkpointActorDefinition.ring.width,
           checkpointActorDefinition.ring.height,
+          checkpointInactiveTint,
+          0,
         )
         .setStrokeStyle(
           checkpointActorDefinition.ring.strokeWidth,
