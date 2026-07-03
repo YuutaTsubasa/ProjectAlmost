@@ -107,8 +107,13 @@ describe('gameplay HUD state', () => {
     const state = createInitialGameplayHudState(stage)
     const [armorGuard, azureCore] = stage.enemies
 
-    expect(armorGuard.type).toBe('armor-guard')
-    expect(azureCore.type).toBe('azure-core')
+    if (armorGuard.type !== 'armor-guard') {
+      throw new Error('Expected first rebuilt 1-1 enemy to be Armor Guard.')
+    }
+    if (azureCore.type !== 'azure-core') {
+      throw new Error('Expected second rebuilt 1-1 enemy to be Azure Core.')
+    }
+
     expect(state.enemyMarkers).toHaveLength(2)
     expect(state.enemyMarkers[0].y).toBeCloseTo(armorGuard.surfaceY / stage.world.height)
     expect(state.enemyMarkers[1].y).toBeCloseTo(azureCore.y / stage.world.height)
