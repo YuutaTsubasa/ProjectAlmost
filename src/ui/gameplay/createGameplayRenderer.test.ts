@@ -363,6 +363,7 @@ function createFakeImage(input: { x: number; y: number; texture: string }) {
     flipX: false,
     depth: 0,
     angle: 0,
+    tint: undefined as number | undefined,
     blendMode: undefined as string | undefined,
     destroyed: false,
     setDepth: (value: number) => {
@@ -387,6 +388,10 @@ function createFakeImage(input: { x: number; y: number; texture: string }) {
     },
     setAlpha: (value: number) => {
       image.alpha = value
+      return image
+    },
+    setTint: (value: number) => {
+      image.tint = value
       return image
     },
     setPosition: (x: number, y: number) => {
@@ -832,6 +837,24 @@ function createHazardStage(): GameplayStageMap {
   }
 }
 
+function getCheckpointSprite(runtime: FakeRuntime, checkpointId: string) {
+  const checkpoint = runtime.stage.checkpoints.find((candidate) => candidate.id === checkpointId)
+  expect(checkpoint).toBeDefined()
+  if (!checkpoint) {
+    throw new Error(`Missing checkpoint ${checkpointId}.`)
+  }
+
+  const sprite = runtime.images.find(
+    (image) => image.texture === checkpointActorDefinition.sprite.key && image.x === checkpoint.x,
+  )
+  expect(sprite).toBeDefined()
+  if (!sprite) {
+    throw new Error(`Missing checkpoint sprite ${checkpointId}.`)
+  }
+
+  return { checkpoint, sprite }
+}
+
 describe('createGameplayRendererConfig', () => {
   it('uses the domain player gravity in Phaser config', () => {
     const stage = getGameplayStageMap('1-1')
@@ -1042,6 +1065,76 @@ describe('createGameplayRendererConfig', () => {
         }),
       ]),
     )
+  })
+
+  it('activates a checkpoint when the player reaches the checkpoint X coordinate', () => {
+    const runtime = createSceneRuntime()
+    runtime.scene.create()
+    expect(runtime.playerSprite).toBeDefined()
+    if (!runtime.playerSprite) return
+
+    const { checkpoint, sprite } = getCheckpointSprite(runtime, 'combat-gate')
+    runtime.playerSprite.x = checkpoint.x
+    runtime.scene.update()
+
+    expect(sprite.alpha).toBe(checkpointActorDefinition.activatedAlpha)
+    expect(sprite.tint).toBe(checkpointActorDefinition.activatedTint)
+    expect(runtime.tweenCalls).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          targets: sprite,
+          scale: checkpointActorDefinition.activationTween.spriteScaleMultiplier,
+          duration: checkpointActorDefinition.activationTween.durationMs,
+          yoyo: true,
+        }),
+      ]),
+    )
+  })
+
+  it('does not reactivate the same checkpoint on repeated updates', () => {
+    const runtime = createSceneRuntime()
+    runtime.scene.create()
+    expect(runtime.playerSprite).toBeDefined()
+    if (!runtime.playerSprite) return
+
+    const { checkpoint, sprite } = getCheckpointSprite(runtime, 'combat-gate')
+    runtime.playerSprite.x = checkpoint.x
+    runtime.scene.update()
+    const tweenCountAfterFirstActivation = runtime.tweenCalls.filter((call) => call.targets === sprite).length
+
+    runtime.scene.update()
+
+    expect(runtime.tweenCalls.filter((call) => call.targets === sprite)).toHaveLength(tweenCountAfterFirstActivation)
+  })
+
+  it('activates only the first later checkpoint when the player moves past multiple checkpoints', () => {
+    const runtime = createSceneRuntime()
+    runtime.scene.create()
+    expect(runtime.playerSprite).toBeDefined()
+    if (!runtime.playerSprite) return
+
+    const first = getCheckpointSprite(runtime, 'combat-gate')
+    const second = getCheckpointSprite(runtime, 'final-ascent')
+    runtime.playerSprite.x = second.checkpoint.x + 100
+    runtime.scene.update()
+
+    expect(first.sprite.alpha).toBe(checkpointActorDefinition.activatedAlpha)
+    expect(second.sprite.alpha).toBe(checkpointActorDefinition.inactiveAlpha)
+  })
+
+  it('skips checkpoint scanning while the player is dead', () => {
+    const runtime = createSceneRuntime()
+    runtime.scene.create()
+    expect(runtime.playerSprite).toBeDefined()
+    if (!runtime.playerSprite) return
+
+    const { checkpoint, sprite } = getCheckpointSprite(runtime, 'combat-gate')
+    ;(runtime.scene as unknown as { isPlayerDead: boolean }).isPlayerDead = true
+    runtime.playerSprite.x = checkpoint.x
+    runtime.scene.update()
+
+    expect(sprite.alpha).toBe(checkpointActorDefinition.inactiveAlpha)
+    expect(sprite.tint).toBeUndefined()
   })
 
   it('creates the player with domain-owned depth and terrain collision wiring', () => {

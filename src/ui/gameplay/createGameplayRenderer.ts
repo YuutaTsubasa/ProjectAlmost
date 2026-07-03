@@ -93,6 +93,11 @@ import {
   shouldScanPlayerCoins,
 } from '../../domain/gameplay/playerCoinPickup'
 import {
+  findNextCheckpointIndex,
+  getCheckpointRespawnState,
+  type PlayerCheckpointGravity,
+} from '../../domain/gameplay/playerCheckpoint'
+import {
   buildTerrainTileGrid,
   getTileColumnCount,
   getTileRowCount,
@@ -133,6 +138,12 @@ type CheckpointRuntime = {
   ring: Phaser.GameObjects.Ellipse
   spawn: GameplayCheckpointSpawn
   activated: boolean
+}
+
+type CurrentRespawnPoint = {
+  x: number
+  surfaceY: number
+  gravity: PlayerCheckpointGravity
 }
 
 type ActiveMeleeHitbox = {
@@ -177,12 +188,19 @@ class GameplayMapScene extends Phaser.Scene {
   private homingReticle: Phaser.GameObjects.Image | null = null
   private hazards: HazardRuntime[] = []
   private checkpoints: CheckpointRuntime[] = []
+  private activeCheckpointIndex = -1
+  private currentRespawnPoint: CurrentRespawnPoint
   private coins: CoinRuntime[] = []
   private collectedCoins = 0
 
   constructor(stage: GameplayStageMap) {
     super(`GameplayMapScene:${stage.id}`)
     this.stageMap = stage
+    this.currentRespawnPoint = {
+      x: stage.player.spawn.x,
+      surfaceY: stage.player.spawn.surfaceY,
+      gravity: 'down',
+    }
   }
 
   preload(): void {
@@ -269,6 +287,7 @@ class GameplayMapScene extends Phaser.Scene {
     this.processActiveMeleeHitboxes()
     this.updateHomingAttack()
     this.updateCoins()
+    this.updateCheckpoints()
     this.checkPlayerOutOfBounds()
     this.updatePlayerMovement()
   }
@@ -511,6 +530,56 @@ class GameplayMapScene extends Phaser.Scene {
         this.collectCoin(coin)
       }
     }
+  }
+
+  private updateCheckpoints(): void {
+    if (!this.player || this.isPlayerDead) return
+
+    const nextCheckpointIndex = findNextCheckpointIndex({
+      checkpoints: this.stageMap.checkpoints,
+      activeCheckpointIndex: this.activeCheckpointIndex,
+      playerX: this.player.x,
+    })
+    if (nextCheckpointIndex === -1) {
+      return
+    }
+
+    const checkpoint = this.checkpoints[nextCheckpointIndex]
+    if (!checkpoint) {
+      return
+    }
+
+    this.activateCheckpoint(nextCheckpointIndex, checkpoint)
+  }
+
+  private activateCheckpoint(index: number, checkpoint: CheckpointRuntime): void {
+    if (checkpoint.activated) return
+
+    this.activeCheckpointIndex = index
+    checkpoint.activated = true
+    this.currentRespawnPoint = getCheckpointRespawnState({
+      checkpoint: checkpoint.spawn,
+      currentGravity: this.currentRespawnPoint.gravity,
+    })
+
+    checkpoint.sprite
+      .setAlpha(checkpointActorDefinition.activatedAlpha)
+      .setTint(checkpointActorDefinition.activatedTint)
+    checkpoint.glow.setFillStyle(checkpointActivatedTint, 0.7)
+    checkpoint.ring.setStrokeStyle(4, checkpointActivatedTint, 1)
+
+    this.tweens.add({
+      targets: checkpoint.sprite,
+      scale: checkpointActorDefinition.activationTween.spriteScaleMultiplier,
+      duration: checkpointActorDefinition.activationTween.durationMs,
+      yoyo: true,
+    })
+    this.tweens.add({
+      targets: [checkpoint.glow, checkpoint.ring],
+      alpha: 1,
+      duration: checkpointActorDefinition.activationTween.durationMs,
+      yoyo: true,
+    })
   }
 
   private collectCoin(coin: CoinRuntime): void {
