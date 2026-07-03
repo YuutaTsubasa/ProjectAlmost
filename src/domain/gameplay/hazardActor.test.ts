@@ -42,15 +42,16 @@ describe('hazard placement', () => {
   })
 
   it('uses prototype spike body ratios', () => {
-    expect(getHazardBodyPresentation({
+    const body = getHazardBodyPresentation({
       width: 180,
       height: 62,
       type: 'spikes',
-    })).toEqual({
-      width: 154.8,
-      height: 34.72,
-      offsetX: 12.600000000000001,
-      offsetY: 22.32,
     })
+    expect(body).toMatchObject({
+      width: 154.8,
+      offsetY: 22.32,
+      offsetX: 12.600000000000001,
+    })
+    expect(body.height).toBeCloseTo(34.72)
   })
 })

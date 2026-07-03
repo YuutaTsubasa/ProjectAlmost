@@ -59,7 +59,7 @@ export function getHazardBodyPresentation(input: {
 } {
   return {
     width: input.width * 0.86,
-    height: Number((input.height * 0.56).toFixed(2)),
+    height: input.height * 0.56,
     offsetX: input.width * 0.07,
     offsetY: input.height * 0.36,
   }
