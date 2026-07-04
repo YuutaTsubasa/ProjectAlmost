@@ -34,6 +34,12 @@ describe('Gameplay HUD Svelte UI', () => {
     expect(hudSource).toContain('class="emblem"')
   })
 
+  it('keeps the gameplay banner geometry isolated from stage-select banner styles', () => {
+    expect(hudSource).toContain('animation: none')
+    expect(hudSource).toContain('width: min(360px, 31vw)')
+    expect(hudSource).toContain('transform: none')
+  })
+
   it('renders map overview marker loops with prototype labels', () => {
     expect(hudSource).toContain('Map Overview')
     expect(hudSource).toContain('class="mini-map"')

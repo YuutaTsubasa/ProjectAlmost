@@ -212,7 +212,7 @@
   .status-hud {
     top: 16px;
     left: 16px;
-    width: min(432px, 34vw);
+    width: min(360px, 31vw);
     padding: 15px 16px 14px;
   }
 
@@ -290,6 +290,7 @@
     width: min(680px, 38vw);
     height: clamp(72px, 9.7vh, 104px);
     transform: translateX(-50%);
+    animation: none;
     clip-path: polygon(18px 0, calc(100% - 18px) 0, 100% 18px, 100% calc(100% - 18px), calc(100% - 18px) 100%, 18px 100%, 0 calc(100% - 18px), 0 18px);
     background: var(--hud-line);
     filter: drop-shadow(0 16px 30px rgba(20, 49, 95, 0.4));
