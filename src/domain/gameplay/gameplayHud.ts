@@ -13,6 +13,14 @@ export type GameplayHudPlatformMarker = GameplayHudMarker & {
 
 export type GameplayHudEnemyMarker = GameplayHudMarker
 
+export type GameplayHudStatusMessageKey =
+  | 'status.initial'
+  | 'status.checkpoint'
+  | 'status.restored'
+  | 'status.fall'
+  | 'status.critical'
+  | 'status.goal'
+
 export type GameplayHudState = {
   hp: number
   hpMax: number
@@ -25,6 +33,8 @@ export type GameplayHudState = {
   checkpointsReached: number
   checkpointTarget: number
   activeCheckpointIndex: number
+  rank: string
+  statusMessageKey: GameplayHudStatusMessageKey
   time: string
   playerProgress: number
   playerProgressY: number
@@ -133,6 +143,8 @@ export function createInitialGameplayHudState(stage: GameplayStageMap): Gameplay
     checkpointsReached: 0,
     checkpointTarget: stage.checkpoints.length,
     activeCheckpointIndex: -1,
+    rank: '--',
+    statusMessageKey: 'status.initial',
     time: '00:00.00',
     playerProgress: getHudPositionProgress({
       position: stage.player.spawn.x,

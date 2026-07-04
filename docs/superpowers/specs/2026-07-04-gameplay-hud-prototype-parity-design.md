@@ -112,6 +112,7 @@ Rank is displayed as `--` for this slice. The rank display is a parity field, no
 The prototype HUD state includes status-message keys even though this gameplay HUD layout does not directly render a separate navigator/status text panel. This slice must preserve that contract shape without adding a new visible navigator UI:
 
 - Add a stable rebuild-local status key field initialized to the equivalent of the prototype initial route guidance.
+- The initial rebuild-local status key is `status.initial`.
 - Renderer emits the initial status key as part of the initial HUD state. Runtime status-message transitions are deferred to a later visible status-message slice.
 - Svelte does not render the status key in this slice.
 - Do not wire ad hoc user-facing status strings through the renderer.
@@ -146,7 +147,7 @@ Do not reference prototype asset paths at runtime.
 Update `src/domain/gameplay/gameplayHud.test.ts` if HUD state is extended:
 
 - Initial rank is `--`.
-- Initial `statusMessageKey` is the rebuild-local initial route-guidance key.
+- Initial `statusMessageKey` is `status.initial`.
 - Patch reducer applies added fields immutably.
 
 ### UI Source Tests

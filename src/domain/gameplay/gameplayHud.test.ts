@@ -91,6 +91,8 @@ describe('gameplay HUD state', () => {
       checkpointsReached: 0,
       checkpointTarget: stage.checkpoints.length,
       activeCheckpointIndex: -1,
+      rank: '--',
+      statusMessageKey: 'status.initial',
       cleared: false,
       time: '00:00.00',
     })
@@ -131,6 +133,8 @@ describe('gameplay HUD state', () => {
       damageTaken: 1,
       activeCheckpointIndex: 0,
       checkpointsReached: 1,
+      rank: 'A',
+      statusMessageKey: 'status.checkpoint',
     })
 
     expect(second).toMatchObject({
@@ -139,8 +143,12 @@ describe('gameplay HUD state', () => {
       damageTaken: 1,
       activeCheckpointIndex: 0,
       checkpointsReached: 1,
+      rank: 'A',
+      statusMessageKey: 'status.checkpoint',
     })
     expect(first.hp).toBe(PLAYER_MAX_HEALTH)
+    expect(first.rank).toBe('--')
+    expect(first.statusMessageKey).toBe('status.initial')
     expect(second).not.toBe(first)
   })
 })
