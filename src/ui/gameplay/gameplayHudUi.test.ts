@@ -42,6 +42,8 @@ describe('Gameplay HUD Svelte UI', () => {
     expect(screenSource).toContain('createInitialGameplayHudState')
     expect(screenSource).toContain('applyGameplayHudPatch')
     expect(screenSource).toContain('onHudUpdate')
+    expect(screenSource).toContain('<GameplayHud')
     expect(screenSource).toContain('stageDisplay={stageDisplay}')
+    expect(screenSource).not.toContain(': any = GameplayHud')
   })
 })

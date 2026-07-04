@@ -19,7 +19,6 @@
   let container: HTMLDivElement
   let hudState = $state<GameplayHudState | null>(null)
   const stageDisplay = $derived(getGameplayHudStageDisplay(stage.id))
-  const GameplayHudWithStageDisplay: any = GameplayHud
 
   $effect(() => {
     hudState = createInitialGameplayHudState(stage)
@@ -43,7 +42,7 @@
 <section class="gameplay-screen" aria-label={`Gameplay ${stage.id}`}>
   <div bind:this={container} class="gameplay-canvas"></div>
   {#if hudState}
-    <GameplayHudWithStageDisplay
+    <GameplayHud
       state={hudState}
       stageLabel={stage.id}
       stageDisplay={stageDisplay}

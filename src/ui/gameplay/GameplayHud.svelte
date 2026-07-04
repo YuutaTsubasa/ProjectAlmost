@@ -1,12 +1,14 @@
 <script lang="ts">
   import type { GameplayHudState } from '../../domain/gameplay/gameplayHud'
+  import type { GameplayHudStageDisplay } from './gameplayHudDisplay'
 
   type Props = {
     state: GameplayHudState
     stageLabel: string
+    stageDisplay: GameplayHudStageDisplay
   }
 
-  let { state, stageLabel }: Props = $props()
+  let { state, stageLabel, stageDisplay: _stageDisplay }: Props = $props()
 
   function getHpWidthPercent() {
     if (state.hpMax <= 0) return 0
