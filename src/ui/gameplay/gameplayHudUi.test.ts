@@ -36,8 +36,19 @@ describe('Gameplay HUD Svelte UI', () => {
 
   it('keeps the gameplay banner geometry isolated from stage-select banner styles', () => {
     expect(hudSource).toContain('animation: none')
-    expect(hudSource).toContain('width: min(360px, 31vw)')
+    expect(hudSource).toContain('width: min(360px, 28.1cqw)')
     expect(hudSource).toContain('transform: none')
+  })
+
+  it('sizes HUD proportions against the resolution frame instead of the viewport', () => {
+    const styleSource = hudSource.slice(hudSource.indexOf('<style>'))
+
+    expect(styleSource).toContain('cqw')
+    expect(styleSource).toContain('cqh')
+    expect(styleSource).toContain('@container (max-width: 900px)')
+    expect(styleSource).not.toContain('@media')
+    expect(styleSource).not.toMatch(/\b\d*\.?\d+vw\b/)
+    expect(styleSource).not.toMatch(/\b\d*\.?\d+vh\b/)
   })
 
   it('renders map overview marker loops with prototype labels', () => {
