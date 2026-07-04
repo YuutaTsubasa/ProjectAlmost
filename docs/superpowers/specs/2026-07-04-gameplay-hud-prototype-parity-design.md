@@ -24,7 +24,7 @@ The desired direction is not to preserve this simplified HUD. The rebuild must c
 - Keep domain logic pure and framework-free under `src/domain/`.
 - Keep Phaser runtime observation inside the renderer; expose HUD facts through typed patches/callbacks.
 - Keep Svelte reactive and presentational; it must render state and emit no gameplay side effects.
-- Size gameplay HUD elements against the 16:9 `.resolution-frame` container using container-query units (`cqw`/`cqh`), not viewport units (`vw`/`vh`). The app shell letterboxes the game into a fixed-aspect resolution frame; HUD proportions must follow that frame so the overlay stays visually consistent across display resolutions.
+- Size gameplay HUD elements against the 16:9 `.resolution-frame` container using container-query units (`cqw`/`cqh`), not viewport units (`vw`/`vh`). The app shell letterboxes the game into a fixed-aspect resolution frame; HUD proportions must follow that frame so the overlay stays visually consistent across display resolutions. HUD geometry must not use mixed pixel/container `min()`, `max()`, `clamp()`, or small-screen layout breakpoints that change the relative HUD proportions between supported 16:9 frame sizes.
 - Do not import runtime code from `__prototype__/`.
 - Do not copy prototype Svelte/CSS verbatim. Rebuild equivalent structure and styling in the new project.
 - Runtime assets copied from prototype must live under rebuild `public/assets/` and be referenced by rebuild paths.

@@ -195,7 +195,7 @@
     gap: 0.63cqw;
     align-items: center;
     color: var(--hud-soft);
-    font-size: clamp(10px, 0.72cqw, 14px);
+    font-size: 0.72cqw;
     font-weight: 700;
     letter-spacing: 0.18em;
     text-transform: uppercase;
@@ -212,7 +212,7 @@
   .status-hud {
     top: 2.2cqh;
     left: 1.25cqw;
-    width: min(360px, 28.1cqw);
+    width: 28.1cqw;
     padding: 2.1cqh 1.25cqw 1.95cqh;
   }
 
@@ -224,7 +224,7 @@
 
   .portrait-slot {
     flex: none;
-    width: clamp(58px, 5.4cqw, 104px);
+    width: 5.4cqw;
     aspect-ratio: 1;
     object-fit: cover;
     object-position: 50% 36%;
@@ -243,7 +243,7 @@
     display: block;
     overflow-wrap: anywhere;
     color: var(--hud-ink);
-    font-size: clamp(18px, 1.35cqw, 26px);
+    font-size: 1.35cqw;
     line-height: 1;
   }
 
@@ -254,14 +254,14 @@
     align-items: baseline;
     margin-top: 1.95cqh;
     color: var(--hud-ink);
-    font-size: clamp(12px, 0.85cqw, 16px);
+    font-size: 0.85cqw;
     font-weight: 700;
     letter-spacing: 0.14em;
     text-transform: uppercase;
   }
 
   .hp-heading b {
-    font-size: clamp(15px, 1.05cqw, 20px);
+    font-size: 1.05cqw;
     font-variant-numeric: tabular-nums;
     letter-spacing: 0.03em;
     white-space: nowrap;
@@ -287,8 +287,8 @@
     position: absolute;
     top: 2.2cqh;
     left: 50%;
-    width: min(680px, 38cqw);
-    height: clamp(72px, 9.7cqh, 104px);
+    width: 38cqw;
+    height: 9.7cqh;
     transform: translateX(-50%);
     animation: none;
     clip-path: polygon(18px 0, calc(100% - 18px) 0, 100% 18px, 100% calc(100% - 18px), calc(100% - 18px) 100%, 18px 100%, 0 calc(100% - 18px), 0 18px);
@@ -312,7 +312,7 @@
 
   .banner-fill strong {
     display: block;
-    font-size: clamp(24px, 2.2cqw, 44px);
+    font-size: 2.2cqw;
     font-weight: 700;
     letter-spacing: 0.04em;
     line-height: 1;
@@ -324,7 +324,7 @@
     display: block;
     margin-top: 0.83cqh;
     color: var(--hud-gold-bright);
-    font-size: clamp(11px, 0.85cqw, 16px);
+    font-size: 0.85cqw;
     font-weight: 700;
     letter-spacing: 0.26em;
     text-transform: uppercase;
@@ -353,13 +353,13 @@
   .map-hud {
     top: 2.2cqh;
     right: 1.25cqw;
-    width: min(338px, 24cqw);
+    width: 24cqw;
     padding: 1.67cqh 1cqw 1.95cqh;
   }
 
   .mini-map {
     position: relative;
-    height: clamp(58px, 7.4cqh, 80px);
+    height: 7.4cqh;
     margin-top: 1.4cqh;
     overflow: hidden;
     border: 1px solid var(--hud-line-soft);
@@ -429,14 +429,14 @@
   .objective-hud {
     top: 20.8cqh;
     right: 1.25cqw;
-    width: min(338px, 24cqw);
+    width: 24cqw;
     padding: 1.67cqh 1.1cqw;
   }
 
   .objective-hud p {
     margin: 1.25cqh 0 0;
     color: var(--hud-ink);
-    font-size: clamp(13px, 0.85cqw, 16px);
+    font-size: 0.85cqw;
     font-weight: 700;
     line-height: 1.2;
   }
@@ -446,7 +446,7 @@
     right: 1.25cqw;
     bottom: 2.2cqh;
     left: 1.25cqw;
-    height: clamp(112px, 13.8cqh, 148px);
+    height: 13.8cqh;
     clip-path: polygon(16px 0, calc(100% - 16px) 0, 100% 16px, 100% calc(100% - 16px), calc(100% - 16px) 100%, 16px 100%, 0 calc(100% - 16px), 0 16px);
     background: var(--hud-line);
     filter: drop-shadow(0 14px 28px rgba(20, 49, 95, 0.32));
@@ -456,7 +456,7 @@
     position: absolute;
     inset: 1px;
     display: grid;
-    grid-template-columns: minmax(260px, 23cqw) 1fr;
+    grid-template-columns: 23cqw 1fr;
     clip-path: inherit;
     background: var(--hud-panel);
     backdrop-filter: blur(7px) saturate(125%);
@@ -494,13 +494,13 @@
   .skills b {
     display: grid;
     width: 100%;
-    min-height: 40px;
+    min-height: 5.55cqh;
     place-items: center;
     border: 1px solid var(--hud-line);
     border-radius: 6px;
     background: linear-gradient(180deg, #fff, var(--accent-pale));
     color: var(--hud-ink);
-    font-size: clamp(9px, 0.6cqw, 12px);
+    font-size: 0.6cqw;
     line-height: 1;
     text-align: center;
   }
@@ -509,7 +509,7 @@
   .readouts span {
     display: block;
     color: var(--hud-soft);
-    font-size: clamp(9px, 0.68cqw, 13px);
+    font-size: 0.68cqw;
     font-weight: 700;
     letter-spacing: 0.12em;
     text-transform: uppercase;
@@ -519,7 +519,7 @@
     display: block;
     margin-top: 0.56cqh;
     color: var(--hud-ink);
-    font-size: clamp(16px, 1.45cqw, 28px);
+    font-size: 1.45cqw;
     font-weight: 700;
     font-variant-numeric: tabular-nums;
     line-height: 1;
@@ -533,42 +533,9 @@
 
   .live-rank b {
     color: var(--hud-soft);
-    font-size: clamp(24px, 2.25cqw, 43px);
+    font-size: 2.25cqw;
     font-style: italic;
     line-height: 0.72;
   }
 
-  @container (max-width: 900px) {
-    .status-hud,
-    .map-hud,
-    .objective-hud {
-      width: min(240px, calc(50cqw - 3.1cqw));
-    }
-
-    .stage-banner {
-      top: 35.2cqh;
-      right: 2.1cqw;
-      left: 2.1cqw;
-      width: auto;
-      transform: none;
-    }
-
-    .objective-hud {
-      top: auto;
-      bottom: 31.5cqh;
-    }
-
-    .bottom-fill {
-      grid-template-columns: 1fr;
-    }
-
-    .skill-group {
-      display: none;
-    }
-
-    .readouts {
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      border-left: 0;
-    }
-  }
 </style>
