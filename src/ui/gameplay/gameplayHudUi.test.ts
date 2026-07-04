@@ -35,11 +35,13 @@ describe('Gameplay HUD Svelte UI', () => {
     expect(hudSource).toContain('width: auto;')
   })
 
-  it('wires GameplayScreen state to renderer HUD patches', () => {
+  it('wires GameplayScreen state and stage display data to the HUD', () => {
     expect(screenSource).toContain("import GameplayHud from './GameplayHud.svelte'")
+    expect(screenSource).toContain('getGameplayHudStageDisplay')
+    expect(screenSource).toContain('const stageDisplay = $derived')
     expect(screenSource).toContain('createInitialGameplayHudState')
     expect(screenSource).toContain('applyGameplayHudPatch')
     expect(screenSource).toContain('onHudUpdate')
-    expect(screenSource).toContain('<GameplayHud')
+    expect(screenSource).toContain('stageDisplay={stageDisplay}')
   })
 })
