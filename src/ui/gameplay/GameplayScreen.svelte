@@ -5,6 +5,7 @@
     createInitialGameplayHudState,
     type GameplayHudState,
   } from '../../domain/gameplay/gameplayHud'
+  import { applyGameplayResultAction } from '../../domain/app/appFlow'
   import type { GameplayStageMap } from '../../domain/gameplay/gameplayMapTypes'
   import type { StageResultActionType } from '../../domain/gameplay/stageResult'
   import GameplayHud from './GameplayHud.svelte'
@@ -30,8 +31,7 @@
   })
 
   function handleResultAction(action: StageResultActionType): void {
-    if (action === 'retry') onRetry()
-    if (action === 'stage-select') onStageSelect()
+    applyGameplayResultAction(action, { onRetry, onStageSelect })
   }
 
   onMount(() => {

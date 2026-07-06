@@ -7,6 +7,7 @@
     confirmSelectedStage,
     confirmSelectedWorld,
     createInitialAppState,
+    getGameplayScreenKey,
     retryGameplayStage,
     returnFromGameplayToStageSelect,
     selectStage,
@@ -291,7 +292,7 @@
         onBack={handleBackFromStageSelect}
       />
     {:else if appState.screen.type === 'gameplay' && gameplayStageMap}
-      {#key `${gameplayStageMap.id}:${appState.screen.runId}`}
+      {#key getGameplayScreenKey(appState.screen)}
         <GameplayScreen
           stage={gameplayStageMap}
           onRetry={handleRetryGameplayStage}

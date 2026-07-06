@@ -15,6 +15,7 @@ import {
   moveWorldSelection,
   openSettingsDeleteConfirm,
   openTitleMenu,
+  getGameplayScreenKey,
   retryGameplayStage,
   returnFromGameplayToStageSelect,
   selectStage,
@@ -271,9 +272,17 @@ describe('confirmSelectedStage', () => {
 
 describe('gameplay result flow', () => {
   it('retries the current gameplay stage with a remount token', () => {
-    expect(retryGameplayStage({ screen: { type: 'gameplay', stageId: '1-1', runId: 0 } })).toEqual({
+    const state = { screen: { type: 'gameplay', stageId: '1-1', runId: 0 } } as const
+    const retried = retryGameplayStage(state)
+
+    expect(retried).toEqual({
       screen: { type: 'gameplay', stageId: '1-1', runId: 1 },
     })
+    expect(getGameplayScreenKey(state.screen)).toBe('1-1:0')
+    if (retried.screen.type !== 'gameplay') {
+      throw new Error('expected gameplay screen after retry')
+    }
+    expect(getGameplayScreenKey(retried.screen)).toBe('1-1:1')
   })
 
   it('returns from gameplay to the matching stage select entry', () => {
