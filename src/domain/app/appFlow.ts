@@ -4,7 +4,6 @@ import {
   openDeleteConfirm,
   type DeleteConfirmState,
 } from '../settings/settings'
-import type { StageResultActionType } from '../gameplay/stageResult'
 import type { StageId, WorldId } from '../data/worlds/worldTypes'
 
 export const TITLE_MENU_ITEMS = ['start', 'settings', 'back'] as const
@@ -196,23 +195,6 @@ function getStageSelectionForStageId(stageId: StageId): StageSelectScreen {
 
 export function getGameplayScreenKey(screen: GameplayScreen): string {
   return `${screen.stageId}:${screen.runId}`
-}
-
-export function applyGameplayResultAction(
-  action: StageResultActionType,
-  callbacks: {
-    onRetry: () => void
-    onStageSelect: () => void
-  },
-): void {
-  if (action === 'retry') {
-    callbacks.onRetry()
-    return
-  }
-
-  if (action === 'stage-select') {
-    callbacks.onStageSelect()
-  }
 }
 
 export function backFromStageSelect(state: AppState): AppState {

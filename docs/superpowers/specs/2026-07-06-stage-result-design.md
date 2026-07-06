@@ -134,7 +134,8 @@ The component must:
 Update `GameplayScreen.svelte` so it owns the result overlay state reactively:
 
 - It receives callbacks from `App.svelte` for retry and stage select.
-- It maps result action intents to those callbacks.
+- It consumes keyboard/gamepad-style directional and confirm intents while `hudState.result` exists, updating the selected result action through pure helper logic.
+- It maps resolved result actions to those callbacks inside Svelte/UI code rather than through a domain callback dispatcher.
 - It exposes `Next Stage` as unavailable until a gameplay map exists for the next stage.
 
 Update `App.svelte` only enough to support this slice:

@@ -51,6 +51,18 @@ export type StageResultActionState = {
   disabled: boolean
 }
 
+export type StageResultControlIntent =
+  | 'move-up'
+  | 'move-down'
+  | 'move-left'
+  | 'move-right'
+  | 'confirm'
+
+export type StageResultActionIntentResolution = {
+  selectedAction: number
+  action: StageResultActionType | null
+}
+
 const baseScore = 300
 const perfectTimeScore = 300
 const aTimeScore = 240
@@ -127,4 +139,48 @@ export function getResultActionStates(input: {
     { type: 'stage-select', disabled: false },
     { type: 'next-stage', disabled: !input.nextStageAvailable },
   ]
+}
+
+export function resolveStageResultActionIntent(
+  input: {
+    selectedAction: number
+    nextStageAvailable: boolean
+  },
+  intent: StageResultControlIntent,
+): StageResultActionIntentResolution {
+  const actions = getResultActionStates({ nextStageAvailable: input.nextStageAvailable })
+
+  if (intent === 'confirm') {
+    const selectedAction = actions[input.selectedAction]
+    return {
+      selectedAction: input.selectedAction,
+      action: selectedAction && !selectedAction.disabled ? selectedAction.type : null,
+    }
+  }
+
+  const enabledIndexes = actions.flatMap((action, index) => (action.disabled ? [] : index))
+  if (enabledIndexes.length === 0) {
+    return {
+      selectedAction: input.selectedAction,
+      action: null,
+    }
+  }
+
+  const direction = intent === 'move-left' || intent === 'move-up' ? -1 : 1
+  const currentEnabledIndex = enabledIndexes.indexOf(input.selectedAction)
+
+  if (currentEnabledIndex === -1) {
+    return {
+      selectedAction: direction === 1 ? enabledIndexes[0]! : enabledIndexes[enabledIndexes.length - 1]!,
+      action: null,
+    }
+  }
+
+  const nextEnabledIndex =
+    (currentEnabledIndex + direction + enabledIndexes.length) % enabledIndexes.length
+
+  return {
+    selectedAction: enabledIndexes[nextEnabledIndex]!,
+    action: null,
+  }
 }

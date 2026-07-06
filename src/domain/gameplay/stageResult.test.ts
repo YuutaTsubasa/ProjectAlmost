@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   calculateStageRank,
   getResultActionStates,
+  resolveStageResultActionIntent,
   getStageResultRowStates,
   scoreStageResult,
   type RankTargets,
@@ -169,5 +170,81 @@ describe('stage result action states', () => {
       { type: 'stage-select', disabled: false },
       { type: 'next-stage', disabled: true },
     ])
+  })
+
+  it('moves between enabled result actions when next stage is unavailable', () => {
+    expect(
+      resolveStageResultActionIntent(
+        { selectedAction: 0, nextStageAvailable: false },
+        'move-right',
+      ),
+    ).toEqual({
+      selectedAction: 1,
+      action: null,
+    })
+
+    expect(
+      resolveStageResultActionIntent(
+        { selectedAction: 1, nextStageAvailable: false },
+        'move-right',
+      ),
+    ).toEqual({
+      selectedAction: 0,
+      action: null,
+    })
+
+    expect(
+      resolveStageResultActionIntent(
+        { selectedAction: 0, nextStageAvailable: false },
+        'move-left',
+      ),
+    ).toEqual({
+      selectedAction: 1,
+      action: null,
+    })
+  })
+
+  it('includes next stage in selection when it is available', () => {
+    expect(
+      resolveStageResultActionIntent(
+        { selectedAction: 1, nextStageAvailable: true },
+        'move-right',
+      ),
+    ).toEqual({
+      selectedAction: 2,
+      action: null,
+    })
+
+    expect(
+      resolveStageResultActionIntent(
+        { selectedAction: 2, nextStageAvailable: true },
+        'move-right',
+      ),
+    ).toEqual({
+      selectedAction: 0,
+      action: null,
+    })
+  })
+
+  it('activates only enabled selected actions on confirm', () => {
+    expect(
+      resolveStageResultActionIntent(
+        { selectedAction: 1, nextStageAvailable: false },
+        'confirm',
+      ),
+    ).toEqual({
+      selectedAction: 1,
+      action: 'stage-select',
+    })
+
+    expect(
+      resolveStageResultActionIntent(
+        { selectedAction: 2, nextStageAvailable: false },
+        'confirm',
+      ),
+    ).toEqual({
+      selectedAction: 2,
+      action: null,
+    })
   })
 })
