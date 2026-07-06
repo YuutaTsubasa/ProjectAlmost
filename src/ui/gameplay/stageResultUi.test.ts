@@ -74,4 +74,37 @@ describe('StageResult UI contract', () => {
     expect(stageResultSource).not.toContain('100vw')
     expect(stageResultSource).not.toContain('100vh')
   })
+
+  it('renders prototype-style banner and stage title ornamentation', () => {
+    expect(stageResultSource).toContain('class="result-banner-star"')
+    expect(stageResultSource).toContain('class="result-stage-separator"')
+  })
+
+  it('renders target counts and locked action sublabel in prototype-style nested elements', () => {
+    expect(stageResultSource).toContain('<em>/ {result.coinTarget}</em>')
+    expect(stageResultSource).toContain('<em>/ {result.enemyTarget}</em>')
+    expect(stageResultSource).toContain('<em>/ {result.checkpointTarget}</em>')
+    expect(stageResultSource).toContain("locked: 'Locked'")
+    expect(stageResultSource).toContain(
+      '{#if action.disabled}<span>{stageResultCopy.actions.locked}</span>{/if}',
+    )
+  })
+
+  it('renders the rank as a right-column badge with a final evaluation sublabel', () => {
+    expect(stageResultSource).toContain('class="result-rank-badge"')
+    expect(stageResultSource).toContain('class="result-rank-sublabel"')
+    expect(stageResultSource).toContain("class:rank-s={result.rank === 'S'}")
+    expect(stageResultSource).toContain("class:rank-d={result.rank === 'D'}")
+  })
+
+  it('uses the approved bright prototype-style result HUD surface', () => {
+    expect(stageResultSource).toContain('--accent: #2f6fd0')
+    expect(stageResultSource).toContain('--accent-bright:')
+    expect(stageResultSource).toContain('--hud-panel:')
+    expect(stageResultSource).toContain('rgba(234, 247, 255')
+    expect(stageResultSource).toContain('color-mix(in srgb, var(--hud-panel) 92%, white)')
+    expect(stageResultSource).toContain('border-left: 1px solid var(--hud-line-soft)')
+    expect(stageResultSource).not.toContain('background: rgba(8, 20, 46, 0.78)')
+    expect(stageResultSource).not.toContain('background: rgba(255, 255, 255, 0.075)')
+  })
 })

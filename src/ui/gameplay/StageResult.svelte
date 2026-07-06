@@ -48,6 +48,7 @@
       retry: 'Retry',
       stageSelect: 'Stage Select',
       nextStage: 'Next Stage',
+      locked: 'Locked',
     },
   } as const
 
@@ -82,9 +83,14 @@
   </aside>
 
   <div class="result-content">
-    <div class="result-banner">{stageResultCopy.resultTitle}</div>
+    <header class="result-banner">
+      <span class="result-banner-star" aria-hidden="true">✦</span>
+      <strong>{stageResultCopy.resultTitle}</strong>
+      <span class="result-banner-star" aria-hidden="true">✦</span>
+    </header>
     <div class="result-stage-name">
-      <strong>{stageDisplay.worldLabel} {stageDisplay.stageId}</strong>
+      <b>{stageDisplay.worldLabel} {stageDisplay.stageId}</b>
+      <i class="result-stage-separator" aria-hidden="true"></i>
       <span>{stageDisplay.stageSubtitle}</span>
     </div>
 
@@ -93,45 +99,48 @@
         <div class="result-row">
           <span>{stageResultCopy.stats.clearTime}</span>
           <b>{result.time}</b>
-          <em>{stageResultCopy.stats.newRecord}</em>
+          <small>{stageResultCopy.stats.newRecord}</small>
         </div>
         <div class:perfect={rowStates.coinsPerfect} class="result-row">
           <span>{stageResultCopy.stats.coins}</span>
-          <b>{result.coins} / {result.coinTarget}</b>
-          {#if rowStates.coinsPerfect}<em>{stageResultCopy.stats.perfect}</em>{/if}
+          <b>{result.coins}<em>/ {result.coinTarget}</em></b>
+          <small class:perfect={rowStates.coinsPerfect}>{rowStates.coinsPerfect ? stageResultCopy.stats.perfect : ''}</small>
         </div>
         <div class:perfect={rowStates.damagePerfect} class="result-row">
           <span>{stageResultCopy.stats.damageTaken}</span>
           <b>{result.damageTaken}</b>
-          {#if rowStates.damagePerfect}<em>{stageResultCopy.stats.perfect}</em>{/if}
+          <small class:perfect={rowStates.damagePerfect}>{rowStates.damagePerfect ? stageResultCopy.stats.perfect : ''}</small>
         </div>
         <div class:perfect={rowStates.fallsPerfect} class="result-row">
           <span>{stageResultCopy.stats.falls}</span>
           <b>{result.falls}</b>
-          {#if rowStates.fallsPerfect}<em>{stageResultCopy.stats.perfect}</em>{/if}
+          <small class:perfect={rowStates.fallsPerfect}>{rowStates.fallsPerfect ? stageResultCopy.stats.perfect : ''}</small>
         </div>
         <div class:perfect={rowStates.enemiesPerfect} class="result-row">
           <span>{stageResultCopy.stats.enemiesDefeated}</span>
-          <b>{result.enemiesDefeated} / {result.enemyTarget}</b>
-          {#if rowStates.enemiesPerfect}<em>{stageResultCopy.stats.perfect}</em>{/if}
+          <b>{result.enemiesDefeated}<em>/ {result.enemyTarget}</em></b>
+          <small class:perfect={rowStates.enemiesPerfect}>{rowStates.enemiesPerfect ? stageResultCopy.stats.perfect : ''}</small>
         </div>
         <div class:perfect={rowStates.checkpointsPerfect} class="result-row">
           <span>{stageResultCopy.stats.checkpoints}</span>
-          <b>{result.checkpointsReached} / {result.checkpointTarget}</b>
-          {#if rowStates.checkpointsPerfect}<em>{stageResultCopy.stats.perfect}</em>{/if}
+          <b>{result.checkpointsReached}<em>/ {result.checkpointTarget}</em></b>
+          <small class:perfect={rowStates.checkpointsPerfect}>{rowStates.checkpointsPerfect ? stageResultCopy.stats.perfect : ''}</small>
         </div>
       </div>
 
-      <div
-        class="result-rank"
-        class:rank-s={result.rank === 'S'}
-        class:rank-a={result.rank === 'A'}
-        class:rank-b={result.rank === 'B'}
-        class:rank-c={result.rank === 'C'}
-        class:rank-d={result.rank === 'D'}
-      >
+      <div class="result-rank">
         <span>{stageResultCopy.rank.label}</span>
-        <strong>{result.rank}</strong>
+        <div
+          class="result-rank-badge"
+          class:rank-s={result.rank === 'S'}
+          class:rank-a={result.rank === 'A'}
+          class:rank-b={result.rank === 'B'}
+          class:rank-c={result.rank === 'C'}
+          class:rank-d={result.rank === 'D'}
+        >
+          <b>{result.rank}</b>
+        </div>
+        <small class="result-rank-sublabel">{stageResultCopy.rank.label}</small>
       </div>
     </div>
 
@@ -145,7 +154,8 @@
           onclick={() => handleActionClick(index, action.type, action.disabled)}
           onmouseenter={() => onSelectAction(index)}
         >
-          {actionLabel(action.type)}
+          <b>{actionLabel(action.type)}</b>
+          {#if action.disabled}<span>{stageResultCopy.actions.locked}</span>{/if}
         </button>
       {/each}
     </div>
@@ -154,220 +164,358 @@
 
 <style>
   .stage-result {
+    --accent: #2f6fd0;
+    --accent-deep: color-mix(in oklab, var(--accent) 66%, #06122c);
+    --accent-bright: color-mix(in oklab, var(--accent) 52%, #ffffff);
+    --accent-pale: color-mix(in oklab, var(--accent) 16%, #ffffff);
+    --glow: color-mix(in oklab, var(--accent) 40%, #ffffff);
+    --hud-ink: color-mix(in oklab, var(--accent) 64%, #08152e);
+    --hud-soft: color-mix(in oklab, var(--accent) 50%, #38507a);
+    --hud-line: color-mix(in srgb, var(--accent) 55%, transparent);
+    --hud-line-soft: color-mix(in srgb, var(--accent) 30%, transparent);
+    --hud-panel: color-mix(in srgb, color-mix(in srgb, var(--accent) 13%, #ffffff) 72%, transparent);
+    --hud-gold-bright: #ffe7a3;
+    --hud-gold-deep: #b78313;
     position: absolute;
     inset: 0;
     z-index: 25;
     overflow: hidden;
     pointer-events: auto;
-    color: #f5fbff;
+    color: var(--hud-ink);
     font-family: system-ui, sans-serif;
+    font-weight: 600;
   }
 
   .result-veil {
     position: absolute;
     inset: 0;
-    background: rgba(3, 8, 18, 0.68);
-    backdrop-filter: blur(0.42cqw);
-    animation: result-veil-in 500ms ease both;
+    background:
+      linear-gradient(90deg, rgba(234, 247, 255, 0.9) 0 27%, rgba(234, 247, 255, 0.45) 48%, rgba(226, 243, 255, 0.72)),
+      rgba(236, 248, 255, 0.48);
+    backdrop-filter: blur(0.32cqw) saturate(78%);
+    animation: result-veil-in 500ms ease-out both;
   }
 
   .result-hero {
     position: absolute;
-    left: 0;
-    bottom: 0;
+    inset: 0 auto 0 0;
+    z-index: 2;
     width: 27cqw;
-    height: 100cqh;
-    animation: result-hero-in 650ms 160ms ease both;
+    overflow: hidden;
+    mask-image: linear-gradient(90deg, #000 80%, transparent);
+    animation: result-hero-in 650ms 160ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  }
+
+  .result-hero::after {
+    content: "";
+    position: absolute;
+    inset: auto 0 0;
+    height: 28%;
+    background: linear-gradient(0deg, rgba(18, 59, 131, 0.72), transparent);
   }
 
   .result-hero img {
-    position: absolute;
-    left: 1.2cqw;
-    bottom: 0;
-    width: 25cqw;
-    height: 86cqh;
+    display: block;
+    width: 100%;
+    height: 100%;
     object-fit: contain;
-    object-position: bottom center;
-    mask-image: linear-gradient(90deg, #000 78%, transparent);
+    object-position: center bottom;
+    filter: drop-shadow(0 0.75cqh 1.7cqh rgba(20, 49, 95, 0.2));
   }
 
   .result-hero div {
     position: absolute;
-    left: 3cqw;
-    bottom: 7cqh;
-    display: grid;
-    gap: 0.4cqh;
+    bottom: 4cqh;
+    left: 2.1cqw;
+    z-index: 2;
+    display: block;
+    color: #fff;
     text-transform: uppercase;
   }
 
+  .result-hero strong,
+  .result-hero span {
+    display: block;
+  }
+
   .result-hero strong {
-    font-size: 1.45cqw;
+    font-size: min(1.75cqw, 34px);
+    letter-spacing: 0.06em;
+    text-shadow: 0 0.24cqh 0.75cqh rgba(8, 18, 40, 0.65);
   }
 
   .result-hero span {
-    color: #ffd978;
-    font-size: 0.8cqw;
+    margin-top: 0.5cqh;
+    color: var(--hud-gold-bright);
+    font-size: min(0.68cqw, 13px);
+    font-weight: 700;
+    letter-spacing: 0.25em;
   }
 
   .result-content {
     position: absolute;
     inset: 0 2.2cqw 0 27cqw;
+    z-index: 3;
   }
 
   .result-banner {
     position: absolute;
     top: 4.2cqh;
     left: 50%;
+    display: flex;
     width: 48cqw;
     height: 10.8cqh;
-    display: grid;
-    place-items: center;
-    clip-path: polygon(6% 0, 94% 0, 100% 50%, 94% 100%, 6% 100%, 0 50%);
-    background: linear-gradient(180deg, rgba(58, 198, 255, 0.94), rgba(23, 83, 170, 0.94));
-    border: 0.12cqw solid rgba(212, 240, 255, 0.8);
-    box-shadow: 0 1.2cqh 3cqh rgba(0, 18, 54, 0.42);
-    font-size: 2.2cqw;
-    font-weight: 900;
-    text-transform: uppercase;
+    gap: 1.7cqw;
+    align-items: center;
+    justify-content: center;
     transform: translateX(-50%);
-    animation: result-banner-in 520ms 260ms ease both;
+    clip-path: polygon(0 50%, 1.6cqw 0, calc(100% - 1.6cqw) 0, 100% 50%, calc(100% - 1.6cqw) 100%, 1.6cqw 100%);
+    background: linear-gradient(180deg, var(--accent-bright), var(--accent) 48%, var(--accent-deep));
+    color: #fff;
+    filter: drop-shadow(0 1.55cqh 2.6cqh rgba(20, 49, 95, 0.42));
+    animation: result-banner-in 500ms 100ms cubic-bezier(0.2, 0.85, 0.2, 1.1) both;
+  }
+
+  .result-banner strong {
+    font-size: min(3.3cqw, 64px);
+    letter-spacing: 0.13em;
+    line-height: 1;
+    text-transform: uppercase;
+  }
+
+  .result-banner-star {
+    color: var(--hud-gold-bright);
+    font-size: min(1.4cqw, 27px);
   }
 
   .result-stage-name {
     position: absolute;
     top: 16.7cqh;
     left: 50%;
-    display: grid;
-    justify-items: center;
-    gap: 0.4cqh;
+    display: flex;
+    gap: 1cqw;
+    align-items: center;
     transform: translateX(-50%);
     text-transform: uppercase;
+    animation: result-row-in 400ms 260ms ease-out both;
   }
 
-  .result-stage-name strong {
-    font-size: 1.45cqw;
+  .result-stage-name b {
+    font-size: min(1.2cqw, 23px);
+    letter-spacing: 0.14em;
+    white-space: nowrap;
   }
 
   .result-stage-name span {
-    color: #ffd978;
-    font-size: 0.92cqw;
+    color: var(--hud-gold-deep);
+    font-size: min(0.83cqw, 16px);
+    font-weight: 700;
+    letter-spacing: 0.25em;
+    white-space: nowrap;
+  }
+
+  .result-stage-separator {
+    width: 0.42cqw;
+    height: 0.42cqw;
+    rotate: 45deg;
+    background: var(--accent-bright);
+    box-shadow: 0 0 0.6cqh var(--glow);
   }
 
   .result-board {
     position: absolute;
     top: 23cqh;
-    left: 0;
     right: 0;
-    height: 43cqh;
+    left: 0;
     display: grid;
+    height: 43cqh;
     grid-template-columns: 1fr 20cqw;
-    gap: 1.2cqw;
-    padding: 2cqh 1.4cqw;
-    background: rgba(8, 20, 46, 0.78);
-    border: 0.12cqw solid rgba(157, 217, 255, 0.5);
-    box-shadow: inset 0 0 0 0.08cqw rgba(255, 255, 255, 0.16);
-    animation: result-board-in 520ms 360ms ease both;
+    padding: 1.2cqh 1cqw 1.2cqh 1.4cqw;
+    border: 1.5px solid var(--hud-line);
+    border-radius: 0.6cqw;
+    background: color-mix(in srgb, var(--hud-panel) 92%, white);
+    box-shadow: 0 1px 0 #fff inset, 0 2.2cqh 4.6cqh -2.6cqh rgba(20, 49, 95, 0.65);
+    backdrop-filter: blur(0.75cqw) saturate(120%);
+    animation: result-board-in 520ms 330ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
   }
 
   .result-stats {
     display: grid;
-    gap: 0.82cqh;
+    align-content: center;
+    padding-right: 1.5cqw;
   }
 
   .result-row {
     display: grid;
-    grid-template-columns: 1fr auto 6.8cqw;
+    min-height: 5.9cqh;
+    grid-template-columns: 1fr auto 8.5cqw;
+    gap: 0.8cqw;
     align-items: center;
-    min-height: 5.4cqh;
-    padding: 0 1cqw;
-    background: rgba(255, 255, 255, 0.075);
-    border-left: 0.22cqw solid rgba(76, 218, 255, 0.7);
-    font-size: 0.95cqw;
-    animation: result-row-in 420ms ease both;
+    border-bottom: 1px solid var(--hud-line-soft);
+    animation: result-row-in 360ms ease-out both;
+  }
+
+  .result-row:nth-child(1) { animation-delay: 520ms; }
+  .result-row:nth-child(2) { animation-delay: 590ms; }
+  .result-row:nth-child(3) { animation-delay: 660ms; }
+  .result-row:nth-child(4) { animation-delay: 730ms; }
+  .result-row:nth-child(5) { animation-delay: 800ms; }
+  .result-row:nth-child(6) {
+    border-bottom: 0;
+    animation-delay: 870ms;
+  }
+
+  .result-row span {
+    font-size: min(1.1cqw, 21px);
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
   }
 
   .result-row b {
-    font-size: 1.15cqw;
+    color: var(--accent-deep);
+    font: 700 min(2cqw, 38px)/1 Rajdhani, sans-serif;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
   }
 
   .result-row em {
-    color: #ffd978;
-    font-size: 0.72cqw;
+    margin-left: 0.3cqw;
+    color: var(--hud-soft);
+    font: 0.56em Rajdhani, sans-serif;
     font-style: normal;
+  }
+
+  .result-row small {
+    min-height: 1em;
+    color: var(--hud-gold-deep);
+    font-size: min(0.63cqw, 12px);
+    font-weight: 700;
+    letter-spacing: 0.12em;
     text-align: right;
     text-transform: uppercase;
   }
 
-  .result-row.perfect {
-    border-left-color: #ffd978;
+  .result-row small.perfect {
+    color: var(--hud-gold-deep);
   }
 
   .result-rank {
-    align-self: center;
-    justify-self: center;
-    width: 16cqw;
-    aspect-ratio: 1;
     display: grid;
-    place-items: center;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(255, 255, 255, 0.18), rgba(24, 80, 150, 0.9));
-    border: 0.18cqw solid rgba(255, 255, 255, 0.65);
+    align-content: center;
+    justify-items: center;
+    border-left: 1px solid var(--hud-line-soft);
     text-transform: uppercase;
   }
 
-  .result-rank span {
-    font-size: 0.78cqw;
+  .result-rank > span {
+    font-size: min(1.15cqw, 22px);
+    font-weight: 700;
+    letter-spacing: 0.25em;
   }
 
-  .result-rank strong {
-    font-size: 6cqw;
-    line-height: 1;
+  .result-rank-badge {
+    display: grid;
+    width: 11cqw;
+    aspect-ratio: 1;
+    margin: 1cqh 0;
+    place-items: center;
+    border: 1px solid var(--hud-line-soft);
+    border-radius: 50%;
+    box-shadow: 0 0 0 0.35cqw rgba(255, 255, 255, 0.38) inset, 0 0 2.2cqh var(--glow);
+    animation: eval-pulse 1.5s ease-in-out infinite;
   }
 
-  .rank-s {
-    color: #fff3a8;
-    box-shadow: 0 0 3cqh rgba(255, 217, 92, 0.55);
+  .result-rank-badge.rank-s {
+    border-color: rgba(197, 137, 31, 0.55);
+    box-shadow: 0 0 0 0.35cqw rgba(255, 230, 160, 0.32) inset, 0 0 2.6cqh rgba(243, 198, 77, 0.75);
   }
 
-  .rank-a {
-    color: #c8f7ff;
+  .result-rank-badge.rank-a {
+    border-color: rgba(16, 159, 200, 0.55);
+    box-shadow: 0 0 0 0.35cqw rgba(173, 240, 255, 0.3) inset, 0 0 2.6cqh rgba(16, 159, 200, 0.62);
   }
 
-  .rank-b,
-  .rank-c,
-  .rank-d {
-    color: #f5fbff;
+  .result-rank-badge.rank-b {
+    border-color: rgba(47, 111, 208, 0.55);
+    box-shadow: 0 0 0 0.35cqw rgba(174, 211, 255, 0.3) inset, 0 0 2.6cqh rgba(47, 111, 208, 0.62);
+  }
+
+  .result-rank-badge.rank-c {
+    border-color: rgba(116, 136, 159, 0.55);
+    box-shadow: 0 0 0 0.35cqw rgba(223, 232, 240, 0.34) inset, 0 0 2.2cqh rgba(116, 136, 159, 0.5);
+  }
+
+  .result-rank-badge.rank-d {
+    border-color: rgba(214, 83, 83, 0.55);
+    box-shadow: 0 0 0 0.35cqw rgba(255, 195, 195, 0.28) inset, 0 0 2.4cqh rgba(214, 83, 83, 0.58);
+  }
+
+  .result-rank b {
+    color: var(--accent);
+    font-size: min(4.8cqw, 92px);
+    letter-spacing: 0.08em;
+  }
+
+  .result-rank-sublabel {
+    color: var(--hud-soft);
+    font-size: min(0.68cqw, 13px);
+    font-weight: 700;
+    letter-spacing: 0.2em;
   }
 
   .result-actions {
     position: absolute;
     top: 70cqh;
-    left: 50%;
-    width: 52cqw;
+    right: 0;
+    left: 0;
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 1cqw;
-    transform: translateX(-50%);
+    gap: 1.2cqw;
+    animation: result-row-in 450ms 900ms ease-out both;
   }
 
   .result-actions button {
-    height: 7.2cqh;
-    border: 0.12cqw solid rgba(185, 232, 255, 0.7);
-    background: rgba(15, 44, 92, 0.86);
-    color: inherit;
-    font-size: 1cqw;
-    font-weight: 800;
-    text-transform: uppercase;
+    position: relative;
+    display: grid;
+    height: 8cqh;
+    place-items: center;
+    border: 1.5px solid var(--hud-line);
+    border-radius: 0.38cqw;
+    background: color-mix(in srgb, var(--hud-panel) 94%, white);
+    color: var(--hud-ink);
+    cursor: pointer;
+    backdrop-filter: blur(0.65cqw);
   }
 
   .result-actions button.active,
   .result-actions button:hover:not(:disabled) {
-    border-color: #ffd978;
-    color: #ffd978;
+    border-color: var(--accent);
+    background: linear-gradient(180deg, #fff, var(--accent-pale));
+    box-shadow: 0 0 1.7cqh rgba(47, 111, 208, 0.28);
+    translate: 0 -0.35cqh;
   }
 
   .result-actions button.locked {
-    opacity: 0.42;
+    opacity: 0.45;
+    cursor: default;
+  }
+
+  .result-actions b {
+    font-size: min(1.2cqw, 23px);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  .result-actions span {
+    position: absolute;
+    bottom: 0.4cqh;
+    color: var(--hud-soft);
+    font-size: min(0.52cqw, 10px);
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
   }
 
   @keyframes result-veil-in {
@@ -425,6 +573,17 @@
     to {
       opacity: 1;
       transform: translateX(0);
+    }
+  }
+
+  @keyframes eval-pulse {
+    0%,
+    100% {
+      transform: scale(1);
+    }
+
+    50% {
+      transform: scale(1.02);
     }
   }
 </style>
