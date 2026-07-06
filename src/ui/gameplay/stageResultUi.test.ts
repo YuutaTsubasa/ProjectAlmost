@@ -107,4 +107,18 @@ describe('StageResult UI contract', () => {
     expect(stageResultSource).not.toContain('background: rgba(8, 20, 46, 0.78)')
     expect(stageResultSource).not.toContain('background: rgba(255, 255, 255, 0.075)')
   })
+
+  it('inherits the shared gameplay HUD font stack instead of resetting to system UI', () => {
+    expect(stageResultSource).toContain('font-family: var(--body')
+    expect(stageResultSource).not.toContain('font-family: system-ui, sans-serif')
+  })
+
+  it('centers the stage name row against the result content area', () => {
+    const stageNameStyle = stageResultSource.match(/\.result-stage-name \{[^}]+\}/)?.[0] ?? ''
+
+    expect(stageNameStyle).toContain('right: 0;')
+    expect(stageNameStyle).toContain('left: 0;')
+    expect(stageNameStyle).toContain('justify-content: center;')
+    expect(stageNameStyle).not.toContain('transform: translateX(-50%);')
+  })
 })

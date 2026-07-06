@@ -182,7 +182,7 @@
     overflow: hidden;
     pointer-events: auto;
     color: var(--hud-ink);
-    font-family: system-ui, sans-serif;
+    font-family: var(--body, "Rajdhani", "Segoe UI", system-ui, sans-serif);
     font-weight: 600;
   }
 
@@ -291,11 +291,13 @@
   .result-stage-name {
     position: absolute;
     top: 16.7cqh;
-    left: 50%;
+    right: 0;
+    left: 0;
     display: flex;
     gap: 1cqw;
     align-items: center;
-    transform: translateX(-50%);
+    justify-content: center;
+    text-align: center;
     text-transform: uppercase;
     animation: result-row-in 400ms 260ms ease-out both;
   }
