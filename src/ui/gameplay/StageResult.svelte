@@ -424,7 +424,7 @@
     display: grid;
     width: 11cqw;
     aspect-ratio: 1;
-    margin: 1cqh 0;
+    margin: 2.2cqh 0;
     place-items: center;
     border: 1px solid var(--hud-line-soft);
     border-radius: 50%;
