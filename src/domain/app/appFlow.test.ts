@@ -15,6 +15,8 @@ import {
   moveWorldSelection,
   openSettingsDeleteConfirm,
   openTitleMenu,
+  retryGameplayStage,
+  returnFromGameplayToStageSelect,
   selectStage,
   selectTitleMenuItem,
   selectWorld,
@@ -256,7 +258,7 @@ describe('confirmSelectedStage', () => {
     } as const
 
     expect(confirmSelectedStage(state)).toEqual({
-      screen: { type: 'gameplay', stageId: '2-5' },
+      screen: { type: 'gameplay', stageId: '2-5', runId: 0 },
     })
   })
 
@@ -264,6 +266,25 @@ describe('confirmSelectedStage', () => {
     const state = createInitialAppState()
 
     expect(confirmSelectedStage(state)).toBe(state)
+  })
+})
+
+describe('gameplay result flow', () => {
+  it('retries the current gameplay stage with a remount token', () => {
+    expect(retryGameplayStage({ screen: { type: 'gameplay', stageId: '1-1', runId: 0 } })).toEqual({
+      screen: { type: 'gameplay', stageId: '1-1', runId: 1 },
+    })
+  })
+
+  it('returns from gameplay to the matching stage select entry', () => {
+    expect(returnFromGameplayToStageSelect({ screen: { type: 'gameplay', stageId: '1-1', runId: 2 } })).toEqual({
+      screen: {
+        type: 'stage-select',
+        selectedWorldIndex: 0,
+        worldId: 'world01',
+        selectedStageIndex: 0,
+      },
+    })
   })
 })
 

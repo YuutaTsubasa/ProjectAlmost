@@ -12,7 +12,7 @@ describe('createMusicCommand', () => {
   })
 
   it('returns null for gameplay so the current music keeps playing', () => {
-    expect(createMusicCommand({ type: 'gameplay', stageId: '1-1' }, DEFAULT_SETTINGS)).toBeNull()
+    expect(createMusicCommand({ type: 'gameplay', stageId: '1-1', runId: 0 }, DEFAULT_SETTINGS)).toBeNull()
   })
 })
 

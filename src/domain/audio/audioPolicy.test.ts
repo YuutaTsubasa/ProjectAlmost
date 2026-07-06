@@ -68,7 +68,7 @@ describe('screen music policy', () => {
   })
 
   it('returns no music decision for gameplay so the current stage-select track is preserved', () => {
-    expect(getMusicForScreen({ type: 'gameplay', stageId: '1-1' }, DEFAULT_SETTINGS)).toBeNull()
+    expect(getMusicForScreen({ type: 'gameplay', stageId: '1-1', runId: 0 }, DEFAULT_SETTINGS)).toBeNull()
   })
 
   it('falls back to world one music for out-of-range world indexes', () => {

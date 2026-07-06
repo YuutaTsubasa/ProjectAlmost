@@ -7,6 +7,8 @@
     confirmSelectedStage,
     confirmSelectedWorld,
     createInitialAppState,
+    retryGameplayStage,
+    returnFromGameplayToStageSelect,
     selectStage,
     selectTitleMenuItem,
     selectWorld,
@@ -144,6 +146,18 @@
     syncMusicForCurrentState()
   }
 
+  function handleRetryGameplayStage() {
+    playUiSfx('confirm')
+    appState = retryGameplayStage(appState)
+    syncMusicForCurrentState()
+  }
+
+  function handleReturnFromGameplayToStageSelect() {
+    playUiSfx('back')
+    appState = returnFromGameplayToStageSelect(appState)
+    syncMusicForCurrentState()
+  }
+
   function handleBackFromStageSelect() {
     playUiSfx('back')
     appState = backFromStageSelect(appState)
@@ -277,8 +291,12 @@
         onBack={handleBackFromStageSelect}
       />
     {:else if appState.screen.type === 'gameplay' && gameplayStageMap}
-      {#key gameplayStageMap.id}
-        <GameplayScreen stage={gameplayStageMap} />
+      {#key `${gameplayStageMap.id}:${appState.screen.runId}`}
+        <GameplayScreen
+          stage={gameplayStageMap}
+          onRetry={handleRetryGameplayStage}
+          onStageSelect={handleReturnFromGameplayToStageSelect}
+        />
       {/key}
     {:else if appState.screen.type === 'gameplay'}
       <div class="gameplay-unavailable" role="status">

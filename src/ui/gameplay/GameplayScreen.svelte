@@ -6,23 +6,33 @@
     type GameplayHudState,
   } from '../../domain/gameplay/gameplayHud'
   import type { GameplayStageMap } from '../../domain/gameplay/gameplayMapTypes'
+  import type { StageResultActionType } from '../../domain/gameplay/stageResult'
   import GameplayHud from './GameplayHud.svelte'
+  import StageResult from './StageResult.svelte'
   import { createGameplayRenderer } from './createGameplayRenderer'
   import { getGameplayHudStageDisplay } from './gameplayHudDisplay'
 
   type Props = {
     stage: GameplayStageMap
+    onRetry: () => void
+    onStageSelect: () => void
   }
 
-  let { stage }: Props = $props()
+  let { stage, onRetry, onStageSelect }: Props = $props()
 
   let container: HTMLDivElement
   let hudState = $state<GameplayHudState | null>(null)
+  let selectedResultAction = $state(0)
   const stageDisplay = $derived(getGameplayHudStageDisplay(stage.id))
 
   $effect(() => {
     hudState = createInitialGameplayHudState(stage)
   })
+
+  function handleResultAction(action: StageResultActionType): void {
+    if (action === 'retry') onRetry()
+    if (action === 'stage-select') onStageSelect()
+  }
 
   onMount(() => {
     const game = createGameplayRenderer({
@@ -47,6 +57,16 @@
       stageLabel={stage.id}
       stageDisplay={stageDisplay}
     />
+    {#if hudState.result}
+      <StageResult
+        result={hudState.result}
+        {stageDisplay}
+        selectedAction={selectedResultAction}
+        nextStageAvailable={false}
+        onSelectAction={(index) => (selectedResultAction = index)}
+        onAction={handleResultAction}
+      />
+    {/if}
   {/if}
 </section>
 

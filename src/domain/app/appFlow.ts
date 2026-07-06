@@ -30,6 +30,7 @@ export type StageSelectScreen = {
 export type GameplayScreen = {
   type: 'gameplay'
   stageId: StageId
+  runId: number
 }
 
 export type SettingsScreen = {
@@ -175,7 +176,20 @@ export function confirmSelectedStage(state: AppState): AppState {
   if (state.screen.type !== 'stage-select') return state
 
   return {
-    screen: { type: 'gameplay', stageId: getStageIdForSelection(state.screen) },
+    screen: { type: 'gameplay', stageId: getStageIdForSelection(state.screen), runId: 0 },
+  }
+}
+
+function getStageSelectionForStageId(stageId: StageId): StageSelectScreen {
+  const [world, stage] = stageId.split('-').map(Number)
+  const selectedWorldIndex = Math.max(0, world - 1)
+  const selectedStageIndex = Math.max(0, stage - 1)
+
+  return {
+    type: 'stage-select',
+    selectedWorldIndex,
+    worldId: WORLD_IDS[selectedWorldIndex] ?? 'world01',
+    selectedStageIndex,
   }
 }
 
@@ -242,5 +256,24 @@ export function backFromSettings(state: AppState): AppState {
 
   return {
     screen: { type: 'title-menu', selectedItemIndex: 1 },
+  }
+}
+
+export function retryGameplayStage(state: AppState): AppState {
+  if (state.screen.type !== 'gameplay') return state
+
+  return {
+    screen: {
+      ...state.screen,
+      runId: state.screen.runId + 1,
+    },
+  }
+}
+
+export function returnFromGameplayToStageSelect(state: AppState): AppState {
+  if (state.screen.type !== 'gameplay') return state
+
+  return {
+    screen: getStageSelectionForStageId(state.screen.stageId),
   }
 }
