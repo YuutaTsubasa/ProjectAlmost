@@ -327,4 +327,3 @@ Expected:
 - Stage clear freezes final HUD state for this slice.
 - No StageResult, persistence, audio, or boss-specific HUD work is introduced.
 - Required tests and verification commands pass.
-

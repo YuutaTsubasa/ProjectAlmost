@@ -1352,4 +1352,3 @@ If all verification passes without source edits, do not create a verification-on
 - Placeholder scan: The plan contains no `TBD`, `TODO`, or deferred implementation markers. Each task has concrete files, test code, implementation snippets, commands, and commit messages.
 - Type consistency: `GameplayHudState`, `GameplayHudPatch`, `createInitialGameplayHudState`, `applyGameplayHudPatch`, and `onHudUpdate` are defined once and used consistently across domain, renderer, and Svelte tasks.
 - Scope check: The plan excludes StageResult, persistence, audio, pause menu, virtual controls, boss HUD variants, and runtime imports from `__prototype__`, matching the approved spec.
-
