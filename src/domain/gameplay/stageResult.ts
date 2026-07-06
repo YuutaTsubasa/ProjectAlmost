@@ -65,7 +65,8 @@ const fallPenaltyValue = 180
 
 function scoreRatioScore(value: number, target: number, maxScore: number): number {
   if (target <= 0) return maxScore
-  return Math.floor((Math.max(0, value) / target) * maxScore)
+  const ratio = Math.max(0, Math.min(1, value / target))
+  return Math.floor(ratio * maxScore)
 }
 
 function getTimeScore(input: Pick<StageScoreInput, 'elapsedMs' | 'rankTargets'>): number {

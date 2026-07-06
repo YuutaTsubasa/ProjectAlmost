@@ -90,6 +90,26 @@ describe('stage result scoring', () => {
     }).timeScore).toBe(97)
   })
 
+  it('caps optional category scores at their maximum values', () => {
+    expect(scoreStageResult({
+      elapsedMs: 20_000,
+      rankTargets,
+      coins: 12,
+      coinTarget: 10,
+      enemiesDefeated: 8,
+      enemyTarget: 4,
+      checkpointsReached: 5,
+      checkpointTarget: 3,
+      damageTaken: 0,
+      falls: 0,
+    })).toMatchObject({
+      coinScore: 200,
+      enemyScore: 150,
+      checkpointScore: 50,
+      totalScore: 1000,
+    })
+  })
+
   it('grants full optional score when optional targets are zero', () => {
     expect(scoreStageResult({
       elapsedMs: 20_000,
