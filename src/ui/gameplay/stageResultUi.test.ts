@@ -2,6 +2,33 @@ import { describe, expect, it } from 'vitest'
 import stageResultSource from './StageResult.svelte?raw'
 
 describe('StageResult UI contract', () => {
+  it('isolates visible copy in a local stageResultCopy map', () => {
+    expect(stageResultSource).toContain('stageResultCopy')
+    expect(stageResultSource).toContain('resultTitle')
+    expect(stageResultSource).toContain('hero')
+    expect(stageResultSource).toContain('clearTime')
+    expect(stageResultSource).toContain('coins')
+    expect(stageResultSource).toContain('damageTaken')
+    expect(stageResultSource).toContain('falls')
+    expect(stageResultSource).toContain('enemiesDefeated')
+    expect(stageResultSource).toContain('checkpoints')
+    expect(stageResultSource).toContain('perfect')
+    expect(stageResultSource).toContain('newRecord')
+    expect(stageResultSource).toContain('label')
+    expect(stageResultSource).toContain('retry')
+    expect(stageResultSource).toContain('stageSelect')
+    expect(stageResultSource).toContain('nextStage')
+    expect(stageResultSource).not.toContain('Clear Time</span>')
+    expect(stageResultSource).not.toContain('Coins</span>')
+    expect(stageResultSource).not.toContain('Damage Taken</span>')
+    expect(stageResultSource).not.toContain('Falls</span>')
+    expect(stageResultSource).not.toContain('Enemies Defeated</span>')
+    expect(stageResultSource).not.toContain('Checkpoints</span>')
+    expect(stageResultSource).not.toContain('Retry</button>')
+    expect(stageResultSource).not.toContain('Stage Select</button>')
+    expect(stageResultSource).not.toContain('Next Stage</button>')
+  })
+
   it('renders the prototype-equivalent result overlay structure', () => {
     expect(stageResultSource).toContain('class="stage-result"')
     expect(stageResultSource).toContain('class="result-veil"')
@@ -30,6 +57,15 @@ describe('StageResult UI contract', () => {
     expect(stageResultSource).toContain('Next Stage')
     expect(stageResultSource).toContain('getResultActionStates')
     expect(stageResultSource).toContain('disabled={action.disabled}')
+  })
+
+  it('selects an action before activating it on click', () => {
+    expect(stageResultSource).toContain('handleActionClick')
+    expect(stageResultSource).toContain('onSelectAction(index)')
+    expect(stageResultSource).toContain('activateAction(type, disabled)')
+    expect(stageResultSource.indexOf('onSelectAction(index)')).toBeLessThan(
+      stageResultSource.indexOf('activateAction(type, disabled)'),
+    )
   })
 
   it('sizes the result overlay against the resolution frame container', () => {

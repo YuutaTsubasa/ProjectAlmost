@@ -25,18 +25,49 @@
     onAction,
   }: Props = $props()
 
+  const stageResultCopy = {
+    resultTitle: 'Stage Result',
+    hero: {
+      name: 'Yuuta Tsubasa',
+      role: 'Paladin Candidate',
+    },
+    stats: {
+      clearTime: 'Clear Time',
+      coins: 'Coins',
+      damageTaken: 'Damage Taken',
+      falls: 'Falls',
+      enemiesDefeated: 'Enemies Defeated',
+      checkpoints: 'Checkpoints',
+      perfect: 'Perfect',
+      newRecord: 'New Record',
+    },
+    rank: {
+      label: 'Final Evaluation',
+    },
+    actions: {
+      retry: 'Retry',
+      stageSelect: 'Stage Select',
+      nextStage: 'Next Stage',
+    },
+  } as const
+
   const rowStates = $derived(getStageResultRowStates(result))
   const actions = $derived(getResultActionStates({ nextStageAvailable }))
 
   function actionLabel(type: StageResultActionType): string {
-    if (type === 'retry') return 'Retry'
-    if (type === 'stage-select') return 'Stage Select'
-    return 'Next Stage'
+    if (type === 'retry') return stageResultCopy.actions.retry
+    if (type === 'stage-select') return stageResultCopy.actions.stageSelect
+    return stageResultCopy.actions.nextStage
   }
 
   function activateAction(type: StageResultActionType, disabled: boolean): void {
     if (disabled) return
     onAction(type)
+  }
+
+  function handleActionClick(index: number, type: StageResultActionType, disabled: boolean): void {
+    onSelectAction(index)
+    activateAction(type, disabled)
   }
 </script>
 
@@ -45,13 +76,13 @@
   <aside class="result-hero" aria-hidden="true">
     <img src="/assets/results/yuuta-stage-result-standee.webp" alt="" />
     <div>
-      <strong>Yuuta Tsubasa</strong>
-      <span>Paladin Candidate</span>
+      <strong>{stageResultCopy.hero.name}</strong>
+      <span>{stageResultCopy.hero.role}</span>
     </div>
   </aside>
 
   <div class="result-content">
-    <div class="result-banner">Stage Result</div>
+    <div class="result-banner">{stageResultCopy.resultTitle}</div>
     <div class="result-stage-name">
       <strong>{stageDisplay.worldLabel} {stageDisplay.stageId}</strong>
       <span>{stageDisplay.stageSubtitle}</span>
@@ -60,34 +91,34 @@
     <div class="result-board">
       <div class="result-stats">
         <div class="result-row">
-          <span>Clear Time</span>
+          <span>{stageResultCopy.stats.clearTime}</span>
           <b>{result.time}</b>
-          <em>New Record</em>
+          <em>{stageResultCopy.stats.newRecord}</em>
         </div>
         <div class:perfect={rowStates.coinsPerfect} class="result-row">
-          <span>Coins</span>
+          <span>{stageResultCopy.stats.coins}</span>
           <b>{result.coins} / {result.coinTarget}</b>
-          {#if rowStates.coinsPerfect}<em>Perfect</em>{/if}
+          {#if rowStates.coinsPerfect}<em>{stageResultCopy.stats.perfect}</em>{/if}
         </div>
         <div class:perfect={rowStates.damagePerfect} class="result-row">
-          <span>Damage Taken</span>
+          <span>{stageResultCopy.stats.damageTaken}</span>
           <b>{result.damageTaken}</b>
-          {#if rowStates.damagePerfect}<em>Perfect</em>{/if}
+          {#if rowStates.damagePerfect}<em>{stageResultCopy.stats.perfect}</em>{/if}
         </div>
         <div class:perfect={rowStates.fallsPerfect} class="result-row">
-          <span>Falls</span>
+          <span>{stageResultCopy.stats.falls}</span>
           <b>{result.falls}</b>
-          {#if rowStates.fallsPerfect}<em>Perfect</em>{/if}
+          {#if rowStates.fallsPerfect}<em>{stageResultCopy.stats.perfect}</em>{/if}
         </div>
         <div class:perfect={rowStates.enemiesPerfect} class="result-row">
-          <span>Enemies Defeated</span>
+          <span>{stageResultCopy.stats.enemiesDefeated}</span>
           <b>{result.enemiesDefeated} / {result.enemyTarget}</b>
-          {#if rowStates.enemiesPerfect}<em>Perfect</em>{/if}
+          {#if rowStates.enemiesPerfect}<em>{stageResultCopy.stats.perfect}</em>{/if}
         </div>
         <div class:perfect={rowStates.checkpointsPerfect} class="result-row">
-          <span>Checkpoints</span>
+          <span>{stageResultCopy.stats.checkpoints}</span>
           <b>{result.checkpointsReached} / {result.checkpointTarget}</b>
-          {#if rowStates.checkpointsPerfect}<em>Perfect</em>{/if}
+          {#if rowStates.checkpointsPerfect}<em>{stageResultCopy.stats.perfect}</em>{/if}
         </div>
       </div>
 
@@ -99,7 +130,7 @@
         class:rank-c={result.rank === 'C'}
         class:rank-d={result.rank === 'D'}
       >
-        <span>Final Evaluation</span>
+        <span>{stageResultCopy.rank.label}</span>
         <strong>{result.rank}</strong>
       </div>
     </div>
@@ -111,7 +142,7 @@
           class:active={selectedAction === index}
           class:locked={action.disabled}
           disabled={action.disabled}
-          onclick={() => activateAction(action.type, action.disabled)}
+          onclick={() => handleActionClick(index, action.type, action.disabled)}
           onmouseenter={() => onSelectAction(index)}
         >
           {actionLabel(action.type)}
