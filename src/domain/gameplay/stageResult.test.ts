@@ -44,8 +44,20 @@ describe('stage result scoring', () => {
     }
 
     expect(calculateStageRank({ ...base, elapsedMs: 20_000, coins: 8 })).toBe('A')
-    expect(calculateStageRank({ ...base, elapsedMs: 20_000, coins: 5 })).toBe('B')
+    expect(calculateStageRank({ ...base, elapsedMs: 20_000, coins: 4 })).toBe('B')
     expect(calculateStageRank({ ...base, elapsedMs: 50_000 })).toBe('C')
+    expect(calculateStageRank({
+      elapsedMs: 20_000,
+      rankTargets,
+      coins: 5,
+      coinTarget: 10,
+      enemiesDefeated: 0,
+      enemyTarget: 4,
+      checkpointsReached: 0,
+      checkpointTarget: 3,
+      damageTaken: 0,
+      falls: 0,
+    })).toBe('A')
   })
 
   it('returns D below the C threshold', () => {

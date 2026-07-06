@@ -102,7 +102,7 @@ export function scoreStageResult(input: StageScoreInput): StageScoreBreakdown {
 export function calculateStageRank(input: StageScoreInput): ClearRank {
   const total = scoreStageResult(input).totalScore
   if (total >= 850) return 'S'
-  if (total > 700) return 'A'
+  if (total >= 700) return 'A'
   if (total >= 550) return 'B'
   if (total >= 400) return 'C'
   return 'D'
