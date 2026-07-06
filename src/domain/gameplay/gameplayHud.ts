@@ -1,4 +1,5 @@
 import type { GameplayStageMap } from './gameplayMapTypes'
+import type { ClearRank } from './stageResult'
 import { PLAYER_MAX_HEALTH } from './playerLife'
 import { getTileColumnCount } from './terrain'
 
@@ -33,7 +34,7 @@ export type GameplayHudState = {
   checkpointsReached: number
   checkpointTarget: number
   activeCheckpointIndex: number
-  rank: string
+  rank: ClearRank | '--'
   statusMessageKey: GameplayHudStatusMessageKey
   time: string
   playerProgress: number
@@ -43,9 +44,24 @@ export type GameplayHudState = {
   checkpointMarkers: readonly GameplayHudMarker[]
   enemyMarkers: readonly GameplayHudEnemyMarker[]
   cleared: boolean
+  result: GameplayClearResultSnapshot | null
 }
 
 export type GameplayHudPatch = Partial<GameplayHudState>
+
+export type GameplayClearResultSnapshot = {
+  elapsedMs: number
+  time: string
+  coins: number
+  coinTarget: number
+  damageTaken: number
+  falls: number
+  enemiesDefeated: number
+  enemyTarget: number
+  checkpointsReached: number
+  checkpointTarget: number
+  rank: ClearRank
+}
 
 export function clampHudProgress(value: number): number {
   if (!Number.isFinite(value)) return 0
@@ -182,6 +198,7 @@ export function createInitialGameplayHudState(stage: GameplayStageMap): Gameplay
       worldHeight: stage.world.height,
     }),
     cleared: false,
+    result: null,
   }
 }
 

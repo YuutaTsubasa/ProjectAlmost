@@ -94,6 +94,7 @@ describe('gameplay HUD state', () => {
       rank: '--',
       statusMessageKey: 'status.initial',
       cleared: false,
+      result: null,
       time: '00:00.00',
     })
     expect(state.mapPlatforms.length).toBe(stage.terrain.platforms.length)
@@ -149,6 +150,47 @@ describe('gameplay HUD state', () => {
     expect(first.hp).toBe(PLAYER_MAX_HEALTH)
     expect(first.rank).toBe('--')
     expect(first.statusMessageKey).toBe('status.initial')
+    expect(second).not.toBe(first)
+  })
+
+  it('applies a clear result snapshot immutably', () => {
+    const stage = getGameplayStageMap('1-1')
+    expect(stage).toBeDefined()
+    if (!stage) return
+
+    const first = createInitialGameplayHudState(stage)
+    const second = applyGameplayHudPatch(first, {
+      cleared: true,
+      rank: 'S',
+      result: {
+        elapsedMs: 12_340,
+        time: '00:12.34',
+        coins: 5,
+        coinTarget: 5,
+        damageTaken: 0,
+        falls: 0,
+        enemiesDefeated: 2,
+        enemyTarget: 2,
+        checkpointsReached: 3,
+        checkpointTarget: 3,
+        rank: 'S',
+      },
+    })
+
+    expect(second.result).toEqual({
+      elapsedMs: 12_340,
+      time: '00:12.34',
+      coins: 5,
+      coinTarget: 5,
+      damageTaken: 0,
+      falls: 0,
+      enemiesDefeated: 2,
+      enemyTarget: 2,
+      checkpointsReached: 3,
+      checkpointTarget: 3,
+      rank: 'S',
+    })
+    expect(first.result).toBeNull()
     expect(second).not.toBe(first)
   })
 })

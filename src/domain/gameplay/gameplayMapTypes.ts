@@ -1,4 +1,5 @@
 import type { StageId } from '../data/worlds/worldTypes'
+import type { RankTargets } from './stageResult'
 
 export type GameplayTheme = 'white-palace'
 
@@ -10,6 +11,7 @@ export type GameplayStageMap = {
     height: number
     tileSize: number
   }
+  rankTargets: RankTargets
   backgroundLayers: readonly BackgroundLayer[]
   player: GameplayPlayerSpawn
   enemies: readonly GameplayEnemySpawn[]

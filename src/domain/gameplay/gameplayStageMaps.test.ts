@@ -5,6 +5,7 @@ import { checkpointActorDefinition } from './checkpointActor'
 import { goalActorDefinition } from './goalActor'
 import { playerActorDefinition } from './playerActor'
 import { getTileColumnCount, getTileRowCount, validatePlatformBounds } from './terrain'
+import type { RankTargets } from './stageResult'
 import { gameplayStageMaps, getGameplayStageMap } from './gameplayStageMaps'
 
 describe('gameplayStageMaps', () => {
@@ -84,6 +85,23 @@ describe('gameplayStageMaps', () => {
         patrolMaxX: 1760,
       },
     ])
+  })
+
+  it('defines ordered rank targets for the first gameplay stage', () => {
+    const stage = getGameplayStageMap('1-1')
+    expect(stage).toBeDefined()
+    if (!stage) return
+
+    const rankTargets: RankTargets = stage.rankTargets
+    expect(rankTargets).toEqual({
+      sTime: 80,
+      aTime: 100,
+      bTime: 125,
+      cTime: 150,
+    })
+    expect(rankTargets.sTime).toBeLessThan(rankTargets.aTime)
+    expect(rankTargets.aTime).toBeLessThan(rankTargets.bTime)
+    expect(rankTargets.bTime).toBeLessThan(rankTargets.cTime)
   })
 
   it('keeps gameplay enemy ids unique within the first stage', () => {

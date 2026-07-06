@@ -14,6 +14,12 @@ const stageOneOne: GameplayStageMap = {
     height: 1080,
     tileSize: 64,
   },
+  rankTargets: {
+    sTime: 80,
+    aTime: 100,
+    bTime: 125,
+    cTime: 150,
+  },
   backgroundLayers: [
     {
       id: 'sky',
