@@ -106,6 +106,7 @@ import {
   type PlayerCheckpointGravity,
 } from '../../domain/gameplay/playerCheckpoint'
 import { canCompleteStage, getStageClearState } from '../../domain/gameplay/stageClear'
+import { calculateStageRank } from '../../domain/gameplay/stageResult'
 import {
   buildTerrainTileGrid,
   getTileColumnCount,
@@ -658,7 +659,7 @@ class GameplayMapScene extends Phaser.Scene {
     this.activeCheckpointIndex = index
     this.emitHudPatch({
       activeCheckpointIndex: this.activeCheckpointIndex,
-      checkpointsReached: this.activeCheckpointIndex + 1,
+      checkpointsReached: this.getReachedCheckpointCount(),
     })
     checkpoint.activated = true
     this.currentRespawnPoint = getCheckpointRespawnState({
@@ -859,7 +860,42 @@ class GameplayMapScene extends Phaser.Scene {
       this.goal.sprite.setTint(goalActorDefinition.activatedTint)
     }
 
-    this.emitHudPatch({ cleared: true })
+    const result = this.createClearResultSnapshot()
+    this.emitHudPatch({ cleared: true, rank: result.rank, result })
+  }
+
+  private getReachedCheckpointCount(): number {
+    return this.activeCheckpointIndex + 1
+  }
+
+  private createClearResultSnapshot() {
+    const elapsedMs = this.time.now
+    const rank = calculateStageRank({
+      elapsedMs,
+      rankTargets: this.stageMap.rankTargets,
+      coins: this.collectedCoins,
+      coinTarget: this.stageMap.coins.length,
+      enemiesDefeated: this.enemiesDefeated,
+      enemyTarget: this.stageMap.enemies.length,
+      checkpointsReached: this.getReachedCheckpointCount(),
+      checkpointTarget: this.stageMap.checkpoints.length,
+      damageTaken: this.damageTaken,
+      falls: this.falls,
+    })
+
+    return {
+      elapsedMs,
+      time: formatGameplayHudTime(elapsedMs),
+      coins: this.collectedCoins,
+      coinTarget: this.stageMap.coins.length,
+      damageTaken: this.damageTaken,
+      falls: this.falls,
+      enemiesDefeated: this.enemiesDefeated,
+      enemyTarget: this.stageMap.enemies.length,
+      checkpointsReached: this.getReachedCheckpointCount(),
+      checkpointTarget: this.stageMap.checkpoints.length,
+      rank,
+    }
   }
 
   private createEnemies(): void {

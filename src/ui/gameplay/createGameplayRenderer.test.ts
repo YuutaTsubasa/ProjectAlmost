@@ -31,6 +31,7 @@ import {
   homingAttackPresentation,
   homingAttackTiming,
 } from '../../domain/gameplay/playerHomingAttack'
+import { calculateStageRank } from '../../domain/gameplay/stageResult'
 import { createGameplayRendererConfig } from './createGameplayRenderer'
 
 vi.mock('phaser', () => {
@@ -1096,6 +1097,50 @@ describe('createGameplayRendererConfig', () => {
       ]),
     )
     expect(runtime.hudUpdates).toHaveLength(updateCountAfterClear)
+  })
+
+  it('emits a complete result snapshot when the stage is cleared', () => {
+    const stage = getGameplayStageMap('1-1')
+    expect(stage).toBeDefined()
+    if (!stage) return
+
+    const runtime = createSceneRuntime({ stage })
+    runtime.scene.create()
+    runtime.scene.time.now = 12_340
+    runtime.scene.update()
+
+    const goal = getGoalSprite(runtime)
+    runtime.triggerGoalOverlap(goal)
+
+    const resultPatch = runtime.hudUpdates.find((patch) => patch.result)
+    expect(resultPatch).toBeDefined()
+    expect(resultPatch).toMatchObject({
+      cleared: true,
+      rank: calculateStageRank({
+        elapsedMs: runtime.scene.time.now,
+        rankTargets: stage.rankTargets,
+        coins: 0,
+        coinTarget: stage.coins.length,
+        enemiesDefeated: 0,
+        enemyTarget: stage.enemies.length,
+        checkpointsReached: 0,
+        checkpointTarget: stage.checkpoints.length,
+        damageTaken: 0,
+        falls: 0,
+      }),
+      result: {
+        elapsedMs: runtime.scene.time.now,
+        time: formatGameplayHudTime(runtime.scene.time.now),
+        coins: 0,
+        coinTarget: stage.coins.length,
+        damageTaken: 0,
+        falls: 0,
+        enemiesDefeated: 0,
+        enemyTarget: stage.enemies.length,
+        checkpointsReached: 0,
+        checkpointTarget: stage.checkpoints.length,
+      },
+    })
   })
 
   it('ignores goal overlap during the queued respawn death window', () => {
