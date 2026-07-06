@@ -404,7 +404,10 @@
   }
 
   .result-rank {
+    box-sizing: border-box;
     display: grid;
+    margin-block: 2.4cqh;
+    padding-block: 1.8cqh;
     align-content: center;
     justify-items: center;
     border-left: 1px solid var(--hud-line-soft);

@@ -97,6 +97,14 @@ describe('StageResult UI contract', () => {
     expect(stageResultSource).toContain("class:rank-d={result.rank === 'D'}")
   })
 
+  it('keeps the rank column divider and contents away from the board edges', () => {
+    const rankStyle = stageResultSource.match(/\.result-rank \{[^}]+\}/)?.[0] ?? ''
+
+    expect(rankStyle).toContain('box-sizing: border-box;')
+    expect(rankStyle).toContain('margin-block: 2.4cqh;')
+    expect(rankStyle).toContain('padding-block: 1.8cqh;')
+  })
+
   it('uses the approved bright prototype-style result HUD surface', () => {
     expect(stageResultSource).toContain('--accent: #2f6fd0')
     expect(stageResultSource).toContain('--accent-bright:')
