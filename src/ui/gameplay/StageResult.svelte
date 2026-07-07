@@ -42,7 +42,7 @@
       newRecord: 'New Record',
     },
     rank: {
-      label: 'Final Evaluation',
+      label: 'Rank',
     },
     actions: {
       retry: 'Retry',
@@ -140,7 +140,6 @@
         >
           <b>{result.rank}</b>
         </div>
-        <small class="result-rank-sublabel">{stageResultCopy.rank.label}</small>
       </div>
     </div>
 
@@ -461,13 +460,6 @@
     color: var(--accent);
     font-size: min(4.8cqw, 92px);
     letter-spacing: 0.08em;
-  }
-
-  .result-rank-sublabel {
-    color: var(--hud-soft);
-    font-size: min(0.68cqw, 13px);
-    font-weight: 700;
-    letter-spacing: 0.2em;
   }
 
   .result-actions {

@@ -90,9 +90,11 @@ describe('StageResult UI contract', () => {
     )
   })
 
-  it('renders the rank as a right-column badge with a final evaluation sublabel', () => {
+  it('renders the rank as a right-column badge with a single rank label', () => {
     expect(stageResultSource).toContain('class="result-rank-badge"')
-    expect(stageResultSource).toContain('class="result-rank-sublabel"')
+    expect(stageResultSource).toContain("label: 'Rank'")
+    expect(stageResultSource).not.toContain('class="result-rank-sublabel"')
+    expect(stageResultSource).not.toContain('Final Evaluation')
     expect(stageResultSource).toContain("class:rank-s={result.rank === 'S'}")
     expect(stageResultSource).toContain("class:rank-d={result.rank === 'D'}")
   })
