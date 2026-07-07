@@ -90,6 +90,12 @@ describe('StageResult UI contract', () => {
     )
   })
 
+  it('renders the locked action sublabel at a readable HUD size', () => {
+    const actionSublabelStyle = stageResultSource.match(/\.result-actions span \{[^}]+\}/)?.[0] ?? ''
+
+    expect(actionSublabelStyle).toContain('font-size: min(0.68cqw, 13px);')
+  })
+
   it('renders the rank as a right-column badge with a single rank label', () => {
     expect(stageResultSource).toContain('class="result-rank-badge"')
     expect(stageResultSource).toContain("label: 'Rank'")

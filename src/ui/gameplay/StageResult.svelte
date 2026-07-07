@@ -509,7 +509,7 @@
     position: absolute;
     bottom: 0.4cqh;
     color: var(--hud-soft);
-    font-size: min(0.52cqw, 10px);
+    font-size: min(0.68cqw, 13px);
     font-weight: 700;
     letter-spacing: 0.14em;
     text-transform: uppercase;
