@@ -2,6 +2,11 @@ import type { StageId } from '../data/worlds/worldTypes'
 import type { RankTargets } from './stageResult'
 
 export type GameplayTheme = 'white-palace'
+  | 'emerald-sanctuary'
+  | 'cerulean-depths'
+  | 'frostveil-peaks'
+  | 'emberfall-caldera'
+  | 'abyssal-hollow'
 
 export type GameplayStageMap = {
   id: StageId
