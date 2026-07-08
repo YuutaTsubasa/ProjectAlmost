@@ -1,143 +1,31 @@
 import type { StageId } from '../data/worlds/worldTypes'
 import type { GameplayStageMap } from './gameplayMapTypes'
+import { convertGameplayStageSource } from './gameplayStageMapConverter'
+import {
+  defaultGameplayThemeAssets,
+  type GameplayStageConversionDiagnostic,
+} from './gameplayStageSource'
+import { gameplayStageSources } from './gameplayStageSources'
 
 export type GameplayStageMapCatalog = {
   order: readonly StageId[]
-  items: Partial<Record<StageId, GameplayStageMap>>
+  items: Record<StageId, GameplayStageMap>
 }
 
-const stageOneOne: GameplayStageMap = {
-  id: '1-1',
-  theme: 'white-palace',
-  world: {
-    width: 9600,
-    height: 1080,
-    tileSize: 64,
-  },
-  rankTargets: {
-    sTime: 80,
-    aTime: 100,
-    bTime: 125,
-    cTime: 150,
-  },
-  backgroundLayers: [
-    {
-      id: 'sky',
-      assetRef: '/assets/maps/white_palace_sky.webp',
-      width: 1920,
-      height: 1080,
-      depth: -30,
-      scrollFactor: 0,
-      parallaxFactor: 0,
-    },
-    {
-      id: 'far',
-      assetRef: '/assets/maps/white_palace_far_bg.webp',
-      width: 1920,
-      height: 1080,
-      depth: -20,
-      scrollFactor: 0,
-      parallaxFactor: 0.08,
-    },
-    {
-      id: 'mid',
-      assetRef: '/assets/maps/white_palace_mid_bg_loop.webp',
-      width: 1920,
-      height: 1080,
-      depth: -10,
-      scrollFactor: 0,
-      parallaxFactor: 0.18,
-    },
-  ],
-  player: {
-    actorId: 'player',
-    spawn: {
-      x: 256,
-      surfaceY: 512,
-    },
-  },
-  enemies: [
-    {
-      id: 'first-armor-guard',
-      type: 'armor-guard',
-      x: 720,
-      surfaceY: 512,
-      patrolMinX: 608,
-      patrolMaxX: 832,
-    },
-    {
-      id: 'first-azure-core',
-      type: 'azure-core',
-      x: 1760,
-      y: 320,
-      patrolMinX: 1760,
-      patrolMaxX: 1760,
-    },
-  ],
-  coins: [
-    { id: 'coin-start-1', x: 320, y: 430 },
-    { id: 'coin-start-2', x: 384, y: 430 },
-    { id: 'coin-homing-line-1', x: 1680, y: 320 },
-    { id: 'coin-homing-line-2', x: 1720, y: 320 },
-    { id: 'coin-route-1', x: 1504, y: 430 },
-  ],
-  hazards: [],
-  checkpoints: [
-    {
-      id: 'combat-gate',
-      x: 2540,
-      surfaceY: 512,
-      spawnX: 2600,
-      spawnSurfaceY: 512,
-    },
-    {
-      id: 'final-ascent',
-      x: 4320,
-      surfaceY: 512,
-      spawnX: 4380,
-      spawnSurfaceY: 512,
-    },
-    {
-      id: 'final-trial',
-      x: 7300,
-      surfaceY: 512,
-      spawnX: 7360,
-      spawnSurfaceY: 512,
-    },
-  ],
-  goal: {
-    x: 9340,
-    surfaceY: 512,
-  },
-  terrain: {
-    tilesetAssetRef: '/assets/tiles/white_palace_platform_tiles.webp',
-    solidTileIndexes: [0, 1, 2],
-    platforms: [
-      { col: 2, row: 8, width: 12, height: 1 },
-      { col: 16, row: 8, width: 5, height: 1 },
-      { col: 23, row: 7, width: 4, height: 1 },
-      { col: 30, row: 8, width: 5, height: 1 },
-      { col: 38, row: 8, width: 13, height: 1 },
-      { col: 54, row: 7, width: 3, height: 1 },
-      { col: 59, row: 6, width: 3, height: 1 },
-      { col: 65, row: 8, width: 12, height: 1 },
-      { col: 80, row: 7, width: 4, height: 1 },
-      { col: 86, row: 6, width: 4, height: 1 },
-      { col: 92, row: 5, width: 7, height: 1 },
-      { col: 103, row: 6, width: 5, height: 1 },
-      { col: 111, row: 8, width: 10, height: 1 },
-      { col: 124, row: 7, width: 4, height: 1 },
-      { col: 130, row: 6, width: 4, height: 1 },
-      { col: 136, row: 8, width: 12, height: 1 },
-    ],
-  },
-}
+const conversionEntries = gameplayStageSources.order.map((stageId) => {
+  const source = gameplayStageSources.items[stageId]
+
+  return [stageId, convertGameplayStageSource(source, defaultGameplayThemeAssets)] as const
+})
+
+export const gameplayStageConversionDiagnostics: readonly GameplayStageConversionDiagnostic[] =
+  conversionEntries.flatMap(([, result]) => result.diagnostics)
 
 export const gameplayStageMaps: GameplayStageMapCatalog = {
-  order: [stageOneOne.id],
-  items: {
-    [stageOneOne.id]: stageOneOne,
-  },
+  order: gameplayStageSources.order,
+  items: Object.fromEntries(
+    conversionEntries.map(([stageId, result]) => [stageId, result.map]),
+  ) as Record<StageId, GameplayStageMap>,
 }
 
 export function getGameplayStageMap(stageId: StageId): GameplayStageMap | undefined {

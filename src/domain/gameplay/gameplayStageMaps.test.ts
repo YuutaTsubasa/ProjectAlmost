@@ -6,7 +6,12 @@ import { goalActorDefinition } from './goalActor'
 import { playerActorDefinition } from './playerActor'
 import { getTileColumnCount, getTileRowCount, validatePlatformBounds } from './terrain'
 import type { RankTargets } from './stageResult'
-import { gameplayStageMaps, getGameplayStageMap } from './gameplayStageMaps'
+import { stages } from '../data/stages/stageCatalog'
+import {
+  gameplayStageConversionDiagnostics,
+  gameplayStageMaps,
+  getGameplayStageMap,
+} from './gameplayStageMaps'
 
 describe('gameplayStageMaps', () => {
   it('contains the first gameplay stage map', () => {
@@ -62,29 +67,21 @@ describe('gameplayStageMaps', () => {
     expect(assetRefs.every((assetRef) => !assetRef.includes('__prototype__'))).toBe(true)
   })
 
-  it('defines both baseline enemy types for the first gameplay stage', () => {
-    const stage = getGameplayStageMap('1-1')
-    expect(stage).toBeDefined()
-    if (!stage) return
+  it('uses only supported gameplay enemy types across converted stages', () => {
+    const enemyTypes = new Set<string>()
 
-    expect(stage.enemies).toEqual([
-      {
-        id: 'first-armor-guard',
-        type: 'armor-guard',
-        x: 720,
-        surfaceY: 512,
-        patrolMinX: 608,
-        patrolMaxX: 832,
-      },
-      {
-        id: 'first-azure-core',
-        type: 'azure-core',
-        x: 1760,
-        y: 320,
-        patrolMinX: 1760,
-        patrolMaxX: 1760,
-      },
-    ])
+    for (const stageId of gameplayStageMaps.order) {
+      const stage = getGameplayStageMap(stageId)
+      expect(stage).toBeDefined()
+      if (!stage) return
+
+      for (const enemy of stage.enemies) {
+        enemyTypes.add(enemy.type)
+        expect(enemyActorDefinitions[enemy.type]).toBeDefined()
+      }
+    }
+
+    expect(enemyTypes).toEqual(new Set(['armor-guard', 'azure-core']))
   })
 
   it('defines ordered rank targets for the first gameplay stage', () => {
@@ -94,10 +91,10 @@ describe('gameplayStageMaps', () => {
 
     const rankTargets: RankTargets = stage.rankTargets
     expect(rankTargets).toEqual({
-      sTime: 80,
-      aTime: 100,
-      bTime: 125,
-      cTime: 150,
+      sTime: 30,
+      aTime: 42,
+      bTime: 58,
+      cTime: 78,
     })
     expect(rankTargets.sTime).toBeLessThan(rankTargets.aTime)
     expect(rankTargets.aTime).toBeLessThan(rankTargets.bTime)
@@ -172,8 +169,12 @@ describe('gameplayStageMaps', () => {
     })
   })
 
-  it('does not return a map for stages outside this slice', () => {
-    expect(getGameplayStageMap('1-2')).toBeUndefined()
+  it('returns converted gameplay maps for all 36 normal stages', () => {
+    expect(gameplayStageMaps.order).toHaveLength(36)
+
+    for (const stageId of gameplayStageMaps.order) {
+      expect(getGameplayStageMap(stageId)?.id).toBe(stageId)
+    }
   })
 
   it('defines collectible coins for the first gameplay stage', () => {
@@ -181,13 +182,12 @@ describe('gameplayStageMaps', () => {
     expect(stage).toBeDefined()
     if (!stage) return
 
-    expect(stage.coins).toEqual([
-      { id: 'coin-start-1', x: 320, y: 430 },
-      { id: 'coin-start-2', x: 384, y: 430 },
-      { id: 'coin-homing-line-1', x: 1680, y: 320 },
-      { id: 'coin-homing-line-2', x: 1720, y: 320 },
-      { id: 'coin-route-1', x: 1504, y: 430 },
+    expect(stage.coins).toHaveLength(25)
+    expect(stage.coins.slice(0, 2)).toEqual([
+      { id: '1-1-coin-001', x: 420, y: 456 },
+      { id: '1-1-coin-002', x: 560, y: 456 },
     ])
+    expect(stage.coins.at(-1)).toEqual({ id: '1-1-coin-025', x: 9240, y: 456 })
   })
 
   it('defines fixed hazard data for every gameplay stage map', () => {
@@ -362,5 +362,73 @@ describe('gameplayStageMaps', () => {
     )
 
     expect(platform).toBeDefined()
+  })
+
+  it('keeps converted gameplay map order aligned with the stage catalog', () => {
+    expect(gameplayStageMaps.order).toEqual(stages.order)
+  })
+
+  it('keeps every converted gameplay stage platform grid inside its world bounds', () => {
+    for (const stageId of gameplayStageMaps.order) {
+      const stage = getGameplayStageMap(stageId)
+      expect(stage).toBeDefined()
+      if (!stage) return
+
+      const columns = getTileColumnCount({
+        worldWidth: stage.world.width,
+        tileSize: stage.world.tileSize,
+      })
+      const rows = getTileRowCount({
+        worldHeight: stage.world.height,
+        tileSize: stage.world.tileSize,
+      })
+
+      expect(validatePlatformBounds({ columns, rows, platforms: stage.terrain.platforms })).toEqual({
+        valid: true,
+      })
+    }
+  })
+
+  it('keeps converted gameplay ids unique within each stage', () => {
+    for (const stageId of gameplayStageMaps.order) {
+      const stage = getGameplayStageMap(stageId)
+      expect(stage).toBeDefined()
+      if (!stage) return
+
+      const enemyIds = stage.enemies.map((enemy) => enemy.id)
+      const coinIds = stage.coins.map((coin) => coin.id)
+      const hazardIds = stage.hazards.map((hazard) => hazard.id)
+      const checkpointIds = stage.checkpoints.map((checkpoint) => checkpoint.id)
+
+      expect(new Set(enemyIds).size).toBe(enemyIds.length)
+      expect(new Set(coinIds).size).toBe(coinIds.length)
+      expect(new Set(hazardIds).size).toBe(hazardIds.length)
+      expect(new Set(checkpointIds).size).toBe(checkpointIds.length)
+    }
+  })
+
+  it('exposes diagnostics for unsupported mechanics in converted source stages', () => {
+    expect(gameplayStageConversionDiagnostics.some((diagnostic) =>
+      diagnostic.stageId === '2-1' && diagnostic.code === 'unsupported-moving-platform',
+    )).toBe(true)
+    expect(gameplayStageConversionDiagnostics.some((diagnostic) =>
+      diagnostic.stageId === '4-4' && diagnostic.code === 'unsupported-surface-zone',
+    )).toBe(true)
+  })
+
+  it('keeps converted gameplay stage asset refs in rebuilt public assets', () => {
+    for (const stageId of gameplayStageMaps.order) {
+      const stage = getGameplayStageMap(stageId)
+      expect(stage).toBeDefined()
+      if (!stage) return
+
+      const assetRefs = [
+        ...stage.backgroundLayers.map((layer) => layer.assetRef),
+        stage.terrain.tilesetAssetRef,
+      ]
+
+      expect(assetRefs.every((assetRef) => assetRef.startsWith('/assets/'))).toBe(true)
+      expect(assetRefs.every((assetRef) => !assetRef.includes('__prototype__'))).toBe(true)
+    }
   })
 })
