@@ -3423,7 +3423,7 @@ describe('createGameplayRendererConfig', () => {
     const runtime = createSceneRuntime()
 
     runtime.scene.create()
-
+    startGameplay(runtime)
     runtime.scene.update()
 
     expect(runtime.playerSprite?.dragX).toBe(playerActorDefinition.movement.idleDragX)
