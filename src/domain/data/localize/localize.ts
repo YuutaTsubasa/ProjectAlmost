@@ -66,6 +66,13 @@ export type SettingsLocalizationKey =
   | 'settings.aria.menu'
   | 'settings.aria.deleteConfirm'
 
+export type PauseLocalizationKey =
+  | 'pause.paused'
+  | 'pause.resume'
+  | 'pause.restart'
+  | 'pause.stageSelect'
+  | 'pause.aria.menu'
+
 export type LocalizationKey =
   | WorldLocalizationKey
   | StageSelectLocalizationKey
@@ -75,6 +82,7 @@ export type LocalizationKey =
   | CommonLocalizationKey
   | LanguageLocalizationKey
   | SettingsLocalizationKey
+  | PauseLocalizationKey
 
 export interface LocaleRecord {
   code: LocaleCode
@@ -321,6 +329,11 @@ const catalog: LocalizedTextCatalog = {
     'settings.aria.screen': 'Settings screen',
     'settings.aria.menu': 'Settings menu',
     'settings.aria.deleteConfirm': 'Delete save data confirmation',
+    'pause.paused': 'Paused',
+    'pause.resume': 'Resume',
+    'pause.restart': 'Restart Stage',
+    'pause.stageSelect': 'Return to Stage Select',
+    'pause.aria.menu': 'Pause menu',
   },
   ja: {
     'language.en': '英語',
@@ -460,6 +473,11 @@ const catalog: LocalizedTextCatalog = {
     'settings.aria.screen': '設定画面',
     'settings.aria.menu': '設定メニュー',
     'settings.aria.deleteConfirm': 'セーブデータ削除確認',
+    'pause.paused': 'ポーズ',
+    'pause.resume': '再開',
+    'pause.restart': 'ステージ再開',
+    'pause.stageSelect': 'ステージ選択へ',
+    'pause.aria.menu': 'ポーズメニュー',
   },
   zhHant: {
     'language.en': '英文',
@@ -599,6 +617,11 @@ const catalog: LocalizedTextCatalog = {
     'settings.aria.screen': '設定畫面',
     'settings.aria.menu': '設定選單',
     'settings.aria.deleteConfirm': '刪除存檔確認',
+    'pause.paused': '暫停',
+    'pause.resume': '繼續',
+    'pause.restart': '重新開始關卡',
+    'pause.stageSelect': '返回選關畫面',
+    'pause.aria.menu': '暫停選單',
   },
   ko: {
     'language.en': '영어',
@@ -738,6 +761,11 @@ const catalog: LocalizedTextCatalog = {
     'settings.aria.screen': '설정 화면',
     'settings.aria.menu': '설정 메뉴',
     'settings.aria.deleteConfirm': '저장 데이터 삭제 확인',
+    'pause.paused': '일시 정지',
+    'pause.resume': '계속',
+    'pause.restart': '스테이지 재시작',
+    'pause.stageSelect': '스테이지 선택으로',
+    'pause.aria.menu': '일시 정지 메뉴',
   },
 }
 

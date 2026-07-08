@@ -14,6 +14,8 @@ export type ControlContext =
   | 'stage-select'
   | 'settings'
   | 'settings-delete-confirm'
+  | 'gameplay-active'
+  | 'gameplay-pause-menu'
 
 export type KeyboardControlDescriptor = {
   key: string
@@ -66,6 +68,19 @@ export function mapKeyboardControlIntent(
   if (context === 'settings-delete-confirm') {
     if (descriptor.key === 'ArrowLeft' || key === 'a') return 'move-left'
     if (descriptor.key === 'ArrowRight' || key === 'd') return 'move-right'
+    if (descriptor.key === 'Enter' || descriptor.key === ' ') return 'confirm'
+    if (descriptor.key === 'Escape') return 'back'
+    return null
+  }
+
+  if (context === 'gameplay-active') {
+    if (descriptor.key === 'Escape' || key === 'p') return 'back'
+    return null
+  }
+
+  if (context === 'gameplay-pause-menu') {
+    if (descriptor.key === 'ArrowUp' || key === 'w') return 'move-up'
+    if (descriptor.key === 'ArrowDown' || key === 's') return 'move-down'
     if (descriptor.key === 'Enter' || descriptor.key === ' ') return 'confirm'
     if (descriptor.key === 'Escape') return 'back'
     return null

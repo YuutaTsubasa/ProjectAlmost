@@ -17,6 +17,29 @@ describe('mapKeyboardControlIntent', () => {
     expect(mapKeyboardControlIntent({ key: 'Escape', repeat: false }, 'title-menu')).toBe('back')
   })
 
+  it('maps active gameplay pause keys without taking over gameplay movement keys', () => {
+    expect(mapKeyboardControlIntent({ key: 'Escape', repeat: false }, 'gameplay-active')).toBe('back')
+    expect(mapKeyboardControlIntent({ key: 'p', repeat: false }, 'gameplay-active')).toBe('back')
+    expect(mapKeyboardControlIntent({ key: 'ArrowUp', repeat: false }, 'gameplay-active')).toBeNull()
+    expect(mapKeyboardControlIntent({ key: ' ', repeat: false }, 'gameplay-active')).toBeNull()
+  })
+
+  it('maps pause menu keys to vertical navigation, confirm, and resume back', () => {
+    expect(mapKeyboardControlIntent({ key: 'ArrowUp', repeat: false }, 'gameplay-pause-menu')).toBe(
+      'move-up',
+    )
+    expect(mapKeyboardControlIntent({ key: 'w', repeat: false }, 'gameplay-pause-menu')).toBe('move-up')
+    expect(mapKeyboardControlIntent({ key: 'ArrowDown', repeat: false }, 'gameplay-pause-menu')).toBe(
+      'move-down',
+    )
+    expect(mapKeyboardControlIntent({ key: 's', repeat: false }, 'gameplay-pause-menu')).toBe(
+      'move-down',
+    )
+    expect(mapKeyboardControlIntent({ key: 'Enter', repeat: false }, 'gameplay-pause-menu')).toBe('confirm')
+    expect(mapKeyboardControlIntent({ key: ' ', repeat: false }, 'gameplay-pause-menu')).toBe('confirm')
+    expect(mapKeyboardControlIntent({ key: 'Escape', repeat: false }, 'gameplay-pause-menu')).toBe('back')
+  })
+
   it('maps world select keys to directional navigation, confirm, and back intents', () => {
     expect(mapKeyboardControlIntent({ key: 'ArrowRight', repeat: false }, 'world-select')).toBe(
       'move-right',
@@ -109,6 +132,14 @@ describe('mapGamepadControlIntents', () => {
 
     expect(
       mapGamepadControlIntents(previous, { ...previous, buttons: [false, true, false, false] }, 'world-select'),
+    ).toEqual(['back'])
+
+    expect(
+      mapGamepadControlIntents(
+        { mapping: 'standard', buttons: [false, false], axes: [] },
+        { mapping: 'standard', buttons: [false, true], axes: [] },
+        'gameplay-active',
+      ),
     ).toEqual(['back'])
 
     expect(

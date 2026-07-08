@@ -244,6 +244,59 @@ describe('localize', () => {
     }
   })
 
+  it('includes localized gameplay pause values for every supported locale', () => {
+    const expectedByLocale = {
+      en: {
+        pausePaused: 'Paused',
+        pauseResume: 'Resume',
+        pauseRestart: 'Restart Stage',
+        pauseStageSelect: 'Return to Stage Select',
+        pauseAriaMenu: 'Pause menu',
+      },
+      ja: {
+        pausePaused: 'ポーズ',
+        pauseResume: '再開',
+        pauseRestart: 'ステージ再開',
+        pauseStageSelect: 'ステージ選択へ',
+        pauseAriaMenu: 'ポーズメニュー',
+      },
+      zhHant: {
+        pausePaused: '暫停',
+        pauseResume: '繼續',
+        pauseRestart: '重新開始關卡',
+        pauseStageSelect: '返回選關畫面',
+        pauseAriaMenu: '暫停選單',
+      },
+      ko: {
+        pausePaused: '일시 정지',
+        pauseResume: '계속',
+        pauseRestart: '스테이지 재시작',
+        pauseStageSelect: '스테이지 선택으로',
+        pauseAriaMenu: '일시 정지 메뉴',
+      },
+    }
+
+    const locales = ['en', 'ja', 'zhHant', 'ko'] as const
+
+    for (const locale of locales) {
+      expect(resolveLocalizedText(localize, locale, 'pause.paused')).toBe(
+        expectedByLocale[locale].pausePaused,
+      )
+      expect(resolveLocalizedText(localize, locale, 'pause.resume')).toBe(
+        expectedByLocale[locale].pauseResume,
+      )
+      expect(resolveLocalizedText(localize, locale, 'pause.restart')).toBe(
+        expectedByLocale[locale].pauseRestart,
+      )
+      expect(resolveLocalizedText(localize, locale, 'pause.stageSelect')).toBe(
+        expectedByLocale[locale].pauseStageSelect,
+      )
+      expect(resolveLocalizedText(localize, locale, 'pause.aria.menu')).toBe(
+        expectedByLocale[locale].pauseAriaMenu,
+      )
+    }
+  })
+
   it('includes localized stage select labels and objective values for every supported locale', () => {
     const expectedByLocale = {
       en: {
