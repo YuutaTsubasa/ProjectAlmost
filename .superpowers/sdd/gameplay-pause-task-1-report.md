@@ -52,3 +52,28 @@
 
 ## Issues or concerns
 - None identified for this task slice.
+
+## Review fix: gameplay-active gamepad gating
+
+### What I changed
+- Added tests that assert `gameplay-active` gamepad input does not emit app-level intents for:
+  - south button / confirm
+  - d-pad movement
+  - left-stick movement
+- Kept east/back mapped to `back` in `gameplay-active`.
+- Added a context gate in `mapGamepadControlIntents` so `gameplay-active` returns only `back` for the east button and skips the generic confirm/movement mappings.
+
+### RED / GREEN evidence
+- RED command: `npm run test -- src/domain/input/controlIntents.test.ts`
+  - Failed as expected on `gameplay-active` south button mapping:
+    - `expected [ 'confirm' ] to deeply equal []`
+- GREEN command: `npm run test -- src/domain/input/controlIntents.test.ts`
+  - Passed, 19 tests passed
+- Task bundle command: `npm run test -- src/domain/gameplay/gameplayPause.test.ts src/domain/input/controlIntents.test.ts src/domain/data/localize/localize.test.ts`
+  - Passed, 40 tests passed
+- Sanity check: `git diff --check`
+  - Passed
+
+### Files updated for this fix
+- `src/domain/input/controlIntents.test.ts`
+- `src/domain/input/controlIntents.ts`

@@ -145,6 +145,30 @@ describe('mapGamepadControlIntents', () => {
     expect(
       mapGamepadControlIntents(
         previous,
+        { ...previous, buttons: [true, false, false, false] },
+        'gameplay-active',
+      ),
+    ).toEqual([])
+
+    expect(
+      mapGamepadControlIntents(
+        previous,
+        { ...previous, buttons: [...previous.buttons.slice(0, 12), true] },
+        'gameplay-active',
+      ),
+    ).toEqual([])
+
+    expect(
+      mapGamepadControlIntents(
+        previous,
+        { ...previous, axes: [0, -0.7] },
+        'gameplay-active',
+      ),
+    ).toEqual([])
+
+    expect(
+      mapGamepadControlIntents(
+        previous,
         { ...previous, buttons: [...previous.buttons.slice(0, 12), true] },
         'world-select',
       ),

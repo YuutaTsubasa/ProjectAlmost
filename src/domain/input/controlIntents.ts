@@ -104,6 +104,10 @@ export function mapGamepadControlIntents(
   if (!current || !previous) return []
   if (current.mapping !== 'standard' || previous.mapping !== 'standard') return []
 
+  if (context === 'gameplay-active') {
+    return pressedNow(previous, current, EAST_BUTTON_INDEX) ? ['back'] : []
+  }
+
   const intents: ControlIntent[] = []
 
   if (pressedNow(previous, current, SOUTH_BUTTON_INDEX)) {
