@@ -1091,6 +1091,61 @@ describe('createGameplayRendererConfig', () => {
     expect(guard.velocityX).toBe(-enemyActorDefinitions['armor-guard'].patrol.speed)
   })
 
+  it('does not clear the stage before the start gate is running', () => {
+    const runtime = createSceneRuntime({ stage: createHazardStage() })
+    runtime.scene.create()
+    const goal = getGoalSprite(runtime)
+
+    const hudUpdatesBefore = runtime.hudUpdates.length
+    runtime.triggerGoalOverlap(goal)
+
+    expect(runtime.hudUpdates).toHaveLength(hudUpdatesBefore)
+    expect(runtime.hudUpdates).not.toEqual(
+      expect.arrayContaining([expect.objectContaining({ cleared: true })]),
+    )
+    expect(goal.tint).toBeUndefined()
+  })
+
+  it('does not apply spike hazard damage before the start gate is running', () => {
+    const runtime = createSceneRuntime({ stage: createHazardStage() })
+    runtime.scene.create()
+    const spike = runtime.staticImageCalls.find(
+      (sprite) => sprite.texture === hazardActorDefinitions.spikes.sprite.key,
+    )
+    expect(spike).toBeDefined()
+    if (!spike || !runtime.playerSprite) return
+
+    const hudUpdatesBefore = runtime.hudUpdates.length
+    runtime.triggerHazardOverlap(spike)
+
+    expect(runtime.hudUpdates).toHaveLength(hudUpdatesBefore)
+    expect(runtime.hudUpdates).not.toEqual(
+      expect.arrayContaining([expect.objectContaining({ hp: 2, damageTaken: 1 })]),
+    )
+    expect(runtime.playerSprite.velocityX).toBe(0)
+    expect(runtime.playerSprite.velocityY).toBe(0)
+  })
+
+  it('does not apply enemy contact damage before the start gate is running', () => {
+    const runtime = createSceneRuntime({ stage: createHazardStage() })
+    runtime.scene.create()
+    const guard = runtime.enemySprites.find(
+      (sprite) => sprite.texture === enemyActorDefinitions['armor-guard'].sprites?.walk?.key,
+    )
+    expect(guard).toBeDefined()
+    if (!guard || !runtime.playerSprite) return
+
+    const hudUpdatesBefore = runtime.hudUpdates.length
+    runtime.triggerEnemyOverlap(guard)
+
+    expect(runtime.hudUpdates).toHaveLength(hudUpdatesBefore)
+    expect(runtime.hudUpdates).not.toEqual(
+      expect.arrayContaining([expect.objectContaining({ hp: 2, damageTaken: 1 })]),
+    )
+    expect(runtime.playerSprite.velocityX).toBe(0)
+    expect(runtime.playerSprite.velocityY).toBe(0)
+  })
+
   it('emits HUD coin statistics when a coin is collected', () => {
     const runtime = createSceneRuntime()
     runtime.scene.create()
@@ -1118,6 +1173,7 @@ describe('createGameplayRendererConfig', () => {
     runtime.scene.create()
     expect(runtime.playerSprite).toBeDefined()
     if (!runtime.playerSprite) return
+    startGameplay(runtime)
 
     const spike = runtime.staticImageCalls.find(
       (sprite) => sprite.texture === hazardActorDefinitions.spikes.sprite.key,
@@ -1204,6 +1260,7 @@ describe('createGameplayRendererConfig', () => {
     runtime.scene.create()
     expect(runtime.playerSprite).toBeDefined()
     if (!runtime.playerSprite) return
+    startGameplay(runtime)
 
     runtime.triggerGoalOverlap(getGoalSprite(runtime))
     const updateCountAfterClear = runtime.hudUpdates.length
@@ -1302,6 +1359,7 @@ describe('createGameplayRendererConfig', () => {
     runtime.scene.create()
     expect(runtime.playerSprite).toBeDefined()
     if (!runtime.playerSprite) return
+    startGameplay(runtime)
 
     const spike = runtime.staticImageCalls.find(
       (sprite) => sprite.texture === hazardActorDefinitions.spikes.sprite.key,
@@ -1492,6 +1550,7 @@ describe('createGameplayRendererConfig', () => {
     runtime.scene.create()
     expect(runtime.playerSprite).toBeDefined()
     if (!runtime.playerSprite) return
+    startGameplay(runtime)
 
     const goal = getGoalSprite(runtime)
     const guard = runtime.sprites.find((sprite) => sprite.texture === 'enemy-guard-walk')
@@ -1528,6 +1587,7 @@ describe('createGameplayRendererConfig', () => {
     runtime.scene.create()
     expect(runtime.playerSprite).toBeDefined()
     if (!runtime.playerSprite) return
+    startGameplay(runtime)
 
     const goal = getGoalSprite(runtime)
     const guard = runtime.sprites.find((sprite) => sprite.texture === 'enemy-guard-walk')
@@ -1564,6 +1624,7 @@ describe('createGameplayRendererConfig', () => {
   it('keeps Armor Guard patrol frozen on the next update after stage clear', () => {
     const runtime = createSceneRuntime()
     runtime.scene.create()
+    startGameplay(runtime)
 
     const goal = getGoalSprite(runtime)
     const guard = runtime.sprites.find((sprite) => sprite.texture === 'enemy-guard-walk')
@@ -1579,6 +1640,7 @@ describe('createGameplayRendererConfig', () => {
   it('stops Azure Core floating tween after stage clear', () => {
     const runtime = createSceneRuntime()
     runtime.scene.create()
+    startGameplay(runtime)
 
     const goal = getGoalSprite(runtime)
     const core = runtime.sprites.find((sprite) => sprite.texture === 'azure-core')
@@ -2849,6 +2911,7 @@ describe('createGameplayRendererConfig', () => {
   it('applies survived enemy contact damage with hurt knockback, animation, and blink', () => {
     const runtime = createSceneRuntime()
     runtime.scene.create()
+    startGameplay(runtime)
     const guard = runtime.sprites.find((sprite) => sprite.texture === 'enemy-guard-walk')
     expect(guard).toBeDefined()
     if (!guard || !runtime.playerSprite) return
@@ -2876,6 +2939,7 @@ describe('createGameplayRendererConfig', () => {
   it('applies enemy contact damage from Azure Core overlaps', () => {
     const runtime = createSceneRuntime()
     runtime.scene.create()
+    startGameplay(runtime)
     const core = runtime.sprites.find((sprite) => sprite.texture === 'azure-core')
     expect(core).toBeDefined()
     if (!core || !runtime.playerSprite) return
@@ -2894,6 +2958,7 @@ describe('createGameplayRendererConfig', () => {
   it('damages and hurts the player on spike hazard overlap', () => {
     const runtime = createSceneRuntime({ stage: createHazardStage() })
     runtime.scene.create()
+    startGameplay(runtime)
     const spike = runtime.staticImageCalls.find(
       (sprite) => sprite.texture === hazardActorDefinitions.spikes.sprite.key,
     )
@@ -2925,6 +2990,7 @@ describe('createGameplayRendererConfig', () => {
   it('does not apply repeated spike hazard damage while invulnerable', () => {
     const runtime = createSceneRuntime({ stage: createHazardStage() })
     runtime.scene.create()
+    startGameplay(runtime)
     const spike = runtime.staticImageCalls.find(
       (sprite) => sprite.texture === hazardActorDefinitions.spikes.sprite.key,
     )
@@ -2941,6 +3007,7 @@ describe('createGameplayRendererConfig', () => {
   it('starts the death transition when spike hazard damage defeats the player', () => {
     const runtime = createSceneRuntime({ stage: createHazardStage() })
     runtime.scene.create()
+    startGameplay(runtime)
     const spike = runtime.staticImageCalls.find(
       (sprite) => sprite.texture === hazardActorDefinitions.spikes.sprite.key,
     )
@@ -3058,6 +3125,7 @@ describe('createGameplayRendererConfig', () => {
   it('restores player alpha after invulnerability recovery', () => {
     const runtime = createSceneRuntime()
     runtime.scene.create()
+    startGameplay(runtime)
     const guard = runtime.sprites.find((sprite) => sprite.texture === 'enemy-guard-walk')
     expect(guard).toBeDefined()
     if (!guard || !runtime.playerSprite) return
@@ -3126,6 +3194,7 @@ describe('createGameplayRendererConfig', () => {
   it('plays death on the third enemy hit and respawns at the stage spawn with full health', () => {
     const runtime = createSceneRuntime()
     runtime.scene.create()
+    startGameplay(runtime)
     const guard = runtime.sprites.find((sprite) => sprite.texture === 'enemy-guard-walk')
     expect(guard).toBeDefined()
     if (!guard || !runtime.playerSprite) return
@@ -3190,6 +3259,7 @@ describe('createGameplayRendererConfig', () => {
   it('keeps stage spawn respawn before activating any checkpoint', () => {
     const runtime = createSceneRuntime()
     runtime.scene.create()
+    startGameplay(runtime)
     const guard = runtime.sprites.find((sprite) => sprite.texture === 'enemy-guard-walk')
     expect(guard).toBeDefined()
     expect(runtime.playerSprite).toBeDefined()
@@ -3249,6 +3319,7 @@ describe('createGameplayRendererConfig', () => {
   it('prevents movement, attack, and repeated contact damage while dead before respawn', () => {
     const runtime = createSceneRuntime()
     runtime.scene.create()
+    startGameplay(runtime)
     const guard = runtime.sprites.find((sprite) => sprite.texture === 'enemy-guard-walk')
     expect(guard).toBeDefined()
     if (!guard || !runtime.playerSprite) return

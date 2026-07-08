@@ -338,7 +338,7 @@ class GameplayMapScene extends Phaser.Scene {
       this.getGameplayStartInputSnapshot(),
     )
 
-    if (!isGameplayStartGateRunning(this.gameplayStartGateState)) {
+    if (!this.isGameplayRunning()) {
       this.emitHudPositionPatch()
       return
     }
@@ -427,6 +427,10 @@ class GameplayMapScene extends Phaser.Scene {
       }),
       time: formatGameplayHudTime(this.gameplayElapsedMs),
     })
+  }
+
+  private isGameplayRunning(): boolean {
+    return isGameplayStartGateRunning(this.gameplayStartGateState)
   }
 
   private createBackgroundLayers(): void {
@@ -878,7 +882,7 @@ class GameplayMapScene extends Phaser.Scene {
 
     if (this.goal) {
       this.physics.add.overlap(player, this.goal.sprite, () => {
-        if (this.isPlayerDead) {
+        if (!this.isGameplayRunning() || this.isPlayerDead) {
           return
         }
 
@@ -1371,7 +1375,7 @@ class GameplayMapScene extends Phaser.Scene {
   }
 
   private handlePlayerEnemyContact(enemy: EnemyRuntime): void {
-    if (!this.player || this.stageCleared) return
+    if (!this.player || this.stageCleared || !this.isGameplayRunning()) return
 
     if (
       !canApplyPlayerEnemyHit({
@@ -1444,7 +1448,7 @@ class GameplayMapScene extends Phaser.Scene {
   }
 
   private handlePlayerHazardContact(hazard: HazardRuntime): void {
-    if (!this.player || this.stageCleared) return
+    if (!this.player || this.stageCleared || !this.isGameplayRunning()) return
 
     if (
       !canApplyPlayerHazardHit({
