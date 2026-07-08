@@ -183,7 +183,7 @@ describe('convertGameplayStageSource', () => {
           },
         ],
         hazards: [
-          ...firstGateSource.hazards,
+          ...(firstGateSource.hazards ?? []),
           {
             id: 'lava-a',
             type: 'lava',
@@ -220,6 +220,20 @@ describe('convertGameplayStageSource', () => {
       'ice-a',
       'lava-a',
     ])
+  })
+
+  it('treats omitted hazards as an empty hazard list', () => {
+    const { hazards: _omittedHazards, ...stageWithoutHazards } = firstGateSource
+
+    const result = convertGameplayStageSource(
+      stageWithoutHazards as GameplayStageSource,
+      defaultGameplayThemeAssets,
+    )
+
+    expect(result.map.hazards).toEqual([])
+    expect(result.diagnostics.some((diagnostic) => diagnostic.code === 'unsupported-hazard')).toBe(
+      false,
+    )
   })
 
   it('maps every supported theme to renderable asset refs', () => {

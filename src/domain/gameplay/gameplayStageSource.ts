@@ -26,7 +26,7 @@ export type GameplayStageSource = {
   }
   platforms: readonly GameplayStageSourcePlatform[]
   movingPlatforms?: readonly GameplayStageSourceMovingPlatform[]
-  hazards: readonly GameplayStageSourceHazard[]
+  hazards?: readonly GameplayStageSourceHazard[]
   gravityZones?: readonly GameplayStageSourceGravityZone[]
   surfaceZones?: readonly GameplayStageSourceSurfaceZone[]
   coins: readonly GameplayStageSourceCoin[]

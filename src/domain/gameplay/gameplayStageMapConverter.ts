@@ -129,7 +129,7 @@ function convertHazards(
   source: GameplayStageSource,
   diagnostics: GameplayStageConversionDiagnostic[],
 ): GameplayHazardSpawn[] {
-  return source.hazards.flatMap((hazard) => {
+  return (source.hazards ?? []).flatMap((hazard) => {
     if (hazard.type === 'spikes') {
       return [
         {
