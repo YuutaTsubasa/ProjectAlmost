@@ -170,21 +170,57 @@ afterEach(() => {
   playerActorDefinition.depth = originalDepth
 })
 
-function requireCatalogStage(stageId: '1-1'): GameplayStageMap {
-  const stage = getGameplayStageMap(stageId)
-  expect(stage).toBeDefined()
-  if (!stage) {
-    throw new Error(`Missing gameplay stage map ${stageId}.`)
-  }
-
-  return stage
-}
-
 function createEnemyFixtureStage(): GameplayStageMap {
-  const stage = requireCatalogStage('1-1')
-
   return {
-    ...stage,
+    id: '1-1',
+    theme: 'white-palace',
+    world: {
+      width: 9_600,
+      height: 1_080,
+      tileSize: 64,
+    },
+    rankTargets: {
+      sTime: 30,
+      aTime: 42,
+      bTime: 58,
+      cTime: 78,
+    },
+    backgroundLayers: [
+      {
+        id: 'sky',
+        assetRef: '/assets/maps/white_palace_sky.webp',
+        width: 9_600,
+        height: 1_080,
+        depth: -30,
+        scrollFactor: 0,
+        parallaxFactor: 0.12,
+      },
+      {
+        id: 'far',
+        assetRef: '/assets/maps/white_palace_far_bg.webp',
+        width: 9_600,
+        height: 1_080,
+        depth: -20,
+        scrollFactor: 0.18,
+        parallaxFactor: 0.28,
+      },
+      {
+        id: 'mid',
+        assetRef: '/assets/maps/white_palace_mid_bg_loop.webp',
+        width: 9_600,
+        height: 1_080,
+        depth: -10,
+        scrollFactor: 0.38,
+        parallaxFactor: 0.52,
+      },
+    ],
+    player: {
+      actorId: 'player',
+      spawn: {
+        x: 256,
+        surfaceY: 512,
+      },
+    },
     enemies: [
       {
         id: 'test-guard',
@@ -204,18 +240,63 @@ function createEnemyFixtureStage(): GameplayStageMap {
       },
     ],
     coins: [
-      ...stage.coins,
       {
-        id: 'test-homing-line-coin',
-        x: 1_680,
-        y: 320,
+        id: 'test-first-coin',
+        x: 420,
+        y: 456,
+      },
+      {
+        id: 'test-second-coin',
+        x: 560,
+        y: 456,
       },
       {
         id: 'test-homing-off-line-coin',
         x: 1_504,
         y: 256,
       },
+      {
+        id: 'test-homing-line-coin',
+        x: 1_680,
+        y: 320,
+      },
     ],
+    hazards: [],
+    checkpoints: [
+      {
+        id: 'combat-gate',
+        x: 2_540,
+        surfaceY: 512,
+        spawnX: 2_600,
+        spawnSurfaceY: 512,
+      },
+      {
+        id: 'final-ascent',
+        x: 4_320,
+        surfaceY: 512,
+        spawnX: 4_380,
+        spawnSurfaceY: 512,
+      },
+      {
+        id: 'final-trial',
+        x: 7_300,
+        surfaceY: 512,
+        spawnX: 7_360,
+        spawnSurfaceY: 512,
+      },
+    ],
+    goal: {
+      x: 9_340,
+      surfaceY: 512,
+    },
+    terrain: {
+      tilesetAssetRef: '/assets/tiles/white_palace_platform_tiles.webp',
+      solidTileIndexes: [0, 1, 2],
+      platforms: [
+        { col: 2, row: 8, width: 12, height: 1 },
+        { col: 16, row: 8, width: 5, height: 1 },
+      ],
+    },
   }
 }
 
