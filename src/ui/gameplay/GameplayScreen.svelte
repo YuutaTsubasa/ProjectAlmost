@@ -1,5 +1,8 @@
 <script lang="ts">
   import { onMount } from 'svelte'
+  import { applySettingsControlIntent } from '../../application/input/settingsControls'
+  import type { SettingsScreen } from '../../domain/app/appFlow'
+  import type { LocaleCode, LocalizeData } from '../../domain/data/localize/localize'
   import {
     applyGameplayHudPatch,
     createInitialGameplayHudState,
@@ -7,31 +10,67 @@
   } from '../../domain/gameplay/gameplayHud'
   import type { GameplayStageMap } from '../../domain/gameplay/gameplayMapTypes'
   import {
+    activatePauseMenuItem,
+    backFromPauseSettings,
+    movePauseMenuSelection,
+    openPauseMenu,
+    resumePauseMenu,
+    selectPauseMenuItem,
+    type GameplayPauseState,
+    type PauseAction,
+  } from '../../domain/gameplay/gameplayPause'
+  import {
     mapGamepadControlIntents,
     mapKeyboardControlIntent,
     type ControlIntent,
     type GamepadControlSnapshot,
   } from '../../domain/input/controlIntents'
+  import type { GameSettings } from '../../domain/settings/settings'
   import {
     resolveStageResultActionIntent,
     type StageResultActionType,
     type StageResultControlIntent,
   } from '../../domain/gameplay/stageResult'
   import GameplayHud from './GameplayHud.svelte'
+  import PauseMenu from './PauseMenu.svelte'
   import StageResult from './StageResult.svelte'
   import { createGameplayRenderer } from './createGameplayRenderer'
   import { getGameplayHudStageDisplay } from './gameplayHudDisplay'
+  import SettingsPanel from '../settings/SettingsPanel.svelte'
 
   type Props = {
     stage: GameplayStageMap
+    settings: GameSettings
+    localizeData: LocalizeData
+    locale: LocaleCode
+    localeCodes: readonly LocaleCode[]
     onRetry: () => void
     onStageSelect: () => void
+    onSettingsChange: (settings: GameSettings, fullscreenChanged: boolean) => void
+    onConfirmSettingsDelete: () => void
   }
 
-  let { stage, onRetry, onStageSelect }: Props = $props()
+  let {
+    stage,
+    settings,
+    localizeData,
+    locale,
+    localeCodes,
+    onRetry,
+    onStageSelect,
+    onSettingsChange,
+    onConfirmSettingsDelete,
+  }: Props = $props()
 
   let container: HTMLDivElement
   let hudState = $state<GameplayHudState | null>(null)
+  let pauseState = $state<GameplayPauseState>({ mode: 'playing' })
+  let renderer: ReturnType<typeof createGameplayRenderer> | null = null
+  let pauseSettingsScreen = $state<SettingsScreen>({
+    type: 'settings',
+    selectedItemIndex: 0,
+    deleteConfirm: null,
+  })
   let selectedResultAction = $state(0)
   let previousGamepadSnapshot: GamepadControlSnapshot | null = null
   const stageDisplay = $derived(getGameplayHudStageDisplay(stage.id))
@@ -80,18 +119,123 @@
     }
   }
 
-  function handleKeydown(event: KeyboardEvent): void {
-    if (!hudState?.result) return
+  function pauseGameplay(): void {
+    if (hudState?.result || pauseState.mode !== 'playing' || !renderer) return
+    pauseState = openPauseMenu(pauseState)
+    renderer.pause()
+  }
 
-    const intent = mapKeyboardControlIntent(
-      { key: event.key, repeat: event.repeat },
-      'stage-select',
+  function resumeGameplay(): void {
+    if (!renderer) return
+    pauseState = resumePauseMenu(pauseState)
+    renderer.resume()
+    renderer.resetTiming()
+  }
+
+  function handlePauseAction(action: PauseAction): void {
+    if (action === 'resume') {
+      resumeGameplay()
+      return
+    }
+
+    if (action === 'restart-stage') {
+      pauseState = { mode: 'playing' }
+      onRetry()
+      return
+    }
+
+    if (action === 'open-settings') {
+      pauseState = { mode: 'settings', selectedItemIndex: 2 }
+      pauseSettingsScreen = {
+        type: 'settings',
+        selectedItemIndex: 0,
+        deleteConfirm: null,
+      }
+      return
+    }
+
+    if (action === 'stage-select') {
+      pauseState = { mode: 'playing' }
+      onStageSelect()
+    }
+  }
+
+  function activateSelectedPauseItem(): void {
+    const activation = activatePauseMenuItem(pauseState)
+    pauseState = activation.state
+    if (activation.action) handlePauseAction(activation.action)
+  }
+
+  function handlePauseSettingsControlIntent(intent: ControlIntent): void {
+    const result = applySettingsControlIntent(
+      { screen: pauseSettingsScreen, settings },
+      intent,
+      localeCodes,
     )
 
-    if (!intent || !isStageResultControlIntent(intent)) return
+    pauseSettingsScreen = result.screen
+    if (result.settings !== settings) onSettingsChange(result.settings, result.fullscreenChanged)
+    if (result.deleteConfirmed) onConfirmSettingsDelete()
+    if (result.exitRequested) pauseState = backFromPauseSettings(pauseState)
+  }
+
+  function handlePauseControlIntent(intent: ControlIntent): void {
+    if (pauseState.mode === 'playing') {
+      if (intent === 'back') pauseGameplay()
+      return
+    }
+
+    if (pauseState.mode !== 'paused') return
+
+    if (intent === 'move-up') {
+      pauseState = movePauseMenuSelection(pauseState, -1)
+      return
+    }
+    if (intent === 'move-down') {
+      pauseState = movePauseMenuSelection(pauseState, 1)
+      return
+    }
+    if (intent === 'back') {
+      resumeGameplay()
+      return
+    }
+    if (intent === 'confirm') activateSelectedPauseItem()
+  }
+
+  function handleKeydown(event: KeyboardEvent): void {
+    if (hudState?.result) {
+      const intent = mapKeyboardControlIntent(
+        { key: event.key, repeat: event.repeat },
+        'stage-select',
+      )
+
+      if (!intent || !isStageResultControlIntent(intent)) return
+
+      event.preventDefault()
+      handleResultControlIntent(intent)
+      return
+    }
+
+    if (pauseState.mode === 'settings') {
+      const intent = mapKeyboardControlIntent(
+        { key: event.key, repeat: event.repeat },
+        'settings',
+      )
+      if (!intent) return
+      event.preventDefault()
+      handlePauseSettingsControlIntent(intent)
+      return
+    }
+
+    const context = pauseState.mode === 'paused' ? 'gameplay-pause-menu' : 'gameplay-active'
+    const intent = mapKeyboardControlIntent(
+      { key: event.key, repeat: event.repeat },
+      context,
+    )
+    if (!intent) return
 
     event.preventDefault()
-    handleResultControlIntent(intent)
+    handlePauseControlIntent(intent)
   }
 
   function readGamepadSnapshot(): GamepadControlSnapshot | null {
@@ -108,7 +252,7 @@
 
   onMount(() => {
     let frameId = 0
-    const game = createGameplayRenderer({
+    renderer = createGameplayRenderer({
       parent: container,
       stage,
       onHudUpdate: (patch) => {
@@ -118,14 +262,27 @@
 
     function pollGamepad() {
       const currentSnapshot = readGamepadSnapshot()
+      const context = hudState?.result
+        ? 'stage-select'
+        : pauseState.mode === 'paused'
+          ? 'gameplay-pause-menu'
+          : pauseState.mode === 'settings'
+            ? 'settings'
+            : 'gameplay-active'
       const intents = mapGamepadControlIntents(
         previousGamepadSnapshot,
         currentSnapshot,
-        'stage-select',
+        context,
       )
 
       for (const intent of intents) {
-        handleResultControlIntent(intent)
+        if (hudState?.result) {
+          handleResultControlIntent(intent)
+        } else if (pauseState.mode === 'settings') {
+          handlePauseSettingsControlIntent(intent)
+        } else {
+          handlePauseControlIntent(intent)
+        }
       }
 
       previousGamepadSnapshot = currentSnapshot
@@ -136,7 +293,8 @@
 
     return () => {
       cancelAnimationFrame(frameId)
-      game.destroy()
+      if (renderer) renderer.destroy()
+      renderer = null
     }
   })
 </script>
@@ -151,6 +309,45 @@
       stageLabel={stage.id}
       stageDisplay={stageDisplay}
     />
+    {#if pauseState.mode === 'paused' && !hudState?.result}
+      <PauseMenu
+        selectedItemIndex={pauseState.selectedItemIndex}
+        {localizeData}
+        {locale}
+        onSelectItem={(index) => {
+          pauseState = selectPauseMenuItem(pauseState, index)
+        }}
+        onAction={handlePauseAction}
+      />
+    {:else if pauseState.mode === 'settings' && !hudState?.result}
+      <div class="pause-overlay settings-pause-overlay">
+        <SettingsPanel
+          screen={pauseSettingsScreen}
+          {settings}
+          {localizeData}
+          {locale}
+          onSelectItem={(index) => {
+            pauseSettingsScreen = { ...pauseSettingsScreen, selectedItemIndex: index }
+          }}
+          onAdjustItem={(index, direction) => {
+            pauseSettingsScreen = { ...pauseSettingsScreen, selectedItemIndex: index }
+            handlePauseSettingsControlIntent(direction === -1 ? 'move-left' : 'move-right')
+          }}
+          onActivateItem={(index) => {
+            pauseSettingsScreen = { ...pauseSettingsScreen, selectedItemIndex: index }
+            handlePauseSettingsControlIntent('confirm')
+          }}
+          onCancelDelete={() => {
+            pauseSettingsScreen = { ...pauseSettingsScreen, deleteConfirm: null }
+          }}
+          onConfirmDelete={() => {
+            pauseSettingsScreen = { ...pauseSettingsScreen, deleteConfirm: null }
+            onConfirmSettingsDelete()
+          }}
+          onBackLabel="pause.resume"
+        />
+      </div>
+    {/if}
     {#if hudState.result}
       <StageResult
         result={hudState.result}
@@ -180,5 +377,31 @@
 
   .gameplay-canvas :global(canvas) {
     display: block;
+  }
+
+  .settings-pause-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 22;
+    display: grid;
+    place-items: center;
+    container-type: size;
+    background:
+      linear-gradient(90deg, rgba(7, 22, 48, 0.2), rgba(7, 22, 48, 0.62), rgba(7, 22, 48, 0.2)),
+      rgba(12, 42, 82, 0.2);
+    pointer-events: auto;
+    backdrop-filter: blur(4px) saturate(78%);
+    animation: pause-backdrop-in 220ms ease-out both;
+  }
+
+  @keyframes pause-backdrop-in {
+    from {
+      opacity: 0;
+      backdrop-filter: blur(0) saturate(100%);
+    }
+    to {
+      opacity: 1;
+      backdrop-filter: blur(4px) saturate(78%);
+    }
   }
 </style>

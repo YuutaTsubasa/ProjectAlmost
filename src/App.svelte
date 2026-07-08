@@ -153,6 +153,11 @@
     syncMusicForCurrentState()
   }
 
+  function handleGameplaySettingsChange(nextSettings: GameSettings, fullscreenChanged: boolean): void {
+    syncSettings(nextSettings)
+    if (fullscreenChanged) void setFullscreen(nextSettings.fullscreen)
+  }
+
   function handleReturnFromGameplayToStageSelect() {
     playUiSfx('back')
     appState = returnFromGameplayToStageSelect(appState)
@@ -295,8 +300,14 @@
       {#key getGameplayScreenKey(appState.screen)}
         <GameplayScreen
           stage={gameplayStageMap}
+          {settings}
+          localizeData={projectData.localize}
+          {locale}
+          localeCodes={projectData.localize.languages.map((language) => language.code)}
           onRetry={handleRetryGameplayStage}
           onStageSelect={handleReturnFromGameplayToStageSelect}
+          onSettingsChange={handleGameplaySettingsChange}
+          onConfirmSettingsDelete={handleConfirmDelete}
         />
       {/key}
     {:else if appState.screen.type === 'gameplay'}
