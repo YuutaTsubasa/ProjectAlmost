@@ -2,6 +2,7 @@ import {
   activateTitleMenuItem,
   backFromStageSelect,
   backFromWorldSelect,
+  backFromSettings,
   cancelDeleteConfirm,
   confirmSelectedStage,
   confirmSelectedWorld,
@@ -10,6 +11,9 @@ import {
   moveTitleMenuSelection,
   moveWorldSelection,
   openTitleMenu,
+  moveSettingsDeleteConfirmSelection,
+  moveSettingsScreenSelection,
+  openSettingsDeleteConfirm,
   type AppState,
 } from '../../domain/app/appFlow'
 import { projectData } from '../../domain/data/projectData'
@@ -36,7 +40,29 @@ export function applyControlIntent(state: SettingsStateCarrier, intent: ControlI
 
   if (state.screen.type === 'settings') {
     const currentSettings = (state as SettingsStateCarrier).settings
-    if (!currentSettings) return state
+    if (!currentSettings) {
+      if (intent === 'move-up' || intent === 'move-down') {
+        return moveSettingsScreenSelection(state, intent === 'move-up' ? -1 : 1)
+      }
+
+      if (intent === 'move-left' || intent === 'move-right') {
+        return state.screen.deleteConfirm
+          ? moveSettingsDeleteConfirmSelection(state, intent === 'move-left' ? -1 : 1)
+          : state
+      }
+
+      if (intent === 'confirm') {
+        if (state.screen.selectedItemIndex === 8) return openSettingsDeleteConfirm(state)
+        if (state.screen.selectedItemIndex === 9) return backFromSettings(state)
+        return state
+      }
+
+      if (intent === 'back') {
+        return backFromSettings(state)
+      }
+
+      return state
+    }
 
     const result = applySettingsControlIntent(
       { screen: state.screen, settings: currentSettings },
@@ -53,7 +79,7 @@ export function applyControlIntent(state: SettingsStateCarrier, intent: ControlI
 
     if (result.exitRequested) {
       return {
-        screen: { type: 'title-menu', selectedItemIndex: 1 },
+        screen: backFromSettings(result).screen,
         settings: result.settings,
       }
     }

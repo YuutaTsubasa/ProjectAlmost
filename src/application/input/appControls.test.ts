@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { DEFAULT_SETTINGS } from '../../domain/settings/settings'
+import { activateTitleMenuItem } from '../../domain/app/appFlow'
 import { applyControlIntent } from './appControls'
 
 describe('applyControlIntent', () => {
@@ -130,6 +131,37 @@ describe('applyControlIntent', () => {
     ).toEqual({
       screen: { type: 'settings', selectedItemIndex: 7, deleteConfirm: null },
       settings: { ...DEFAULT_SETTINGS, fullscreen: true },
+    })
+  })
+
+  it('routes title-menu settings controls without an attached settings payload', () => {
+    const routedSettingsState = activateTitleMenuItem({
+      screen: { type: 'title-menu', selectedItemIndex: 1 },
+    })
+
+    expect(applyControlIntent(routedSettingsState, 'move-down')).toEqual({
+      screen: { type: 'settings', selectedItemIndex: 1, deleteConfirm: null },
+    })
+
+    expect(applyControlIntent({ ...routedSettingsState, screen: { type: 'settings', selectedItemIndex: 8, deleteConfirm: null } }, 'confirm')).toEqual(
+      {
+        screen: { type: 'settings', selectedItemIndex: 8, deleteConfirm: { selectedActionIndex: 0 } },
+      },
+    )
+
+    expect(applyControlIntent({ ...routedSettingsState, screen: { type: 'settings', selectedItemIndex: 8, deleteConfirm: null } }, 'back')).toEqual(
+      {
+        screen: { type: 'title-menu', selectedItemIndex: 1 },
+      },
+    )
+
+    expect(
+      applyControlIntent(
+        { screen: { type: 'settings', selectedItemIndex: 8, deleteConfirm: { selectedActionIndex: 1 } } },
+        'back',
+      ),
+    ).toEqual({
+      screen: { type: 'settings', selectedItemIndex: 8, deleteConfirm: null },
     })
   })
 
