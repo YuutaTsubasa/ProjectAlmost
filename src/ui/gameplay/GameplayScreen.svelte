@@ -23,6 +23,7 @@
     mapGamepadControlIntents,
     mapKeyboardControlIntent,
     type ControlIntent,
+    type ControlContext,
     type GamepadControlSnapshot,
   } from '../../domain/input/controlIntents'
   import type { GameSettings } from '../../domain/settings/settings'
@@ -179,6 +180,10 @@
     if (result.exitRequested) pauseState = backFromPauseSettings(pauseState)
   }
 
+  function pauseSettingsControlContext(): ControlContext {
+    return pauseSettingsScreen.deleteConfirm ? 'settings-delete-confirm' : 'settings'
+  }
+
   function handlePauseControlIntent(intent: ControlIntent): void {
     if (pauseState.mode === 'playing') {
       if (intent === 'back') pauseGameplay()
@@ -219,7 +224,7 @@
     if (pauseState.mode === 'settings') {
       const intent = mapKeyboardControlIntent(
         { key: event.key, repeat: event.repeat },
-        'settings',
+        pauseSettingsControlContext(),
       )
       if (!intent) return
       event.preventDefault()
@@ -267,7 +272,7 @@
         : pauseState.mode === 'paused'
           ? 'gameplay-pause-menu'
           : pauseState.mode === 'settings'
-            ? 'settings'
+            ? pauseSettingsControlContext()
             : 'gameplay-active'
       const intents = mapGamepadControlIntents(
         previousGamepadSnapshot,
