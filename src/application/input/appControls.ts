@@ -52,6 +52,7 @@ export function applyControlIntent(state: SettingsStateCarrier, intent: ControlI
       }
 
       if (intent === 'confirm') {
+        if (state.screen.deleteConfirm) return cancelDeleteConfirm(state)
         if (state.screen.selectedItemIndex === 8) return openSettingsDeleteConfirm(state)
         if (state.screen.selectedItemIndex === 9) return backFromSettings(state)
         return state

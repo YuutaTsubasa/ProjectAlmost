@@ -91,3 +91,21 @@
 - Result: passed.
 - Command: `npm run test`
 - Result: passed, 41 files / 424 tests.
+
+## Re-Review Fix
+
+- Fixed the routed-settings fallback in `src/application/input/appControls.ts` so `confirm` closes an already-open `deleteConfirm` dialog instead of reopening it when no `settings` payload is attached.
+- Kept the change local to the no-settings-payload branch and left the shared settings helper untouched.
+
+### RED
+
+- Command: `npm run test -- src/application/input/appControls.test.ts`
+- Result: failed as expected after adding the regression test.
+- Failure: routed settings with `deleteConfirm` open received `deleteConfirm: { selectedActionIndex: 0 }` instead of closing to `null`.
+
+### GREEN
+
+- Command: `npm run test -- src/application/input/appControls.test.ts src/application/input/settingsControls.test.ts`
+- Result: passed, 2 files / 13 tests.
+- Command: `git diff --check`
+- Result: passed with no whitespace or patch-format issues.

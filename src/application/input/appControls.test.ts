@@ -163,6 +163,17 @@ describe('applyControlIntent', () => {
     ).toEqual({
       screen: { type: 'settings', selectedItemIndex: 8, deleteConfirm: null },
     })
+
+    expect(
+      applyControlIntent(
+        {
+          screen: { type: 'settings', selectedItemIndex: 8, deleteConfirm: { selectedActionIndex: 0 } },
+        },
+        'confirm',
+      ),
+    ).toEqual({
+      screen: { type: 'settings', selectedItemIndex: 8, deleteConfirm: null },
+    })
   })
 
   it('handles delete confirmation controls in settings', () => {
