@@ -873,6 +873,13 @@ function recoverFromSurvivedHurt(runtime: FakeRuntime): void {
   runtime.runDelayedCalls(playerLifeTiming.invulnerabilityRecoveryDelayMs)
 }
 
+function startGameplay(runtime: FakeRuntime): void {
+  runtime.scene.update(0, 0)
+  runtime.playerKeys.right.isDown = true
+  runtime.scene.update(16, 16)
+  runtime.playerKeys.right.isDown = false
+}
+
 function createHazardStage(): GameplayStageMap {
   const stage = getGameplayStageMap('1-1')
   expect(stage).toBeDefined()
@@ -941,10 +948,13 @@ describe('createGameplayRendererConfig', () => {
     expect(runtime.playerSprite).toBeDefined()
     if (!runtime.playerSprite) return
 
+    runtime.scene.update(0, 0)
+    runtime.playerKeys.right.isDown = true
     runtime.playerSprite.x = 640
     runtime.playerSprite.y = 320
     runtime.scene.time.now = 65_432
-    runtime.scene.update()
+    runtime.scene.update(65_432, 65_432)
+    runtime.playerKeys.right.isDown = false
 
     expect(runtime.hudUpdates.at(-1)).toMatchObject({
       playerProgress: getHudPositionProgress({
@@ -974,8 +984,11 @@ describe('createGameplayRendererConfig', () => {
     expect(runtime.playerSprite).toBeDefined()
     if (!runtime.playerSprite) return
 
+    runtime.scene.update(0, 0)
+    runtime.playerKeys.right.isDown = true
     runtime.scene.time.now = 1_000
     runtime.scene.update(1_000, 1_000)
+    runtime.playerKeys.right.isDown = false
     runtime.scene.time.now = 18_000
     runtime.scene.update(18_000, 16)
 
@@ -1015,11 +1028,75 @@ describe('createGameplayRendererConfig', () => {
     expect(guard.velocityX).toBe(0)
   })
 
+  it('does not start from held entry input until gameplay input is released and pressed again', () => {
+    const runtime = createSceneRuntime()
+    runtime.scene.create()
+    expect(runtime.playerSprite).toBeDefined()
+    if (!runtime.playerSprite) return
+
+    runtime.playerKeys.right.isDown = true
+    runtime.scene.update(1_000, 1_000)
+
+    expect(runtime.hudUpdates.at(-1)).toMatchObject({
+      time: formatGameplayHudTime(0),
+    })
+    expect(runtime.playerSprite.accelerationX).toBe(0)
+
+    runtime.playerKeys.right.isDown = false
+    runtime.scene.update(1_016, 16)
+
+    expect(runtime.hudUpdates.at(-1)).toMatchObject({
+      time: formatGameplayHudTime(0),
+    })
+
+    runtime.playerKeys.right.isDown = true
+    runtime.scene.update(1_032, 16)
+
+    expect(runtime.hudUpdates.at(-1)).toMatchObject({
+      time: formatGameplayHudTime(16),
+    })
+    expect(runtime.playerSprite.accelerationX).toBeGreaterThan(0)
+  })
+
+  it('honors the first valid start input in the same update frame', () => {
+    const runtime = createSceneRuntime()
+    runtime.scene.create()
+    expect(runtime.playerSprite).toBeDefined()
+    if (!runtime.playerSprite) return
+
+    runtime.scene.update(0, 0)
+    runtime.playerKeys.left.isDown = true
+    runtime.scene.update(16, 16)
+
+    expect(runtime.hudUpdates.at(-1)).toMatchObject({
+      time: formatGameplayHudTime(16),
+    })
+    expect(runtime.playerSprite.accelerationX).toBeLessThan(0)
+  })
+
+  it('starts Armor Guard patrol after the start gate is running', () => {
+    const runtime = createSceneRuntime()
+    runtime.scene.create()
+
+    const guard = runtime.enemySprites.find(
+      (sprite) => sprite.texture === enemyActorDefinitions['armor-guard'].sprites?.walk?.key,
+    )
+    expect(guard).toBeDefined()
+    if (!guard) return
+
+    runtime.scene.update(0, 0)
+    runtime.playerKeys.right.isDown = true
+    runtime.scene.update(16, 16)
+
+    expect(guard.velocityX).toBe(-enemyActorDefinitions['armor-guard'].patrol.speed)
+  })
+
   it('emits HUD coin statistics when a coin is collected', () => {
     const runtime = createSceneRuntime()
     runtime.scene.create()
     expect(runtime.playerSprite).toBeDefined()
     if (!runtime.playerSprite) return
+    startGameplay(runtime)
 
     const coin = runtime.images.find((image) => image.texture === 'coin')
     expect(coin).toBeDefined()
@@ -1075,6 +1152,7 @@ describe('createGameplayRendererConfig', () => {
     runtime.scene.create()
     expect(runtime.playerSprite).toBeDefined()
     if (!runtime.playerSprite) return
+    startGameplay(runtime)
 
     runtime.playerSprite.y = runtime.stage.world.height + PLAYER_OUT_OF_BOUNDS_MARGIN + 1
     runtime.scene.update()
@@ -1091,6 +1169,7 @@ describe('createGameplayRendererConfig', () => {
     runtime.scene.create()
     expect(runtime.playerSprite).toBeDefined()
     if (!runtime.playerSprite) return
+    startGameplay(runtime)
 
     const core = runtime.sprites.find((sprite) => sprite.texture === 'azure-core')
     expect(core).toBeDefined()
@@ -1154,8 +1233,11 @@ describe('createGameplayRendererConfig', () => {
 
     const runtime = createSceneRuntime({ stage })
     runtime.scene.create()
+    runtime.scene.update(0, 0)
+    runtime.playerKeys.right.isDown = true
     runtime.scene.time.now = 12_340
-    runtime.scene.update()
+    runtime.scene.update(12_340, 12_340)
+    runtime.playerKeys.right.isDown = false
 
     const goal = getGoalSprite(runtime)
     runtime.triggerGoalOverlap(goal)
@@ -1198,8 +1280,11 @@ describe('createGameplayRendererConfig', () => {
 
     const runtime = createSceneRuntime({ stage })
     runtime.scene.create()
+    runtime.scene.update(0, 0)
+    runtime.playerKeys.right.isDown = true
     runtime.scene.time.now = 1_000
     runtime.scene.update(1_000, 1_000)
+    runtime.playerKeys.right.isDown = false
     runtime.scene.time.now = 18_000
     runtime.scene.update(18_000, 16)
 
@@ -1563,6 +1648,7 @@ describe('createGameplayRendererConfig', () => {
     runtime.scene.create()
     expect(runtime.playerSprite).toBeDefined()
     if (!runtime.playerSprite) return
+    startGameplay(runtime)
 
     runtime.playerKeys.j.isDown = true
     runtime.scene.update()
@@ -1589,6 +1675,7 @@ describe('createGameplayRendererConfig', () => {
     const core = runtime.sprites.find((sprite) => sprite.texture === 'azure-core')
     expect(core).toBeDefined()
     if (!core || !runtime.playerSprite) return
+    startGameplay(runtime)
 
     runtime.playerSprite.body.blocked.down = false
     runtime.playerSprite.body.touching.down = false
@@ -1752,6 +1839,7 @@ describe('createGameplayRendererConfig', () => {
     runtime.scene.create()
     expect(runtime.playerSprite).toBeDefined()
     if (!runtime.playerSprite) return
+    startGameplay(runtime)
 
     const { checkpoint, sprite } = getCheckpointSprite(runtime, 'combat-gate')
     runtime.playerSprite.x = checkpoint.x
@@ -1787,6 +1875,7 @@ describe('createGameplayRendererConfig', () => {
     runtime.scene.create()
     expect(runtime.playerSprite).toBeDefined()
     if (!runtime.playerSprite) return
+    startGameplay(runtime)
 
     const { checkpoint, sprite } = getCheckpointSprite(runtime, 'combat-gate')
     runtime.playerSprite.x = checkpoint.x
@@ -1803,6 +1892,7 @@ describe('createGameplayRendererConfig', () => {
     runtime.scene.create()
     expect(runtime.playerSprite).toBeDefined()
     if (!runtime.playerSprite) return
+    startGameplay(runtime)
 
     const first = getCheckpointSprite(runtime, 'combat-gate')
     const second = getCheckpointSprite(runtime, 'final-ascent')
@@ -1947,6 +2037,7 @@ describe('createGameplayRendererConfig', () => {
     const coin = runtime.images.find((image) => image.texture === 'coin')
     expect(coin).toBeDefined()
     if (!coin || !runtime.playerSprite) return
+    startGameplay(runtime)
 
     runtime.playerSprite.x = coin.x
     runtime.playerSprite.y = coin.y
@@ -1977,6 +2068,7 @@ describe('createGameplayRendererConfig', () => {
     const coin = runtime.images.find((image) => image.texture === 'coin')
     expect(coin).toBeDefined()
     if (!coin || !runtime.playerSprite) return
+    startGameplay(runtime)
 
     runtime.playerSprite.x = coin.x
     runtime.playerSprite.y = coin.y
@@ -2012,6 +2104,7 @@ describe('createGameplayRendererConfig', () => {
     expect(guard).toBeDefined()
     expect(core).toBeDefined()
     if (!guard || !core || !runtime.playerSprite) return
+    startGameplay(runtime)
 
     runtime.playerSprite.body.blocked.down = false
     runtime.playerSprite.body.touching.down = false
@@ -2042,6 +2135,7 @@ describe('createGameplayRendererConfig', () => {
     const core = runtime.sprites.find((sprite) => sprite.texture === 'azure-core')
     expect(core).toBeDefined()
     if (!core || !runtime.playerSprite) return
+    startGameplay(runtime)
 
     runtime.playerSprite.body.blocked.down = false
     runtime.playerSprite.body.touching.down = false
@@ -2076,6 +2170,7 @@ describe('createGameplayRendererConfig', () => {
     const core = runtime.sprites.find((sprite) => sprite.texture === 'azure-core')
     expect(core).toBeDefined()
     if (!core || !runtime.playerSprite) return
+    startGameplay(runtime)
 
     runtime.playerSprite.body.blocked.down = false
     runtime.playerSprite.body.touching.down = false
@@ -2105,6 +2200,7 @@ describe('createGameplayRendererConfig', () => {
     expect(core).toBeDefined()
     expect(lineCoin).toBeDefined()
     if (!core || !lineCoin || !runtime.playerSprite) return
+    startGameplay(runtime)
 
     runtime.playerSprite.body.blocked.down = false
     runtime.playerSprite.body.touching.down = false
@@ -2135,6 +2231,7 @@ describe('createGameplayRendererConfig', () => {
     expect(core).toBeDefined()
     expect(offLineCoin).toBeDefined()
     if (!core || !offLineCoin || !runtime.playerSprite) return
+    startGameplay(runtime)
 
     runtime.playerSprite.body.blocked.down = false
     runtime.playerSprite.body.touching.down = false
@@ -2155,6 +2252,7 @@ describe('createGameplayRendererConfig', () => {
     const core = runtime.sprites.find((sprite) => sprite.texture === 'azure-core')
     expect(core).toBeDefined()
     if (!core || !runtime.playerSprite) return
+    startGameplay(runtime)
 
     runtime.playerSprite.body.blocked.down = false
     runtime.playerSprite.body.touching.down = false
@@ -2179,6 +2277,7 @@ describe('createGameplayRendererConfig', () => {
     )
     expect(guard).toBeDefined()
     if (!guard || !runtime.playerSprite) return
+    startGameplay(runtime)
 
     runtime.playerSprite.body.blocked.down = false
     runtime.playerSprite.body.touching.down = false
@@ -2204,6 +2303,7 @@ describe('createGameplayRendererConfig', () => {
     expect(guard).toBeDefined()
     expect(core).toBeDefined()
     if (!guard || !core || !runtime.playerSprite) return
+    startGameplay(runtime)
 
     runtime.playerSprite.body.blocked.down = false
     runtime.playerSprite.body.touching.down = false
@@ -2230,6 +2330,7 @@ describe('createGameplayRendererConfig', () => {
     runtime.scene.create()
     expect(runtime.playerSprite).toBeDefined()
     if (!runtime.playerSprite) return
+    startGameplay(runtime)
 
     runtime.playerSprite.body.blocked.down = false
     runtime.playerSprite.body.touching.down = false
@@ -2251,6 +2352,7 @@ describe('createGameplayRendererConfig', () => {
     const core = runtime.sprites.find((sprite) => sprite.texture === 'azure-core')
     expect(core).toBeDefined()
     if (!core || !runtime.playerSprite) return
+    startGameplay(runtime)
 
     runtime.playerSprite.body.blocked.down = false
     runtime.playerSprite.body.touching.down = false
@@ -2282,6 +2384,7 @@ describe('createGameplayRendererConfig', () => {
     expect(guard).toBeDefined()
     expect(core).toBeDefined()
     if (!guard || !core || !runtime.playerSprite) return
+    startGameplay(runtime)
 
     runtime.playerSprite.body.blocked.down = false
     runtime.playerSprite.body.touching.down = false
@@ -2314,6 +2417,7 @@ describe('createGameplayRendererConfig', () => {
     const core = runtime.sprites.find((sprite) => sprite.texture === 'azure-core')
     expect(core).toBeDefined()
     if (!core || !runtime.playerSprite) return
+    startGameplay(runtime)
 
     runtime.playerSprite.body.blocked.down = false
     runtime.playerSprite.body.touching.down = false
@@ -2342,6 +2446,7 @@ describe('createGameplayRendererConfig', () => {
     const core = runtime.sprites.find((sprite) => sprite.texture === 'azure-core')
     expect(core).toBeDefined()
     if (!core || !runtime.playerSprite) return
+    startGameplay(runtime)
 
     runtime.playerSprite.body.blocked.down = false
     runtime.playerSprite.body.touching.down = false
@@ -2430,6 +2535,7 @@ describe('createGameplayRendererConfig', () => {
     const guardDefinition = enemyActorDefinitions['armor-guard']
 
     runtime.scene.create()
+    startGameplay(runtime)
 
     const guard = runtime.enemySprites.find((sprite) => sprite.texture === guardDefinition.sprites?.walk?.key)
     expect(guard).toBeDefined()
@@ -2499,6 +2605,7 @@ describe('createGameplayRendererConfig', () => {
     const runtime = createSceneRuntime()
 
     runtime.scene.create()
+    startGameplay(runtime)
     const guard = runtime.enemySprites.find((sprite) => sprite.texture === enemyActorDefinitions['armor-guard'].sprites?.walk?.key)
     expect(guard).toBeDefined()
     if (!guard) return
@@ -2531,6 +2638,7 @@ describe('createGameplayRendererConfig', () => {
   it('creates an invisible melee hitbox and keeps attack animation priority on J press', () => {
     const runtime = createSceneRuntime()
     runtime.scene.create()
+    startGameplay(runtime)
 
     runtime.playerKeys.j.isDown = true
     runtime.scene.update()
@@ -2553,6 +2661,7 @@ describe('createGameplayRendererConfig', () => {
   it('faces and spawns the melee hitbox left when left and J are pressed on the same frame', () => {
     const runtime = createSceneRuntime()
     runtime.scene.create()
+    startGameplay(runtime)
 
     runtime.playerKeys.left.isDown = true
     runtime.playerKeys.j.isDown = true
@@ -2576,6 +2685,7 @@ describe('createGameplayRendererConfig', () => {
   it('destroys the hitbox, ends attack, and restores readiness on prototype delays', () => {
     const runtime = createSceneRuntime()
     runtime.scene.create()
+    startGameplay(runtime)
 
     runtime.playerKeys.j.isDown = true
     runtime.scene.update()
@@ -2604,6 +2714,7 @@ describe('createGameplayRendererConfig', () => {
     const guard = runtime.sprites.find((sprite) => sprite.texture === 'enemy-guard-walk')
     expect(guard).toBeDefined()
     if (!guard || !runtime.playerSprite) return
+    startGameplay(runtime)
 
     runtime.playerSprite.x = 540
     runtime.playerSprite.y = guard.y
@@ -2628,6 +2739,7 @@ describe('createGameplayRendererConfig', () => {
     expect(guard).toBeDefined()
     expect(core).toBeDefined()
     if (!guard || !core || !runtime.playerSprite) return
+    startGameplay(runtime)
 
     runtime.playerSprite.x = 540
     runtime.playerSprite.y = guard.y
@@ -2657,6 +2769,7 @@ describe('createGameplayRendererConfig', () => {
     const guard = runtime.sprites.find((sprite) => sprite.texture === 'enemy-guard-walk')
     expect(guard).toBeDefined()
     if (!guard || !runtime.playerSprite) return
+    startGameplay(runtime)
 
     runtime.playerSprite.x = 540
     runtime.playerSprite.y = guard.y
@@ -2678,6 +2791,7 @@ describe('createGameplayRendererConfig', () => {
     const guard = runtime.sprites.find((sprite) => sprite.texture === 'enemy-guard-walk')
     expect(guard).toBeDefined()
     if (!guard) return
+    startGameplay(runtime)
 
     runtime.playerSprite!.x = 672
     runtime.playerSprite!.y = guard.y
@@ -2702,6 +2816,7 @@ describe('createGameplayRendererConfig', () => {
     const core = runtime.sprites.find((sprite) => sprite.texture === 'azure-core')
     expect(core).toBeDefined()
     if (!core) return
+    startGameplay(runtime)
 
     runtime.playerSprite!.x = 1712
     runtime.playerSprite!.y = core.y
@@ -2916,6 +3031,7 @@ describe('createGameplayRendererConfig', () => {
     const guard = runtime.sprites.find((sprite) => sprite.texture === 'enemy-guard-walk')
     expect(guard).toBeDefined()
     if (!guard || !runtime.playerSprite) return
+    startGameplay(runtime)
 
     runtime.playerSprite.x = 650
     guard.x = 720
@@ -2959,6 +3075,7 @@ describe('createGameplayRendererConfig', () => {
     const guard = runtime.sprites.find((sprite) => sprite.texture === 'enemy-guard-walk')
     expect(guard).toBeDefined()
     if (!guard || !runtime.playerSprite) return
+    startGameplay(runtime)
 
     runtime.playerSprite.x = 672
     runtime.playerSprite.y = guard.y
@@ -2986,6 +3103,7 @@ describe('createGameplayRendererConfig', () => {
     expect(guard).toBeDefined()
     expect(core).toBeDefined()
     if (!guard || !core || !runtime.playerSprite) return
+    startGameplay(runtime)
 
     runtime.playerSprite.x = 540
     runtime.playerSprite.y = guard.y
@@ -3098,6 +3216,7 @@ describe('createGameplayRendererConfig', () => {
     expect(guard).toBeDefined()
     expect(runtime.playerSprite).toBeDefined()
     if (!guard || !runtime.playerSprite) return
+    startGameplay(runtime)
 
     const { checkpoint } = getCheckpointSprite(runtime, 'combat-gate')
     runtime.playerSprite.x = checkpoint.x
@@ -3167,6 +3286,7 @@ describe('createGameplayRendererConfig', () => {
       runtime.scene.create()
       expect(runtime.playerSprite).toBeDefined()
       if (!runtime.playerSprite) return
+      startGameplay(runtime)
       const expectedRespawnX =
         position.x >= runtime.stage.checkpoints[0].x
           ? runtime.stage.checkpoints[0].spawnX
@@ -3215,9 +3335,10 @@ describe('createGameplayRendererConfig', () => {
     const runtime = createSceneRuntime()
 
     runtime.scene.create()
+    runtime.scene.update(0, 0)
     runtime.playerKeys.left.isDown = true
 
-    runtime.scene.update()
+    runtime.scene.update(16, 16)
 
     expect(runtime.playerSprite?.dragX).toBe(playerActorDefinition.movement.idleDragX)
     expect(runtime.playerSprite?.accelerationX).toBe(-playerActorDefinition.movement.groundAcceleration)
@@ -3232,9 +3353,10 @@ describe('createGameplayRendererConfig', () => {
     const runtime = createSceneRuntime()
 
     runtime.scene.create()
+    runtime.scene.update(0, 0)
     runtime.playerKeys.right.isDown = true
 
-    runtime.scene.update()
+    runtime.scene.update(16, 16)
 
     expect(runtime.playerSprite?.dragX).toBe(playerActorDefinition.movement.idleDragX)
     expect(runtime.playerSprite?.accelerationX).toBe(playerActorDefinition.movement.groundAcceleration)
@@ -3249,9 +3371,10 @@ describe('createGameplayRendererConfig', () => {
     const runtime = createSceneRuntime()
 
     runtime.scene.create()
+    runtime.scene.update(0, 0)
     runtime.playerKeys.a.isDown = true
 
-    runtime.scene.update()
+    runtime.scene.update(16, 16)
 
     expect(runtime.playerSprite?.accelerationX).toBe(-playerActorDefinition.movement.groundAcceleration)
     expect(runtime.playerSprite?.flipX).toBe(true)
@@ -3265,9 +3388,10 @@ describe('createGameplayRendererConfig', () => {
     const runtime = createSceneRuntime()
 
     runtime.scene.create()
+    runtime.scene.update(0, 0)
     runtime.playerKeys.d.isDown = true
 
-    runtime.scene.update()
+    runtime.scene.update(16, 16)
 
     expect(runtime.playerSprite?.accelerationX).toBe(playerActorDefinition.movement.groundAcceleration)
     expect(runtime.playerSprite?.flipX).toBe(false)
@@ -3281,10 +3405,11 @@ describe('createGameplayRendererConfig', () => {
     const runtime = createSceneRuntime()
 
     runtime.scene.create()
+    runtime.scene.update(0, 0)
     runtime.playerKeys.left.isDown = true
     runtime.playerKeys.right.isDown = true
 
-    runtime.scene.update()
+    runtime.scene.update(16, 16)
 
     expect(runtime.playerSprite?.accelerationX).toBe(-playerActorDefinition.movement.groundAcceleration)
     expect(runtime.playerSprite?.flipX).toBe(true)
@@ -3313,9 +3438,10 @@ describe('createGameplayRendererConfig', () => {
     const runtime = createSceneRuntime()
 
     runtime.scene.create()
+    runtime.scene.update(0, 0)
     runtime.playerKeys.space.isDown = true
 
-    runtime.scene.update()
+    runtime.scene.update(16, 16)
 
     expect(runtime.playerSprite?.velocityY).toBe(playerActorDefinition.jump.velocityY)
   })
@@ -3324,9 +3450,10 @@ describe('createGameplayRendererConfig', () => {
     const runtime = createSceneRuntime()
 
     runtime.scene.create()
+    runtime.scene.update(0, 0)
     runtime.playerKeys.space.isDown = true
 
-    runtime.scene.update()
+    runtime.scene.update(16, 16)
 
     expect(runtime.playerSprite?.playCalls.at(-1)).toEqual({
       key: playerActorDefinition.sprites.jump.key,
@@ -3337,13 +3464,15 @@ describe('createGameplayRendererConfig', () => {
   it('maps ArrowUp and W to jump press rising edges', () => {
     const upRuntime = createSceneRuntime()
     upRuntime.scene.create()
+    upRuntime.scene.update(0, 0)
     upRuntime.playerKeys.up.isDown = true
-    upRuntime.scene.update()
+    upRuntime.scene.update(16, 16)
 
     const wRuntime = createSceneRuntime()
     wRuntime.scene.create()
+    wRuntime.scene.update(0, 0)
     wRuntime.playerKeys.w.isDown = true
-    wRuntime.scene.update()
+    wRuntime.scene.update(16, 16)
 
     expect(upRuntime.playerSprite?.velocityY).toBe(playerActorDefinition.jump.velocityY)
     expect(wRuntime.playerSprite?.velocityY).toBe(playerActorDefinition.jump.velocityY)
@@ -3353,8 +3482,9 @@ describe('createGameplayRendererConfig', () => {
     const runtime = createSceneRuntime()
 
     runtime.scene.create()
+    runtime.scene.update(0, 0)
     runtime.playerKeys.space.isDown = true
-    runtime.scene.update()
+    runtime.scene.update(16, 16)
     expect(runtime.playerSprite?.velocityY).toBe(playerActorDefinition.jump.velocityY)
 
     runtime.playerSprite!.velocityY = 0
@@ -3388,6 +3518,7 @@ describe('createGameplayRendererConfig', () => {
     const runtime = createSceneRuntime()
 
     runtime.scene.create()
+    startGameplay(runtime)
     runtime.playerSprite!.body.blocked.down = false
     runtime.playerSprite!.body.touching.down = false
     runtime.scene.update()
