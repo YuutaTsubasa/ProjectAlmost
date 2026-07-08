@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest'
+import pauseMenuSource from '../gameplay/PauseMenu.svelte?raw'
+import settingsPanelSource from '../settings/SettingsPanel.svelte?raw'
 import settingsSource from '../settings/SettingsScreen.svelte?raw'
 import stageSelectSource from '../stage/StageSelectScreen.svelte?raw'
 import titleSource from '../title/TitleScreen.svelte?raw'
@@ -8,7 +10,9 @@ const screenSources = [
   ['TitleScreen', titleSource],
   ['WorldSelectScreen', worldSelectSource],
   ['SettingsScreen', settingsSource],
+  ['SettingsPanel', settingsPanelSource],
   ['StageSelectScreen', stageSelectSource],
+  ['PauseMenu', pauseMenuSource],
 ] as const
 
 describe('ControlHints component contract', () => {
@@ -23,6 +27,12 @@ describe('ControlHints component contract', () => {
 
   it('uses shared control hints on all menu screens instead of inline keycap markup', () => {
     for (const [screenName, source] of screenSources) {
+      if (screenName === 'SettingsScreen') {
+        expect(source, screenName).toContain("import SettingsPanel from './SettingsPanel.svelte'")
+        expect(source, screenName).not.toContain('<kbd>')
+        continue
+      }
+
       expect(source, screenName).toContain("import ControlHints from '../controls/ControlHints.svelte'")
       expect(source, screenName).toContain('<ControlHints')
       expect(source, screenName).not.toContain('<kbd>')
