@@ -261,4 +261,28 @@ describe('convertGameplayStageSource', () => {
       expect(result.map.terrain.tilesetAssetRef).toMatch(/^\/assets\//)
     }
   })
+
+  it('emits a theme asset fallback diagnostic for non-white themes while still producing renderable assets', () => {
+    const result = convertGameplayStageSource(
+      {
+        ...firstGateSource,
+        theme: 'emerald-sanctuary',
+      },
+      defaultGameplayThemeAssets,
+    )
+
+    expect(result.map.theme).toBe('emerald-sanctuary')
+    expect(result.map.backgroundLayers.every((layer) => layer.assetRef.startsWith('/assets/'))).toBe(
+      true,
+    )
+    expect(result.map.terrain.tilesetAssetRef).toMatch(/^\/assets\//)
+    expect(result.diagnostics).toEqual([
+      {
+        stageId: '1-1',
+        code: 'theme-asset-fallback',
+        sourceId: 'emerald-sanctuary',
+        message: 'Stage 1-1 uses fallback gameplay assets for theme emerald-sanctuary.',
+      },
+    ])
+  })
 })
