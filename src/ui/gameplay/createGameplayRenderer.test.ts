@@ -170,6 +170,55 @@ afterEach(() => {
   playerActorDefinition.depth = originalDepth
 })
 
+function requireCatalogStage(stageId: '1-1'): GameplayStageMap {
+  const stage = getGameplayStageMap(stageId)
+  expect(stage).toBeDefined()
+  if (!stage) {
+    throw new Error(`Missing gameplay stage map ${stageId}.`)
+  }
+
+  return stage
+}
+
+function createEnemyFixtureStage(): GameplayStageMap {
+  const stage = requireCatalogStage('1-1')
+
+  return {
+    ...stage,
+    enemies: [
+      {
+        id: 'test-guard',
+        type: 'armor-guard',
+        x: 720,
+        surfaceY: 512,
+        patrolMinX: 608,
+        patrolMaxX: 832,
+      },
+      {
+        id: 'test-core',
+        type: 'azure-core',
+        x: 1_760,
+        y: 320,
+        patrolMinX: 1_760,
+        patrolMaxX: 1_760,
+      },
+    ],
+    coins: [
+      ...stage.coins,
+      {
+        id: 'test-homing-line-coin',
+        x: 1_680,
+        y: 320,
+      },
+      {
+        id: 'test-homing-off-line-coin',
+        x: 1_504,
+        y: 256,
+      },
+    ],
+  }
+}
+
 function createFakeTileSprite() {
   const sprite = {
     depth: 0,
@@ -502,12 +551,7 @@ function createSceneRuntime(input: {
   stage?: GameplayStageMap
   onHudUpdate?: (patch: GameplayHudPatch) => void
 } = {}) {
-  const stage = input.stage ?? getGameplayStageMap('1-1')
-
-  expect(stage).toBeDefined()
-  if (!stage) {
-    throw new Error('Missing gameplay stage map 1-1.')
-  }
+  const stage = input.stage ?? createEnemyFixtureStage()
 
   const hudUpdates: GameplayHudPatch[] = []
   const config = createGameplayRendererConfig({
@@ -881,11 +925,7 @@ function startGameplay(runtime: FakeRuntime): void {
 }
 
 function createHazardStage(): GameplayStageMap {
-  const stage = getGameplayStageMap('1-1')
-  expect(stage).toBeDefined()
-  if (!stage) {
-    throw new Error('Missing gameplay stage map 1-1.')
-  }
+  const stage = createEnemyFixtureStage()
 
   return {
     ...stage,

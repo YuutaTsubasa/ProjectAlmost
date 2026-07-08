@@ -56,7 +56,7 @@ Result:
 
 ## Commit
 
-- `aa956c6` - `feat: convert gameplay stage source catalog`
+- `a0e8d34` - `feat: convert gameplay stage source catalog`
 
 ## Self-Review
 
@@ -68,3 +68,35 @@ Result:
 ## Concerns
 
 - Full `npm run test` is not green because `src/domain/gameplay/gameplayHud.test.ts` and `src/ui/gameplay/createGameplayRenderer.test.ts` still assert the old manual `1-1` enemy composition and coordinates. The task brief explicitly excluded renderer-test updates, so I am carrying that as the remaining concern on this commit.
+
+---
+
+## Task 2 Fallout Fix
+
+### Scope
+
+- Isolated HUD enemy-marker coverage from catalog `1-1` by replacing the production-stage fixture with a local minimal `GameplayStageMap` fixture containing one Armor Guard and one Azure Core.
+- Isolated renderer enemy and homing-attack behavior tests from catalog `1-1` by switching the default runtime helper to a local fixture stage that preserves the old guard/core layout and coin positions required by the existing behavior specs.
+- Left production converter and catalog code unchanged.
+
+### Verification
+
+Commands:
+
+```bash
+npm run test -- src/domain/gameplay/gameplayHud.test.ts src/ui/gameplay/createGameplayRenderer.test.ts
+npm run test
+npm run check
+git diff --check
+```
+
+Result:
+
+- Focused Vitest run: passed, 2 files and 115 tests green.
+- Full `npm run test`: passed, 46 files and 474 tests green.
+- `npm run check`: passed with 0 errors and 0 warnings.
+- `git diff --check`: passed with no whitespace issues.
+
+### Commit
+
+- Pending at report update time: `test: isolate gameplay enemy fixtures from catalog data`

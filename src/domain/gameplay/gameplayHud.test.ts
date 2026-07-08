@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import type { GameplayStageMap } from './gameplayMapTypes'
 import { PLAYER_MAX_HEALTH } from './playerLife'
 import { getGameplayStageMap } from './gameplayStageMaps'
 import {
@@ -14,6 +15,62 @@ import {
   getHudPlatformMarkers,
   getHudPositionProgress,
 } from './gameplayHud'
+
+function createHudEnemyFixture(): GameplayStageMap {
+  return {
+    id: '1-1',
+    theme: 'white-palace',
+    world: {
+      width: 2_400,
+      height: 720,
+      tileSize: 64,
+    },
+    rankTargets: {
+      sTime: 20,
+      aTime: 35,
+      bTime: 50,
+      cTime: 70,
+    },
+    backgroundLayers: [],
+    player: {
+      actorId: 'player',
+      spawn: {
+        x: 128,
+        surfaceY: 576,
+      },
+    },
+    enemies: [
+      {
+        id: 'test-guard',
+        type: 'armor-guard',
+        x: 720,
+        surfaceY: 432,
+        patrolMinX: 607,
+        patrolMaxX: 833,
+      },
+      {
+        id: 'test-core',
+        type: 'azure-core',
+        x: 1_760,
+        y: 320,
+        patrolMinX: 1_760,
+        patrolMaxX: 1_760,
+      },
+    ],
+    coins: [],
+    hazards: [],
+    checkpoints: [],
+    goal: {
+      x: 2_200,
+      surfaceY: 576,
+    },
+    terrain: {
+      tilesetAssetRef: 'test://tileset',
+      solidTileIndexes: [],
+      platforms: [],
+    },
+  }
+}
 
 describe('gameplay HUD labels', () => {
   it('formats prototype-style health and coin labels', () => {
@@ -102,24 +159,20 @@ describe('gameplay HUD state', () => {
     expect(state.enemyMarkers.length).toBe(stage.enemies.length)
   })
 
-  it('projects rebuilt 1-1 enemy markers from each enemy spawn field', () => {
-    const stage = getGameplayStageMap('1-1')
-    expect(stage).toBeDefined()
-    if (!stage) return
-
+  it('projects enemy markers from each enemy spawn field', () => {
+    const stage = createHudEnemyFixture()
     const state = createInitialGameplayHudState(stage)
     const [armorGuard, azureCore] = stage.enemies
 
-    if (armorGuard.type !== 'armor-guard') {
-      throw new Error('Expected first rebuilt 1-1 enemy to be Armor Guard.')
-    }
-    if (azureCore.type !== 'azure-core') {
-      throw new Error('Expected second rebuilt 1-1 enemy to be Azure Core.')
-    }
-
     expect(state.enemyMarkers).toHaveLength(2)
-    expect(state.enemyMarkers[0].y).toBeCloseTo(armorGuard.surfaceY / stage.world.height)
-    expect(state.enemyMarkers[1].y).toBeCloseTo(azureCore.y / stage.world.height)
+    expect(armorGuard.type).toBe('armor-guard')
+    expect(azureCore.type).toBe('azure-core')
+    if (armorGuard.type === 'armor-guard') {
+      expect(state.enemyMarkers[0].y).toBeCloseTo(armorGuard.surfaceY / stage.world.height)
+    }
+    if (azureCore.type === 'azure-core') {
+      expect(state.enemyMarkers[1].y).toBeCloseTo(azureCore.y / stage.world.height)
+    }
   })
 
   it('applies HUD patches immutably', () => {
