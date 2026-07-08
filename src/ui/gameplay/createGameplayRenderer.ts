@@ -22,6 +22,13 @@ import {
   type GameplayHudPatch,
 } from '../../domain/gameplay/gameplayHud'
 import {
+  advanceGameplayStartGate,
+  createInitialGameplayStartGateState,
+  isGameplayStartGateRunning,
+  type GameplayStartGateState,
+  type GameplayStartInputSnapshot,
+} from '../../domain/gameplay/gameplayStartGate'
+import {
   getGroundedHazardCenterY,
   getHazardBodyPresentation,
   getHazardFrameIndex,
@@ -223,6 +230,7 @@ class GameplayMapScene extends Phaser.Scene {
   private enemiesDefeated = 0
   private stageCleared = false
   private gameplayElapsedMs = 0
+  private gameplayStartGateState: GameplayStartGateState = createInitialGameplayStartGateState()
 
   constructor(stage: GameplayStageMap, onHudUpdate?: (patch: GameplayHudPatch) => void) {
     super(`GameplayMapScene:${stage.id}`)
@@ -318,15 +326,24 @@ class GameplayMapScene extends Phaser.Scene {
     this.falls = 0
     this.enemiesDefeated = 0
     this.gameplayElapsedMs = 0
+    this.gameplayStartGateState = createInitialGameplayStartGateState()
     this.emitHudPatch(createInitialGameplayHudState(this.stageMap))
   }
 
   update(_time?: number, delta?: number): void {
-    this.advanceGameplayElapsed(delta)
+    this.updatePresentationOnlySystems()
 
-    for (const layer of this.backgroundLayers) {
-      layer.sprite.setTilePosition(this.cameras.main.scrollX * layer.parallaxFactor, 0)
+    this.gameplayStartGateState = advanceGameplayStartGate(
+      this.gameplayStartGateState,
+      this.getGameplayStartInputSnapshot(),
+    )
+
+    if (!isGameplayStartGateRunning(this.gameplayStartGateState)) {
+      this.emitHudPositionPatch()
+      return
     }
+
+    this.advanceGameplayElapsed(delta)
 
     this.updateEnemyPatrol()
     this.processActiveMeleeHitboxes()
@@ -336,6 +353,41 @@ class GameplayMapScene extends Phaser.Scene {
     this.checkPlayerOutOfBounds()
     this.updatePlayerMovement()
     this.emitHudPositionPatch()
+  }
+
+  private updatePresentationOnlySystems(): void {
+    for (const layer of this.backgroundLayers) {
+      layer.sprite.setTilePosition(this.cameras.main.scrollX * layer.parallaxFactor, 0)
+    }
+  }
+
+  private getGameplayStartInputSnapshot(): GameplayStartInputSnapshot {
+    const keys = this.playerKeys
+
+    if (!keys) {
+      return {
+        leftHeld: false,
+        rightHeld: false,
+        crouchHeld: false,
+        jumpPressed: false,
+        jumpHeld: false,
+        attackPressed: false,
+        attackHeld: false,
+      }
+    }
+
+    const jumpHeld = keys.space.isDown || keys.up.isDown || keys.w.isDown
+    const attackHeld = keys.j.isDown || keys.z.isDown
+
+    return {
+      leftHeld: keys.left.isDown || keys.a.isDown,
+      rightHeld: keys.right.isDown || keys.d.isDown,
+      crouchHeld: false,
+      jumpPressed: jumpHeld && !this.wasJumpDown,
+      jumpHeld,
+      attackPressed: attackHeld && !this.wasAttackDown,
+      attackHeld,
+    }
   }
 
   private advanceGameplayElapsed(delta?: number): void {
@@ -956,7 +1008,7 @@ class GameplayMapScene extends Phaser.Scene {
         if (walk) {
           sprite.play(walk.key)
         }
-        sprite.setVelocityX(direction * definition.patrol.speed)
+        sprite.setVelocityX(0)
         this.physics.add.collider(sprite, terrainLayer)
 
         return {

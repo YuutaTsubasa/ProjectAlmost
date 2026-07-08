@@ -984,6 +984,37 @@ describe('createGameplayRendererConfig', () => {
     })
   })
 
+  it('keeps gameplay elapsed time at zero before the first armed gameplay input', () => {
+    const runtime = createSceneRuntime()
+    runtime.scene.create()
+    expect(runtime.playerSprite).toBeDefined()
+    if (!runtime.playerSprite) return
+
+    runtime.scene.time.now = 65_432
+    runtime.scene.update(65_432, 65_432)
+
+    expect(runtime.hudUpdates.at(-1)).toMatchObject({
+      time: formatGameplayHudTime(0),
+    })
+  })
+
+  it('keeps Armor Guard still before gameplay starts', () => {
+    const runtime = createSceneRuntime()
+    runtime.scene.create()
+
+    const guard = runtime.enemySprites.find(
+      (sprite) => sprite.texture === enemyActorDefinitions['armor-guard'].sprites?.walk?.key,
+    )
+    expect(guard).toBeDefined()
+    if (!guard) return
+
+    expect(guard.velocityX).toBe(0)
+
+    runtime.scene.update(16, 16)
+
+    expect(guard.velocityX).toBe(0)
+  })
+
   it('emits HUD coin statistics when a coin is collected', () => {
     const runtime = createSceneRuntime()
     runtime.scene.create()
