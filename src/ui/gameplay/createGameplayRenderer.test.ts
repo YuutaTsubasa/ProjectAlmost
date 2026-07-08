@@ -33,6 +33,7 @@ import {
 } from '../../domain/gameplay/playerHomingAttack'
 import { calculateStageRank } from '../../domain/gameplay/stageResult'
 import { createGameplayRendererConfig } from './createGameplayRenderer'
+import rendererSource from './createGameplayRenderer.ts?raw'
 
 vi.mock('phaser', () => {
   class Scene {
@@ -3334,5 +3335,20 @@ describe('createGameplayRendererConfig', () => {
       key: playerActorDefinition.sprites.idle.key,
       ignoreIfPlaying: true,
     })
+  })
+})
+
+describe('gameplay renderer pause controller contract', () => {
+  it('exposes explicit pause, resume, reset timing, and destroy controls', () => {
+    expect(rendererSource).toContain('export type GameplayRendererController')
+    expect(rendererSource).toContain('pause: () => void')
+    expect(rendererSource).toContain('resume: () => void')
+    expect(rendererSource).toContain('resetTiming: () => void')
+    expect(rendererSource).toContain('destroy: () => void')
+    expect(rendererSource).toContain('game.scene.pause(sceneKey)')
+    expect(rendererSource).toContain('game.scene.resume(sceneKey)')
+    expect(rendererSource).toContain('game.loop.resetDelta()')
+    expect(rendererSource).not.toContain('pause.resume')
+    expect(rendererSource).not.toContain('pause.stageSelect')
   })
 })

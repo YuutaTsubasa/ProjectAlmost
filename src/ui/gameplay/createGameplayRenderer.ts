@@ -120,6 +120,14 @@ type GameplayRendererInput = {
   onHudUpdate?: (patch: GameplayHudPatch) => void
 }
 
+export type GameplayRendererController = {
+  game: Phaser.Game
+  pause: () => void
+  resume: () => void
+  resetTiming: () => void
+  destroy: () => void
+}
+
 type BackgroundRuntimeLayer = {
   sprite: Phaser.GameObjects.TileSprite
   parallaxFactor: number
@@ -1709,6 +1717,23 @@ export function createGameplayRendererConfig(
   }
 }
 
-export function createGameplayRenderer(input: GameplayRendererInput): Phaser.Game {
-  return new Phaser.Game(createGameplayRendererConfig(input))
+export function createGameplayRenderer(input: GameplayRendererInput): GameplayRendererController {
+  const sceneKey = `GameplayMapScene:${input.stage.id}`
+  const game = new Phaser.Game(createGameplayRendererConfig(input))
+
+  return {
+    game,
+    pause: () => {
+      game.scene.pause(sceneKey)
+    },
+    resume: () => {
+      game.scene.resume(sceneKey)
+    },
+    resetTiming: () => {
+      game.loop.resetDelta()
+    },
+    destroy: () => {
+      game.destroy(true)
+    },
+  }
 }

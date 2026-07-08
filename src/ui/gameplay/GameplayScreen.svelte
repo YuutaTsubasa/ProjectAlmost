@@ -136,7 +136,7 @@
 
     return () => {
       cancelAnimationFrame(frameId)
-      game.destroy(true)
+      game.destroy()
     }
   })
 </script>
