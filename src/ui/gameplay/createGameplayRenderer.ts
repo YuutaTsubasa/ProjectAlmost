@@ -222,6 +222,7 @@ class GameplayMapScene extends Phaser.Scene {
   private falls = 0
   private enemiesDefeated = 0
   private stageCleared = false
+  private gameplayElapsedMs = 0
 
   constructor(stage: GameplayStageMap, onHudUpdate?: (patch: GameplayHudPatch) => void) {
     super(`GameplayMapScene:${stage.id}`)
@@ -316,10 +317,13 @@ class GameplayMapScene extends Phaser.Scene {
     this.damageTaken = 0
     this.falls = 0
     this.enemiesDefeated = 0
+    this.gameplayElapsedMs = 0
     this.emitHudPatch(createInitialGameplayHudState(this.stageMap))
   }
 
-  update(): void {
+  update(_time?: number, delta?: number): void {
+    this.advanceGameplayElapsed(delta)
+
     for (const layer of this.backgroundLayers) {
       layer.sprite.setTilePosition(this.cameras.main.scrollX * layer.parallaxFactor, 0)
     }
@@ -332,6 +336,14 @@ class GameplayMapScene extends Phaser.Scene {
     this.checkPlayerOutOfBounds()
     this.updatePlayerMovement()
     this.emitHudPositionPatch()
+  }
+
+  private advanceGameplayElapsed(delta?: number): void {
+    const elapsedDelta = Number.isFinite(delta)
+      ? Number(delta)
+      : this.time.now - this.gameplayElapsedMs
+
+    this.gameplayElapsedMs += Math.max(0, elapsedDelta)
   }
 
   private emitHudPatch(patch: GameplayHudPatch): void {
@@ -361,7 +373,7 @@ class GameplayMapScene extends Phaser.Scene {
         worldWidth: this.stageMap.world.width,
         worldHeight: this.stageMap.world.height,
       }),
-      time: formatGameplayHudTime(this.time.now),
+      time: formatGameplayHudTime(this.gameplayElapsedMs),
     })
   }
 
@@ -877,7 +889,7 @@ class GameplayMapScene extends Phaser.Scene {
   }
 
   private createClearResultSnapshot() {
-    const elapsedMs = this.time.now
+    const elapsedMs = Math.max(0, Math.floor(this.gameplayElapsedMs))
     const rank = calculateStageRank({
       elapsedMs,
       rankTargets: this.stageMap.rankTargets,

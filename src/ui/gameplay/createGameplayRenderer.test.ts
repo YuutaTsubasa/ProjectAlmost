@@ -522,7 +522,7 @@ function createSceneRuntime(input: {
   const scene = configuredScenes[0] as {
     preload: () => void
     create: () => void
-    update: () => void
+    update: (time?: number, delta?: number) => void
     load: {
       image: (key: string, assetRef: string) => void
       spritesheet: (key: string, assetRef: string, options: { frameWidth: number; frameHeight: number }) => void
@@ -968,6 +968,22 @@ describe('createGameplayRendererConfig', () => {
     })
   })
 
+  it('tracks gameplay HUD elapsed time from update delta so paused wall-clock gaps are excluded', () => {
+    const runtime = createSceneRuntime()
+    runtime.scene.create()
+    expect(runtime.playerSprite).toBeDefined()
+    if (!runtime.playerSprite) return
+
+    runtime.scene.time.now = 1_000
+    runtime.scene.update(1_000, 1_000)
+    runtime.scene.time.now = 18_000
+    runtime.scene.update(18_000, 16)
+
+    expect(runtime.hudUpdates.at(-1)).toMatchObject({
+      time: formatGameplayHudTime(1_016),
+    })
+  })
+
   it('emits HUD coin statistics when a coin is collected', () => {
     const runtime = createSceneRuntime()
     runtime.scene.create()
@@ -1141,6 +1157,27 @@ describe('createGameplayRendererConfig', () => {
         checkpointsReached: 0,
         checkpointTarget: stage.checkpoints.length,
       },
+    })
+  })
+
+  it('uses gameplay elapsed time for clear result instead of paused wall-clock time', () => {
+    const stage = getGameplayStageMap('1-1')
+    expect(stage).toBeDefined()
+    if (!stage) return
+
+    const runtime = createSceneRuntime({ stage })
+    runtime.scene.create()
+    runtime.scene.time.now = 1_000
+    runtime.scene.update(1_000, 1_000)
+    runtime.scene.time.now = 18_000
+    runtime.scene.update(18_000, 16)
+
+    runtime.triggerGoalOverlap(getGoalSprite(runtime))
+
+    const resultPatch = runtime.hudUpdates.find((patch) => patch.result)
+    expect(resultPatch?.result).toMatchObject({
+      elapsedMs: 1_016,
+      time: formatGameplayHudTime(1_016),
     })
   })
 
