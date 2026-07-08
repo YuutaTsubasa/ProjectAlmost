@@ -97,6 +97,16 @@ describe('applyControlIntent', () => {
     })
     expect(
       applyControlIntent(
+        { ...settingsState, screen: { type: 'settings', selectedItemIndex: 4, deleteConfirm: null } },
+        'confirm',
+      ),
+    ).toEqual({
+      ...settingsState,
+      screen: { type: 'settings', selectedItemIndex: 4, deleteConfirm: null },
+      settings: { ...DEFAULT_SETTINGS, fullscreen: true },
+    })
+    expect(
+      applyControlIntent(
         { ...settingsState, screen: { type: 'settings', selectedItemIndex: 8, deleteConfirm: null } },
         'confirm',
       ),
@@ -107,6 +117,19 @@ describe('applyControlIntent', () => {
     expect(applyControlIntent(settingsState, 'back')).toEqual({
       screen: { type: 'title-menu', selectedItemIndex: 1 },
       settings: DEFAULT_SETTINGS,
+    })
+    expect(
+      applyControlIntent(
+        {
+          ...settingsState,
+          screen: { type: 'settings', selectedItemIndex: 7, deleteConfirm: null },
+          settings: { ...DEFAULT_SETTINGS, fullscreen: true, masterVolume: 60 },
+        },
+        'confirm',
+      ),
+    ).toEqual({
+      screen: { type: 'settings', selectedItemIndex: 7, deleteConfirm: null },
+      settings: { ...DEFAULT_SETTINGS, fullscreen: true },
     })
   })
 
@@ -125,6 +148,18 @@ describe('applyControlIntent', () => {
       screen: { type: 'settings', selectedItemIndex: 8, deleteConfirm: null },
     })
     expect(applyControlIntent(state, 'confirm')).toEqual({
+      ...state,
+      screen: { type: 'settings', selectedItemIndex: 8, deleteConfirm: null },
+    })
+    expect(
+      applyControlIntent(
+        {
+          ...state,
+          screen: { type: 'settings', selectedItemIndex: 8, deleteConfirm: { selectedActionIndex: 1 as const } },
+        },
+        'confirm',
+      ),
+    ).toEqual({
       ...state,
       screen: { type: 'settings', selectedItemIndex: 8, deleteConfirm: null },
     })

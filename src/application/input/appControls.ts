@@ -1,6 +1,5 @@
 import {
   activateTitleMenuItem,
-  backFromSettings,
   backFromStageSelect,
   backFromWorldSelect,
   cancelDeleteConfirm,
@@ -8,17 +7,15 @@ import {
   confirmSelectedWorld,
   createInitialAppState,
   moveStageSelection,
-  moveSettingsDeleteConfirmSelection,
-  moveSettingsScreenSelection,
   moveTitleMenuSelection,
   moveWorldSelection,
-  openSettingsDeleteConfirm,
   openTitleMenu,
   type AppState,
 } from '../../domain/app/appFlow'
 import { projectData } from '../../domain/data/projectData'
 import type { ControlIntent } from '../../domain/input/controlIntents'
-import { adjustSettingsRow, resetSettings, type GameSettings } from '../../domain/settings/settings'
+import type { GameSettings } from '../../domain/settings/settings'
+import { applySettingsControlIntent } from './settingsControls'
 
 export type SettingsStateCarrier = AppState & {
   settings?: GameSettings
@@ -39,50 +36,32 @@ export function applyControlIntent(state: SettingsStateCarrier, intent: ControlI
 
   if (state.screen.type === 'settings') {
     const currentSettings = (state as SettingsStateCarrier).settings
-    const withSettings = (nextState: AppState): SettingsStateCarrier =>
-      currentSettings ? { ...nextState, settings: currentSettings } : nextState
+    if (!currentSettings) return state
 
-    if (state.screen.deleteConfirm) {
-      if (intent === 'move-left') return withSettings(moveSettingsDeleteConfirmSelection(state, -1))
-      if (intent === 'move-right') return withSettings(moveSettingsDeleteConfirmSelection(state, 1))
-      if (intent === 'back') return withSettings(cancelDeleteConfirm(state))
-      if (intent === 'confirm') return withSettings(cancelDeleteConfirm(state))
-      return state
-    }
+    const result = applySettingsControlIntent(
+      { screen: state.screen, settings: currentSettings },
+      intent,
+      projectData.localize.languages.map((language) => language.code),
+    )
 
-    if (intent === 'move-up') return withSettings(moveSettingsScreenSelection(state, -1))
-    if (intent === 'move-down') return withSettings(moveSettingsScreenSelection(state, 1))
-    if ((intent === 'move-left' || intent === 'move-right') && currentSettings) {
+    if (result.deleteConfirmed) {
       return {
-        ...state,
-        settings: adjustSettingsRow(
-          currentSettings,
-          state.screen.selectedItemIndex,
-          intent === 'move-left' ? -1 : 1,
-          projectData.localize.languages.map((language) => language.code),
-        ),
+        screen: cancelDeleteConfirm(result).screen,
+        settings: result.settings,
       }
     }
-    if (intent === 'confirm') {
-      if (state.screen.selectedItemIndex === 7 && currentSettings) {
-        return { ...state, settings: resetSettings(currentSettings.fullscreen) }
-      }
-      if (state.screen.selectedItemIndex === 8) return withSettings(openSettingsDeleteConfirm(state))
-      if (state.screen.selectedItemIndex === 9) return withSettings(backFromSettings(state))
-      if (currentSettings) {
-        return {
-          ...state,
-          settings: adjustSettingsRow(
-            currentSettings,
-            state.screen.selectedItemIndex,
-            1,
-            projectData.localize.languages.map((language) => language.code),
-          ),
-        }
+
+    if (result.exitRequested) {
+      return {
+        screen: { type: 'title-menu', selectedItemIndex: 1 },
+        settings: result.settings,
       }
     }
-    if (intent === 'back') return withSettings(backFromSettings(state))
-    return state
+
+    return {
+      screen: result.screen,
+      settings: result.settings,
+    }
   }
 
   if (state.screen.type === 'stage-select') {
