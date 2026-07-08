@@ -1514,6 +1514,38 @@ describe('createGameplayRendererConfig', () => {
     )
   })
 
+  it.each(['1-1', '2-1', '4-4'] as const)(
+    'creates a renderer scene from converted gameplay stage %s',
+    (stageId) => {
+      const stage = getGameplayStageMap(stageId)
+      expect(stage).toBeDefined()
+      if (!stage) return
+
+      const runtime = createSceneRuntime({ stage })
+
+      runtime.scene.preload()
+      expect(() => runtime.scene.create()).not.toThrow()
+      expect(runtime.imageCalls).toEqual(
+        expect.arrayContaining(
+          stage.backgroundLayers.map((layer) => ({
+            key: layer.id,
+            assetRef: layer.assetRef,
+          })),
+        ),
+      )
+      expect(runtime.imageCalls).toEqual(
+        expect.arrayContaining([
+          { key: 'terrain-tiles', assetRef: stage.terrain.tilesetAssetRef },
+        ]),
+      )
+      expect(runtime.hudUpdates[0]).toMatchObject({
+        coinTarget: stage.coins.length,
+        enemyTarget: stage.enemies.length,
+        checkpointTarget: stage.checkpoints.length,
+      })
+    },
+  )
+
   it('uses the domain player gravity in Phaser config', () => {
     const stage = getGameplayStageMap('1-1')
 
