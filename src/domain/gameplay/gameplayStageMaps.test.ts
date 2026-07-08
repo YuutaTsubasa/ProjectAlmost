@@ -434,6 +434,21 @@ describe('gameplayStageMaps', () => {
     })
   })
 
+  it('preserves boss-prototype metadata in boss source stages', () => {
+    for (const stageId of ['2-6', '3-6', '4-6', '5-6', '6-6'] as const) {
+      const bossPrototype = gameplayStageSources.items[stageId].enemies.find(
+        ({ id }) => id === 'boss-prototype',
+      )
+
+      expect(bossPrototype).toMatchObject({
+        id: 'boss-prototype',
+        type: 'azure-core',
+        respawnPolicy: 'persistent',
+        countsForScore: true,
+      })
+    }
+  })
+
   it('keeps converted gameplay stage asset refs in rebuilt public assets', () => {
     for (const stageId of gameplayStageMaps.order) {
       const stage = getGameplayStageMap(stageId)

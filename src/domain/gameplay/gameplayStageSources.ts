@@ -4453,6 +4453,8 @@ export const gameplayStageSources = {
       {
         "id": "boss-prototype",
         "type": "azure-core",
+        "respawnPolicy": "persistent",
+        "countsForScore": true,
         "x": 6540,
         "y": 384,
         "patrolMinX": 6540,
@@ -6014,6 +6016,8 @@ export const gameplayStageSources = {
       {
         "id": "boss-prototype",
         "type": "azure-core",
+        "respawnPolicy": "persistent",
+        "countsForScore": true,
         "x": 7000,
         "y": 384,
         "patrolMinX": 7000,
@@ -7549,6 +7553,8 @@ export const gameplayStageSources = {
       {
         "id": "boss-prototype",
         "type": "azure-core",
+        "respawnPolicy": "persistent",
+        "countsForScore": true,
         "x": 7200,
         "y": 384,
         "patrolMinX": 7200,
@@ -9127,6 +9133,8 @@ export const gameplayStageSources = {
       {
         "id": "boss-prototype",
         "type": "azure-core",
+        "respawnPolicy": "persistent",
+        "countsForScore": true,
         "x": 7500,
         "y": 384,
         "patrolMinX": 7500,
@@ -10969,6 +10977,8 @@ export const gameplayStageSources = {
       {
         "id": "boss-prototype",
         "type": "azure-core",
+        "respawnPolicy": "persistent",
+        "countsForScore": true,
         "x": 7900,
         "y": 384,
         "patrolMinX": 7900,
