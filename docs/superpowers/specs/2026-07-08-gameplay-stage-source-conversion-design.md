@@ -82,6 +82,7 @@ Enemy conversion rules:
 - Prototype guard enemies with `type` missing or `type: 'guard'` become `type: 'armor-guard'`.
 - Prototype Azure Core enemies stay `type: 'azure-core'`.
 - Enemy ids and patrol bounds are preserved.
+- Stage-source enemy metadata that the current converter does not consume yet, including `respawnPolicy`, `respawnDelayMs`, and `countsForScore`, stays preserved in rebuilt source data for later slices.
 
 Coin conversion rules:
 

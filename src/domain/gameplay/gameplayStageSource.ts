@@ -98,6 +98,9 @@ export type GameplayStageSourceGuardEnemy = {
 export type GameplayStageSourceAzureCoreEnemy = {
   id: string
   type: 'azure-core'
+  respawnPolicy?: 'persistent' | 'regenerate'
+  respawnDelayMs?: number
+  countsForScore?: boolean
   x: number
   y: number
   patrolMinX: number

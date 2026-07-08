@@ -2428,6 +2428,8 @@ export const gameplayStageSources = {
       {
         "id": "boss-prototype",
         "type": "azure-core",
+        "respawnPolicy": "persistent",
+        "countsForScore": true,
         "x": 5880,
         "y": 384,
         "patrolMinX": 5880,
@@ -2436,6 +2438,7 @@ export const gameplayStageSources = {
       {
         "id": "approach-core-1",
         "type": "azure-core",
+        "respawnDelayMs": 650,
         "x": 1248,
         "y": 350,
         "patrolMinX": 1248,
@@ -2444,6 +2447,7 @@ export const gameplayStageSources = {
       {
         "id": "approach-core-2",
         "type": "azure-core",
+        "respawnDelayMs": 650,
         "x": 1984,
         "y": 330,
         "patrolMinX": 1984,
@@ -2452,6 +2456,7 @@ export const gameplayStageSources = {
       {
         "id": "approach-core-3",
         "type": "azure-core",
+        "respawnDelayMs": 650,
         "x": 2624,
         "y": 320,
         "patrolMinX": 2624,
@@ -2460,6 +2465,7 @@ export const gameplayStageSources = {
       {
         "id": "approach-core-4",
         "type": "azure-core",
+        "respawnDelayMs": 650,
         "x": 3328,
         "y": 290,
         "patrolMinX": 3328,
@@ -2468,6 +2474,7 @@ export const gameplayStageSources = {
       {
         "id": "approach-core-5",
         "type": "azure-core",
+        "respawnDelayMs": 650,
         "x": 3968,
         "y": 340,
         "patrolMinX": 3968,
@@ -2476,6 +2483,7 @@ export const gameplayStageSources = {
       {
         "id": "approach-core-6",
         "type": "azure-core",
+        "respawnDelayMs": 650,
         "x": 4736,
         "y": 310,
         "patrolMinX": 4736,
@@ -2484,6 +2492,7 @@ export const gameplayStageSources = {
       {
         "id": "approach-core-7",
         "type": "azure-core",
+        "respawnDelayMs": 650,
         "x": 5440,
         "y": 330,
         "patrolMinX": 5440,
@@ -2740,6 +2749,8 @@ export const gameplayStageSources = {
       {
         "id": "thorn-core-a",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 1780,
         "y": 500,
         "patrolMinX": 1780,
@@ -2755,6 +2766,8 @@ export const gameplayStageSources = {
       {
         "id": "thorn-core-b",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 3650,
         "y": 500,
         "patrolMinX": 3540,
@@ -2763,6 +2776,8 @@ export const gameplayStageSources = {
       {
         "id": "thorn-core-c",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 4920,
         "y": 390,
         "patrolMinX": 4800,
@@ -3070,6 +3085,8 @@ export const gameplayStageSources = {
       {
         "id": "ferry-core-a",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 2050,
         "y": 420,
         "patrolMinX": 2050,
@@ -3078,6 +3095,8 @@ export const gameplayStageSources = {
       {
         "id": "ferry-core-b",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 4830,
         "y": 430,
         "patrolMinX": 4720,
@@ -3093,6 +3112,8 @@ export const gameplayStageSources = {
       {
         "id": "ferry-core-c",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 8170,
         "y": 395,
         "patrolMinX": 8060,
@@ -3364,6 +3385,8 @@ export const gameplayStageSources = {
       {
         "id": "bramble-core-a",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 1980,
         "y": 430,
         "patrolMinX": 1980,
@@ -3372,6 +3395,8 @@ export const gameplayStageSources = {
       {
         "id": "bramble-core-b",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 2400,
         "y": 430,
         "patrolMinX": 2400,
@@ -3380,6 +3405,8 @@ export const gameplayStageSources = {
       {
         "id": "bramble-core-c",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 2850,
         "y": 430,
         "patrolMinX": 2850,
@@ -3395,6 +3422,8 @@ export const gameplayStageSources = {
       {
         "id": "bramble-core-d",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 5430,
         "y": 448,
         "patrolMinX": 5430,
@@ -3403,6 +3432,8 @@ export const gameplayStageSources = {
       {
         "id": "bramble-core-e",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 5940,
         "y": 448,
         "patrolMinX": 5940,
@@ -3708,6 +3739,8 @@ export const gameplayStageSources = {
       {
         "id": "canopy-core-a",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 1660,
         "y": 520,
         "patrolMinX": 1660,
@@ -3716,6 +3749,8 @@ export const gameplayStageSources = {
       {
         "id": "canopy-core-b",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 2780,
         "y": 420,
         "patrolMinX": 2780,
@@ -3731,6 +3766,8 @@ export const gameplayStageSources = {
       {
         "id": "canopy-core-c",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 5580,
         "y": 392,
         "patrolMinX": 5480,
@@ -3739,6 +3776,8 @@ export const gameplayStageSources = {
       {
         "id": "canopy-core-d",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 8280,
         "y": 330,
         "patrolMinX": 8180,
@@ -4151,6 +4190,8 @@ export const gameplayStageSources = {
       {
         "id": "gauntlet-core-a",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 1780,
         "y": 520,
         "patrolMinX": 1780,
@@ -4159,6 +4200,8 @@ export const gameplayStageSources = {
       {
         "id": "gauntlet-core-b",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 4380,
         "y": 392,
         "patrolMinX": 4280,
@@ -4174,6 +4217,8 @@ export const gameplayStageSources = {
       {
         "id": "gauntlet-core-c",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 6560,
         "y": 392,
         "patrolMinX": 6460,
@@ -4182,6 +4227,8 @@ export const gameplayStageSources = {
       {
         "id": "gauntlet-core-d",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 8840,
         "y": 456,
         "patrolMinX": 8740,
@@ -4197,6 +4244,8 @@ export const gameplayStageSources = {
       {
         "id": "gauntlet-core-e",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 12120,
         "y": 456,
         "patrolMinX": 12120,
@@ -4205,6 +4254,8 @@ export const gameplayStageSources = {
       {
         "id": "gauntlet-core-f",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 14740,
         "y": 520,
         "patrolMinX": 14620,
@@ -4410,6 +4461,7 @@ export const gameplayStageSources = {
       {
         "id": "heartroot-core-a",
         "type": "azure-core",
+        "respawnDelayMs": 650,
         "x": 1240,
         "y": 440,
         "patrolMinX": 1240,
@@ -4418,6 +4470,7 @@ export const gameplayStageSources = {
       {
         "id": "heartroot-core-b",
         "type": "azure-core",
+        "respawnDelayMs": 650,
         "x": 2100,
         "y": 360,
         "patrolMinX": 2100,
@@ -4426,6 +4479,7 @@ export const gameplayStageSources = {
       {
         "id": "heartroot-core-c",
         "type": "azure-core",
+        "respawnDelayMs": 650,
         "x": 2860,
         "y": 410,
         "patrolMinX": 2860,
@@ -4434,6 +4488,7 @@ export const gameplayStageSources = {
       {
         "id": "heartroot-core-d",
         "type": "azure-core",
+        "respawnDelayMs": 650,
         "x": 3700,
         "y": 320,
         "patrolMinX": 3700,
@@ -4442,6 +4497,7 @@ export const gameplayStageSources = {
       {
         "id": "heartroot-core-e",
         "type": "azure-core",
+        "respawnDelayMs": 650,
         "x": 4680,
         "y": 420,
         "patrolMinX": 4680,
@@ -4450,6 +4506,7 @@ export const gameplayStageSources = {
       {
         "id": "heartroot-core-f",
         "type": "azure-core",
+        "respawnDelayMs": 650,
         "x": 5600,
         "y": 370,
         "patrolMinX": 5600,
@@ -4639,6 +4696,8 @@ export const gameplayStageSources = {
       {
         "id": "tide-core-a",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 2920,
         "y": 420,
         "patrolMinX": 2920,
@@ -4654,6 +4713,8 @@ export const gameplayStageSources = {
       {
         "id": "tide-core-b",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 6900,
         "y": 420,
         "patrolMinX": 6900,
@@ -4881,6 +4942,8 @@ export const gameplayStageSources = {
       {
         "id": "undertide-core-a",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 2140,
         "y": 410,
         "patrolMinX": 2140,
@@ -4889,6 +4952,8 @@ export const gameplayStageSources = {
       {
         "id": "undertide-core-b",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 6220,
         "y": 410,
         "patrolMinX": 6220,
@@ -5122,6 +5187,8 @@ export const gameplayStageSources = {
       {
         "id": "mirror-core-a",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 2050,
         "y": 420,
         "patrolMinX": 2050,
@@ -5130,6 +5197,8 @@ export const gameplayStageSources = {
       {
         "id": "mirror-core-b",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 4560,
         "y": 420,
         "patrolMinX": 4560,
@@ -5138,6 +5207,8 @@ export const gameplayStageSources = {
       {
         "id": "mirror-core-c",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 7000,
         "y": 430,
         "patrolMinX": 7000,
@@ -5400,6 +5471,8 @@ export const gameplayStageSources = {
       {
         "id": "vortex-core-a",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 2320,
         "y": 392,
         "patrolMinX": 2320,
@@ -5408,6 +5481,8 @@ export const gameplayStageSources = {
       {
         "id": "vortex-core-b",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 7420,
         "y": 520,
         "patrolMinX": 7420,
@@ -5738,6 +5813,8 @@ export const gameplayStageSources = {
       {
         "id": "abyss-core-a",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 2540,
         "y": 420,
         "patrolMinX": 2540,
@@ -5753,6 +5830,8 @@ export const gameplayStageSources = {
       {
         "id": "abyss-core-b",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 8300,
         "y": 420,
         "patrolMinX": 8300,
@@ -5768,6 +5847,8 @@ export const gameplayStageSources = {
       {
         "id": "abyss-core-c",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 13000,
         "y": 430,
         "patrolMinX": 13000,
@@ -5941,6 +6022,7 @@ export const gameplayStageSources = {
       {
         "id": "leviathan-core-a",
         "type": "azure-core",
+        "respawnDelayMs": 650,
         "x": 1480,
         "y": 420,
         "patrolMinX": 1480,
@@ -5949,6 +6031,7 @@ export const gameplayStageSources = {
       {
         "id": "leviathan-core-b",
         "type": "azure-core",
+        "respawnDelayMs": 650,
         "x": 2650,
         "y": 420,
         "patrolMinX": 2650,
@@ -5957,6 +6040,7 @@ export const gameplayStageSources = {
       {
         "id": "leviathan-core-c",
         "type": "azure-core",
+        "respawnDelayMs": 650,
         "x": 3950,
         "y": 430,
         "patrolMinX": 3950,
@@ -5965,6 +6049,7 @@ export const gameplayStageSources = {
       {
         "id": "leviathan-core-d",
         "type": "azure-core",
+        "respawnDelayMs": 650,
         "x": 5350,
         "y": 420,
         "patrolMinX": 5350,
@@ -5973,6 +6058,7 @@ export const gameplayStageSources = {
       {
         "id": "leviathan-core-e",
         "type": "azure-core",
+        "respawnDelayMs": 650,
         "x": 6260,
         "y": 410,
         "patrolMinX": 6260,
@@ -6159,6 +6245,8 @@ export const gameplayStageSources = {
       {
         "id": "ice-core-a",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 5580,
         "y": 480,
         "patrolMinX": 5580,
@@ -6389,6 +6477,8 @@ export const gameplayStageSources = {
       {
         "id": "slope-core-a",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 3300,
         "y": 390,
         "patrolMinX": 3300,
@@ -6404,6 +6494,8 @@ export const gameplayStageSources = {
       {
         "id": "slope-core-b",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 8500,
         "y": 500,
         "patrolMinX": 8500,
@@ -6628,6 +6720,8 @@ export const gameplayStageSources = {
       {
         "id": "chain-core-a",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 2320,
         "y": 500,
         "patrolMinX": 2320,
@@ -6636,6 +6730,8 @@ export const gameplayStageSources = {
       {
         "id": "chain-core-b",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 3820,
         "y": 430,
         "patrolMinX": 3820,
@@ -6651,6 +6747,8 @@ export const gameplayStageSources = {
       {
         "id": "chain-core-c",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 6200,
         "y": 390,
         "patrolMinX": 6200,
@@ -6909,6 +7007,8 @@ export const gameplayStageSources = {
       {
         "id": "blizzard-core-a",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 3100,
         "y": 430,
         "patrolMinX": 3100,
@@ -6924,6 +7024,8 @@ export const gameplayStageSources = {
       {
         "id": "blizzard-core-b",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 8100,
         "y": 500,
         "patrolMinX": 8100,
@@ -7242,6 +7344,8 @@ export const gameplayStageSources = {
       {
         "id": "frozen-core-a",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 2700,
         "y": 500,
         "patrolMinX": 2700,
@@ -7257,6 +7361,8 @@ export const gameplayStageSources = {
       {
         "id": "frozen-core-b",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 8800,
         "y": 500,
         "patrolMinX": 8800,
@@ -7272,6 +7378,8 @@ export const gameplayStageSources = {
       {
         "id": "frozen-core-c",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 12400,
         "y": 392,
         "patrolMinX": 12400,
@@ -7449,6 +7557,8 @@ export const gameplayStageSources = {
       {
         "id": "snowcrown-core-a",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 1500,
         "y": 430,
         "patrolMinX": 1500,
@@ -7457,6 +7567,8 @@ export const gameplayStageSources = {
       {
         "id": "snowcrown-core-b",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 2800,
         "y": 390,
         "patrolMinX": 2800,
@@ -7465,6 +7577,8 @@ export const gameplayStageSources = {
       {
         "id": "snowcrown-core-c",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 3980,
         "y": 430,
         "patrolMinX": 3980,
@@ -7473,6 +7587,8 @@ export const gameplayStageSources = {
       {
         "id": "snowcrown-core-d",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 5320,
         "y": 360,
         "patrolMinX": 5320,
@@ -7481,6 +7597,8 @@ export const gameplayStageSources = {
       {
         "id": "snowcrown-core-e",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 6380,
         "y": 410,
         "patrolMinX": 6380,
@@ -7655,6 +7773,8 @@ export const gameplayStageSources = {
       {
         "id": "cinder-core-a",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 3400,
         "y": 470,
         "patrolMinX": 3400,
@@ -7663,6 +7783,8 @@ export const gameplayStageSources = {
       {
         "id": "cinder-core-b",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 5020,
         "y": 480,
         "patrolMinX": 5020,
@@ -7895,6 +8017,8 @@ export const gameplayStageSources = {
       {
         "id": "magma-core-a",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 3050,
         "y": 430,
         "patrolMinX": 3050,
@@ -7910,6 +8034,8 @@ export const gameplayStageSources = {
       {
         "id": "magma-core-b",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 8500,
         "y": 430,
         "patrolMinX": 8500,
@@ -8123,6 +8249,8 @@ export const gameplayStageSources = {
       {
         "id": "eruption-core-a",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 2280,
         "y": 500,
         "patrolMinX": 2280,
@@ -8131,6 +8259,8 @@ export const gameplayStageSources = {
       {
         "id": "eruption-core-b",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 3820,
         "y": 440,
         "patrolMinX": 3820,
@@ -8139,6 +8269,8 @@ export const gameplayStageSources = {
       {
         "id": "eruption-core-c",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 5400,
         "y": 430,
         "patrolMinX": 5400,
@@ -8389,6 +8521,8 @@ export const gameplayStageSources = {
       {
         "id": "caldera-core-a",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 3080,
         "y": 500,
         "patrolMinX": 3080,
@@ -8404,6 +8538,8 @@ export const gameplayStageSources = {
       {
         "id": "caldera-core-b",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 9000,
         "y": 430,
         "patrolMinX": 9000,
@@ -8770,6 +8906,8 @@ export const gameplayStageSources = {
       {
         "id": "inferno-core-a",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 2700,
         "y": 500,
         "patrolMinX": 2700,
@@ -8785,6 +8923,8 @@ export const gameplayStageSources = {
       {
         "id": "inferno-core-b",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 6800,
         "y": 390,
         "patrolMinX": 6800,
@@ -8800,6 +8940,8 @@ export const gameplayStageSources = {
       {
         "id": "inferno-core-c",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 11600,
         "y": 392,
         "patrolMinX": 11600,
@@ -8993,6 +9135,8 @@ export const gameplayStageSources = {
       {
         "id": "emberheart-core-a",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 1500,
         "y": 430,
         "patrolMinX": 1500,
@@ -9001,6 +9145,8 @@ export const gameplayStageSources = {
       {
         "id": "emberheart-core-b",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 2820,
         "y": 390,
         "patrolMinX": 2820,
@@ -9009,6 +9155,8 @@ export const gameplayStageSources = {
       {
         "id": "emberheart-core-c",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 3980,
         "y": 430,
         "patrolMinX": 3980,
@@ -9017,6 +9165,8 @@ export const gameplayStageSources = {
       {
         "id": "emberheart-core-d",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 5320,
         "y": 360,
         "patrolMinX": 5320,
@@ -9025,6 +9175,8 @@ export const gameplayStageSources = {
       {
         "id": "emberheart-core-e",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 6500,
         "y": 410,
         "patrolMinX": 6500,
@@ -9221,6 +9373,8 @@ export const gameplayStageSources = {
       {
         "id": "threshold-core-a",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 3300,
         "y": 470,
         "patrolMinX": 3300,
@@ -9236,6 +9390,8 @@ export const gameplayStageSources = {
       {
         "id": "threshold-core-b",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 7600,
         "y": 500,
         "patrolMinX": 7600,
@@ -9474,6 +9630,8 @@ export const gameplayStageSources = {
       {
         "id": "inverted-core-a",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 3000,
         "y": 430,
         "patrolMinX": 3000,
@@ -9482,6 +9640,8 @@ export const gameplayStageSources = {
       {
         "id": "inverted-core-b",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 5600,
         "y": 330,
         "patrolMinX": 5600,
@@ -9497,6 +9657,8 @@ export const gameplayStageSources = {
       {
         "id": "inverted-core-c",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 9150,
         "y": 500,
         "patrolMinX": 9150,
@@ -9759,6 +9921,8 @@ export const gameplayStageSources = {
       {
         "id": "conveyor-core-a",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 2800,
         "y": 500,
         "patrolMinX": 2800,
@@ -9774,6 +9938,8 @@ export const gameplayStageSources = {
       {
         "id": "conveyor-core-b",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 6400,
         "y": 390,
         "patrolMinX": 6400,
@@ -10067,6 +10233,8 @@ export const gameplayStageSources = {
       {
         "id": "current-core-a",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 3200,
         "y": 390,
         "patrolMinX": 3200,
@@ -10075,6 +10243,8 @@ export const gameplayStageSources = {
       {
         "id": "current-core-b",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 5900,
         "y": 500,
         "patrolMinX": 5900,
@@ -10090,6 +10260,8 @@ export const gameplayStageSources = {
       {
         "id": "current-core-c",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 9800,
         "y": 390,
         "patrolMinX": 9800,
@@ -10537,6 +10709,8 @@ export const gameplayStageSources = {
       {
         "id": "synthesis-core-a",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 2700,
         "y": 500,
         "patrolMinX": 2700,
@@ -10552,6 +10726,8 @@ export const gameplayStageSources = {
       {
         "id": "synthesis-core-b",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 6800,
         "y": 390,
         "patrolMinX": 6800,
@@ -10567,6 +10743,8 @@ export const gameplayStageSources = {
       {
         "id": "synthesis-core-c",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 11600,
         "y": 392,
         "patrolMinX": 11600,
@@ -10799,6 +10977,8 @@ export const gameplayStageSources = {
       {
         "id": "queen-core-a",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 1500,
         "y": 430,
         "patrolMinX": 1500,
@@ -10807,6 +10987,8 @@ export const gameplayStageSources = {
       {
         "id": "queen-core-b",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 2820,
         "y": 390,
         "patrolMinX": 2820,
@@ -10815,6 +10997,8 @@ export const gameplayStageSources = {
       {
         "id": "queen-core-c",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 3980,
         "y": 430,
         "patrolMinX": 3980,
@@ -10823,6 +11007,8 @@ export const gameplayStageSources = {
       {
         "id": "queen-core-d",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 5320,
         "y": 360,
         "patrolMinX": 5320,
@@ -10831,6 +11017,8 @@ export const gameplayStageSources = {
       {
         "id": "queen-core-e",
         "type": "azure-core",
+        "respawnPolicy": "regenerate",
+        "countsForScore": false,
         "x": 6500,
         "y": 410,
         "patrolMinX": 6500,

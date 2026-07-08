@@ -12,6 +12,7 @@ import {
   gameplayStageMaps,
   getGameplayStageMap,
 } from './gameplayStageMaps'
+import { gameplayStageSources } from './gameplayStageSources'
 
 describe('gameplayStageMaps', () => {
   it('contains the first gameplay stage map', () => {
@@ -414,6 +415,23 @@ describe('gameplayStageMaps', () => {
     expect(gameplayStageConversionDiagnostics.some((diagnostic) =>
       diagnostic.stageId === '4-4' && diagnostic.code === 'unsupported-surface-zone',
     )).toBe(true)
+  })
+
+  it('preserves prototype enemy metadata in gameplay stage sources', () => {
+    const thornCore = gameplayStageSources.items['2-1'].enemies.find((enemy) => enemy.id === 'thorn-core-a')
+    const approachCore = gameplayStageSources.items['1-6'].enemies.find((enemy) => enemy.id === 'approach-core-1')
+
+    expect(thornCore).toMatchObject({
+      id: 'thorn-core-a',
+      type: 'azure-core',
+      respawnPolicy: 'regenerate',
+      countsForScore: false,
+    })
+    expect(approachCore).toMatchObject({
+      id: 'approach-core-1',
+      type: 'azure-core',
+      respawnDelayMs: 650,
+    })
   })
 
   it('keeps converted gameplay stage asset refs in rebuilt public assets', () => {
