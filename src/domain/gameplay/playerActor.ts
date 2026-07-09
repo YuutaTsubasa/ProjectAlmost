@@ -1,5 +1,6 @@
 export type PlayerActorId = 'player'
-export type PlayerAnimationKey = 'idle' | 'run' | 'jump' | 'attack' | 'hurt' | 'death'
+export type PlayerAnimationKey = 'idle' | 'run' | 'jump' | 'attack' | 'hurt' | 'death' | 'crouch'
+export type PlayerBodyPose = 'standing' | 'crouching'
 export type PlayerMovementDirection = 'left' | 'right' | 'none'
 
 export type PlayerAnimationDefinition = {
@@ -18,7 +19,10 @@ export type PlayerActorDefinition = {
   id: PlayerActorId
   sprites: Record<PlayerAnimationKey, PlayerAnimationDefinition>
   origin: { x: number; y: number }
-  body: { width: number; height: number; offsetX: number; offsetY: number }
+  body: PlayerBodyDefinition
+  crouch: {
+    body: PlayerBodyDefinition
+  }
   centerAboveSurface: number
   scale: number
   depth: number
@@ -36,15 +40,24 @@ export type PlayerActorDefinition = {
   }
 }
 
+export type PlayerBodyDefinition = {
+  width: number
+  height: number
+  offsetX: number
+  offsetY: number
+}
+
 export type PlayerMovementInput = {
   left: boolean
   right: boolean
+  crouching: boolean
 }
 
 export type PlayerHorizontalMovementDecision = {
   direction: PlayerMovementDirection
   accelerationX: number
   dragX: number
+  stopVelocityX: boolean
 }
 
 export const playerActorDefinition: PlayerActorDefinition = {
@@ -116,9 +129,23 @@ export const playerActorDefinition: PlayerActorDefinition = {
       repeat: 0,
       scale: 0.78,
     },
+    crouch: {
+      key: 'player-crouch',
+      assetRef: '/assets/sprites/player_crouch/sheet-transparent.webp',
+      frameWidth: 128,
+      frameHeight: 128,
+      frameStart: 0,
+      frameEnd: 3,
+      frameRate: 5,
+      repeat: -1,
+      scale: 0.78,
+    },
   },
   origin: { x: 0.5, y: 0.5 },
   body: { width: 34, height: 72, offsetX: 47, offsetY: 42 },
+  crouch: {
+    body: { width: 34, height: 44, offsetX: 47, offsetY: 70 },
+  },
   centerAboveSurface: 76,
   scale: 0.78,
   depth: 10,
@@ -136,6 +163,46 @@ export const playerActorDefinition: PlayerActorDefinition = {
   },
 }
 
+export function canPlayerCrouch(input: {
+  crouchHeld: boolean
+  grounded: boolean
+  attacking: boolean
+  hurting: boolean
+  dead: boolean
+  stageCleared: boolean
+}): boolean {
+  return input.crouchHeld
+    && input.grounded
+    && !input.attacking
+    && !input.hurting
+    && !input.dead
+    && !input.stageCleared
+}
+
+export function getPlayerCrouchState(input: {
+  crouchHeld: boolean
+  grounded: boolean
+  attacking: boolean
+  hurting: boolean
+  dead: boolean
+  stageCleared: boolean
+}): { crouching: boolean; pose: PlayerBodyPose } {
+  const crouching = canPlayerCrouch(input)
+
+  return {
+    crouching,
+    pose: crouching ? 'crouching' : 'standing',
+  }
+}
+
+export function getPlayerBodyDefinition(input: {
+  pose: PlayerBodyPose
+}): PlayerBodyDefinition {
+  return input.pose === 'crouching'
+    ? playerActorDefinition.crouch.body
+    : playerActorDefinition.body
+}
+
 export function getPlayerCenterY(input: { surfaceY: number }): number {
   return input.surfaceY - playerActorDefinition.centerAboveSurface
 }
@@ -143,11 +210,21 @@ export function getPlayerCenterY(input: { surfaceY: number }): number {
 export function getPlayerHorizontalMovementDecision(
   input: PlayerMovementInput,
 ): PlayerHorizontalMovementDecision {
+  if (input.crouching) {
+    return {
+      direction: 'none',
+      accelerationX: 0,
+      dragX: playerActorDefinition.movement.idleDragX,
+      stopVelocityX: true,
+    }
+  }
+
   if (input.left) {
     return {
       direction: 'left',
       accelerationX: -playerActorDefinition.movement.groundAcceleration,
       dragX: playerActorDefinition.movement.idleDragX,
+      stopVelocityX: false,
     }
   }
 
@@ -156,6 +233,7 @@ export function getPlayerHorizontalMovementDecision(
       direction: 'right',
       accelerationX: playerActorDefinition.movement.groundAcceleration,
       dragX: playerActorDefinition.movement.idleDragX,
+      stopVelocityX: false,
     }
   }
 
@@ -163,5 +241,6 @@ export function getPlayerHorizontalMovementDecision(
     direction: 'none',
     accelerationX: 0,
     dragX: playerActorDefinition.movement.idleDragX,
+    stopVelocityX: false,
   }
 }
