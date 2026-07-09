@@ -1367,7 +1367,16 @@ class GameplayMapScene extends Phaser.Scene {
   }
 
   private isPlayerCrouching(): boolean {
-    return this.isCrouching
+    const grounded = this.isPlayerGrounded()
+
+    return getPlayerCrouchState({
+      crouchHeld: this.getCrouchHeld(),
+      grounded,
+      attacking: this.isAttacking || this.isHomingAttacking,
+      hurting: this.isPlayerHurting,
+      dead: this.isPlayerDead,
+      stageCleared: this.stageCleared,
+    }).crouching
   }
 
   private getCrouchHeld(): boolean {

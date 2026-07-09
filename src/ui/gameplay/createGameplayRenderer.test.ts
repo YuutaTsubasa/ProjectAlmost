@@ -4475,6 +4475,75 @@ describe('createGameplayRendererConfig', () => {
     })
   })
 
+  it('blocks a boss projectile on the same crouch-input frame', () => {
+    const stage = getGameplayStageMap('1-6')
+    expect(stage).toBeDefined()
+    if (!stage) return
+    const runtime = createSceneRuntime({ stage })
+
+    runtime.scene.preload()
+    runtime.scene.create()
+    startGameplay(runtime)
+
+    const projectile = getBossProjectileSprites(runtime)[0]
+    expect(projectile).toBeDefined()
+    expect(runtime.playerSprite).toBeDefined()
+    if (!projectile || !runtime.playerSprite) return
+
+    projectile.x = runtime.playerSprite.x
+    projectile.y = runtime.playerSprite.y
+    runtime.playerKeys.down.isDown = true
+
+    runtime.scene.update(32, 16)
+
+    expect(projectile.destroyed).toBe(true)
+    expect(runtime.playerSprite.playCalls.at(-1)).toEqual({
+      key: playerActorDefinition.sprites.crouch.key,
+      ignoreIfPlaying: true,
+    })
+    expect(
+      runtime.playerSprite.playCalls.some(
+        (call) => call.key === playerActorDefinition.sprites.hurt.key,
+      ),
+    ).toBe(false)
+  })
+
+  it('successful jump exits crouch, restores standing body, and plays jump animation', () => {
+    const runtime = createSceneRuntime()
+
+    runtime.scene.create()
+    startGameplay(runtime)
+
+    runtime.playerKeys.down.isDown = true
+    runtime.scene.update(32, 16)
+
+    expect(runtime.playerSprite?.playCalls.at(-1)).toEqual({
+      key: playerActorDefinition.sprites.crouch.key,
+      ignoreIfPlaying: true,
+    })
+    expect(runtime.playerSprite?.body.size).toEqual({
+      width: playerActorDefinition.crouch.body.width,
+      height: playerActorDefinition.crouch.body.height,
+    })
+
+    runtime.playerKeys.space.isDown = true
+    runtime.scene.update(48, 16)
+
+    expect(runtime.playerSprite?.velocityY).toBe(playerActorDefinition.jump.velocityY)
+    expect(runtime.playerSprite?.body.size).toEqual({
+      width: playerActorDefinition.body.width,
+      height: playerActorDefinition.body.height,
+    })
+    expect(runtime.playerSprite?.body.offset).toEqual({
+      x: playerActorDefinition.body.offsetX,
+      y: playerActorDefinition.body.offsetY,
+    })
+    expect(runtime.playerSprite?.playCalls.at(-1)).toEqual({
+      key: playerActorDefinition.sprites.jump.key,
+      ignoreIfPlaying: true,
+    })
+  })
+
   it('applies jump velocity for a grounded Space press', () => {
     const runtime = createSceneRuntime()
 
