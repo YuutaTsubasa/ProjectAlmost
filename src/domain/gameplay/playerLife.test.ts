@@ -43,6 +43,7 @@ describe('canApplyPlayerEnemyHit', () => {
       hurting: false,
       enemyDefeated: false,
       homingAttacking: false,
+      crouching: false,
       dead: false,
     })).toBe(true)
   })
@@ -53,6 +54,7 @@ describe('canApplyPlayerEnemyHit', () => {
       hurting: false,
       enemyDefeated: false,
       homingAttacking: false,
+      crouching: false,
       dead: false,
     })).toBe(false)
     expect(canApplyPlayerEnemyHit({
@@ -60,6 +62,7 @@ describe('canApplyPlayerEnemyHit', () => {
       hurting: true,
       enemyDefeated: false,
       homingAttacking: false,
+      crouching: false,
       dead: false,
     })).toBe(false)
     expect(canApplyPlayerEnemyHit({
@@ -67,6 +70,7 @@ describe('canApplyPlayerEnemyHit', () => {
       hurting: false,
       enemyDefeated: true,
       homingAttacking: false,
+      crouching: false,
       dead: false,
     })).toBe(false)
     expect(canApplyPlayerEnemyHit({
@@ -74,6 +78,7 @@ describe('canApplyPlayerEnemyHit', () => {
       hurting: false,
       enemyDefeated: false,
       homingAttacking: true,
+      crouching: false,
       dead: false,
     })).toBe(false)
     expect(canApplyPlayerEnemyHit({
@@ -81,6 +86,15 @@ describe('canApplyPlayerEnemyHit', () => {
       hurting: false,
       enemyDefeated: false,
       homingAttacking: false,
+      crouching: true,
+      dead: false,
+    })).toBe(false)
+    expect(canApplyPlayerEnemyHit({
+      invulnerable: false,
+      hurting: false,
+      enemyDefeated: false,
+      homingAttacking: false,
+      crouching: false,
       dead: true,
     })).toBe(false)
   })
@@ -92,6 +106,7 @@ describe('canApplyPlayerHazardHit', () => {
       invulnerable: false,
       hurting: false,
       homingAttacking: false,
+      crouching: false,
       dead: false,
     })).toBe(true)
   })
@@ -101,24 +116,35 @@ describe('canApplyPlayerHazardHit', () => {
       invulnerable: true,
       hurting: false,
       homingAttacking: false,
+      crouching: false,
       dead: false,
     })).toBe(false)
     expect(canApplyPlayerHazardHit({
       invulnerable: false,
       hurting: true,
       homingAttacking: false,
+      crouching: false,
       dead: false,
     })).toBe(false)
     expect(canApplyPlayerHazardHit({
       invulnerable: false,
       hurting: false,
       homingAttacking: true,
+      crouching: false,
       dead: false,
     })).toBe(false)
     expect(canApplyPlayerHazardHit({
       invulnerable: false,
       hurting: false,
       homingAttacking: false,
+      crouching: true,
+      dead: false,
+    })).toBe(false)
+    expect(canApplyPlayerHazardHit({
+      invulnerable: false,
+      hurting: false,
+      homingAttacking: false,
+      crouching: false,
       dead: true,
     })).toBe(false)
   })

@@ -82,6 +82,8 @@ import {
   PLAYER_MAX_HEALTH,
   PLAYER_OUT_OF_BOUNDS_MARGIN,
   canApplyPlayerDamage,
+  canApplyPlayerEnemyHit,
+  canApplyPlayerHazardHit,
   canEnterPlayerDefeat,
   getPlayerDamageOutcome,
   getPlayerDefeatEntryState,
@@ -1667,12 +1669,13 @@ class GameplayMapScene extends Phaser.Scene {
         this.destroyBossProjectile(projectile)
       } else if (hit === 'hit') {
         this.destroyBossProjectile(projectile)
+        const crouching = this.isPlayerCrouching()
         if (
           !canApplyPlayerDamage({
             invulnerable: this.isPlayerInvulnerable,
             hurting: this.isPlayerHurting,
             homingAttacking: this.isHomingAttacking,
-            crouching: this.isCrouching,
+            crouching,
             dead: this.isPlayerDead,
           })
         ) {
@@ -1908,14 +1911,15 @@ class GameplayMapScene extends Phaser.Scene {
 
   private handlePlayerEnemyContact(enemy: EnemyRuntime): void {
     if (!this.player || this.stageCleared || !this.isGameplayRunning()) return
-    if (enemy.defeated) return
+    const crouching = this.isPlayerCrouching()
 
     if (
-      !canApplyPlayerDamage({
+      !canApplyPlayerEnemyHit({
         invulnerable: this.isPlayerInvulnerable,
         hurting: this.isPlayerHurting,
+        enemyDefeated: enemy.defeated,
         homingAttacking: this.isHomingAttacking,
-        crouching: this.isCrouching,
+        crouching,
         dead: this.isPlayerDead,
       })
     ) {
@@ -1984,13 +1988,14 @@ class GameplayMapScene extends Phaser.Scene {
 
   private handlePlayerHazardContact(hazard: HazardRuntime): void {
     if (!this.player || this.stageCleared || !this.isGameplayRunning()) return
+    const crouching = this.isPlayerCrouching()
 
     if (
-      !canApplyPlayerDamage({
+      !canApplyPlayerHazardHit({
         invulnerable: this.isPlayerInvulnerable,
         hurting: this.isPlayerHurting,
         homingAttacking: this.isHomingAttacking,
-        crouching: this.isCrouching,
+        crouching,
         dead: this.isPlayerDead,
       })
     ) {

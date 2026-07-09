@@ -3902,6 +3902,46 @@ describe('createGameplayRendererConfig', () => {
     })
   })
 
+  it('blocks enemy contact damage on the same crouch-input frame before movement refresh', () => {
+    const runtime = createSceneRuntime()
+    runtime.scene.create()
+    startGameplay(runtime)
+    const guard = runtime.sprites.find((sprite) => sprite.texture === 'enemy-guard-walk')
+    expect(guard).toBeDefined()
+    if (!guard || !runtime.playerSprite) return
+
+    runtime.playerKeys.down.isDown = true
+    runtime.playerSprite.x = 650
+    guard.x = 720
+    runtime.triggerEnemyOverlap(guard)
+
+    expect(runtime.playerSprite.playCalls).not.toContainEqual({
+      key: playerActorDefinition.sprites.hurt.key,
+      ignoreIfPlaying: true,
+    })
+  })
+
+  it('applies enemy contact damage on the same crouch-release frame using live state', () => {
+    const runtime = createSceneRuntime()
+    runtime.scene.create()
+    startGameplay(runtime)
+    const guard = runtime.sprites.find((sprite) => sprite.texture === 'enemy-guard-walk')
+    expect(guard).toBeDefined()
+    if (!guard || !runtime.playerSprite) return
+
+    runtime.playerKeys.down.isDown = true
+    runtime.scene.update()
+    runtime.playerKeys.down.isDown = false
+    runtime.playerSprite.x = 650
+    guard.x = 720
+    runtime.triggerEnemyOverlap(guard)
+
+    expect(runtime.playerSprite.playCalls).toContainEqual({
+      key: playerActorDefinition.sprites.hurt.key,
+      ignoreIfPlaying: true,
+    })
+  })
+
   it('damages and hurts the player on spike hazard overlap', () => {
     const runtime = createSceneRuntime({ stage: createHazardStage() })
     runtime.scene.create()
@@ -3973,6 +4013,26 @@ describe('createGameplayRendererConfig', () => {
     expect(runtime.playerSprite.body.size).toEqual({
       width: playerActorDefinition.crouch.body.width,
       height: playerActorDefinition.crouch.body.height,
+    })
+  })
+
+  it('blocks spike hazard damage on the same crouch-input frame before movement refresh', () => {
+    const runtime = createSceneRuntime({ stage: createHazardStage() })
+    runtime.scene.create()
+    startGameplay(runtime)
+    const spike = runtime.staticImageCalls.find(
+      (sprite) => sprite.texture === hazardActorDefinitions.spikes.sprite.key,
+    )
+    expect(spike).toBeDefined()
+    if (!spike || !runtime.playerSprite) return
+
+    runtime.playerKeys.down.isDown = true
+    runtime.playerSprite.x = spike.x - 20
+    runtime.triggerHazardOverlap(spike)
+
+    expect(runtime.playerSprite.playCalls).not.toContainEqual({
+      key: playerActorDefinition.sprites.hurt.key,
+      ignoreIfPlaying: true,
     })
   })
 

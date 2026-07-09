@@ -32,25 +32,33 @@ export function canApplyPlayerEnemyHit(input: {
   hurting: boolean
   enemyDefeated: boolean
   homingAttacking: boolean
+  crouching: boolean
   dead: boolean
 }): boolean {
-  return !input.invulnerable
-    && !input.hurting
-    && !input.enemyDefeated
-    && !input.homingAttacking
-    && !input.dead
+  return !input.enemyDefeated
+    && canApplyPlayerDamage({
+      invulnerable: input.invulnerable,
+      hurting: input.hurting,
+      homingAttacking: input.homingAttacking,
+      crouching: input.crouching,
+      dead: input.dead,
+    })
 }
 
 export function canApplyPlayerHazardHit(input: {
   invulnerable: boolean
   hurting: boolean
   homingAttacking: boolean
+  crouching: boolean
   dead: boolean
 }): boolean {
-  return !input.invulnerable
-    && !input.hurting
-    && !input.homingAttacking
-    && !input.dead
+  return canApplyPlayerDamage({
+    invulnerable: input.invulnerable,
+    hurting: input.hurting,
+    homingAttacking: input.homingAttacking,
+    crouching: input.crouching,
+    dead: input.dead,
+  })
 }
 
 export function canApplyPlayerDamage(input: {
