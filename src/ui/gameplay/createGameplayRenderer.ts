@@ -81,8 +81,7 @@ import {
 import {
   PLAYER_MAX_HEALTH,
   PLAYER_OUT_OF_BOUNDS_MARGIN,
-  canApplyPlayerEnemyHit,
-  canApplyPlayerHazardHit,
+  canApplyPlayerDamage,
   canEnterPlayerDefeat,
   getPlayerDamageOutcome,
   getPlayerDefeatEntryState,
@@ -1052,6 +1051,7 @@ class GameplayMapScene extends Phaser.Scene {
     this.clearHomingState()
     this.clearActiveMeleeHitboxes()
     this.stopBossPattern('destroy')
+    this.clearPlayerCrouch()
 
     if (this.player) {
       this.tweens.killTweensOf(this.player)
@@ -1411,7 +1411,7 @@ class GameplayMapScene extends Phaser.Scene {
 
     const decision = getAttackInputDecision({
       attackPressed,
-      crouching: false,
+      crouching: this.isCrouching,
       grounded,
     })
 
@@ -1668,10 +1668,11 @@ class GameplayMapScene extends Phaser.Scene {
       } else if (hit === 'hit') {
         this.destroyBossProjectile(projectile)
         if (
-          !canApplyPlayerHazardHit({
+          !canApplyPlayerDamage({
             invulnerable: this.isPlayerInvulnerable,
             hurting: this.isPlayerHurting,
             homingAttacking: this.isHomingAttacking,
+            crouching: this.isCrouching,
             dead: this.isPlayerDead,
           })
         ) {
@@ -1844,6 +1845,7 @@ class GameplayMapScene extends Phaser.Scene {
     this.wasJumpDown = false
     this.clearActiveMeleeHitboxes()
     this.clearHomingState()
+    this.clearPlayerCrouch()
     this.respawnPlayerAtCurrentPoint()
     this.emitBossHudPatch()
     this.emitHudPatch({
@@ -1906,13 +1908,14 @@ class GameplayMapScene extends Phaser.Scene {
 
   private handlePlayerEnemyContact(enemy: EnemyRuntime): void {
     if (!this.player || this.stageCleared || !this.isGameplayRunning()) return
+    if (enemy.defeated) return
 
     if (
-      !canApplyPlayerEnemyHit({
+      !canApplyPlayerDamage({
         invulnerable: this.isPlayerInvulnerable,
         hurting: this.isPlayerHurting,
-        enemyDefeated: enemy.defeated,
         homingAttacking: this.isHomingAttacking,
+        crouching: this.isCrouching,
         dead: this.isPlayerDead,
       })
     ) {
@@ -1924,6 +1927,8 @@ class GameplayMapScene extends Phaser.Scene {
 
   private applyPlayerContactDamage(sourceX: number): void {
     if (!this.player) return
+
+    this.clearPlayerCrouch()
 
     const damageOutcome = getPlayerDamageOutcome({ currentHealth: this.playerHealth })
     this.playerHealth = damageOutcome.nextHealth
@@ -1981,10 +1986,11 @@ class GameplayMapScene extends Phaser.Scene {
     if (!this.player || this.stageCleared || !this.isGameplayRunning()) return
 
     if (
-      !canApplyPlayerHazardHit({
+      !canApplyPlayerDamage({
         invulnerable: this.isPlayerInvulnerable,
         hurting: this.isPlayerHurting,
         homingAttacking: this.isHomingAttacking,
+        crouching: this.isCrouching,
         dead: this.isPlayerDead,
       })
     ) {
@@ -2025,6 +2031,7 @@ class GameplayMapScene extends Phaser.Scene {
     this.attackReady = entry.attackReady
     this.clearHomingState()
     this.clearActiveMeleeHitboxes()
+    this.clearPlayerCrouch()
     this.stopBossPattern('destroy')
     if (reason === 'fall') {
       this.falls += 1
@@ -2076,6 +2083,7 @@ class GameplayMapScene extends Phaser.Scene {
     this.wasJumpDown = false
 
     this.clearHomingState()
+    this.clearPlayerCrouch()
     this.respawnPlayerAtCurrentPoint()
 
     if (shouldRestartBossPatternAfterRespawn({

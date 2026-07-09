@@ -3629,6 +3629,20 @@ describe('createGameplayRendererConfig', () => {
     expect(runtime.playerSprite?.scale).toBe(playerActorDefinition.sprites.attack.scale)
   })
 
+  it('does not start melee or Homing attack while crouching', () => {
+    const runtime = createSceneRuntime()
+    runtime.scene.create()
+    startGameplay(runtime)
+
+    runtime.playerKeys.down.isDown = true
+    runtime.scene.update()
+    runtime.playerKeys.j.isDown = true
+    runtime.scene.update()
+
+    expect(runtime.images.filter((image) => image.texture === 'attack-hitbox')).toHaveLength(0)
+    expect(runtime.playerSprite?.texture).toBe(playerActorDefinition.sprites.crouch.key)
+  })
+
   it('faces and spawns the melee hitbox left when left and J are pressed on the same frame', () => {
     const runtime = createSceneRuntime()
     runtime.scene.create()
@@ -3864,6 +3878,30 @@ describe('createGameplayRendererConfig', () => {
     })
   })
 
+  it('blocks enemy contact damage while crouching', () => {
+    const runtime = createSceneRuntime()
+    runtime.scene.create()
+    startGameplay(runtime)
+    const guard = runtime.sprites.find((sprite) => sprite.texture === 'enemy-guard-walk')
+    expect(guard).toBeDefined()
+    if (!guard || !runtime.playerSprite) return
+
+    runtime.playerKeys.down.isDown = true
+    runtime.scene.update()
+    runtime.playerSprite.x = 650
+    guard.x = 720
+    runtime.triggerEnemyOverlap(guard)
+
+    expect(runtime.playerSprite.playCalls).not.toContainEqual({
+      key: playerActorDefinition.sprites.hurt.key,
+      ignoreIfPlaying: true,
+    })
+    expect(runtime.playerSprite.body.size).toEqual({
+      width: playerActorDefinition.crouch.body.width,
+      height: playerActorDefinition.crouch.body.height,
+    })
+  })
+
   it('damages and hurts the player on spike hazard overlap', () => {
     const runtime = createSceneRuntime({ stage: createHazardStage() })
     runtime.scene.create()
@@ -3911,6 +3949,31 @@ describe('createGameplayRendererConfig', () => {
 
     const hurtTweens = runtime.tweenCalls.filter((call) => call.targets === runtime.playerSprite)
     expect(hurtTweens).toHaveLength(1)
+  })
+
+  it('blocks spike hazard damage while crouching', () => {
+    const runtime = createSceneRuntime({ stage: createHazardStage() })
+    runtime.scene.create()
+    startGameplay(runtime)
+    const spike = runtime.staticImageCalls.find(
+      (sprite) => sprite.texture === hazardActorDefinitions.spikes.sprite.key,
+    )
+    expect(spike).toBeDefined()
+    if (!spike || !runtime.playerSprite) return
+
+    runtime.playerKeys.down.isDown = true
+    runtime.scene.update()
+    runtime.playerSprite.x = spike.x - 20
+    runtime.triggerHazardOverlap(spike)
+
+    expect(runtime.playerSprite.playCalls).not.toContainEqual({
+      key: playerActorDefinition.sprites.hurt.key,
+      ignoreIfPlaying: true,
+    })
+    expect(runtime.playerSprite.body.size).toEqual({
+      width: playerActorDefinition.crouch.body.width,
+      height: playerActorDefinition.crouch.body.height,
+    })
   })
 
   it('starts the death transition when spike hazard damage defeats the player', () => {
@@ -4508,6 +4571,35 @@ describe('createGameplayRendererConfig', () => {
     ).toBe(false)
   })
 
+  it('blocks boss projectile hits while crouching', () => {
+    const stage = getGameplayStageMap('1-6')
+    expect(stage).toBeDefined()
+    if (!stage) return
+    const runtime = createSceneRuntime({ stage })
+
+    runtime.scene.preload()
+    runtime.scene.create()
+    startGameplay(runtime)
+    runtime.playerKeys.down.isDown = true
+    runtime.scene.update()
+
+    const projectile = getBossProjectileSprites(runtime)[0]
+    expect(projectile).toBeDefined()
+    if (!projectile || !runtime.playerSprite) return
+    projectile.x = runtime.playerSprite.x
+    projectile.y = runtime.playerSprite.y
+
+    runtime.scene.update()
+
+    expect(projectile.destroyed).toBe(true)
+    expect(
+      runtime.hudUpdates.filter((patch) => patch.damageTaken !== undefined).at(-1),
+    ).not.toMatchObject({
+      hp: 2,
+      damageTaken: 1,
+    })
+  })
+
   it('successful jump exits crouch, restores standing body, and plays jump animation', () => {
     const runtime = createSceneRuntime()
 
@@ -4540,6 +4632,140 @@ describe('createGameplayRendererConfig', () => {
     })
     expect(runtime.playerSprite?.playCalls.at(-1)).toEqual({
       key: playerActorDefinition.sprites.jump.key,
+      ignoreIfPlaying: true,
+    })
+  })
+
+  it('clears crouch before applying hurt presentation', () => {
+    const runtime = createSceneRuntime()
+    runtime.scene.create()
+    startGameplay(runtime)
+    expect(runtime.playerSprite).toBeDefined()
+    if (!runtime.playerSprite) return
+
+    runtime.playerKeys.down.isDown = true
+    runtime.scene.update()
+    runtime.playerKeys.down.isDown = false
+    const scene = runtime.scene as typeof runtime.scene & {
+      applyPlayerContactDamage: (sourceX: number) => void
+      isCrouching: boolean
+    }
+    scene.isCrouching = true
+    scene.applyPlayerContactDamage(runtime.playerSprite.x + 16)
+
+    expect(runtime.playerSprite.body.size).toEqual({
+      width: playerActorDefinition.body.width,
+      height: playerActorDefinition.body.height,
+    })
+    expect(runtime.playerSprite.body.offset).toEqual({
+      x: playerActorDefinition.body.offsetX,
+      y: playerActorDefinition.body.offsetY,
+    })
+    expect(runtime.playerSprite.playCalls.at(-1)).toEqual({
+      key: playerActorDefinition.sprites.hurt.key,
+      ignoreIfPlaying: true,
+    })
+  })
+
+  it('clears crouch before death and respawn', () => {
+    const runtime = createSceneRuntime()
+    runtime.scene.create()
+    startGameplay(runtime)
+    expect(runtime.playerSprite).toBeDefined()
+    if (!runtime.playerSprite) return
+
+    runtime.playerKeys.down.isDown = true
+    runtime.scene.update()
+    runtime.playerKeys.down.isDown = false
+    const scene = runtime.scene as typeof runtime.scene & {
+      applyPlayerContactDamage: (sourceX: number) => void
+      isCrouching: boolean
+    }
+    scene.isCrouching = true
+
+    scene.applyPlayerContactDamage(runtime.playerSprite.x + 16)
+    recoverFromSurvivedHurt(runtime)
+    runtime.playerKeys.down.isDown = true
+    runtime.scene.update()
+    runtime.playerKeys.down.isDown = false
+    scene.isCrouching = true
+    scene.applyPlayerContactDamage(runtime.playerSprite.x + 16)
+    recoverFromSurvivedHurt(runtime)
+    runtime.playerKeys.down.isDown = true
+    runtime.scene.update()
+    runtime.playerKeys.down.isDown = false
+    scene.isCrouching = true
+    scene.applyPlayerContactDamage(runtime.playerSprite.x + 16)
+
+    expect(runtime.playerSprite.body.size).toEqual({
+      width: playerActorDefinition.body.width,
+      height: playerActorDefinition.body.height,
+    })
+
+    runtime.runDelayedCalls(playerLifeTiming.deathRespawnDelayMs)
+    runtime.triggerFadeOutComplete()
+
+    expect(runtime.playerSprite.body.size).toEqual({
+      width: playerActorDefinition.body.width,
+      height: playerActorDefinition.body.height,
+    })
+    expect(runtime.playerSprite.body.offset).toEqual({
+      x: playerActorDefinition.body.offsetX,
+      y: playerActorDefinition.body.offsetY,
+    })
+  })
+
+  it('clears crouch on stage clear', () => {
+    const runtime = createSceneRuntime()
+    runtime.scene.create()
+    startGameplay(runtime)
+    expect(runtime.playerSprite).toBeDefined()
+    if (!runtime.playerSprite) return
+
+    runtime.playerKeys.down.isDown = true
+    runtime.scene.update()
+
+    runtime.triggerGoalOverlap(getGoalSprite(runtime))
+
+    expect(runtime.playerSprite.body.size).toEqual({
+      width: playerActorDefinition.body.width,
+      height: playerActorDefinition.body.height,
+    })
+    expect(runtime.playerSprite.playCalls.at(-1)).toEqual({
+      key: playerActorDefinition.sprites.idle.key,
+      ignoreIfPlaying: true,
+    })
+  })
+
+  it('clears crouch on boss phase reset', () => {
+    const stage = getGameplayStageMap('1-6')
+    expect(stage).toBeDefined()
+    if (!stage) return
+    const runtime = createSceneRuntime({ stage })
+
+    runtime.scene.preload()
+    runtime.scene.create()
+    startGameplay(runtime)
+    expect(runtime.playerSprite).toBeDefined()
+    if (!runtime.playerSprite) return
+
+    runtime.playerKeys.down.isDown = true
+    runtime.scene.update()
+    runtime.playerKeys.down.isDown = false
+    const scene = runtime.scene as typeof runtime.scene & {
+      handleBossPrototypeHit: () => boolean
+      isCrouching: boolean
+    }
+    scene.isCrouching = true
+
+    expect(scene.handleBossPrototypeHit()).toBe(true)
+
+    expect(runtime.playerSprite.body.size).toEqual({
+      width: playerActorDefinition.body.width,
+      height: playerActorDefinition.body.height,
+    })
+    expect(runtime.playerSprite.playCalls.at(-1)).toEqual({
+      key: playerActorDefinition.sprites.idle.key,
       ignoreIfPlaying: true,
     })
   })
