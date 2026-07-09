@@ -523,10 +523,10 @@ describe('gameplayStageMaps', () => {
   })
 
   it('has copied Emerald Sanctuary gameplay assets into rebuilt public assets', () => {
-    expect(readFileSync('public/assets/maps/emerald_sanctuary_sky.webp').byteLength).toBeGreaterThan(0)
-    expect(readFileSync('public/assets/maps/emerald_sanctuary_far_bg.webp').byteLength).toBeGreaterThan(0)
-    expect(readFileSync('public/assets/maps/emerald_sanctuary_mid_bg_loop.webp').byteLength).toBeGreaterThan(0)
-    expect(readFileSync('public/assets/maps/emerald_sanctuary_gameplay_bg.webp').byteLength).toBeGreaterThan(0)
-    expect(readFileSync('public/assets/tiles/emerald_sanctuary_platform_tiles.webp').byteLength).toBeGreaterThan(0)
+    expect(readFileSync('public/assets/maps/emerald_sanctuary_sky.webp', 'utf8').length).toBeGreaterThan(0)
+    expect(readFileSync('public/assets/maps/emerald_sanctuary_far_bg.webp', 'utf8').length).toBeGreaterThan(0)
+    expect(readFileSync('public/assets/maps/emerald_sanctuary_mid_bg_loop.webp', 'utf8').length).toBeGreaterThan(0)
+    expect(readFileSync('public/assets/maps/emerald_sanctuary_gameplay_bg.webp', 'utf8').length).toBeGreaterThan(0)
+    expect(readFileSync('public/assets/tiles/emerald_sanctuary_platform_tiles.webp', 'utf8').length).toBeGreaterThan(0)
   })
 })
