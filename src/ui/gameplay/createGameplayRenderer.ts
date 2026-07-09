@@ -1872,21 +1872,13 @@ class GameplayMapScene extends Phaser.Scene {
     if (body) {
       body.enable = false
     }
-    this.tweens.add({
-      targets: boss.sprite,
-      scale: boss.sprite.scale * 1.8,
-      alpha: 0,
-      angle: boss.sprite.angle + 90,
-      duration: 260,
-      ease: 'Quad.easeOut',
-      onComplete: () => boss.sprite.setVisible(false),
-    })
 
-    if (this.goal) {
+    this.time.delayedCall(800, () => {
+      if (!this.goal) return
       this.goal.sprite.setVisible(true)
       this.goal.sprite.body.enable = true
       this.goal.sprite.clearTint()
-    }
+    })
 
     const phase = getBossHudPhaseDisplay({
       isBossStage: this.isBossStage,

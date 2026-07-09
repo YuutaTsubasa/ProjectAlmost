@@ -2787,16 +2787,20 @@ describe('createGameplayRendererConfig', () => {
     runtime.hitBossWithMelee()
 
     const boss = runtime.getBossSprite()
-    const defeatTween = runtime.tweenCalls.find(
-      (call) => call.targets === boss && call.duration === 260 && call.ease === 'Quad.easeOut',
-    )
-
     expect(boss?.visible).toBe(true)
     expect(boss?.playCalls.at(-1)).toEqual({
       key: bossPriestessSpriteAssets.death.key,
       ignoreIfPlaying: true,
     })
     expect(boss?.body.enable).toBe(false)
+    expect(
+      runtime.tweenCalls.some((call) =>
+        call.targets === boss
+        && call.duration === 260
+        && call.ease === 'Quad.easeOut'
+        && call.alpha === 0
+      ),
+    ).toBe(false)
     expect(runtime.hudUpdates).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
@@ -2806,9 +2810,8 @@ describe('createGameplayRendererConfig', () => {
         }),
       ]),
     )
-
-    defeatTween?.onComplete?.()
-    expect(boss?.visible).toBe(false)
+    runtime.runDelayedCalls(800)
+    expect(boss?.visible).toBe(true)
   })
 
   it('ignores boss-stage goal overlap until the boss is defeated', () => {
@@ -2834,7 +2837,7 @@ describe('createGameplayRendererConfig', () => {
     expect(getBossProjectileSprites(runtime)).toHaveLength(projectileCountBefore)
   })
 
-  it('hides and disables the boss-stage goal until the boss is defeated', () => {
+  it('hides and disables the boss-stage goal until the boss defeat reveal delay elapses', () => {
     const stage = getGameplayStageMap('1-6')
     expect(stage).toBeDefined()
     if (!stage) return
@@ -2856,6 +2859,11 @@ describe('createGameplayRendererConfig', () => {
     runtime.hitBossWithMelee()
     runtime.runDelayedCalls(620)
     runtime.hitBossWithMelee()
+
+    expect(goal.visible).toBe(false)
+    expect(goal.body.enable).toBe(false)
+
+    runtime.runDelayedCalls(800)
 
     expect(goal.visible).toBe(true)
     expect(goal.body.enable).toBe(true)

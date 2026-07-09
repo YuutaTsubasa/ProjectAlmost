@@ -304,7 +304,7 @@ The 1-6 `boss-prototype` uses the White Palace boss Priestess bitmap presentatio
 
 - cast sprite while the boss is idle or actively running a pattern.
 - hurt sprite during non-final phase transitions.
-- death sprite during final defeat.
+- death sprite during final defeat; the final boss remains visible while playing the death animation rather than being immediately hidden by a fade/scale/rotate tween.
 - sprite sheets are loaded from rebuild `public/assets/sprites/` through the domain asset manifest.
 - body size, body offset, origin, scale, and visible-foot frame Y are defined in the domain manifest so renderer code does not duplicate presentation constants.
 - the boss remains at the authored `boss-prototype` center position and must not inherit ordinary Azure Core floating tweens.
@@ -350,7 +350,7 @@ Renderer tests:
 - homing hit on boss advances phase or defeats the boss.
 - phase transition clears projectiles and resets the player.
 - final hit defeats the boss and allows stage clear.
-- boss-stage goal starts hidden with its body disabled, then becomes visible and enabled after final boss hit.
+- boss-stage goal starts hidden with its body disabled, then becomes visible and enabled after the Prototype final-defeat reveal delay (`800ms`) following the final boss hit.
 - boss prototype uses the 1-6 Priestess cast, hurt, and death sprites for the matching runtime states.
 - player defeat stops the pattern and clears projectiles.
 - respawn restarts the pattern only before the phase count.
