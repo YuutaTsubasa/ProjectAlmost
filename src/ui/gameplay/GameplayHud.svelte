@@ -106,6 +106,16 @@
     <p>{state.cleared ? 'Stage clear' : 'Reach the goal'}</p>
   </section>
 
+  {#if state.bossPhaseMax > 0 && !state.cleared}
+    <section class="hud-panel boss-phase-hud" aria-label="Boss phase">
+      <span class="corner tr"></span>
+      <span class="corner bl"></span>
+      <div class="hud-label"><span></span>gameplayHud.bossPhase</div>
+      <strong>{state.bossPhase} <small>/ {state.bossPhaseMax}</small></strong>
+      <p>gameplayHud.bossPhaseHint</p>
+    </section>
+  {/if}
+
   <section class="bottom-hud" aria-label="Gameplay statistics and controls">
     <div class="bottom-fill">
       <div class="skill-group">
@@ -439,6 +449,36 @@
     font-size: 0.85cqw;
     font-weight: 700;
     line-height: 1.2;
+  }
+
+  .boss-phase-hud {
+    top: 32.2cqh;
+    right: 1.25cqw;
+    width: 24cqw;
+    padding: 1.67cqh 1.1cqw;
+  }
+
+  .boss-phase-hud strong {
+    display: block;
+    margin-top: 1.1cqh;
+    color: var(--hud-ink);
+    font-size: 2.1cqw;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    line-height: 0.9;
+  }
+
+  .boss-phase-hud small {
+    color: var(--hud-soft);
+    font-size: 0.55em;
+  }
+
+  .boss-phase-hud p {
+    margin: 0.85cqh 0 0;
+    color: var(--hud-soft);
+    font-size: 0.75cqw;
+    font-weight: 700;
+    line-height: 1.15;
   }
 
   .bottom-hud {

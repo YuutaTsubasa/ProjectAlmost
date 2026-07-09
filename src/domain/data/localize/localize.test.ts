@@ -377,6 +377,57 @@ describe('localize', () => {
     }
   })
 
+  it('includes localized gameplay boss HUD values for every supported locale', () => {
+    const expectedByLocale = {
+      en: {
+        bossPhase: 'Boss Phase',
+        bossPhaseHint: 'Each hit starts the next pattern from the entrance.',
+        bossPattern: 'Boss phase {phase}/{max}. Evade the barrage.',
+        bossVulnerable: 'Attack window open. Strike the Boss now.',
+        bossDefeated: 'Boss signal defeated. The exit is open.',
+      },
+      ja: {
+        bossPhase: 'ボスフェーズ',
+        bossPhaseHint: '攻撃が当たるたび入口から次のパターンが始まります。',
+        bossPattern: 'ボスフェーズ {phase}/{max}。弾幕を回避してください。',
+        bossVulnerable: '攻撃チャンス。今すぐボスを攻撃してください。',
+        bossDefeated: 'ボス信号を撃破。出口が開きました。',
+      },
+      zhHant: {
+        bossPhase: 'Boss 階段',
+        bossPhaseHint: '每次命中後會回到入口，並進入下一段彈幕。',
+        bossPattern: 'Boss 階段 {phase}/{max}，閃避彈幕。',
+        bossVulnerable: '攻擊窗口開啟，現在攻擊 Boss。',
+        bossDefeated: 'Boss 已擊敗，出口已開啟。',
+      },
+      ko: {
+        bossPhase: '보스 페이즈',
+        bossPhaseHint: '한 번 맞힐 때마다 입구에서 다음 패턴이 시작됩니다.',
+        bossPattern: '보스 페이즈 {phase}/{max}. 탄막을 피하세요.',
+        bossVulnerable: '공격 기회가 열렸습니다. 지금 보스를 공격하세요.',
+        bossDefeated: '보스 신호를 격파했습니다. 출구가 열렸습니다.',
+      },
+    } as const
+
+    for (const locale of localize.languages.map((language) => language.code)) {
+      expect(resolveLocalizedText(localize, locale, 'gameplayHud.bossPhase')).toBe(
+        expectedByLocale[locale].bossPhase,
+      )
+      expect(resolveLocalizedText(localize, locale, 'gameplayHud.bossPhaseHint')).toBe(
+        expectedByLocale[locale].bossPhaseHint,
+      )
+      expect(resolveLocalizedText(localize, locale, 'status.bossPattern')).toBe(
+        expectedByLocale[locale].bossPattern,
+      )
+      expect(resolveLocalizedText(localize, locale, 'status.bossVulnerable')).toBe(
+        expectedByLocale[locale].bossVulnerable,
+      )
+      expect(resolveLocalizedText(localize, locale, 'status.bossDefeated')).toBe(
+        expectedByLocale[locale].bossDefeated,
+      )
+    }
+  })
+
   it('includes localized settings, common, and language values for every supported locale', () => {
     const expectedByLocale = {
       en: {

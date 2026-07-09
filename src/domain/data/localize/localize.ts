@@ -73,6 +73,15 @@ export type PauseLocalizationKey =
   | 'pause.stageSelect'
   | 'pause.aria.menu'
 
+export type GameplayHudLocalizationKey =
+  | 'gameplayHud.bossPhase'
+  | 'gameplayHud.bossPhaseHint'
+
+export type GameplayStatusLocalizationKey =
+  | 'status.bossPattern'
+  | 'status.bossVulnerable'
+  | 'status.bossDefeated'
+
 export type LocalizationKey =
   | WorldLocalizationKey
   | StageSelectLocalizationKey
@@ -83,6 +92,8 @@ export type LocalizationKey =
   | LanguageLocalizationKey
   | SettingsLocalizationKey
   | PauseLocalizationKey
+  | GameplayHudLocalizationKey
+  | GameplayStatusLocalizationKey
 
 export interface LocaleRecord {
   code: LocaleCode
@@ -334,6 +345,11 @@ const catalog: LocalizedTextCatalog = {
     'pause.restart': 'Restart Stage',
     'pause.stageSelect': 'Return to Stage Select',
     'pause.aria.menu': 'Pause menu',
+    'gameplayHud.bossPhase': 'Boss Phase',
+    'gameplayHud.bossPhaseHint': 'Each hit starts the next pattern from the entrance.',
+    'status.bossPattern': 'Boss phase {phase}/{max}. Evade the barrage.',
+    'status.bossVulnerable': 'Attack window open. Strike the Boss now.',
+    'status.bossDefeated': 'Boss signal defeated. The exit is open.',
   },
   ja: {
     'language.en': '英語',
@@ -478,6 +494,11 @@ const catalog: LocalizedTextCatalog = {
     'pause.restart': 'ステージ再開',
     'pause.stageSelect': 'ステージ選択へ',
     'pause.aria.menu': 'ポーズメニュー',
+    'gameplayHud.bossPhase': 'ボスフェーズ',
+    'gameplayHud.bossPhaseHint': '攻撃が当たるたび入口から次のパターンが始まります。',
+    'status.bossPattern': 'ボスフェーズ {phase}/{max}。弾幕を回避してください。',
+    'status.bossVulnerable': '攻撃チャンス。今すぐボスを攻撃してください。',
+    'status.bossDefeated': 'ボス信号を撃破。出口が開きました。',
   },
   zhHant: {
     'language.en': '英文',
@@ -622,6 +643,11 @@ const catalog: LocalizedTextCatalog = {
     'pause.restart': '重新開始關卡',
     'pause.stageSelect': '返回選關畫面',
     'pause.aria.menu': '暫停選單',
+    'gameplayHud.bossPhase': 'Boss 階段',
+    'gameplayHud.bossPhaseHint': '每次命中後會回到入口，並進入下一段彈幕。',
+    'status.bossPattern': 'Boss 階段 {phase}/{max}，閃避彈幕。',
+    'status.bossVulnerable': '攻擊窗口開啟，現在攻擊 Boss。',
+    'status.bossDefeated': 'Boss 已擊敗，出口已開啟。',
   },
   ko: {
     'language.en': '영어',
@@ -766,6 +792,11 @@ const catalog: LocalizedTextCatalog = {
     'pause.restart': '스테이지 재시작',
     'pause.stageSelect': '스테이지 선택으로',
     'pause.aria.menu': '일시 정지 메뉴',
+    'gameplayHud.bossPhase': '보스 페이즈',
+    'gameplayHud.bossPhaseHint': '한 번 맞힐 때마다 입구에서 다음 패턴이 시작됩니다.',
+    'status.bossPattern': '보스 페이즈 {phase}/{max}. 탄막을 피하세요.',
+    'status.bossVulnerable': '공격 기회가 열렸습니다. 지금 보스를 공격하세요.',
+    'status.bossDefeated': '보스 신호를 격파했습니다. 출구가 열렸습니다.',
   },
 }
 

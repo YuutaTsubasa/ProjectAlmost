@@ -82,6 +82,15 @@ describe('Gameplay HUD Svelte UI', () => {
     expect(hudSource).toContain('state.rank')
   })
 
+  it('renders boss phase HUD only when boss phase state is present and uncleared', () => {
+    expect(hudSource).toContain('{#if state.bossPhaseMax > 0 && !state.cleared}')
+    expect(hudSource).toContain('class="hud-panel boss-phase-hud"')
+    expect(hudSource).toContain('gameplayHud.bossPhase')
+    expect(hudSource).toContain('{state.bossPhase}')
+    expect(hudSource).toContain('{state.bossPhaseMax}')
+    expect(hudSource).toContain('gameplayHud.bossPhaseHint')
+  })
+
   it('wires GameplayScreen stage display data to the HUD', () => {
     expect(screenSource).toContain("import GameplayHud from './GameplayHud.svelte'")
     expect(screenSource).toContain('getGameplayHudStageDisplay')
