@@ -22,7 +22,7 @@ import {
 } from './bossBattle'
 
 describe('boss battle rules', () => {
-  it('declares imported White Palace boss Priestess sprite assets under rebuild public paths', () => {
+  it('declares imported 1-6 boss Priestess sprite assets under rebuild public paths', () => {
     expect(bossPriestessSpriteAssets).toEqual({
       cast: {
         key: 'boss-priestess-cast',
@@ -33,6 +33,8 @@ describe('boss battle rules', () => {
         frameEnd: 3,
         frameRate: 7,
         repeat: -1,
+        scale: 1.2,
+        body: { width: 48, height: 92, offsetX: 40, offsetY: 26 },
       },
       hurt: {
         key: 'boss-priestess-hurt',
@@ -43,6 +45,8 @@ describe('boss battle rules', () => {
         frameEnd: 3,
         frameRate: 10,
         repeat: 0,
+        scale: 1.2,
+        body: { width: 48, height: 92, offsetX: 40, offsetY: 26 },
       },
       death: {
         key: 'boss-priestess-death',
@@ -53,6 +57,8 @@ describe('boss battle rules', () => {
         frameEnd: 3,
         frameRate: 8,
         repeat: 0,
+        scale: 1.2,
+        body: { width: 48, height: 92, offsetX: 40, offsetY: 26 },
       },
     })
     expect(Object.values(bossPriestessSpriteAssets).every((sprite) =>
@@ -60,7 +66,7 @@ describe('boss battle rules', () => {
     )).toBe(true)
   })
 
-  it('has imported White Palace boss Priestess spritesheets into rebuilt public assets', () => {
+  it('has imported 1-6 boss Priestess spritesheets into rebuilt public assets', () => {
     for (const sprite of Object.values(bossPriestessSpriteAssets)) {
       expect(readFileSync(`public${sprite.assetRef}`, 'utf8').length).toBeGreaterThan(0)
     }

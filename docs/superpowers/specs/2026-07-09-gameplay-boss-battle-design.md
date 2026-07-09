@@ -300,7 +300,13 @@ Boss projectiles are generated Phaser textures rather than imported bitmap asset
 - no gravity.
 - velocity from the domain projectile velocity function.
 
-Boss sprite uses the current Azure Core presentation for `boss-prototype` unless a later boss art slice replaces it. The White Palace boss Priestess cast, hurt, and death spritesheets are copied into root `public/assets/sprites/` and represented through a domain asset manifest so a later rendering slice can switch from generated Azure Core presentation to bitmap boss art without consulting `__prototype__`.
+The 1-6 `boss-prototype` uses the White Palace boss Priestess bitmap presentation:
+
+- cast sprite while the boss is idle or actively running a pattern.
+- hurt sprite during non-final phase transitions.
+- death sprite during final defeat.
+- sprite sheets are loaded from rebuild `public/assets/sprites/` through the domain asset manifest.
+- body size, body offset, and scale are defined in the domain manifest so renderer code does not duplicate presentation constants.
 
 ## Testing Requirements
 
@@ -343,6 +349,7 @@ Renderer tests:
 - phase transition clears projectiles and resets the player.
 - final hit defeats the boss and allows stage clear.
 - boss-stage goal starts hidden with its body disabled, then becomes visible and enabled after final boss hit.
+- boss prototype uses the 1-6 Priestess cast, hurt, and death sprites for the matching runtime states.
 - player defeat stops the pattern and clears projectiles.
 - respawn restarts the pattern only before the phase count.
 - stale timer generations do not fire volleys.
@@ -352,7 +359,7 @@ UI/source tests:
 
 - Gameplay HUD renders boss phase panel only on boss stages while uncleared.
 - boss objective/status localization keys exist.
-- White Palace boss Priestess cast, hurt, and death spritesheets exist under rebuild `public/assets/sprites/` and are referenced by rebuild asset paths.
+- 1-6 boss Priestess cast, hurt, and death spritesheets exist under rebuild `public/assets/sprites/` and are referenced by rebuild asset paths.
 
 ## Verification
 
@@ -368,7 +375,6 @@ The `rg` result may include tests that assert paths do not contain `__prototype_
 
 ## Out Of Scope
 
-- Wiring the imported boss Priestess bitmap art into live boss rendering.
 - Boss music routing.
 - Dedicated one-off `1-6-boss-arena` stage registry.
 - Moving platform and gravity-zone mechanics not already supported by the rebuilt renderer.

@@ -16,6 +16,8 @@ export const bossPriestessSpriteAssets = {
     frameEnd: 3,
     frameRate: 7,
     repeat: -1,
+    scale: 1.2,
+    body: { width: 48, height: 92, offsetX: 40, offsetY: 26 },
   },
   hurt: {
     key: 'boss-priestess-hurt',
@@ -26,6 +28,8 @@ export const bossPriestessSpriteAssets = {
     frameEnd: 3,
     frameRate: 10,
     repeat: 0,
+    scale: 1.2,
+    body: { width: 48, height: 92, offsetX: 40, offsetY: 26 },
   },
   death: {
     key: 'boss-priestess-death',
@@ -36,6 +40,8 @@ export const bossPriestessSpriteAssets = {
     frameEnd: 3,
     frameRate: 8,
     repeat: 0,
+    scale: 1.2,
+    body: { width: 48, height: 92, offsetX: 40, offsetY: 26 },
   },
 } as const
 

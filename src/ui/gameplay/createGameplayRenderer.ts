@@ -23,6 +23,7 @@ import {
   shouldResetBossRunAfterHomingHit,
   shouldRestartBossPatternAfterRespawn,
   shouldResetBossSupportCore,
+  bossPriestessSpriteAssets,
 } from '../../domain/gameplay/bossBattle'
 import {
   checkpointActorDefinition,
@@ -315,6 +316,15 @@ class GameplayMapScene extends Phaser.Scene {
       }
     }
 
+    if (this.isBossStage) {
+      for (const sprite of Object.values(bossPriestessSpriteAssets)) {
+        this.load.spritesheet(sprite.key, sprite.assetRef, {
+          frameWidth: sprite.frameWidth,
+          frameHeight: sprite.frameHeight,
+        })
+      }
+    }
+
     for (const definition of Object.values(hazardActorDefinitions)) {
       this.load.spritesheet(definition.sprite.key, definition.sprite.assetRef, {
         frameWidth: definition.sprite.frameWidth,
@@ -361,6 +371,7 @@ class GameplayMapScene extends Phaser.Scene {
     this.createCoinTexture()
     this.createBossProjectileTexture()
     this.createEnemyAnimations()
+    this.createBossPriestessAnimations()
     this.createEnemies()
     this.initializeBossPrototype()
     this.createHazards()
@@ -885,6 +896,22 @@ class GameplayMapScene extends Phaser.Scene {
     }
   }
 
+  private createBossPriestessAnimations(): void {
+    if (!this.isBossStage) return
+
+    for (const sprite of Object.values(bossPriestessSpriteAssets)) {
+      this.anims.create({
+        key: sprite.key,
+        frames: this.anims.generateFrameNumbers(sprite.key, {
+          start: sprite.frameStart,
+          end: sprite.frameEnd,
+        }),
+        frameRate: sprite.frameRate,
+        repeat: sprite.repeat,
+      })
+    }
+  }
+
   private createAzureCoreTexture(): void {
     const texture = enemyActorDefinitions['azure-core'].generatedTexture
     if (!texture) return
@@ -1161,6 +1188,26 @@ class GameplayMapScene extends Phaser.Scene {
     if (!this.isBossStage) return
 
     this.bossPrototype = this.enemies.find((enemy) => enemy.spawn.id === 'boss-prototype') ?? null
+    if (this.bossPrototype) {
+      this.applyBossPriestessPresentation(this.bossPrototype, 'cast')
+    }
+  }
+
+  private applyBossPriestessPresentation(
+    boss: EnemyRuntime,
+    state: keyof typeof bossPriestessSpriteAssets,
+  ): void {
+    const sprite = bossPriestessSpriteAssets[state]
+    boss.sprite
+      .setTexture(sprite.key, sprite.frameStart)
+      .setScale(sprite.scale)
+      .play(sprite.key, true)
+
+    const body = boss.sprite.body as Phaser.Physics.Arcade.Body | null
+    if (body) {
+      body.setSize(sprite.body.width, sprite.body.height)
+      body.setOffset(sprite.body.offsetX, sprite.body.offsetY)
+    }
   }
 
   private startBossPattern(): void {
@@ -1179,6 +1226,7 @@ class GameplayMapScene extends Phaser.Scene {
 
     this.stopBossPattern('fade')
     this.bossPatternRestartPending = false
+    this.applyBossPriestessPresentation(boss, 'cast')
     const generation = ++this.bossPatternGeneration
     this.bossShotIndex = 0
 
@@ -1732,6 +1780,7 @@ class GameplayMapScene extends Phaser.Scene {
   }
 
   private advanceBossPhase(boss: EnemyRuntime): void {
+    this.applyBossPriestessPresentation(boss, 'hurt')
     boss.sprite.setVelocity(0, 0)
     this.tweens.add({
       targets: boss.sprite,
@@ -1769,6 +1818,7 @@ class GameplayMapScene extends Phaser.Scene {
   private defeatBossPrototype(boss: EnemyRuntime): void {
     boss.defeated = true
     this.enemiesDefeated += 1
+    this.applyBossPriestessPresentation(boss, 'death')
     boss.sprite.setVelocity(0, 0)
     const body = boss.sprite.body as Phaser.Physics.Arcade.Body | null
     if (body) {

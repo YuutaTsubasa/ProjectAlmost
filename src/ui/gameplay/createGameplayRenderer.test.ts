@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { enemyActorDefinitions } from '../../domain/gameplay/enemyActor'
 import { checkpointActorDefinition, getCheckpointBottomY } from '../../domain/gameplay/checkpointActor'
-import { getBossPatternDelayMs } from '../../domain/gameplay/bossBattle'
+import { bossPriestessSpriteAssets, getBossPatternDelayMs } from '../../domain/gameplay/bossBattle'
 import { getGoalBottomY, goalActorDefinition } from '../../domain/gameplay/goalActor'
 import {
   getGroundedHazardCenterY,
@@ -2412,6 +2412,62 @@ describe('createGameplayRendererConfig', () => {
     )
   })
 
+  it('preloads and registers 1-6 boss Priestess spritesheet animations', () => {
+    const stage = getGameplayStageMap('1-6')
+    expect(stage).toBeDefined()
+    if (!stage) return
+    const runtime = createSceneRuntime({ stage })
+
+    runtime.scene.preload()
+    runtime.scene.create()
+
+    for (const sprite of Object.values(bossPriestessSpriteAssets)) {
+      expect(runtime.spritesheetCalls).toContainEqual({
+        key: sprite.key,
+        assetRef: sprite.assetRef,
+        frameWidth: sprite.frameWidth,
+        frameHeight: sprite.frameHeight,
+      })
+      expect(runtime.animationCreateCalls).toContainEqual({
+        key: sprite.key,
+        frames: Array.from({ length: sprite.frameEnd - sprite.frameStart + 1 }, (_, index) => ({
+          key: sprite.key,
+          frame: sprite.frameStart + index,
+        })),
+        frameRate: sprite.frameRate,
+        repeat: sprite.repeat,
+      })
+    }
+  })
+
+  it('uses the 1-6 boss Priestess cast sprite for the boss prototype', () => {
+    const stage = getGameplayStageMap('1-6')
+    expect(stage).toBeDefined()
+    if (!stage) return
+    const runtime = createSceneRuntime({ stage })
+
+    runtime.scene.preload()
+    runtime.scene.create()
+
+    const boss = runtime.getBossSprite()
+
+    expect(boss).toBeDefined()
+    expect(boss?.texture).toBe(bossPriestessSpriteAssets.cast.key)
+    expect(boss?.scale).toBe(bossPriestessSpriteAssets.cast.scale)
+    expect(boss?.body.size).toEqual({
+      width: bossPriestessSpriteAssets.cast.body.width,
+      height: bossPriestessSpriteAssets.cast.body.height,
+    })
+    expect(boss?.body.offset).toEqual({
+      x: bossPriestessSpriteAssets.cast.body.offsetX,
+      y: bossPriestessSpriteAssets.cast.body.offsetY,
+    })
+    expect(boss?.playCalls.at(-1)).toEqual({
+      key: bossPriestessSpriteAssets.cast.key,
+      ignoreIfPlaying: true,
+    })
+  })
+
   it('starts boss pattern with an immediate phase zero aimed projectile once gameplay starts', () => {
     const stage = getGameplayStageMap('1-6')
     expect(stage).toBeDefined()
@@ -2654,6 +2710,32 @@ describe('createGameplayRendererConfig', () => {
     expect(runtime.timerEvents.filter((event) => event.active)).toHaveLength(1)
   })
 
+  it('plays the boss Priestess hurt sprite during non-final phase transitions', () => {
+    const stage = getGameplayStageMap('1-6')
+    expect(stage).toBeDefined()
+    if (!stage) return
+    const runtime = createSceneRuntime({ stage })
+
+    runtime.scene.preload()
+    runtime.scene.create()
+    startGameplay(runtime)
+
+    runtime.hitBossWithMelee()
+
+    const boss = runtime.getBossSprite()
+    expect(boss?.playCalls.at(-1)).toEqual({
+      key: bossPriestessSpriteAssets.hurt.key,
+      ignoreIfPlaying: true,
+    })
+
+    runtime.runDelayedCalls(620)
+
+    expect(boss?.playCalls.at(-1)).toEqual({
+      key: bossPriestessSpriteAssets.cast.key,
+      ignoreIfPlaying: true,
+    })
+  })
+
   it('restores regenerated boss support core presentation after prior defeat tween state', () => {
     const stage = getGameplayStageMap('1-6')
     expect(stage).toBeDefined()
@@ -2705,6 +2787,10 @@ describe('createGameplayRendererConfig', () => {
     )
 
     expect(boss?.visible).toBe(true)
+    expect(boss?.playCalls.at(-1)).toEqual({
+      key: bossPriestessSpriteAssets.death.key,
+      ignoreIfPlaying: true,
+    })
     expect(boss?.body.enable).toBe(false)
     expect(runtime.hudUpdates).toEqual(
       expect.arrayContaining([
