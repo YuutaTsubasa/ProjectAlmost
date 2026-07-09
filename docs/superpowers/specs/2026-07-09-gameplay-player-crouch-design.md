@@ -108,7 +108,7 @@ export type PlayerBodyDefinition = {
 - offset X `47`
 - offset Y `42`
 
-Add `playerActorDefinition.crouch.body` for the crouch pose. The crouch body must be shorter than the standing body and keep the visible feet grounded. Because the crouch spritesheet has more transparent bottom padding than the standing sprite, the body offset must align the crouch frame's visible foot baseline with the standing frame's visible foot baseline rather than merely preserving the same body bottom. The exact dimensions are owned by the rebuild domain manifest and verified by tests.
+Add `playerActorDefinition.crouch.body` for the crouch pose. The crouch body must be shorter than the standing body and keep the physics feet grounded by increasing `offsetY` by the removed height. The crouch spritesheet must also keep its visible foot baseline aligned with the standing visible foot baseline so the sprite does not appear to float while the physics body remains stable. The exact dimensions and visible foot baseline are owned by the rebuild domain manifest and verified by tests.
 
 Add pure functions:
 

@@ -90,13 +90,13 @@ describe('playerActorDefinition', () => {
           frameRate: 5,
           repeat: -1,
           scale: 0.78,
-          footY: 103,
+          footY: 117,
         },
       },
       origin: { x: 0.5, y: 0.5 },
       body: { width: 34, height: 72, offsetX: 47, offsetY: 42 },
       crouch: {
-        body: { width: 34, height: 44, offsetX: 47, offsetY: 56 },
+        body: { width: 34, height: 44, offsetX: 47, offsetY: 70 },
       },
       centerAboveSurface: 76,
       scale: 0.78,
@@ -118,20 +118,16 @@ describe('playerActorDefinition', () => {
 })
 
 describe('player crouch body', () => {
-  it('keeps crouch visible feet aligned with standing visible feet', () => {
+  it('keeps crouch physics feet aligned with standing physics feet', () => {
     const standing = playerActorDefinition.body
     const crouching = playerActorDefinition.crouch.body
-    const standingFootY = playerActorDefinition.sprites.idle.footY
-    const crouchingFootY = playerActorDefinition.sprites.crouch.footY
-
-    expect(standingFootY).toBeDefined()
-    expect(crouchingFootY).toBeDefined()
-    if (standingFootY === undefined || crouchingFootY === undefined) return
 
     expect(crouching.height).toBeLessThan(standing.height)
-    const standingFootOverhang = standingFootY - (standing.offsetY + standing.height)
+    expect(crouching.offsetY + crouching.height).toBe(standing.offsetY + standing.height)
+  })
 
-    expect(crouching.offsetY + crouching.height).toBe(crouchingFootY - standingFootOverhang)
+  it('keeps crouch visible feet aligned with standing visible feet', () => {
+    expect(playerActorDefinition.sprites.crouch.footY).toBe(playerActorDefinition.sprites.idle.footY)
   })
 
   it('selects standing or crouching body definitions by pose', () => {
