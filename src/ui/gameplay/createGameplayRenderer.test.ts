@@ -4598,7 +4598,7 @@ describe('createGameplayRendererConfig', () => {
     })
   })
 
-  it('blocks a boss projectile on the same crouch-input frame', () => {
+  it('lets a boss projectile pass through on the same crouch-input frame', () => {
     const stage = getGameplayStageMap('1-6')
     expect(stage).toBeDefined()
     if (!stage) return
@@ -4619,7 +4619,7 @@ describe('createGameplayRendererConfig', () => {
 
     runtime.scene.update(32, 16)
 
-    expect(projectile.destroyed).toBe(true)
+    expect(projectile.destroyed).toBe(false)
     expect(runtime.playerSprite.playCalls.at(-1)).toEqual({
       key: playerActorDefinition.sprites.crouch.key,
       ignoreIfPlaying: true,
@@ -4631,7 +4631,7 @@ describe('createGameplayRendererConfig', () => {
     ).toBe(false)
   })
 
-  it('blocks boss projectile hits while crouching', () => {
+  it('lets boss projectile hits pass through while crouching', () => {
     const stage = getGameplayStageMap('1-6')
     expect(stage).toBeDefined()
     if (!stage) return
@@ -4651,7 +4651,7 @@ describe('createGameplayRendererConfig', () => {
 
     runtime.scene.update()
 
-    expect(projectile.destroyed).toBe(true)
+    expect(projectile.destroyed).toBe(false)
     expect(
       runtime.hudUpdates.filter((patch) => patch.damageTaken !== undefined).at(-1),
     ).not.toMatchObject({

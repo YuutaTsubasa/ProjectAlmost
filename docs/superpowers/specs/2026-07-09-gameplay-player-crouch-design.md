@@ -13,7 +13,7 @@ It makes these behaviors true in rebuilt gameplay:
 - crouch is blocked while airborne, attacking, hurting, dead, or stage-cleared.
 - crouching stops normal horizontal movement.
 - crouching prevents melee and Homing attack starts.
-- crouching blocks crouch-blockable boss projectiles and player contact damage paths that already accept crouch state.
+- crouching lets crouch-blockable boss projectiles pass through without damage and blocks player contact damage paths that already accept crouch state.
 - jumping or leaving an eligible crouch state exits crouch and restores the normal player body.
 
 This slice does not add gamepad controls, virtual controls, ice-specific movement, new audio, new HUD copy, new level content, or ceiling/stand-up clearance checks. The rebuild currently has no low-ceiling traversal requirement, so standing up immediately when input is released is acceptable.
@@ -25,7 +25,7 @@ The rebuild already has:
 - `src/domain/gameplay/playerActor.ts` for player sprite, body, movement, and jump metadata.
 - `src/domain/gameplay/playerAttack.ts` with a `crouching` gate in `getAttackInputDecision`.
 - `src/domain/gameplay/playerLife.ts` with `crouching` inputs for contact damage decisions.
-- `src/domain/gameplay/bossProjectile.ts` with `blocked-by-crouch` support.
+- `src/domain/gameplay/bossProjectile.ts` with crouch pass-through support.
 - `src/domain/gameplay/gameplayStartGate.ts` that treats crouch input as gameplay input.
 - `src/ui/gameplay/createGameplayRenderer.ts` polling ArrowDown and `S`, but only for start-gate input.
 
@@ -56,7 +56,7 @@ Prototype crouch rules to preserve:
 - crouch animation frames are `0..3`, frame rate `5`, repeat `-1`.
 - crouching takes animation priority over grounded idle/run, but airborne jump takes priority over crouch.
 - attack input is ignored while crouching.
-- boss projectiles inside hit distance are blocked when the player is crouching.
+- boss projectiles inside hit distance pass through without damage when the player is crouching.
 
 ## Architecture
 
@@ -234,7 +234,7 @@ Renderer tests:
 - crouch applies the crouch body and releasing input restores standing body.
 - airborne crouch input does not play crouch animation.
 - attack input while crouching does not create melee hitboxes or start Homing.
-- crouching passes true into boss projectile handling and blocks eligible projectile hits.
+- crouching passes true into boss projectile handling and lets eligible projectile hits pass through without destroying the projectile or damaging the player.
 - jumping exits crouch, restores standing body, and plays jump animation.
 - hurt, death, respawn, and stage-clear paths clear crouch and restore standing body.
 

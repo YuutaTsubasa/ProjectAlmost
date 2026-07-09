@@ -1665,8 +1665,8 @@ class GameplayMapScene extends Phaser.Scene {
           projectile.y,
         ),
       })
-      if (hit === 'blocked-by-crouch') {
-        this.destroyBossProjectile(projectile)
+      if (hit === 'pass-through-crouch') {
+        continue
       } else if (hit === 'hit') {
         this.destroyBossProjectile(projectile)
         const crouching = this.isPlayerCrouching()

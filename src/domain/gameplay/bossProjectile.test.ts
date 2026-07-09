@@ -37,7 +37,7 @@ describe('boss projectile rules', () => {
     expect(isBossProjectileOutOfBounds({ ...world, x: 960, y: 1160 })).toBe(false)
   })
 
-  it('decides projectile hits against player state and crouch', () => {
+  it('decides projectile hits against player state and crouch pass-through', () => {
     expect(getBossProjectileHitDecision({
       playerDead: true,
       playerCrouching: false,
@@ -52,7 +52,7 @@ describe('boss projectile rules', () => {
       playerDead: false,
       playerCrouching: true,
       distanceToPlayer: 41,
-    })).toBe('blocked-by-crouch')
+    })).toBe('pass-through-crouch')
     expect(getBossProjectileHitDecision({
       playerDead: false,
       playerCrouching: false,
