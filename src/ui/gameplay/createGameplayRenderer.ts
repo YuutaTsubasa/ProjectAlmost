@@ -359,9 +359,6 @@ class GameplayMapScene extends Phaser.Scene {
     this.createCoins()
     this.playerKeys = this.createPlayerKeys()
     this.createPlayer()
-    if (this.bossPrototype && !this.bossPatternEvent) {
-      this.startBossPattern()
-    }
     this.damageTaken = 0
     this.falls = 0
     this.enemiesDefeated = 0
@@ -385,6 +382,10 @@ class GameplayMapScene extends Phaser.Scene {
     if (!this.isGameplayRunning()) {
       this.emitHudPositionPatch()
       return
+    }
+
+    if (this.bossPrototype && !this.bossPatternEvent) {
+      this.startBossPattern()
     }
 
     this.advanceGameplayElapsed(delta)
@@ -427,7 +428,7 @@ class GameplayMapScene extends Phaser.Scene {
     return {
       leftHeld: keys.left.isDown || keys.a.isDown,
       rightHeld: keys.right.isDown || keys.d.isDown,
-      crouchHeld: false,
+      crouchHeld: keys.down.isDown || keys.s.isDown,
       jumpPressed: jumpHeld && !this.wasJumpDown,
       jumpHeld,
       attackPressed: attackHeld && !this.wasAttackDown,
@@ -1130,10 +1131,6 @@ class GameplayMapScene extends Phaser.Scene {
     if (!this.isBossStage) return
 
     this.bossPrototype = this.enemies.find((enemy) => enemy.spawn.id === 'boss-prototype') ?? null
-
-    if (this.bossPrototype) {
-      this.startBossPattern()
-    }
   }
 
   private startBossPattern(): void {
@@ -1514,6 +1511,16 @@ class GameplayMapScene extends Phaser.Scene {
         this.destroyBossProjectile(projectile)
       } else if (hit === 'hit') {
         this.destroyBossProjectile(projectile)
+        if (
+          !canApplyPlayerHazardHit({
+            invulnerable: this.isPlayerInvulnerable,
+            hurting: this.isPlayerHurting,
+            homingAttacking: this.isHomingAttacking,
+            dead: this.isPlayerDead,
+          })
+        ) {
+          continue
+        }
         this.applyPlayerContactDamage(projectile.x)
       }
     }

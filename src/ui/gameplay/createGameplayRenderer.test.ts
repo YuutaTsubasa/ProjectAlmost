@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { enemyActorDefinitions } from '../../domain/gameplay/enemyActor'
 import { checkpointActorDefinition, getCheckpointBottomY } from '../../domain/gameplay/checkpointActor'
+import { getBossPatternDelayMs } from '../../domain/gameplay/bossBattle'
 import { getGoalBottomY, goalActorDefinition } from '../../domain/gameplay/goalActor'
 import {
   getGroundedHazardCenterY,
@@ -153,6 +154,14 @@ type CameraFadeCall = {
   red: number
   green: number
   blue: number
+}
+
+type TimerEventCall = {
+  delay: number
+  loop: boolean
+  callback: () => void
+  active: boolean
+  nextFireAt: number
 }
 
 type FakePlayerKeys = {
@@ -786,6 +795,7 @@ function createSceneRuntime(input: {
   const images: Array<ReturnType<typeof createFakeImage>> = []
   const ellipses: Array<ReturnType<typeof createFakeEllipse>> = []
   const delayedCalls: Array<{ delay: number; callback: () => void }> = []
+  const timerEvents: TimerEventCall[] = []
   const killedTweenTargets: unknown[] = []
   const colliderCalls: Array<{ a: unknown; b: unknown }> = []
   const overlapCalls: OverlapCall[] = []
@@ -948,11 +958,47 @@ function createSceneRuntime(input: {
     delayedCall: (delay, callback) => {
       delayedCalls.push({ delay, callback })
     },
-    addEvent: ({ callback }) => ({
-      remove: () => {
-        void callback
-      },
-    }),
+    addEvent: ({ delay, loop, callback }) => {
+      const event: TimerEventCall = {
+        delay,
+        loop: Boolean(loop),
+        callback,
+        active: true,
+        nextFireAt: scene.time.now + delay,
+      }
+      timerEvents.push(event)
+
+      return {
+        remove: () => {
+          event.active = false
+        },
+      }
+    },
+  }
+
+  function advanceTime(ms: number): void {
+    const targetTime = scene.time.now + ms
+
+    while (true) {
+      const nextEvent = timerEvents
+        .filter((event) => event.active && event.nextFireAt <= targetTime)
+        .sort((left, right) => left.nextFireAt - right.nextFireAt)[0]
+
+      if (!nextEvent) {
+        break
+      }
+
+      scene.time.now = nextEvent.nextFireAt
+      nextEvent.callback()
+
+      if (nextEvent.loop && nextEvent.active) {
+        nextEvent.nextFireAt += nextEvent.delay
+      } else {
+        nextEvent.active = false
+      }
+    }
+
+    scene.time.now = targetTime
   }
 
   scene.tweens = {
@@ -990,6 +1036,7 @@ function createSceneRuntime(input: {
     images,
     ellipses,
     delayedCalls,
+    timerEvents,
     killedTweenTargets,
     colliderCalls,
     overlapCalls,
@@ -1002,6 +1049,7 @@ function createSceneRuntime(input: {
         call.callback()
       }
     },
+    advanceTime,
     triggerEnemyOverlap: (enemy: ReturnType<typeof createFakeArcadeSprite>) => {
       const overlap = overlapCalls.find((candidate) => candidate.a === playerSprite && candidate.b === enemy)
       if (!overlap) {
@@ -1044,6 +1092,10 @@ function createSceneRuntime(input: {
 function recoverFromSurvivedHurt(runtime: FakeRuntime): void {
   runtime.runDelayedCalls(playerLifeTiming.hurtRecoveryDelayMs)
   runtime.runDelayedCalls(playerLifeTiming.invulnerabilityRecoveryDelayMs)
+}
+
+function getBossProjectileSprites(runtime: FakeRuntime) {
+  return runtime.sprites.filter((sprite) => sprite.texture === 'boss-projectile' && !sprite.destroyed)
 }
 
 function startGameplay(runtime: FakeRuntime): void {
@@ -2283,7 +2335,7 @@ describe('createGameplayRendererConfig', () => {
     )
   })
 
-  it('starts boss pattern with an immediate phase zero aimed projectile', () => {
+  it('starts boss pattern with an immediate phase zero aimed projectile once gameplay starts', () => {
     const stage = getGameplayStageMap('1-6')
     expect(stage).toBeDefined()
     if (!stage) return
@@ -2291,6 +2343,7 @@ describe('createGameplayRendererConfig', () => {
 
     runtime.scene.preload()
     runtime.scene.create()
+    startGameplay(runtime)
 
     const projectile = runtime.sprites.find((sprite) => sprite.texture === 'boss-projectile')
     expect(projectile).toBeDefined()
@@ -2299,6 +2352,95 @@ describe('createGameplayRendererConfig', () => {
     expect(projectile?.body.allowGravity).toBe(false)
     expect(projectile?.velocityX).not.toBe(0)
   })
+
+  it('does not stack boss projectile damage while the player is hurting and invulnerable', () => {
+    const stage = getGameplayStageMap('1-6')
+    expect(stage).toBeDefined()
+    if (!stage) return
+    const runtime = createSceneRuntime({ stage })
+
+    runtime.scene.preload()
+    runtime.scene.create()
+    startGameplay(runtime)
+
+    const firstProjectile = getBossProjectileSprites(runtime)[0]
+    expect(firstProjectile).toBeDefined()
+    expect(runtime.playerSprite).toBeDefined()
+    if (!firstProjectile || !runtime.playerSprite) return
+
+    firstProjectile.x = runtime.playerSprite.x
+    firstProjectile.y = runtime.playerSprite.y
+    runtime.scene.update(32, 16)
+
+    const hurtAnimationKey = playerActorDefinition.sprites.hurt.key
+    expect(
+      runtime.playerSprite.playCalls.filter((call) => call.key === hurtAnimationKey),
+    ).toHaveLength(1)
+    expect(
+      runtime.hudUpdates.filter((patch) => patch.damageTaken !== undefined).at(-1),
+    ).toMatchObject({
+      hp: 2,
+      damageTaken: 1,
+    })
+
+    runtime.advanceTime(getBossPatternDelayMs({ phase: 0 }))
+
+    const secondProjectile = getBossProjectileSprites(runtime).at(-1)
+    expect(secondProjectile).toBeDefined()
+    if (!secondProjectile) return
+
+    secondProjectile.x = runtime.playerSprite.x
+    secondProjectile.y = runtime.playerSprite.y
+    runtime.scene.update(48, 16)
+
+    expect(
+      runtime.playerSprite.playCalls.filter((call) => call.key === hurtAnimationKey),
+    ).toHaveLength(1)
+    expect(
+      runtime.hudUpdates.filter((patch) => patch.damageTaken !== undefined).at(-1),
+    ).toMatchObject({
+      hp: 2,
+      damageTaken: 1,
+    })
+  })
+
+  it('does not start boss pattern or accumulate boss projectiles before gameplay starts', () => {
+    const stage = getGameplayStageMap('1-6')
+    expect(stage).toBeDefined()
+    if (!stage) return
+    const runtime = createSceneRuntime({ stage })
+
+    runtime.scene.preload()
+    runtime.scene.create()
+
+    expect(getBossProjectileSprites(runtime)).toHaveLength(0)
+
+    runtime.advanceTime(getBossPatternDelayMs({ phase: 0 }) * 2)
+
+    expect(getBossProjectileSprites(runtime)).toHaveLength(0)
+  })
+
+  it.each(['down', 's'] as const)(
+    'starts gameplay and boss pattern from %s crouch input',
+    (key) => {
+      const stage = getGameplayStageMap('1-6')
+      expect(stage).toBeDefined()
+      if (!stage) return
+      const runtime = createSceneRuntime({ stage })
+
+      runtime.scene.preload()
+      runtime.scene.create()
+
+      expect(getBossProjectileSprites(runtime)).toHaveLength(0)
+
+      runtime.scene.update(0, 0)
+      runtime.playerKeys[key].isDown = true
+      runtime.scene.update(16, 16)
+      runtime.playerKeys[key].isDown = false
+
+      expect(getBossProjectileSprites(runtime)).toHaveLength(1)
+    },
+  )
 
   it('creates the generated Homing reticle texture from prototype dimensions', () => {
     const runtime = createSceneRuntime()

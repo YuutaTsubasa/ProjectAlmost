@@ -15,7 +15,34 @@ Files changed:
 - `.superpowers/sdd/boss-battle-task-3-report.md`
 
 Commit hash:
-- `0138d0e`
+- `63db731`
+
+Concerns:
+- None.
+
+---
+
+Fix status:
+- DONE: review remediation for boss projectile damage gating, boss pattern start gating, crouch start input, and timer-backed renderer coverage.
+
+RED command and failure summary:
+- Behavior 1: `npm run test -- src/ui/gameplay/createGameplayRenderer.test.ts -t "does not stack boss projectile damage while the player is hurting and invulnerable"` failed because boss projectiles triggered the hurt animation twice while the player was already in hurt/invulnerable state.
+- Behavior 2: `npm run test -- src/ui/gameplay/createGameplayRenderer.test.ts -t "boss pattern or accumulate boss projectiles before gameplay starts|starts gameplay and boss pattern from"` failed because a boss projectile already existed before the gameplay start gate opened, and the same pre-start spawn broke both crouch-start cases.
+
+GREEN command summaries:
+- Behavior 1: `npm run test -- src/ui/gameplay/createGameplayRenderer.test.ts -t "does not stack boss projectile damage while the player is hurting and invulnerable"` passed.
+- Behavior 2: `npm run test -- src/ui/gameplay/createGameplayRenderer.test.ts -t "boss pattern or accumulate boss projectiles before gameplay starts|starts gameplay and boss pattern from"` passed with the timer-backed boss start tests green.
+- Full renderer file: `npm run test -- src/ui/gameplay/createGameplayRenderer.test.ts` passed with 116 tests green.
+- Type/script verification: `npm run check` passed with 0 errors and 0 warnings.
+- Diff sanity: `git diff --check` passed with no whitespace or path issues.
+
+Files changed:
+- `src/ui/gameplay/createGameplayRenderer.ts`
+- `src/ui/gameplay/createGameplayRenderer.test.ts`
+- `.superpowers/sdd/boss-battle-task-3-report.md`
+
+Commit hash:
+- 25bd395
 
 Concerns:
 - None.
