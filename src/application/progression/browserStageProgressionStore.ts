@@ -33,7 +33,13 @@ function isStageProgressionSave(value: unknown): value is StageProgressionSave {
   if (candidate.version !== 1 || !candidate.stageRecords || typeof candidate.stageRecords !== 'object') return false
   if (Array.isArray(candidate.stageRecords)) return false
 
-  return Object.values(candidate.stageRecords).every((record) => isStageRecord(record))
+  return Object.entries(candidate.stageRecords).every(([stageId, record]) =>
+    isStageId(stageId) && isStageRecord(record),
+  )
+}
+
+function isStageId(value: string): value is StageId {
+  return /^[1-6]-[1-6]$/.test(value)
 }
 
 function isStageRecord(value: unknown): value is StageRecord {
@@ -49,7 +55,9 @@ function isStageRecord(value: unknown): value is StageRecord {
 
   return candidate.cleared === true || candidate.cleared === false
     ? typeof candidate.bestTimeMs === 'number'
+      && Number.isInteger(candidate.bestTimeMs)
       && Number.isFinite(candidate.bestTimeMs)
+      && candidate.bestTimeMs >= 0
       && typeof candidate.bestTime === 'string'
       && typeof candidate.bestRank === 'string'
       && (candidate.bestRank === 'S'
@@ -58,7 +66,9 @@ function isStageRecord(value: unknown): value is StageRecord {
         || candidate.bestRank === 'C'
         || candidate.bestRank === 'D')
       && typeof candidate.maxCoins === 'number'
+      && Number.isInteger(candidate.maxCoins)
       && Number.isFinite(candidate.maxCoins)
+      && candidate.maxCoins >= 0
     : false
 }
 
