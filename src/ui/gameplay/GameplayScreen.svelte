@@ -27,16 +27,17 @@
     type GamepadControlSnapshot,
   } from '../../domain/input/controlIntents'
   import type { GameSettings } from '../../domain/settings/settings'
-  import {
-    resolveStageResultActionIntent,
-    type StageResultActionType,
-    type StageResultControlIntent,
-  } from '../../domain/gameplay/stageResult'
-  import GameplayHud from './GameplayHud.svelte'
-  import PauseMenu from './PauseMenu.svelte'
-  import StageResult from './StageResult.svelte'
-  import { createGameplayRenderer } from './createGameplayRenderer'
-  import { getGameplayHudStageDisplay } from './gameplayHudDisplay'
+import {
+  resolveStageResultActionIntent,
+  type StageResultActionType,
+  type StageResultControlIntent,
+} from '../../domain/gameplay/stageResult'
+import type { StageClearResult } from '../../domain/progression/stageProgression'
+import GameplayHud from './GameplayHud.svelte'
+import PauseMenu from './PauseMenu.svelte'
+import StageResult from './StageResult.svelte'
+import { createGameplayRenderer } from './createGameplayRenderer'
+import { getGameplayHudStageDisplay } from './gameplayHudDisplay'
   import SettingsPanel from '../settings/SettingsPanel.svelte'
 
   type Props = {
@@ -49,6 +50,7 @@
     onStageSelect: () => void
     onSettingsChange: (settings: GameSettings, fullscreenChanged: boolean) => void
     onConfirmSettingsDelete: () => void
+    onStageClear: (result: StageClearResult) => void
   }
 
   let {
@@ -61,6 +63,7 @@
     onStageSelect,
     onSettingsChange,
     onConfirmSettingsDelete,
+    onStageClear,
   }: Props = $props()
 
   let container: HTMLDivElement
@@ -72,6 +75,8 @@
     selectedItemIndex: 0,
     deleteConfirm: null,
   })
+
+  let stageClearRecorded = $state(false)
   let selectedResultAction = $state(0)
   let previousGamepadSnapshot: GamepadControlSnapshot | null = null
   const stageDisplay = $derived(getGameplayHudStageDisplay(stage.id))
@@ -91,6 +96,17 @@
       onStageSelect()
     }
   }
+
+  $effect(() => {
+    if (!hudState?.result || stageClearRecorded) return
+
+    stageClearRecorded = true
+    onStageClear({
+      time: hudState.result.time,
+      rank: hudState.result.rank,
+      coins: hudState.result.coins,
+    })
+  })
 
   function isStageResultControlIntent(intent: ControlIntent): intent is StageResultControlIntent {
     return (

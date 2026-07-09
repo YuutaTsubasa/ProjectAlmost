@@ -23,25 +23,33 @@
   import { applyControlIntent } from './application/input/appControls'
   import { createProjectIdentity } from './domain/app/projectIdentity'
   import { projectData } from './domain/data/projectData'
-  import type { LocaleCode } from './domain/data/localize/localize'
-  import { getGameplayStageMap } from './domain/gameplay/gameplayStageMaps'
-  import type { ControlIntent } from './domain/input/controlIntents'
-  import {
-    adjustSettingsRow,
-    parseStoredSettings,
-    resetSettings,
-    SETTINGS_STORAGE_KEY,
-    type GameSettings,
-  } from './domain/settings/settings'
-  import ResolutionFrame from './ui/layout/ResolutionFrame.svelte'
-  import GameplayScreen from './ui/gameplay/GameplayScreen.svelte'
-  import SettingsScreen from './ui/settings/SettingsScreen.svelte'
-  import StageSelectScreen from './ui/stage/StageSelectScreen.svelte'
-  import TitleScreen from './ui/title/TitleScreen.svelte'
+import type { LocaleCode } from './domain/data/localize/localize'
+import { getGameplayStageMap } from './domain/gameplay/gameplayStageMaps'
+import type { ControlIntent } from './domain/input/controlIntents'
+import {
+  createEmptySave,
+  deleteStageProgressionSave,
+  loadStageProgressionSave,
+  recordStageClear,
+} from './application/progression/browserStageProgressionStore'
+import {
+  adjustSettingsRow,
+  parseStoredSettings,
+  resetSettings,
+  SETTINGS_STORAGE_KEY,
+  type GameSettings,
+} from './domain/settings/settings'
+import type { StageClearResult } from './domain/progression/stageProgression'
+import ResolutionFrame from './ui/layout/ResolutionFrame.svelte'
+import GameplayScreen from './ui/gameplay/GameplayScreen.svelte'
+import SettingsScreen from './ui/settings/SettingsScreen.svelte'
+import StageSelectScreen from './ui/stage/StageSelectScreen.svelte'
+import TitleScreen from './ui/title/TitleScreen.svelte'
   import WorldSelectScreen from './ui/world/WorldSelectScreen.svelte'
 
   let settings: GameSettings = $state(parseStoredSettings(null, false))
   let appState = $state(createInitialAppState())
+  let stageProgressionSave = $state(createEmptySave())
   let audio: BrowserAudioController | undefined
   const identity = createProjectIdentity()
   const locale: LocaleCode = $derived(settings.language)
@@ -153,6 +161,17 @@
     syncMusicForCurrentState()
   }
 
+  function handleStageClear(result: StageClearResult) {
+    if (appState.screen.type !== 'gameplay') return
+
+    stageProgressionSave = recordStageClear(
+      localStorage,
+      stageProgressionSave,
+      appState.screen.stageId,
+      result,
+    )
+  }
+
   function handleGameplaySettingsChange(nextSettings: GameSettings, fullscreenChanged: boolean): void {
     syncSettings(nextSettings)
     if (fullscreenChanged) void setFullscreen(nextSettings.fullscreen)
@@ -226,10 +245,12 @@
 
   function handleConfirmDelete() {
     playUiSfx('confirm')
+    stageProgressionSave = deleteStageProgressionSave(localStorage)
     appState = cancelDeleteConfirm(appState)
   }
 
   onMount(() => {
+    stageProgressionSave = loadStageProgressionSave(localStorage)
     audio = createBrowserAudioController()
     syncSettings(parseStoredSettings(localStorage.getItem(SETTINGS_STORAGE_KEY), actualFullscreen()))
     const initialMusicCommand = createMusicCommand(appState.screen, settings)
@@ -308,6 +329,7 @@
           onStageSelect={handleReturnFromGameplayToStageSelect}
           onSettingsChange={handleGameplaySettingsChange}
           onConfirmSettingsDelete={handleConfirmDelete}
+          onStageClear={handleStageClear}
         />
       {/key}
     {:else if appState.screen.type === 'gameplay'}
