@@ -253,14 +253,15 @@
 
   .top-hud {
     --top-hud-stack-gap: 1.25cqh;
+    --top-hud-side-width: 28.1cqw;
     position: absolute;
     top: 2.2cqh;
     right: 1.25cqw;
     left: 1.25cqw;
-    display: flex;
+    display: grid;
+    grid-template-columns: var(--top-hud-side-width) 1fr var(--top-hud-side-width);
     gap: 1.25cqw;
     align-items: flex-start;
-    justify-content: space-between;
   }
 
   .top-left-hud,
@@ -271,19 +272,17 @@
   }
 
   .top-left-hud {
-    flex: none;
-    width: 28.1cqw;
+    width: var(--top-hud-side-width);
   }
 
   .top-center-hud {
     display: flex;
-    flex: 1;
     min-width: 0;
     justify-content: center;
   }
 
   .top-right-hud {
-    flex: none;
+    justify-self: end;
     width: 24cqw;
   }
 

@@ -45,7 +45,7 @@ describe('Gameplay HUD Svelte UI', () => {
     expect(hudSource).not.toContain('transform: translateX(-50%)')
   })
 
-  it('places top HUD panels inside left, center, and right flex regions', () => {
+  it('places top HUD panels inside left, center, and right layout regions', () => {
     const leftRegion = hudSource.slice(
       hudSource.indexOf('class="top-left-hud"'),
       hudSource.indexOf('class="top-center-hud"'),
@@ -82,6 +82,26 @@ describe('Gameplay HUD Svelte UI', () => {
     expect(topStackStyle).toContain('display: flex')
     expect(topStackStyle).toContain('flex-direction: column')
     expect(topStackStyle).toContain('gap: var(--top-hud-stack-gap)')
+  })
+
+  it('centers the stage banner with balanced side grid tracks', () => {
+    const styleSource = hudSource.slice(hudSource.indexOf('<style>'))
+    const topHudStyle = styleSource.slice(
+      styleSource.indexOf('.top-hud {'),
+      styleSource.indexOf('.top-left-hud,'),
+    )
+    const topRightStyle = styleSource.slice(
+      styleSource.indexOf('.top-right-hud {'),
+      styleSource.indexOf('.status-hud {'),
+    )
+
+    expect(topHudStyle).toContain('--top-hud-side-width: 28.1cqw')
+    expect(topHudStyle).toContain('display: grid')
+    expect(topHudStyle).toContain('grid-template-columns: var(--top-hud-side-width) 1fr var(--top-hud-side-width)')
+    expect(topHudStyle).toContain('align-items: flex-start')
+    expect(topHudStyle).not.toContain('justify-content: space-between')
+    expect(topRightStyle).toContain('justify-self: end')
+    expect(topRightStyle).toContain('width: 24cqw')
   })
 
   it('lets top layout containers own positioning instead of individual top panels', () => {
