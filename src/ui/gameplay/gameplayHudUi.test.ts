@@ -85,10 +85,19 @@ describe('Gameplay HUD Svelte UI', () => {
   it('renders boss phase HUD only when boss phase state is present and uncleared', () => {
     expect(hudSource).toContain('{#if state.bossPhaseMax > 0 && !state.cleared}')
     expect(hudSource).toContain('class="hud-panel boss-phase-hud"')
-    expect(hudSource).toContain('gameplayHud.bossPhase')
     expect(hudSource).toContain('{state.bossPhase}')
     expect(hudSource).toContain('{state.bossPhaseMax}')
-    expect(hudSource).toContain('gameplayHud.bossPhaseHint')
+  })
+
+  it('resolves boss phase HUD text instead of rendering raw localization keys', () => {
+    expect(hudSource).toContain('resolveLocalizedText')
+    expect(hudSource).toContain("return resolveLocalizedText(localize, locale, key)")
+    expect(hudSource).toContain("text('hud.bossPhase')")
+    expect(hudSource).toContain("text('hud.bossPhaseHint')")
+    expect(hudSource).not.toContain('>gameplayHud.bossPhase</div>')
+    expect(hudSource).not.toContain('>gameplayHud.bossPhaseHint</p>')
+    expect(hudSource).not.toContain('>hud.bossPhase</div>')
+    expect(hudSource).not.toContain('>hud.bossPhaseHint</p>')
   })
 
   it('wires GameplayScreen stage display data to the HUD', () => {

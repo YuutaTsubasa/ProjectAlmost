@@ -1,4 +1,10 @@
 <script lang="ts">
+  import {
+    localize,
+    resolveLocalizedText,
+    type GameplayHudLocalizationKey,
+    type LocaleCode,
+  } from '../../domain/data/localize/localize'
   import type { GameplayHudState } from '../../domain/gameplay/gameplayHud'
   import {
     GAMEPLAY_HUD_PLAYER_PORTRAIT_SRC,
@@ -8,14 +14,19 @@
   type Props = {
     state: GameplayHudState
     stageDisplay: GameplayHudStageDisplay
+    locale?: LocaleCode
     stageLabel?: string
   }
 
-  let { state, stageDisplay }: Props = $props()
+  let { state, stageDisplay, locale = 'en' }: Props = $props()
 
   function getHpWidthPercent() {
     if (state.hpMax <= 0) return 0
     return Math.max(0, Math.min(100, (state.hp / state.hpMax) * 100))
+  }
+
+  function text(key: GameplayHudLocalizationKey): string {
+    return resolveLocalizedText(localize, locale, key)
   }
 </script>
 
@@ -107,12 +118,12 @@
   </section>
 
   {#if state.bossPhaseMax > 0 && !state.cleared}
-    <section class="hud-panel boss-phase-hud" aria-label="Boss phase">
+    <section class="hud-panel boss-phase-hud" aria-label={text('hud.bossPhase')}>
       <span class="corner tr"></span>
       <span class="corner bl"></span>
-      <div class="hud-label"><span></span>gameplayHud.bossPhase</div>
+      <div class="hud-label"><span></span>{text('hud.bossPhase')}</div>
       <strong>{state.bossPhase} <small>/ {state.bossPhaseMax}</small></strong>
-      <p>gameplayHud.bossPhaseHint</p>
+      <p>{text('hud.bossPhaseHint')}</p>
     </section>
   {/if}
 

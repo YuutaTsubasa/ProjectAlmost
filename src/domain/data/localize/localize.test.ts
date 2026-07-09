@@ -410,10 +410,10 @@ describe('localize', () => {
     } as const
 
     for (const locale of localize.languages.map((language) => language.code)) {
-      expect(resolveLocalizedText(localize, locale, 'gameplayHud.bossPhase')).toBe(
+      expect(resolveLocalizedText(localize, locale, 'hud.bossPhase')).toBe(
         expectedByLocale[locale].bossPhase,
       )
-      expect(resolveLocalizedText(localize, locale, 'gameplayHud.bossPhaseHint')).toBe(
+      expect(resolveLocalizedText(localize, locale, 'hud.bossPhaseHint')).toBe(
         expectedByLocale[locale].bossPhaseHint,
       )
       expect(resolveLocalizedText(localize, locale, 'status.bossPattern')).toBe(
