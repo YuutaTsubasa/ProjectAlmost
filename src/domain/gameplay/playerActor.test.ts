@@ -185,7 +185,7 @@ describe('getPlayerCrouchState', () => {
 
 describe('getPlayerHorizontalMovementDecision', () => {
   it('accelerates left with idle drag', () => {
-    expect(getPlayerHorizontalMovementDecision({ left: true, right: false, crouching: false })).toEqual({
+    expect(getPlayerHorizontalMovementDecision({ left: true, right: false })).toEqual({
       direction: 'left',
       accelerationX: -950,
       dragX: 1500,
@@ -194,7 +194,7 @@ describe('getPlayerHorizontalMovementDecision', () => {
   })
 
   it('accelerates right with idle drag', () => {
-    expect(getPlayerHorizontalMovementDecision({ left: false, right: true, crouching: false })).toEqual({
+    expect(getPlayerHorizontalMovementDecision({ left: false, right: true })).toEqual({
       direction: 'right',
       accelerationX: 950,
       dragX: 1500,
@@ -203,7 +203,7 @@ describe('getPlayerHorizontalMovementDecision', () => {
   })
 
   it('idles with drag when no horizontal input is active', () => {
-    expect(getPlayerHorizontalMovementDecision({ left: false, right: false, crouching: false })).toEqual({
+    expect(getPlayerHorizontalMovementDecision({ left: false, right: false })).toEqual({
       direction: 'none',
       accelerationX: 0,
       dragX: 1500,
@@ -212,9 +212,24 @@ describe('getPlayerHorizontalMovementDecision', () => {
   })
 
   it('keeps prototype left priority when both directions are held', () => {
-    expect(getPlayerHorizontalMovementDecision({ left: true, right: true, crouching: false })).toEqual({
+    expect(getPlayerHorizontalMovementDecision({ left: true, right: true })).toEqual({
       direction: 'left',
       accelerationX: -950,
+      dragX: 1500,
+      stopVelocityX: false,
+    })
+  })
+
+  it('defaults omitted crouching to false for legacy callers', () => {
+    expect(getPlayerHorizontalMovementDecision({ left: true, right: false })).toEqual({
+      direction: 'left',
+      accelerationX: -950,
+      dragX: 1500,
+      stopVelocityX: false,
+    })
+    expect(getPlayerHorizontalMovementDecision({ left: false, right: true })).toEqual({
+      direction: 'right',
+      accelerationX: 950,
       dragX: 1500,
       stopVelocityX: false,
     })

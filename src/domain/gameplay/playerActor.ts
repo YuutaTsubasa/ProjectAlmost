@@ -50,7 +50,7 @@ export type PlayerBodyDefinition = {
 export type PlayerMovementInput = {
   left: boolean
   right: boolean
-  crouching: boolean
+  crouching?: boolean
 }
 
 export type PlayerHorizontalMovementDecision = {
@@ -210,7 +210,7 @@ export function getPlayerCenterY(input: { surfaceY: number }): number {
 export function getPlayerHorizontalMovementDecision(
   input: PlayerMovementInput,
 ): PlayerHorizontalMovementDecision {
-  if (input.crouching) {
+  if (input.crouching ?? false) {
     return {
       direction: 'none',
       accelerationX: 0,
