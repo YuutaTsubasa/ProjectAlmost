@@ -150,6 +150,53 @@ Unlock progression is global catalog order:
 
 This matches the Prototype progression rule of using the ordered stage registry and avoids per-world reset behavior unless a future spec changes progression.
 
+## Implementation Slicing
+
+Build this feature in three ordered slices. Each slice must be test-first and independently reviewable.
+
+### Slice 1: Record System
+
+The first slice records stage clear facts and persists them without changing Stage Select locking yet.
+
+Scope:
+
+- domain stage records and clear results.
+- stage result merge rules.
+- browser save load, save, record clear, and delete save.
+- App wiring that records a completed gameplay run once.
+- Settings Delete Save wiring that clears stored records.
+
+This slice establishes the source of truth. It does not need to render locked Stage Select nodes yet.
+
+### Slice 2: Unlock Projection
+
+The second slice derives unlock state from recorded facts.
+
+Scope:
+
+- ordered stage id projection from the rebuild stage catalog.
+- first-stage unlocked rule.
+- previous-cleared unlock rule.
+- next-stage lookup.
+- debug unlock all stages.
+- app-flow guards that prevent locked-stage deploy and allow next-stage navigation only when rules permit it.
+
+This slice treats unlock state as a pure projection of records plus debug state. It must not duplicate record facts in UI state.
+
+### Slice 3: UI Integration
+
+The third slice applies the projection to Prototype-matching presentation.
+
+Scope:
+
+- Stage Select locked, unlocked, and cleared visual states.
+- locked preview overlay and localized locked labels.
+- path live state based on adjacent unlock states.
+- cleared record display.
+- Result HUD next-stage locked/available state.
+
+This slice must not add new persistence logic. It consumes the record and unlock view model created by earlier slices.
+
 ## Data Model
 
 Save data version:
@@ -198,33 +245,31 @@ Malformed or incompatible save data loads as an empty save.
 
 Use TDD for every behavior slice.
 
-Domain tests:
+Record System tests:
 
 - empty records are empty.
 - time parsing matches Prototype `MM:SS.hh`.
 - merge keeps best time, best rank, and max coins independently.
-- first stage is unlocked by empty records.
-- later stage is locked until the previous stage is cleared.
-- next stage lookup follows catalog order and returns none at the end.
-- option state projection marks locked, unlocked, and cleared stages.
-
-Application store tests:
-
 - load empty save when storage is empty.
 - load empty save when JSON is malformed or version is unsupported.
 - record clear writes merged records.
 - delete save removes save key and returns empty save.
+- Gameplay clear recording writes one record per completed run.
+- Settings Delete Save clears persisted stage records.
+
+Unlock Projection tests:
+
+- first stage is unlocked by empty records.
+- later stage is locked until the previous stage is cleared.
+- next stage lookup follows catalog order and returns none at the end.
+- option state projection marks locked, unlocked, and cleared stages.
 - debug query enables and disables the dev-only unlock key.
 - debug unlock is ignored outside dev mode.
-
-App flow tests:
-
 - locked selected stage confirm leaves the app on Stage Select.
 - unlocked selected stage confirm opens gameplay.
 - next-stage action opens the next stage only when allowed.
-- settings delete confirmation clears progression records.
 
-UI contract tests:
+UI Integration tests:
 
 - Stage Select source or component-level tests prove locked and cleared classes/labels are rendered.
 - deploy is disabled or inert for locked stages.
