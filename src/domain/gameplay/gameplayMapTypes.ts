@@ -93,6 +93,8 @@ export type BackgroundLayer = {
   depth: number
   scrollFactor: number
   parallaxFactor: number
+  alpha?: number
+  tint?: number
 }
 
 export type TerrainDefinition = {
