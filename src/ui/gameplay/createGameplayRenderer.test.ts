@@ -2453,6 +2453,9 @@ describe('createGameplayRendererConfig', () => {
 
     expect(boss).toBeDefined()
     expect(boss?.texture).toBe(bossPriestessSpriteAssets.cast.key)
+    expect(boss?.x).toBe(5880)
+    expect(boss?.y).toBe(384)
+    expect(boss?.origin).toEqual(bossPriestessSpriteAssets.cast.origin)
     expect(boss?.scale).toBe(bossPriestessSpriteAssets.cast.scale)
     expect(boss?.body.size).toEqual({
       width: bossPriestessSpriteAssets.cast.body.width,
@@ -2466,6 +2469,8 @@ describe('createGameplayRendererConfig', () => {
       key: bossPriestessSpriteAssets.cast.key,
       ignoreIfPlaying: true,
     })
+    expect(runtime.killedTweenTargets).toContain(boss)
+    expect(runtime.tweenCalls.some((call) => call.targets === boss && call.y === 370)).toBe(false)
   })
 
   it('starts boss pattern with an immediate phase zero aimed projectile once gameplay starts', () => {

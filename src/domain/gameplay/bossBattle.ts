@@ -17,6 +17,8 @@ export const bossPriestessSpriteAssets = {
     frameRate: 7,
     repeat: -1,
     scale: 1.2,
+    origin: { x: 0.5, y: 0.5 },
+    visualBottomFrameY: 118,
     body: { width: 48, height: 92, offsetX: 40, offsetY: 26 },
   },
   hurt: {
@@ -29,6 +31,8 @@ export const bossPriestessSpriteAssets = {
     frameRate: 10,
     repeat: 0,
     scale: 1.2,
+    origin: { x: 0.5, y: 0.5 },
+    visualBottomFrameY: 118,
     body: { width: 48, height: 92, offsetX: 40, offsetY: 26 },
   },
   death: {
@@ -41,6 +45,8 @@ export const bossPriestessSpriteAssets = {
     frameRate: 8,
     repeat: 0,
     scale: 1.2,
+    origin: { x: 0.5, y: 0.5 },
+    visualBottomFrameY: 118,
     body: { width: 48, height: 92, offsetX: 40, offsetY: 26 },
   },
 } as const
@@ -86,6 +92,18 @@ export function getBossPatternDelayMs(input: { phase: number }): number {
     BOSS_PATTERN_MIN_DELAY_MS,
     BOSS_PATTERN_BASE_DELAY_MS - input.phase * BOSS_PATTERN_PHASE_DELAY_STEP_MS,
   )
+}
+
+export function getBossPriestessVisibleBottomY(input: {
+  spriteY: number
+  frameHeight: number
+  originY: number
+  scale: number
+  visualBottomFrameY: number
+}): number {
+  const originFrameY = input.frameHeight * input.originY
+
+  return input.spriteY + (input.visualBottomFrameY - originFrameY) * input.scale
 }
 
 export function getBossPhasePlayerResetState(input: {

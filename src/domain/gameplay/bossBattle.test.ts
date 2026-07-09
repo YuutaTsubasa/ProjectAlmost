@@ -14,6 +14,7 @@ import {
   getBossHudPhaseDisplay,
   getBossPatternDelayMs,
   getBossPhasePlayerResetState,
+  getBossPriestessVisibleBottomY,
   getBossVolleyShots,
   isBossStageDefinition,
   shouldRestartBossPatternAfterRespawn,
@@ -34,6 +35,8 @@ describe('boss battle rules', () => {
         frameRate: 7,
         repeat: -1,
         scale: 1.2,
+        origin: { x: 0.5, y: 0.5 },
+        visualBottomFrameY: 118,
         body: { width: 48, height: 92, offsetX: 40, offsetY: 26 },
       },
       hurt: {
@@ -46,6 +49,8 @@ describe('boss battle rules', () => {
         frameRate: 10,
         repeat: 0,
         scale: 1.2,
+        origin: { x: 0.5, y: 0.5 },
+        visualBottomFrameY: 118,
         body: { width: 48, height: 92, offsetX: 40, offsetY: 26 },
       },
       death: {
@@ -58,6 +63,8 @@ describe('boss battle rules', () => {
         frameRate: 8,
         repeat: 0,
         scale: 1.2,
+        origin: { x: 0.5, y: 0.5 },
+        visualBottomFrameY: 118,
         body: { width: 48, height: 92, offsetX: 40, offsetY: 26 },
       },
     })
@@ -77,6 +84,16 @@ describe('boss battle rules', () => {
     expect(BOSS_PATTERN_BASE_DELAY_MS).toBe(980)
     expect(BOSS_PATTERN_PHASE_DELAY_STEP_MS).toBe(90)
     expect(BOSS_PATTERN_MIN_DELAY_MS).toBe(540)
+  })
+
+  it('projects the Priestess visible feet from the authored boss center', () => {
+    expect(getBossPriestessVisibleBottomY({
+      spriteY: 384,
+      frameHeight: bossPriestessSpriteAssets.cast.frameHeight,
+      originY: bossPriestessSpriteAssets.cast.origin.y,
+      scale: bossPriestessSpriteAssets.cast.scale,
+      visualBottomFrameY: bossPriestessSpriteAssets.cast.visualBottomFrameY,
+    })).toBeCloseTo(448.8)
   })
 
   it('detects boss stages from the stage id and boss prototype enemy', () => {

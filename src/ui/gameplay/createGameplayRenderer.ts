@@ -10,6 +10,7 @@ import {
   type EnemyPatrolDirection,
 } from '../../domain/gameplay/enemyActor'
 import {
+  BOSS_PROTOTYPE_ENEMY_ID,
   canHitBossPrototype,
   canFireBossVolley,
   canRunBossPatternTick,
@@ -1172,7 +1173,9 @@ class GameplayMapScene extends Phaser.Scene {
 
         sprite.body.allowGravity = false
         sprite.setImmovable(true)
-        this.createAzureCoreFloat(sprite, spawn.y)
+        if (spawn.id !== BOSS_PROTOTYPE_ENEMY_ID) {
+          this.createAzureCoreFloat(sprite, spawn.y)
+        }
 
         return {
           sprite,
@@ -1187,7 +1190,7 @@ class GameplayMapScene extends Phaser.Scene {
   private initializeBossPrototype(): void {
     if (!this.isBossStage) return
 
-    this.bossPrototype = this.enemies.find((enemy) => enemy.spawn.id === 'boss-prototype') ?? null
+    this.bossPrototype = this.enemies.find((enemy) => enemy.spawn.id === BOSS_PROTOTYPE_ENEMY_ID) ?? null
     if (this.bossPrototype) {
       this.applyBossPriestessPresentation(this.bossPrototype, 'cast')
     }
@@ -1198,8 +1201,11 @@ class GameplayMapScene extends Phaser.Scene {
     state: keyof typeof bossPriestessSpriteAssets,
   ): void {
     const sprite = bossPriestessSpriteAssets[state]
+    this.tweens.killTweensOf(boss.sprite)
     boss.sprite
       .setTexture(sprite.key, sprite.frameStart)
+      .setOrigin(sprite.origin.x, sprite.origin.y)
+      .setPosition(boss.spawn.x, getEnemySpawnY(boss.spawn))
       .setScale(sprite.scale)
       .play(sprite.key, true)
 

@@ -306,7 +306,9 @@ The 1-6 `boss-prototype` uses the White Palace boss Priestess bitmap presentatio
 - hurt sprite during non-final phase transitions.
 - death sprite during final defeat.
 - sprite sheets are loaded from rebuild `public/assets/sprites/` through the domain asset manifest.
-- body size, body offset, and scale are defined in the domain manifest so renderer code does not duplicate presentation constants.
+- body size, body offset, origin, scale, and visible-foot frame Y are defined in the domain manifest so renderer code does not duplicate presentation constants.
+- the boss remains at the authored `boss-prototype` center position and must not inherit ordinary Azure Core floating tweens.
+- the Priestess visible feet project from the authored center to the boss platform surface; for 1-6, sprite center `384`, frame height `128`, origin Y `0.5`, scale `1.2`, and visible bottom frame Y `118` place the visible feet at `448.8`, matching the platform top at `448`.
 
 ## Testing Requirements
 
