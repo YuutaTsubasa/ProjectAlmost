@@ -1,4 +1,5 @@
 import type { GameplayStageMap } from './gameplayMapTypes'
+import { getBossHudPhaseDisplay, isBossStageDefinition } from './bossBattle'
 import type { ClearRank } from './stageResult'
 import { PLAYER_MAX_HEALTH } from './playerLife'
 import { getTileColumnCount } from './terrain'
@@ -21,6 +22,9 @@ export type GameplayHudStatusMessageKey =
   | 'status.fall'
   | 'status.critical'
   | 'status.goal'
+  | 'status.bossPattern'
+  | 'status.bossVulnerable'
+  | 'status.bossDefeated'
 
 export type GameplayHudState = {
   hp: number
@@ -37,6 +41,8 @@ export type GameplayHudState = {
   rank: ClearRank | '--'
   statusMessageKey: GameplayHudStatusMessageKey
   time: string
+  bossPhase: number
+  bossPhaseMax: number
   playerProgress: number
   playerProgressY: number
   goalProgress: number
@@ -147,6 +153,14 @@ export function getHudGoalProgress(input: {
 }
 
 export function createInitialGameplayHudState(stage: GameplayStageMap): GameplayHudState {
+  const bossPhaseDisplay = getBossHudPhaseDisplay({
+    isBossStage: isBossStageDefinition({
+      stageId: stage.id,
+      enemies: stage.enemies,
+    }),
+    bossPhase: 0,
+  })
+
   return {
     hp: PLAYER_MAX_HEALTH,
     hpMax: PLAYER_MAX_HEALTH,
@@ -162,6 +176,8 @@ export function createInitialGameplayHudState(stage: GameplayStageMap): Gameplay
     rank: '--',
     statusMessageKey: 'status.initial',
     time: '00:00.00',
+    bossPhase: bossPhaseDisplay.phase,
+    bossPhaseMax: bossPhaseDisplay.max,
     playerProgress: getHudPositionProgress({
       position: stage.player.spawn.x,
       worldSize: stage.world.width,

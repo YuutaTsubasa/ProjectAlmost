@@ -67,7 +67,12 @@ export type GameplayPlayerSpawn = {
 
 export type GameplayEnemySpawn = ArmorGuardSpawn | AzureCoreSpawn
 
-export type ArmorGuardSpawn = {
+export type GameplayEnemyRuntimeMetadata = {
+  respawnPolicy?: 'persistent' | 'regenerate'
+  countsForScore?: boolean
+}
+
+export type ArmorGuardSpawn = GameplayEnemyRuntimeMetadata & {
   id: string
   type: 'armor-guard'
   x: number
@@ -76,7 +81,7 @@ export type ArmorGuardSpawn = {
   patrolMaxX: number
 }
 
-export type AzureCoreSpawn = {
+export type AzureCoreSpawn = GameplayEnemyRuntimeMetadata & {
   id: string
   type: 'azure-core'
   x: number

@@ -159,6 +159,28 @@ describe('gameplay HUD state', () => {
     expect(state.enemyMarkers.length).toBe(stage.enemies.length)
   })
 
+  it('initializes non-boss stages with hidden boss phase state', () => {
+    const stage = getGameplayStageMap('1-1')
+    expect(stage).toBeDefined()
+    if (!stage) return
+
+    expect(createInitialGameplayHudState(stage)).toMatchObject({
+      bossPhase: 0,
+      bossPhaseMax: 0,
+    })
+  })
+
+  it('initializes boss stages with Prototype one-based boss phase display', () => {
+    const stage = getGameplayStageMap('1-6')
+    expect(stage).toBeDefined()
+    if (!stage) return
+
+    expect(createInitialGameplayHudState(stage)).toMatchObject({
+      bossPhase: 1,
+      bossPhaseMax: 4,
+    })
+  })
+
   it('projects enemy markers from each enemy spawn field', () => {
     const stage = createHudEnemyFixture()
     const state = createInitialGameplayHudState(stage)

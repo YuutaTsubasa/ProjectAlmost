@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
+import { isBossStageDefinition } from './bossBattle'
 import { hazardActorDefinitions } from './hazardActor'
 import { enemyActorDefinitions } from './enemyActor'
 import { checkpointActorDefinition } from './checkpointActor'
@@ -443,6 +444,24 @@ describe('gameplayStageMaps', () => {
 
       expect(bossPrototype).toMatchObject({
         id: 'boss-prototype',
+        type: 'azure-core',
+        respawnPolicy: 'persistent',
+        countsForScore: true,
+      })
+    }
+  })
+
+  it('detects converted boss stages from boss prototype metadata', () => {
+    for (const stageId of ['1-6', '2-6', '3-6', '4-6', '5-6', '6-6'] as const) {
+      const stage = getGameplayStageMap(stageId)
+      expect(stage).toBeDefined()
+      if (!stage) return
+
+      expect(isBossStageDefinition({
+        stageId: stage.id,
+        enemies: stage.enemies,
+      })).toBe(true)
+      expect(stage.enemies.find((enemy) => enemy.id === 'boss-prototype')).toMatchObject({
         type: 'azure-core',
         respawnPolicy: 'persistent',
         countsForScore: true,

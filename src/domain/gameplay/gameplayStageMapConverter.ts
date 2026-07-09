@@ -93,6 +93,7 @@ function convertEnemy(enemy: GameplayStageSource['enemies'][number]): GameplayEn
       y: enemy.y,
       patrolMinX: enemy.patrolMinX,
       patrolMaxX: enemy.patrolMaxX,
+      ...getEnemyRuntimeMetadata(enemy),
     }
   }
 
@@ -103,6 +104,14 @@ function convertEnemy(enemy: GameplayStageSource['enemies'][number]): GameplayEn
     surfaceY: enemy.surfaceY,
     patrolMinX: enemy.patrolMinX,
     patrolMaxX: enemy.patrolMaxX,
+    ...getEnemyRuntimeMetadata(enemy),
+  }
+}
+
+function getEnemyRuntimeMetadata(enemy: GameplayStageSource['enemies'][number]) {
+  return {
+    ...(enemy.respawnPolicy === undefined ? {} : { respawnPolicy: enemy.respawnPolicy }),
+    ...(enemy.countsForScore === undefined ? {} : { countsForScore: enemy.countsForScore }),
   }
 }
 

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { isBossStageDefinition } from './bossBattle'
 import { convertGameplayStageSource } from './gameplayStageMapConverter'
 import type { GameplayStageSource } from './gameplayStageSource'
 import { gameplayStageVisualProfiles } from './gameplayStageVisualProfile'
@@ -145,6 +146,38 @@ describe('convertGameplayStageSource', () => {
         patrolMaxX: 1760,
       },
     ])
+  })
+
+  it('preserves boss prototype metadata for runtime boss detection', () => {
+    const source = {
+      ...firstGateSource,
+      id: '1-6',
+      enemies: [
+        {
+          id: 'boss-prototype',
+          type: 'azure-core',
+          x: 5880,
+          y: 384,
+          patrolMinX: 5880,
+          patrolMaxX: 5880,
+          respawnPolicy: 'persistent',
+          countsForScore: true,
+        },
+      ],
+    } satisfies GameplayStageSource
+
+    const result = convertGameplayStageSource(source, gameplayStageVisualProfiles)
+
+    expect(result.map.enemies[0]).toMatchObject({
+      id: 'boss-prototype',
+      type: 'azure-core',
+      respawnPolicy: 'persistent',
+      countsForScore: true,
+    })
+    expect(isBossStageDefinition({
+      stageId: result.map.id,
+      enemies: result.map.enemies,
+    })).toBe(true)
   })
 
   it('emits diagnostics for unsupported mechanics without putting them into the runtime map', () => {
