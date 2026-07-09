@@ -2442,6 +2442,87 @@ describe('createGameplayRendererConfig', () => {
     },
   )
 
+  it('stops boss pattern and clears boss projectiles when the player is defeated in a boss stage', () => {
+    const stage = getGameplayStageMap('1-6')
+    expect(stage).toBeDefined()
+    if (!stage) return
+    const runtime = createSceneRuntime({ stage })
+
+    runtime.scene.preload()
+    runtime.scene.create()
+    startGameplay(runtime)
+    runtime.advanceTime(getBossPatternDelayMs({ phase: 0 }))
+
+    expect(getBossProjectileSprites(runtime)).toHaveLength(2)
+    expect(runtime.timerEvents.filter((event) => event.active)).toHaveLength(1)
+    expect(runtime.playerSprite).toBeDefined()
+    if (!runtime.playerSprite) return
+
+    runtime.playerSprite.x = -PLAYER_OUT_OF_BOUNDS_MARGIN - 1
+    runtime.scene.update(32, 16)
+
+    expect(getBossProjectileSprites(runtime)).toHaveLength(0)
+    expect(runtime.timerEvents.filter((event) => event.active)).toHaveLength(0)
+
+    runtime.advanceTime(getBossPatternDelayMs({ phase: 0 }) * 2)
+
+    expect(getBossProjectileSprites(runtime)).toHaveLength(0)
+    expect(runtime.timerEvents.filter((event) => event.active)).toHaveLength(0)
+  })
+
+  it('restarts the boss pattern from a clean state after boss-stage respawn', () => {
+    const stage = getGameplayStageMap('1-6')
+    expect(stage).toBeDefined()
+    if (!stage) return
+    const runtime = createSceneRuntime({ stage })
+
+    runtime.scene.preload()
+    runtime.scene.create()
+    startGameplay(runtime)
+    runtime.advanceTime(getBossPatternDelayMs({ phase: 0 }))
+
+    expect(runtime.playerSprite).toBeDefined()
+    if (!runtime.playerSprite) return
+
+    runtime.playerSprite.x = -PLAYER_OUT_OF_BOUNDS_MARGIN - 1
+    runtime.scene.update(32, 16)
+    runtime.runDelayedCalls(playerLifeTiming.deathRespawnDelayMs)
+    runtime.triggerFadeOutComplete()
+
+    expect(getBossProjectileSprites(runtime)).toHaveLength(0)
+    expect(runtime.timerEvents.filter((event) => event.active)).toHaveLength(0)
+
+    runtime.scene.update(48, 16)
+
+    expect(getBossProjectileSprites(runtime)).toHaveLength(1)
+    expect(runtime.timerEvents.filter((event) => event.active)).toHaveLength(1)
+  })
+
+  it('stops boss pattern and clears boss projectiles when the boss stage clears', () => {
+    const stage = getGameplayStageMap('1-6')
+    expect(stage).toBeDefined()
+    if (!stage) return
+    const runtime = createSceneRuntime({ stage })
+
+    runtime.scene.preload()
+    runtime.scene.create()
+    startGameplay(runtime)
+    runtime.advanceTime(getBossPatternDelayMs({ phase: 0 }))
+
+    expect(getBossProjectileSprites(runtime)).toHaveLength(2)
+    expect(runtime.timerEvents.filter((event) => event.active)).toHaveLength(1)
+
+    runtime.triggerGoalOverlap(getGoalSprite(runtime))
+
+    expect(getBossProjectileSprites(runtime)).toHaveLength(0)
+    expect(runtime.timerEvents.filter((event) => event.active)).toHaveLength(0)
+
+    runtime.advanceTime(getBossPatternDelayMs({ phase: 0 }) * 2)
+
+    expect(getBossProjectileSprites(runtime)).toHaveLength(0)
+    expect(runtime.timerEvents.filter((event) => event.active)).toHaveLength(0)
+  })
+
   it('creates the generated Homing reticle texture from prototype dimensions', () => {
     const runtime = createSceneRuntime()
 

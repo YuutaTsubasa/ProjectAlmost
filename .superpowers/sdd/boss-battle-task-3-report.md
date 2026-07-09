@@ -23,6 +23,31 @@ Concerns:
 ---
 
 Fix status:
+- DONE: boss projectile lifecycle cleanup now stops the boss timer and clears in-flight boss projectiles on boss-stage player defeat, respawn cleanup, and stage clear.
+
+RED command and failure summary:
+- `npm run test -- src/ui/gameplay/createGameplayRenderer.test.ts -t "boss pattern and clears boss projectiles|boss pattern from a clean state after boss-stage respawn|boss stage clears"` failed in 3 expected places because boss-stage defeat and clear left 2 live `boss-projectile` sprites in the scene, and the respawn path inherited the same stale projectile state.
+
+GREEN command summaries:
+- `npm run test -- src/ui/gameplay/createGameplayRenderer.test.ts -t "boss pattern and clears boss projectiles|boss pattern from a clean state after boss-stage respawn|boss stage clears"` passed with 3 lifecycle tests green.
+- `npm run test -- src/ui/gameplay/createGameplayRenderer.test.ts` passed with 119 tests green.
+- `npm run check` passed with 0 Svelte/TypeScript errors and 0 warnings.
+- `git diff --check` passed with no whitespace or path issues.
+
+Files changed:
+- `src/ui/gameplay/createGameplayRenderer.ts`
+- `src/ui/gameplay/createGameplayRenderer.test.ts`
+- `.superpowers/sdd/boss-battle-task-3-report.md`
+
+Commit hash:
+- Self-referential note: this report entry is included in the `fix: clean boss projectile lifecycle` commit created immediately after verification.
+
+Concerns:
+- None.
+
+---
+
+Fix status:
 - DONE: review remediation for boss projectile damage gating, boss pattern start gating, crouch start input, and timer-backed renderer coverage.
 
 RED command and failure summary:

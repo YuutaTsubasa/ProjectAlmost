@@ -987,6 +987,7 @@ class GameplayMapScene extends Phaser.Scene {
     this.isPlayerInvulnerable = false
     this.clearHomingState()
     this.clearActiveMeleeHitboxes()
+    this.stopBossPattern('destroy')
 
     if (this.player) {
       this.tweens.killTweensOf(this.player)
@@ -1147,10 +1148,8 @@ class GameplayMapScene extends Phaser.Scene {
       return
     }
 
+    this.stopBossPattern('fade')
     const generation = ++this.bossPatternGeneration
-    this.clearBossProjectiles()
-    this.bossPatternEvent?.remove(false)
-    this.bossPatternEvent = undefined
     this.bossShotIndex = 0
 
     for (const enemy of this.enemies) {
@@ -1552,6 +1551,25 @@ class GameplayMapScene extends Phaser.Scene {
     }
   }
 
+  private destroyBossProjectiles(): void {
+    for (const projectile of [...this.bossProjectiles]) {
+      this.destroyBossProjectile(projectile)
+    }
+  }
+
+  private stopBossPattern(projectileCleanup: 'fade' | 'destroy'): void {
+    this.bossPatternGeneration += 1
+    this.bossPatternEvent?.remove(false)
+    this.bossPatternEvent = undefined
+
+    if (projectileCleanup === 'fade') {
+      this.clearBossProjectiles()
+      return
+    }
+
+    this.destroyBossProjectiles()
+  }
+
   private processEnemyHitsForHitbox(hitbox: ActiveMeleeHitbox): void {
     if (hitbox.consumed) {
       return
@@ -1739,6 +1757,7 @@ class GameplayMapScene extends Phaser.Scene {
     this.attackReady = entry.attackReady
     this.clearHomingState()
     this.clearActiveMeleeHitboxes()
+    this.stopBossPattern('destroy')
     if (reason === 'fall') {
       this.falls += 1
       this.emitHudPatch({ falls: this.falls })
@@ -1774,6 +1793,8 @@ class GameplayMapScene extends Phaser.Scene {
 
   private respawnPlayer(): void {
     if (!this.player || this.stageCleared) return
+
+    this.stopBossPattern('destroy')
 
     const state = getPlayerRespawnState()
     this.playerHealth = state.health
