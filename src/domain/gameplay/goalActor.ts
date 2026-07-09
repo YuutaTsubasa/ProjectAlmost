@@ -34,3 +34,10 @@ export function getGoalBottomY(input: {
 }): number {
   return input.surfaceY + goalActorDefinition.visualBottomInset
 }
+
+export function shouldLockGoalUntilBossDefeated(input: {
+  isBossStage: boolean
+  bossDefeated: boolean
+}): boolean {
+  return input.isBossStage && !input.bossDefeated
+}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { getGoalBottomY, goalActorDefinition } from './goalActor'
+import { getGoalBottomY, goalActorDefinition, shouldLockGoalUntilBossDefeated } from './goalActor'
 
 describe('goal actor definition', () => {
   it('defines prototype goal presentation as rebuild-owned asset metadata', () => {
@@ -35,5 +35,23 @@ describe('goal actor definition', () => {
 
   it('places the visual bottom using the prototype bottom inset', () => {
     expect(getGoalBottomY({ surfaceY: 512 })).toBe(518)
+  })
+
+  it('locks the goal while a boss stage still has an undefeated boss', () => {
+    expect(shouldLockGoalUntilBossDefeated({
+      isBossStage: true,
+      bossDefeated: false,
+    })).toBe(true)
+  })
+
+  it('does not lock the goal for non-boss stages or after boss defeat', () => {
+    expect(shouldLockGoalUntilBossDefeated({
+      isBossStage: false,
+      bossDefeated: false,
+    })).toBe(false)
+    expect(shouldLockGoalUntilBossDefeated({
+      isBossStage: true,
+      bossDefeated: true,
+    })).toBe(false)
   })
 })

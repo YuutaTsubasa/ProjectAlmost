@@ -217,8 +217,18 @@ On final hit:
 - mark the boss as defeated.
 - disable the boss body.
 - play the boss defeat presentation.
+- reveal and enable the stage goal if it was locked by the boss battle.
 - update HUD/status.
 - allow the stage to be cleared.
+
+### Goal Locking
+
+Boss-stage goals are not visible or interactable before the boss is defeated.
+
+- On boss stages, the renderer creates the goal from the same rebuild-owned goal actor definition, then hides it and disables its body while `boss-prototype` is undefeated.
+- Player overlap with the locked goal must not clear the stage.
+- The final boss hit reveals the goal, reenables the goal body, and clears any pre-clear tint so the player can finish the stage through the normal goal overlap path.
+- Non-boss stages keep the goal visible and enabled from scene creation.
 
 ### Homing Attack Interaction
 
@@ -290,7 +300,7 @@ Boss projectiles are generated Phaser textures rather than imported bitmap asset
 - no gravity.
 - velocity from the domain projectile velocity function.
 
-Boss sprite uses the current Azure Core presentation for `boss-prototype` unless a later boss art slice replaces it. If boss hurt/death art is introduced in this slice, assets must be copied into root `public/assets/` and represented through domain actor definitions; otherwise the Azure Core burst/hurt presentation is acceptable for this slice as long as phase/hit behavior matches Prototype.
+Boss sprite uses the current Azure Core presentation for `boss-prototype` unless a later boss art slice replaces it. The White Palace boss Priestess cast, hurt, and death spritesheets are copied into root `public/assets/sprites/` and represented through a domain asset manifest so a later rendering slice can switch from generated Azure Core presentation to bitmap boss art without consulting `__prototype__`.
 
 ## Testing Requirements
 
@@ -332,6 +342,7 @@ Renderer tests:
 - homing hit on boss advances phase or defeats the boss.
 - phase transition clears projectiles and resets the player.
 - final hit defeats the boss and allows stage clear.
+- boss-stage goal starts hidden with its body disabled, then becomes visible and enabled after final boss hit.
 - player defeat stops the pattern and clears projectiles.
 - respawn restarts the pattern only before the phase count.
 - stale timer generations do not fire volleys.
@@ -341,6 +352,7 @@ UI/source tests:
 
 - Gameplay HUD renders boss phase panel only on boss stages while uncleared.
 - boss objective/status localization keys exist.
+- White Palace boss Priestess cast, hurt, and death spritesheets exist under rebuild `public/assets/sprites/` and are referenced by rebuild asset paths.
 
 ## Verification
 
@@ -356,7 +368,7 @@ The `rg` result may include tests that assert paths do not contain `__prototype_
 
 ## Out Of Scope
 
-- New boss bitmap art beyond assets already present in the rebuilt project, unless needed for Prototype parity during implementation.
+- Wiring the imported boss Priestess bitmap art into live boss rendering.
 - Boss music routing.
 - Dedicated one-off `1-6-boss-arena` stage registry.
 - Moving platform and gravity-zone mechanics not already supported by the rebuilt renderer.

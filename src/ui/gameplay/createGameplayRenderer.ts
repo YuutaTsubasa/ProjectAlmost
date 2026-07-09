@@ -28,7 +28,11 @@ import {
   checkpointActorDefinition,
   getCheckpointBottomY,
 } from '../../domain/gameplay/checkpointActor'
-import { getGoalBottomY, goalActorDefinition } from '../../domain/gameplay/goalActor'
+import {
+  getGoalBottomY,
+  goalActorDefinition,
+  shouldLockGoalUntilBossDefeated,
+} from '../../domain/gameplay/goalActor'
 import {
   createInitialGameplayHudState,
   formatGameplayHudTime,
@@ -756,6 +760,14 @@ class GameplayMapScene extends Phaser.Scene {
     sprite.body.setOffset(goalActorDefinition.body.offsetX, goalActorDefinition.body.offsetY)
     sprite.setDepth(goalActorDefinition.depth)
     sprite.play(goalActorDefinition.animation.idleKey)
+
+    if (shouldLockGoalUntilBossDefeated({
+      isBossStage: this.isBossStage,
+      bossDefeated: this.bossPrototype?.defeated ?? false,
+    })) {
+      sprite.setVisible(false)
+      sprite.body.enable = false
+    }
 
     this.goal = {
       sprite,
@@ -1771,6 +1783,12 @@ class GameplayMapScene extends Phaser.Scene {
       ease: 'Quad.easeOut',
       onComplete: () => boss.sprite.setVisible(false),
     })
+
+    if (this.goal) {
+      this.goal.sprite.setVisible(true)
+      this.goal.sprite.body.enable = true
+      this.goal.sprite.clearTint()
+    }
 
     const phase = getBossHudPhaseDisplay({
       isBossStage: this.isBossStage,

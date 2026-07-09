@@ -6,6 +6,39 @@ export const BOSS_STAGE_ID_SUFFIX = '-6'
 export const BOSS_PROTOTYPE_ENEMY_ID = 'boss-prototype'
 export const BOSS_PATTERN_ENEMY_TYPE = 'azure-core'
 
+export const bossPriestessSpriteAssets = {
+  cast: {
+    key: 'boss-priestess-cast',
+    assetRef: '/assets/sprites/boss_priestess_cast/sheet-transparent.webp',
+    frameWidth: 128,
+    frameHeight: 128,
+    frameStart: 0,
+    frameEnd: 3,
+    frameRate: 7,
+    repeat: -1,
+  },
+  hurt: {
+    key: 'boss-priestess-hurt',
+    assetRef: '/assets/sprites/boss_priestess_hurt/sheet-transparent.webp',
+    frameWidth: 128,
+    frameHeight: 128,
+    frameStart: 0,
+    frameEnd: 3,
+    frameRate: 10,
+    repeat: 0,
+  },
+  death: {
+    key: 'boss-priestess-death',
+    assetRef: '/assets/sprites/boss_priestess_death/sheet-transparent.webp',
+    frameWidth: 128,
+    frameHeight: 128,
+    frameStart: 0,
+    frameEnd: 3,
+    frameRate: 8,
+    repeat: 0,
+  },
+} as const
+
 export type BossHitOutcome =
   | { type: 'advance-phase'; nextPhase: number }
   | { type: 'defeated'; nextPhase: number }

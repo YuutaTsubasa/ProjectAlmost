@@ -356,6 +356,10 @@ function createFakeTileSprite(input: { texture: string }) {
       sprite.tint = value
       return sprite
     },
+    clearTint: () => {
+      sprite.tint = undefined
+      return sprite
+    },
   }
 
   return sprite
@@ -495,6 +499,10 @@ function createFakeArcadeSprite(input: { x: number; y: number; texture: string }
     },
     setTint: (value: number) => {
       sprite.tint = value
+      return sprite
+    },
+    clearTint: () => {
+      sprite.tint = undefined
       return sprite
     },
     setBlendMode: (value: string) => {
@@ -2733,6 +2741,34 @@ describe('createGameplayRendererConfig', () => {
     expect(runtime.hudUpdates.some((patch) => patch.result)).toBe(false)
     expect(runtime.timerEvents.filter((event) => event.active)).toHaveLength(activeTimersBefore)
     expect(getBossProjectileSprites(runtime)).toHaveLength(projectileCountBefore)
+  })
+
+  it('hides and disables the boss-stage goal until the boss is defeated', () => {
+    const stage = getGameplayStageMap('1-6')
+    expect(stage).toBeDefined()
+    if (!stage) return
+    const runtime = createSceneRuntime({ stage })
+
+    runtime.scene.preload()
+    runtime.scene.create()
+    startGameplay(runtime)
+
+    const goal = getGoalSprite(runtime)
+
+    expect(goal.visible).toBe(false)
+    expect(goal.body.enable).toBe(false)
+
+    runtime.hitBossWithMelee()
+    runtime.runDelayedCalls(620)
+    runtime.hitBossWithMelee()
+    runtime.runDelayedCalls(620)
+    runtime.hitBossWithMelee()
+    runtime.runDelayedCalls(620)
+    runtime.hitBossWithMelee()
+
+    expect(goal.visible).toBe(true)
+    expect(goal.body.enable).toBe(true)
+    expect(goal.tint).toBeUndefined()
   })
 
   it('clears boss projectiles on player defeat and restarts the current phase after respawn', () => {

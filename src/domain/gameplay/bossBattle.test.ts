@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest'
+import { readFileSync } from 'node:fs'
 import {
   BOSS_PATTERN_BASE_DELAY_MS,
   BOSS_PATTERN_MIN_DELAY_MS,
   BOSS_PATTERN_PHASE_DELAY_STEP_MS,
   BOSS_PHASE_COUNT,
+  bossPriestessSpriteAssets,
   canFireBossVolley,
   canHitBossPrototype,
   canRunBossPatternTick,
@@ -20,6 +22,50 @@ import {
 } from './bossBattle'
 
 describe('boss battle rules', () => {
+  it('declares imported White Palace boss Priestess sprite assets under rebuild public paths', () => {
+    expect(bossPriestessSpriteAssets).toEqual({
+      cast: {
+        key: 'boss-priestess-cast',
+        assetRef: '/assets/sprites/boss_priestess_cast/sheet-transparent.webp',
+        frameWidth: 128,
+        frameHeight: 128,
+        frameStart: 0,
+        frameEnd: 3,
+        frameRate: 7,
+        repeat: -1,
+      },
+      hurt: {
+        key: 'boss-priestess-hurt',
+        assetRef: '/assets/sprites/boss_priestess_hurt/sheet-transparent.webp',
+        frameWidth: 128,
+        frameHeight: 128,
+        frameStart: 0,
+        frameEnd: 3,
+        frameRate: 10,
+        repeat: 0,
+      },
+      death: {
+        key: 'boss-priestess-death',
+        assetRef: '/assets/sprites/boss_priestess_death/sheet-transparent.webp',
+        frameWidth: 128,
+        frameHeight: 128,
+        frameStart: 0,
+        frameEnd: 3,
+        frameRate: 8,
+        repeat: 0,
+      },
+    })
+    expect(Object.values(bossPriestessSpriteAssets).every((sprite) =>
+      sprite.assetRef.startsWith('/assets/') && !sprite.assetRef.includes('__prototype__'),
+    )).toBe(true)
+  })
+
+  it('has imported White Palace boss Priestess spritesheets into rebuilt public assets', () => {
+    for (const sprite of Object.values(bossPriestessSpriteAssets)) {
+      expect(readFileSync(`public${sprite.assetRef}`, 'utf8').length).toBeGreaterThan(0)
+    }
+  })
+
   it('uses Prototype boss phase and cadence constants', () => {
     expect(BOSS_PHASE_COUNT).toBe(4)
     expect(BOSS_PATTERN_BASE_DELAY_MS).toBe(980)
