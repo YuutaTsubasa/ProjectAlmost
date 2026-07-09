@@ -1172,12 +1172,7 @@ class GameplayMapScene extends Phaser.Scene {
 
     for (const enemy of this.enemies) {
       if (shouldResetBossSupportCore({ sameAsBoss: enemy === boss, enemyType: enemy.spawn.type })) {
-        enemy.defeated = false
-        enemy.sprite.setVisible(true)
-        const body = enemy.sprite.body as Phaser.Physics.Arcade.Body | null
-        if (body) {
-          body.enable = true
-        }
+        this.resetEnemyRuntime(enemy)
       }
     }
 
@@ -1230,6 +1225,35 @@ class GameplayMapScene extends Phaser.Scene {
     projectile.setBlendMode(Phaser.BlendModes.ADD)
     projectile.setData('spawnedAt', this.time.now)
     this.bossProjectiles.push(projectile)
+  }
+
+  private resetEnemyRuntime(enemy: EnemyRuntime): void {
+    const definition = enemyActorDefinitions[enemy.spawn.type]
+
+    enemy.defeated = false
+    enemy.sprite
+      .setVisible(true)
+      .setAlpha(1)
+      .setScale(definition.scale)
+      .setAngle(0)
+      .setVelocity(0, 0)
+
+    if (enemy.spawn.type === 'armor-guard') {
+      const walk = enemyActorDefinitions['armor-guard'].sprites?.walk
+      if (walk) {
+        enemy.sprite.play(walk.key, true)
+      }
+    } else {
+      const textureKey = enemyActorDefinitions['azure-core'].generatedTexture?.key
+      if (textureKey) {
+        enemy.sprite.setTexture(textureKey)
+      }
+    }
+
+    const body = enemy.sprite.body as Phaser.Physics.Arcade.Body | null
+    if (body) {
+      body.enable = true
+    }
   }
 
   private createAzureCoreFloat(sprite: Phaser.Physics.Arcade.Sprite, spawnY: number): void {

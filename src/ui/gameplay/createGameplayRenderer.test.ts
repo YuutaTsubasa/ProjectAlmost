@@ -1213,6 +1213,16 @@ function getGoalSprite(runtime: FakeRuntime) {
   return goal
 }
 
+function getEnemySpriteAt(runtime: FakeRuntime, x: number) {
+  const enemy = runtime.enemySprites.find((sprite) => sprite.x === x)
+  expect(enemy).toBeDefined()
+  if (!enemy) {
+    throw new Error(`Missing enemy sprite at ${x}.`)
+  }
+
+  return enemy
+}
+
 describe('createGameplayRendererConfig', () => {
   it('emits initial gameplay HUD state during scene creation', () => {
     const runtime = createSceneRuntime()
@@ -2634,6 +2644,33 @@ describe('createGameplayRendererConfig', () => {
 
     expect(getBossProjectileSprites(runtime)).toHaveLength(projectilesAfterRestart)
     expect(runtime.timerEvents.filter((event) => event.active)).toHaveLength(1)
+  })
+
+  it('restores regenerated boss support core presentation after prior defeat tween state', () => {
+    const stage = getGameplayStageMap('1-6')
+    expect(stage).toBeDefined()
+    if (!stage) return
+    const runtime = createSceneRuntime({ stage })
+
+    runtime.scene.preload()
+    runtime.scene.create()
+    startGameplay(runtime)
+
+    const supportCore = getEnemySpriteAt(runtime, 1_248)
+    supportCore.setVisible(false)
+    supportCore.setAlpha(0)
+    supportCore.setScale(1.8)
+    supportCore.setAngle(90)
+    supportCore.body.enable = false
+
+    runtime.hitBossWithMelee()
+    runtime.runDelayedCalls(620)
+
+    expect(supportCore.visible).toBe(true)
+    expect(supportCore.alpha).toBe(1)
+    expect(supportCore.scale).toBe(enemyActorDefinitions['azure-core'].scale)
+    expect(supportCore.angle).toBe(0)
+    expect(supportCore.body.enable).toBe(true)
   })
 
   it('defeats the boss on the final boss phase hit', () => {

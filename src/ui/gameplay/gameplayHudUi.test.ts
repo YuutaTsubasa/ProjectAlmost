@@ -94,6 +94,18 @@ describe('Gameplay HUD Svelte UI', () => {
     expect(hudSource).toContain('{state.bossPhaseMax}')
   })
 
+  it('positions boss phase HUD on the left side of the gameplay frame', () => {
+    const bossPhaseStyle = hudSource.slice(
+      hudSource.indexOf('.boss-phase-hud {'),
+      hudSource.indexOf('.boss-phase-hud strong'),
+    )
+
+    expect(bossPhaseStyle).toContain('left: 1.25cqw')
+    expect(bossPhaseStyle).not.toContain('right:')
+    expect(bossPhaseStyle).not.toMatch(/\b\d*\.?\d+vw\b/)
+    expect(bossPhaseStyle).not.toMatch(/\b\d*\.?\d+vh\b/)
+  })
+
   it('resolves boss phase HUD text instead of rendering raw localization keys', () => {
     expect(hudSource).toContain('resolveLocalizedText')
     expect(hudSource).toContain("return resolveLocalizedText(localize, locale, key)")
