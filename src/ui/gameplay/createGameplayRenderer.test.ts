@@ -823,6 +823,10 @@ function createSceneRuntime(input: {
   let playerSprite: ReturnType<typeof createFakeArcadeSprite> | null = null
   let cameraFollowTarget: unknown = null
   let fadeOutCompleteCallback: (() => void) | null = null
+  const internalScene = scene as typeof scene & {
+    applyPlayerContactDamage: (sourceX: number) => void
+    bossPrototype?: { sprite: ReturnType<typeof createFakeArcadeSprite> } | null
+  }
 
   scene.load = {
     image: (key, assetRef) => {
@@ -1085,6 +1089,34 @@ function createSceneRuntime(input: {
     },
     get cameraFollowTarget() {
       return cameraFollowTarget
+    },
+    getBossSprite: () => internalScene.bossPrototype?.sprite ?? null,
+    placePlayerNear: (x: number, y: number) => {
+      if (!playerSprite) return
+      playerSprite.x = x
+      playerSprite.y = y
+    },
+    pressAttack: () => {
+      playerKeys.j.isDown = true
+    },
+    releaseAttack: () => {
+      playerKeys.j.isDown = false
+    },
+    hitBossWithMelee: () => {
+      const boss = internalScene.bossPrototype?.sprite
+      if (!boss || !playerSprite) return
+      playerSprite.x = boss.x - 48
+      playerSprite.y = boss.y
+      playerKeys.j.isDown = true
+      scene.update(16, 16)
+      playerKeys.j.isDown = false
+      scene.update(32, 16)
+    },
+    killPlayerWithDamage: () => {
+      const sourceX = playerSprite ? playerSprite.x + 16 : 16
+      internalScene.applyPlayerContactDamage(sourceX)
+      internalScene.applyPlayerContactDamage(sourceX)
+      internalScene.applyPlayerContactDamage(sourceX)
     },
   }
 }
@@ -2517,11 +2549,92 @@ describe('createGameplayRendererConfig', () => {
 
     expect(getBossProjectileSprites(runtime)).toHaveLength(0)
     expect(runtime.timerEvents.filter((event) => event.active)).toHaveLength(0)
-
-    runtime.scene.update(48, 16)
+    runtime.runDelayedCalls(500)
 
     expect(getBossProjectileSprites(runtime)).toHaveLength(1)
     expect(runtime.timerEvents.filter((event) => event.active)).toHaveLength(1)
+  })
+
+  it('advances boss phase on melee hit instead of defeating the boss as an ordinary enemy', () => {
+    const stage = getGameplayStageMap('1-6')
+    expect(stage).toBeDefined()
+    if (!stage) return
+    const runtime = createSceneRuntime({ stage })
+
+    runtime.scene.preload()
+    runtime.scene.create()
+    startGameplay(runtime)
+
+    const boss = runtime.getBossSprite()
+    expect(boss).toBeDefined()
+    if (!boss) return
+
+    runtime.placePlayerNear(boss.x - 48, boss.y)
+    runtime.pressAttack()
+    runtime.scene.update(16, 16)
+    runtime.releaseAttack()
+    runtime.scene.update(32, 16)
+
+    expect(boss.visible).toBe(true)
+    expect(boss.body.enable).toBe(true)
+    expect(runtime.hudUpdates).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ bossPhase: 2, bossPhaseMax: 4 }),
+      ]),
+    )
+  })
+
+  it('defeats the boss on the final boss phase hit', () => {
+    const stage = getGameplayStageMap('1-6')
+    expect(stage).toBeDefined()
+    if (!stage) return
+    const runtime = createSceneRuntime({ stage })
+
+    runtime.scene.preload()
+    runtime.scene.create()
+    startGameplay(runtime)
+
+    runtime.hitBossWithMelee()
+    runtime.runDelayedCalls(620)
+    runtime.hitBossWithMelee()
+    runtime.runDelayedCalls(620)
+    runtime.hitBossWithMelee()
+    runtime.runDelayedCalls(620)
+    runtime.hitBossWithMelee()
+
+    const boss = runtime.getBossSprite()
+    expect(boss?.visible).toBe(false)
+    expect(boss?.body.enable).toBe(false)
+    expect(runtime.hudUpdates).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          bossPhase: 4,
+          bossPhaseMax: 4,
+          statusMessageKey: 'status.bossDefeated',
+        }),
+      ]),
+    )
+  })
+
+  it('clears boss projectiles on player defeat and restarts the current phase after respawn', () => {
+    const stage = getGameplayStageMap('1-6')
+    expect(stage).toBeDefined()
+    if (!stage) return
+    const runtime = createSceneRuntime({ stage })
+
+    runtime.scene.preload()
+    runtime.scene.create()
+    startGameplay(runtime)
+    expect(runtime.sprites.some((sprite) => sprite.texture === 'boss-projectile' && !sprite.destroyed)).toBe(true)
+
+    runtime.killPlayerWithDamage()
+    expect(runtime.sprites.filter((sprite) => sprite.texture === 'boss-projectile' && !sprite.destroyed)).toHaveLength(0)
+
+    runtime.runDelayedCalls(playerLifeTiming.deathRespawnDelayMs)
+    runtime.triggerFadeOutComplete()
+    runtime.runDelayedCalls(500)
+
+    expect(runtime.sprites.some((sprite) => sprite.texture === 'boss-projectile' && !sprite.destroyed)).toBe(true)
   })
 
   it('stops boss pattern and clears boss projectiles when the boss stage clears', () => {

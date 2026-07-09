@@ -10,13 +10,18 @@ import {
   type EnemyPatrolDirection,
 } from '../../domain/gameplay/enemyActor'
 import {
+  canHitBossPrototype,
   canFireBossVolley,
   canRunBossPatternTick,
   canStartBossPattern,
+  getBossHitOutcome,
   getBossHudPhaseDisplay,
   getBossPatternDelayMs,
+  getBossPhasePlayerResetState,
   getBossVolleyShots,
   isBossStageDefinition,
+  shouldResetBossRunAfterHomingHit,
+  shouldRestartBossPatternAfterRespawn,
   shouldResetBossSupportCore,
 } from '../../domain/gameplay/bossBattle'
 import {
@@ -244,6 +249,7 @@ class GameplayMapScene extends Phaser.Scene {
   private bossShotIndex = 0
   private bossPatternGeneration = 0
   private bossPatternEvent?: Phaser.Time.TimerEvent
+  private bossPatternRestartPending = false
   private homingTarget: Phaser.Physics.Arcade.Sprite | null = null
   private homingReticle: Phaser.GameObjects.Image | null = null
   private hazards: HazardRuntime[] = []
@@ -384,7 +390,12 @@ class GameplayMapScene extends Phaser.Scene {
       return
     }
 
-    if (!this.isPlayerDead && this.bossPrototype && !this.bossPatternEvent) {
+    if (
+      !this.isPlayerDead
+      && this.bossPrototype
+      && !this.bossPatternEvent
+      && !this.bossPatternRestartPending
+    ) {
       this.startBossPattern()
     }
 
@@ -1149,6 +1160,7 @@ class GameplayMapScene extends Phaser.Scene {
     }
 
     this.stopBossPattern('fade')
+    this.bossPatternRestartPending = false
     const generation = ++this.bossPatternGeneration
     this.bossShotIndex = 0
 
@@ -1359,6 +1371,18 @@ class GameplayMapScene extends Phaser.Scene {
     this.player.setVelocity(0, 0)
 
     const enemy = this.enemies.find((candidate) => candidate.sprite === target)
+    const resetsBossRun = shouldResetBossRunAfterHomingHit({
+      targetIsBoss: target === this.bossPrototype?.sprite,
+      bossPhase: this.bossPhase,
+    })
+    if (enemy === this.bossPrototype) {
+      this.handleBossPrototypeHit()
+      if (!resetsBossRun) {
+        this.finishHomingAttack(true)
+      }
+      return
+    }
+
     if (enemy && shouldProcessEnemyDefeat({ enemyExists: true, defeated: enemy.defeated })) {
       this.defeatEnemy(enemy)
     }
@@ -1592,6 +1616,10 @@ class GameplayMapScene extends Phaser.Scene {
   }
 
   private defeatEnemy(enemy: EnemyRuntime): void {
+    if (enemy === this.bossPrototype && this.handleBossPrototypeHit()) {
+      return
+    }
+
     enemy.defeated = true
     this.enemiesDefeated += 1
     this.emitHudPatch({
@@ -1633,6 +1661,106 @@ class GameplayMapScene extends Phaser.Scene {
 
     this.time.delayedCall(enemyDefeatPresentation.hideDelayMs, () => {
       enemy.sprite.setVisible(false)
+    })
+  }
+
+  private handleBossPrototypeHit(): boolean {
+    const boss = this.bossPrototype
+    if (
+      !canHitBossPrototype({
+        bossExists: boss !== null,
+        bossDefeated: boss?.defeated ?? true,
+      }) || !boss
+    ) {
+      return false
+    }
+
+    this.stopBossPattern('fade')
+
+    const outcome = getBossHitOutcome({ currentPhase: this.bossPhase })
+    this.bossPhase = outcome.nextPhase
+
+    if (outcome.type === 'defeated') {
+      this.defeatBossPrototype(boss)
+      return true
+    }
+
+    this.advanceBossPhase(boss)
+    return true
+  }
+
+  private advanceBossPhase(boss: EnemyRuntime): void {
+    boss.sprite.setVelocity(0, 0)
+    this.tweens.add({
+      targets: boss.sprite,
+      scale: boss.sprite.scale * 1.18,
+      alpha: 0.5,
+      duration: 160,
+      yoyo: true,
+    })
+
+    const reset = getBossPhasePlayerResetState({ maxHealth: PLAYER_MAX_HEALTH })
+    this.playerHealth = reset.health
+    this.isAttacking = reset.attacking
+    this.isHomingAttacking = reset.homingAttacking
+    this.attackReady = reset.attackReady
+    this.isPlayerHurting = false
+    this.isPlayerInvulnerable = false
+    this.wasAttackDown = false
+    this.wasJumpDown = false
+    this.clearActiveMeleeHitboxes()
+    this.clearHomingState()
+    this.respawnPlayerAtCurrentPoint()
+    this.emitBossHudPatch()
+    this.emitHudPatch({
+      hp: this.playerHealth,
+      statusMessageKey: 'status.bossPattern',
+    })
+    this.bossPatternRestartPending = true
+    this.time.delayedCall(620, () => {
+      this.bossPatternRestartPending = false
+      if (this.isPlayerDead) return
+      this.startBossPattern()
+    })
+  }
+
+  private defeatBossPrototype(boss: EnemyRuntime): void {
+    boss.defeated = true
+    this.enemiesDefeated += 1
+    boss.sprite.setVelocity(0, 0)
+    const body = boss.sprite.body as Phaser.Physics.Arcade.Body | null
+    if (body) {
+      body.enable = false
+    }
+    this.tweens.add({
+      targets: boss.sprite,
+      scale: boss.sprite.scale * 1.8,
+      alpha: 0,
+      angle: boss.sprite.angle + 90,
+      duration: 260,
+      ease: 'Quad.easeOut',
+      onComplete: () => boss.sprite.setVisible(false),
+    })
+    boss.sprite.setVisible(false)
+
+    const phase = getBossHudPhaseDisplay({
+      isBossStage: this.isBossStage,
+      bossPhase: this.bossPhase,
+    })
+    this.emitHudPatch({
+      enemiesDefeated: this.enemiesDefeated,
+      enemyMarkers: getHudEnemyMarkers({
+        enemies: this.enemies.map((candidate) => ({
+          x: candidate.sprite.x,
+          y: candidate.sprite.y,
+          defeated: candidate.defeated,
+        })),
+        worldWidth: this.stageMap.world.width,
+        worldHeight: this.stageMap.world.height,
+      }),
+      bossPhase: phase.phase,
+      bossPhaseMax: phase.max,
+      statusMessageKey: 'status.bossDefeated',
     })
   }
 
@@ -1807,6 +1935,25 @@ class GameplayMapScene extends Phaser.Scene {
     this.wasAttackDown = false
     this.wasJumpDown = false
 
+    this.clearHomingState()
+    this.respawnPlayerAtCurrentPoint()
+
+    if (shouldRestartBossPatternAfterRespawn({
+      isBossStage: this.isBossStage,
+      bossPhase: this.bossPhase,
+    })) {
+      this.bossPatternRestartPending = true
+      this.time.delayedCall(500, () => {
+        this.bossPatternRestartPending = false
+        if (this.isPlayerDead) return
+        this.startBossPattern()
+      })
+    }
+  }
+
+  private respawnPlayerAtCurrentPoint(): void {
+    if (!this.player) return
+
     this.player.x = this.currentRespawnPoint.x
     this.player.y = getPlayerCenterY({ surfaceY: this.currentRespawnPoint.surfaceY })
     this.player.setVelocity(0, 0)
@@ -1815,7 +1962,6 @@ class GameplayMapScene extends Phaser.Scene {
     if (this.player.body) {
       this.player.body.enable = true
     }
-    this.clearHomingState()
     this.playerJumpState = createMovableActorJumpState({
       now: this.time.now,
       grounded: true,
