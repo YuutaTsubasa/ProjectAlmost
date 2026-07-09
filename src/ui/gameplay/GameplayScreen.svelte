@@ -313,6 +313,7 @@
       state={hudState}
       stageLabel={stage.id}
       stageDisplay={stageDisplay}
+      locale={locale}
     />
     {#if pauseState.mode === 'paused' && !hudState?.result}
       <PauseMenu

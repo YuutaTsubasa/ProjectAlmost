@@ -108,5 +108,6 @@ describe('Gameplay HUD Svelte UI', () => {
     expect(screenSource).toContain('applyGameplayHudPatch')
     expect(screenSource).toContain('onHudUpdate')
     expect(screenSource).toContain('stageDisplay={stageDisplay}')
+    expect(screenSource).toContain('locale={locale}')
   })
 })

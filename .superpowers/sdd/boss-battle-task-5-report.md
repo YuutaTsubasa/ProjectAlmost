@@ -39,3 +39,18 @@ Command summaries:
 - `npm run test -- src/domain/data/localize/localize.test.ts src/ui/gameplay/gameplayHudUi.test.ts` (GREEN): passed, 2 files and 22 tests green.
 - `npm run check`: passed, `svelte-check found 0 errors and 0 warnings`.
 - `git diff --check`: passed with no output.
+
+---
+
+Task 5 active-locale wiring fix report:
+
+- Added a source regression in `src/ui/gameplay/gameplayHudUi.test.ts` that requires `GameplayScreen.svelte` to pass `locale={locale}` into `<GameplayHud>`.
+- Verified the focused RED run failed specifically because `GameplayScreen.svelte` omitted the locale prop.
+- Passed the active gameplay `locale` prop through to `GameplayHud` and kept the HUD-level optional locale default unchanged for isolated test/story usage.
+
+Command summaries:
+
+- `npm run test -- src/ui/gameplay/gameplayHudUi.test.ts` (RED): failed because `screenSource` did not contain `locale={locale}`.
+- `npm run test -- src/ui/gameplay/gameplayHudUi.test.ts src/domain/data/localize/localize.test.ts` (GREEN): passed, 2 files and 22 tests green.
+- `npm run check`: passed, `svelte-check found 0 errors and 0 warnings`.
+- `git diff --check`: passed with no output.
