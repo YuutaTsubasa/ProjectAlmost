@@ -42,6 +42,10 @@ function isStageId(value: string): value is StageId {
   return /^[1-6]-[1-6]$/.test(value)
 }
 
+function isStageTimeLabel(value: unknown): value is string {
+  return typeof value === 'string' && /^\d{2}:\d{2}\.\d{2}$/.test(value)
+}
+
 function isStageRecord(value: unknown): value is StageRecord {
   if (!value || typeof value !== 'object') return false
 
@@ -58,7 +62,7 @@ function isStageRecord(value: unknown): value is StageRecord {
       && Number.isInteger(candidate.bestTimeMs)
       && Number.isFinite(candidate.bestTimeMs)
       && candidate.bestTimeMs >= 0
-      && typeof candidate.bestTime === 'string'
+      && isStageTimeLabel(candidate.bestTime)
       && typeof candidate.bestRank === 'string'
       && (candidate.bestRank === 'S'
         || candidate.bestRank === 'A'
