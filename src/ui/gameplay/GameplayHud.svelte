@@ -43,102 +43,110 @@
 </script>
 
 <div class="gameplay-hud" aria-label="Gameplay HUD">
-  <section class="hud-panel status-hud" aria-label="Player status">
-    <span class="corner tl"></span>
-    <span class="corner tr"></span>
-    <span class="corner bl"></span>
-    <span class="corner br"></span>
-    <div class="hud-label"><span></span>System Status</div>
-    <div class="status-body">
-      <img class="portrait-slot" src={GAMEPLAY_HUD_PLAYER_PORTRAIT_SRC} alt="Yuuta Tsubasa" />
-      <div class="status-info">
-        <strong>Yuuta Tsubasa</strong>
-        <div class="hp-heading">
-          <span>HP</span>
-          <b>{state.hp} / {state.hpMax}</b>
+  <div class="top-hud" aria-label="Gameplay top HUD">
+    <div class="top-left-hud">
+      <section class="hud-panel status-hud" aria-label="Player status">
+        <span class="corner tl"></span>
+        <span class="corner tr"></span>
+        <span class="corner bl"></span>
+        <span class="corner br"></span>
+        <div class="hud-label"><span></span>System Status</div>
+        <div class="status-body">
+          <img class="portrait-slot" src={GAMEPLAY_HUD_PLAYER_PORTRAIT_SRC} alt="Yuuta Tsubasa" />
+          <div class="status-info">
+            <strong>Yuuta Tsubasa</strong>
+            <div class="hp-heading">
+              <span>HP</span>
+              <b>{state.hp} / {state.hpMax}</b>
+            </div>
+            <div class="bar" aria-hidden="true">
+              <i style:width={`${getHpWidthPercent()}%`}></i>
+            </div>
+            <p class="status-message">{statusMessageText()}</p>
+          </div>
         </div>
-        <div class="bar" aria-hidden="true">
-          <i style:width={`${getHpWidthPercent()}%`}></i>
+      </section>
+
+      {#if state.bossPhaseMax > 0 && !state.cleared}
+        <section class="hud-panel boss-phase-hud" aria-label={text('hud.bossPhase')}>
+          <span class="corner tr"></span>
+          <span class="corner bl"></span>
+          <div class="hud-label"><span></span>{text('hud.bossPhase')}</div>
+          <strong>{state.bossPhase} <small>/ {state.bossPhaseMax}</small></strong>
+          <p>{text('hud.bossPhaseHint')}</p>
+        </section>
+      {/if}
+    </div>
+
+    <div class="top-center-hud">
+      <section class="stage-banner" aria-label="Stage">
+        <div class="banner-fill">
+          <span class="emblem" aria-hidden="true">
+            <svg viewBox="0 0 26 52" fill="currentColor">
+              <rect x="12" y="5" width="2" height="44" rx="1"></rect>
+              <path d="M13 14c-5 0-8-3-9-8 6 0 9 3 9 8z"></path>
+              <path d="M13 14c5 0 8-3 9-8-6 0-9 3-9 8z"></path>
+              <path d="M13 24c-4.5 0-7-2.6-8-7 5.4 0 8 2.6 8 7z"></path>
+              <path d="M13 24c4.5 0 7-2.6 8-7-5.4 0-8 2.6-8 7z"></path>
+            </svg>
+          </span>
+          <div>
+            <strong>{stageDisplay.worldLabel} {stageDisplay.stageId}</strong>
+            <span>{stageDisplay.stageSubtitle}</span>
+          </div>
+          <span class="emblem flip" aria-hidden="true">
+            <svg viewBox="0 0 26 52" fill="currentColor">
+              <rect x="12" y="5" width="2" height="44" rx="1"></rect>
+              <path d="M13 14c-5 0-8-3-9-8 6 0 9 3 9 8z"></path>
+              <path d="M13 14c5 0 8-3 9-8-6 0-9 3-9 8z"></path>
+              <path d="M13 24c-4.5 0-7-2.6-8-7 5.4 0 8 2.6 8 7z"></path>
+              <path d="M13 24c4.5 0 7-2.6 8-7-5.4 0-8 2.6-8 7z"></path>
+            </svg>
+          </span>
         </div>
-        <p class="status-message">{statusMessageText()}</p>
-      </div>
+      </section>
     </div>
-  </section>
 
-  <section class="stage-banner" aria-label="Stage">
-    <div class="banner-fill">
-      <span class="emblem" aria-hidden="true">
-        <svg viewBox="0 0 26 52" fill="currentColor">
-          <rect x="12" y="5" width="2" height="44" rx="1"></rect>
-          <path d="M13 14c-5 0-8-3-9-8 6 0 9 3 9 8z"></path>
-          <path d="M13 14c5 0 8-3 9-8-6 0-9 3-9 8z"></path>
-          <path d="M13 24c-4.5 0-7-2.6-8-7 5.4 0 8 2.6 8 7z"></path>
-          <path d="M13 24c4.5 0 7-2.6 8-7-5.4 0-8 2.6-8 7z"></path>
-        </svg>
-      </span>
-      <div>
-        <strong>{stageDisplay.worldLabel} {stageDisplay.stageId}</strong>
-        <span>{stageDisplay.stageSubtitle}</span>
-      </div>
-      <span class="emblem flip" aria-hidden="true">
-        <svg viewBox="0 0 26 52" fill="currentColor">
-          <rect x="12" y="5" width="2" height="44" rx="1"></rect>
-          <path d="M13 14c-5 0-8-3-9-8 6 0 9 3 9 8z"></path>
-          <path d="M13 14c5 0 8-3 9-8-6 0-9 3-9 8z"></path>
-          <path d="M13 24c-4.5 0-7-2.6-8-7 5.4 0 8 2.6 8 7z"></path>
-          <path d="M13 24c4.5 0 7-2.6 8-7-5.4 0-8 2.6-8 7z"></path>
-        </svg>
-      </span>
+    <div class="top-right-hud">
+      <section class="hud-panel map-hud" aria-label="Mini map">
+        <span class="corner tr"></span>
+        <span class="corner bl"></span>
+        <div class="hud-label"><span></span>Map Overview</div>
+        <div class="mini-map">
+          <svg viewBox="0 0 100 36" aria-label="Stage map">
+            {#each state.mapPlatforms as platform}
+              <line
+                class="map-platform"
+                x1={platform.x * 100}
+                y1={platform.y * 36}
+                x2={(platform.x + platform.width) * 100}
+                y2={platform.y * 36}
+              ></line>
+            {/each}
+            {#each state.checkpointMarkers as checkpoint, index}
+              <path
+                class="map-checkpoint"
+                class:active={index <= state.activeCheckpointIndex}
+                d={`M${checkpoint.x * 100} ${checkpoint.y * 36} V${checkpoint.y * 36 - 6} M${checkpoint.x * 100 - 1.7} ${checkpoint.y * 36 - 6} H${checkpoint.x * 100 + 1.7} V${checkpoint.y * 36 - 3} H${checkpoint.x * 100 - 1.7} Z`}
+              ></path>
+            {/each}
+            <circle class="map-player" cx={state.playerProgress * 100} cy={state.playerProgressY * 36} r="2.4"></circle>
+            {#each state.enemyMarkers as enemy}
+              <circle class="map-enemy" cx={enemy.x * 100} cy={enemy.y * 36} r="1.4"></circle>
+            {/each}
+            <path class="map-goal" d={`M${state.goalProgress * 100} 9.1 V2 M${state.goalProgress * 100} 2 L${state.goalProgress * 100 - 6} 4.5 L${state.goalProgress * 100} 7`}></path>
+          </svg>
+        </div>
+      </section>
+
+      <section class="hud-panel objective-hud" aria-label="Objective">
+        <span class="corner tl"></span>
+        <span class="corner br"></span>
+        <div class="hud-label"><span></span>Objective</div>
+        <p>{objectiveText()}</p>
+      </section>
     </div>
-  </section>
-
-  <section class="hud-panel map-hud" aria-label="Mini map">
-    <span class="corner tr"></span>
-    <span class="corner bl"></span>
-    <div class="hud-label"><span></span>Map Overview</div>
-    <div class="mini-map">
-      <svg viewBox="0 0 100 36" aria-label="Stage map">
-        {#each state.mapPlatforms as platform}
-          <line
-            class="map-platform"
-            x1={platform.x * 100}
-            y1={platform.y * 36}
-            x2={(platform.x + platform.width) * 100}
-            y2={platform.y * 36}
-          ></line>
-        {/each}
-        {#each state.checkpointMarkers as checkpoint, index}
-          <path
-            class="map-checkpoint"
-            class:active={index <= state.activeCheckpointIndex}
-            d={`M${checkpoint.x * 100} ${checkpoint.y * 36} V${checkpoint.y * 36 - 6} M${checkpoint.x * 100 - 1.7} ${checkpoint.y * 36 - 6} H${checkpoint.x * 100 + 1.7} V${checkpoint.y * 36 - 3} H${checkpoint.x * 100 - 1.7} Z`}
-          ></path>
-        {/each}
-        <circle class="map-player" cx={state.playerProgress * 100} cy={state.playerProgressY * 36} r="2.4"></circle>
-        {#each state.enemyMarkers as enemy}
-          <circle class="map-enemy" cx={enemy.x * 100} cy={enemy.y * 36} r="1.4"></circle>
-        {/each}
-        <path class="map-goal" d={`M${state.goalProgress * 100} 9.1 V2 M${state.goalProgress * 100} 2 L${state.goalProgress * 100 - 6} 4.5 L${state.goalProgress * 100} 7`}></path>
-      </svg>
-    </div>
-  </section>
-
-  <section class="hud-panel objective-hud" aria-label="Objective">
-    <span class="corner tl"></span>
-    <span class="corner br"></span>
-    <div class="hud-label"><span></span>Objective</div>
-    <p>{objectiveText()}</p>
-  </section>
-
-  {#if state.bossPhaseMax > 0 && !state.cleared}
-    <section class="hud-panel boss-phase-hud" aria-label={text('hud.bossPhase')}>
-      <span class="corner tr"></span>
-      <span class="corner bl"></span>
-      <div class="hud-label"><span></span>{text('hud.bossPhase')}</div>
-      <strong>{state.bossPhase} <small>/ {state.bossPhaseMax}</small></strong>
-      <p>{text('hud.bossPhaseHint')}</p>
-    </section>
-  {/if}
+  </div>
 
   <section class="bottom-hud" aria-label="Gameplay statistics and controls">
     <div class="bottom-fill">
@@ -190,7 +198,7 @@
   }
 
   .hud-panel {
-    position: absolute;
+    position: relative;
     border: 1.5px solid var(--hud-line);
     border-radius: 8px;
     background: var(--hud-panel);
@@ -243,10 +251,43 @@
     box-shadow: 0 0 6px var(--glow);
   }
 
-  .status-hud {
+  .top-hud {
+    --top-hud-stack-gap: 1.25cqh;
+    position: absolute;
     top: 2.2cqh;
+    right: 1.25cqw;
     left: 1.25cqw;
+    display: flex;
+    gap: 1.25cqw;
+    align-items: flex-start;
+    justify-content: space-between;
+  }
+
+  .top-left-hud,
+  .top-right-hud {
+    display: flex;
+    flex-direction: column;
+    gap: var(--top-hud-stack-gap);
+  }
+
+  .top-left-hud {
+    flex: none;
     width: 28.1cqw;
+  }
+
+  .top-center-hud {
+    display: flex;
+    flex: 1;
+    min-width: 0;
+    justify-content: center;
+  }
+
+  .top-right-hud {
+    flex: none;
+    width: 24cqw;
+  }
+
+  .status-hud {
     padding: 2.1cqh 1.25cqw 1.95cqh;
   }
 
@@ -327,12 +368,9 @@
   }
 
   .stage-banner {
-    position: absolute;
-    top: 2.2cqh;
-    left: 50%;
+    position: relative;
     width: 38cqw;
     height: 9.7cqh;
-    transform: translateX(-50%);
     animation: none;
     clip-path: polygon(18px 0, calc(100% - 18px) 0, 100% 18px, 100% calc(100% - 18px), calc(100% - 18px) 100%, 18px 100%, 0 calc(100% - 18px), 0 18px);
     background: var(--hud-line);
@@ -394,9 +432,6 @@
   }
 
   .map-hud {
-    top: 2.2cqh;
-    right: 1.25cqw;
-    width: 24cqw;
     padding: 1.67cqh 1cqw 1.95cqh;
   }
 
@@ -470,9 +505,6 @@
   }
 
   .objective-hud {
-    top: 20.8cqh;
-    right: 1.25cqw;
-    width: 24cqw;
     padding: 1.67cqh 1.1cqw;
   }
 
@@ -485,9 +517,6 @@
   }
 
   .boss-phase-hud {
-    top: 20.8cqh;
-    left: 1.25cqw;
-    width: 24cqw;
     padding: 1.67cqh 1.1cqw;
   }
 

@@ -5,6 +5,10 @@ import screenSource from './GameplayScreen.svelte?raw'
 describe('Gameplay HUD Svelte UI', () => {
   it('renders prototype-equivalent HUD regions and panel shell details', () => {
     expect(hudSource).toContain('class="gameplay-hud"')
+    expect(hudSource).toContain('class="top-hud"')
+    expect(hudSource).toContain('class="top-left-hud"')
+    expect(hudSource).toContain('class="top-center-hud"')
+    expect(hudSource).toContain('class="top-right-hud"')
     expect(hudSource).toContain('class="hud-panel status-hud"')
     expect(hudSource).toContain('class="stage-banner"')
     expect(hudSource).toContain('class="hud-panel map-hud"')
@@ -36,8 +40,72 @@ describe('Gameplay HUD Svelte UI', () => {
 
   it('keeps the gameplay banner geometry isolated from stage-select banner styles', () => {
     expect(hudSource).toContain('animation: none')
-    expect(hudSource).toContain('width: 28.1cqw')
-    expect(hudSource).toContain('transform: translateX(-50%)')
+    expect(hudSource).toContain('width: 38cqw')
+    expect(hudSource).toContain('class="top-center-hud"')
+    expect(hudSource).not.toContain('transform: translateX(-50%)')
+  })
+
+  it('places top HUD panels inside left, center, and right flex regions', () => {
+    const leftRegion = hudSource.slice(
+      hudSource.indexOf('class="top-left-hud"'),
+      hudSource.indexOf('class="top-center-hud"'),
+    )
+    const centerRegion = hudSource.slice(
+      hudSource.indexOf('class="top-center-hud"'),
+      hudSource.indexOf('class="top-right-hud"'),
+    )
+    const rightRegion = hudSource.slice(
+      hudSource.indexOf('class="top-right-hud"'),
+      hudSource.indexOf('<section class="bottom-hud"'),
+    )
+
+    expect(leftRegion).toContain('class="hud-panel status-hud"')
+    expect(leftRegion).toContain('{#if state.bossPhaseMax > 0 && !state.cleared}')
+    expect(leftRegion).toContain('class="hud-panel boss-phase-hud"')
+    expect(centerRegion).toContain('class="stage-banner"')
+    expect(rightRegion).toContain('class="hud-panel map-hud"')
+    expect(rightRegion).toContain('class="hud-panel objective-hud"')
+  })
+
+  it('uses one flex stack gap for the top-left and top-right HUD groups', () => {
+    const styleSource = hudSource.slice(hudSource.indexOf('<style>'))
+    const topHudStyle = styleSource.slice(
+      styleSource.indexOf('.top-hud {'),
+      styleSource.indexOf('.top-left-hud,'),
+    )
+    const topStackStyle = styleSource.slice(
+      styleSource.indexOf('.top-left-hud,'),
+      styleSource.indexOf('.top-left-hud {'),
+    )
+
+    expect(topHudStyle).toContain('--top-hud-stack-gap: 1.25cqh')
+    expect(topStackStyle).toContain('display: flex')
+    expect(topStackStyle).toContain('flex-direction: column')
+    expect(topStackStyle).toContain('gap: var(--top-hud-stack-gap)')
+  })
+
+  it('lets top layout containers own positioning instead of individual top panels', () => {
+    const styleSource = hudSource.slice(hudSource.indexOf('<style>'))
+    const topHudStyle = styleSource.slice(
+      styleSource.indexOf('.top-hud {'),
+      styleSource.indexOf('.top-left-hud,'),
+    )
+
+    expect(topHudStyle).toContain('position: absolute')
+    expect(topHudStyle).toContain('top: 2.2cqh')
+    expect(topHudStyle).toContain('right: 1.25cqw')
+    expect(topHudStyle).toContain('left: 1.25cqw')
+
+    for (const selector of ['.status-hud {', '.map-hud {', '.objective-hud {', '.boss-phase-hud {']) {
+      const panelStyle = styleSource.slice(
+        styleSource.indexOf(selector),
+        styleSource.indexOf('}', styleSource.indexOf(selector)),
+      )
+
+      expect(panelStyle).not.toContain('top:')
+      expect(panelStyle).not.toContain('left:')
+      expect(panelStyle).not.toContain('right:')
+    }
   })
 
   it('sizes HUD proportions against the resolution frame instead of the viewport', () => {
@@ -94,18 +162,16 @@ describe('Gameplay HUD Svelte UI', () => {
     expect(hudSource).toContain('{state.bossPhaseMax}')
   })
 
-  it('positions boss phase HUD on the left side of the gameplay frame', () => {
-    const bossPhaseStyle = hudSource.slice(
-      hudSource.indexOf('.boss-phase-hud {'),
-      hudSource.indexOf('.boss-phase-hud strong'),
+  it('keeps boss phase HUD in the left stack below player status', () => {
+    const leftRegion = hudSource.slice(
+      hudSource.indexOf('class="top-left-hud"'),
+      hudSource.indexOf('class="top-center-hud"'),
     )
+    const statusIndex = leftRegion.indexOf('class="hud-panel status-hud"')
+    const bossPhaseIndex = leftRegion.indexOf('class="hud-panel boss-phase-hud"')
 
-    expect(bossPhaseStyle).toContain('top: 20.8cqh')
-    expect(bossPhaseStyle).toContain('left: 1.25cqw')
-    expect(bossPhaseStyle).not.toContain('left: 30.6cqw')
-    expect(bossPhaseStyle).not.toContain('right:')
-    expect(bossPhaseStyle).not.toMatch(/\b\d*\.?\d+vw\b/)
-    expect(bossPhaseStyle).not.toMatch(/\b\d*\.?\d+vh\b/)
+    expect(statusIndex).toBeGreaterThanOrEqual(0)
+    expect(bossPhaseIndex).toBeGreaterThan(statusIndex)
   })
 
   it('resolves boss phase HUD text instead of rendering raw localization keys', () => {
