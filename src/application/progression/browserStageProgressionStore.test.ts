@@ -48,6 +48,28 @@ describe('browser stage progression store', () => {
     expect(loadStageProgressionSave(storage)).toEqual(createEmptySave())
   })
 
+  it('loads an empty save when stage records is not an object', () => {
+    const storage = createMemoryStorage({
+      [STAGE_PROGRESSION_SAVE_KEY]: JSON.stringify({ version: 1, stageRecords: [] }),
+    })
+
+    expect(loadStageProgressionSave(storage)).toEqual(createEmptySave())
+  })
+
+  it('loads an empty save when stage records contain malformed payloads', () => {
+    const storage = createMemoryStorage({
+      [STAGE_PROGRESSION_SAVE_KEY]: JSON.stringify({
+        version: 1,
+        stageRecords: {
+          '1-1': { cleared: true, bestTimeMs: 1000, bestTime: '00:01.00', bestRank: 'S', maxCoins: 1 },
+          '1-2': { cleared: true, bestTimeMs: 'bad', bestTime: '00:01.00', bestRank: 'S', maxCoins: 1 },
+        },
+      }),
+    })
+
+    expect(loadStageProgressionSave(storage)).toEqual(createEmptySave())
+  })
+
   it('records a stage clear by merging records and writing storage', () => {
     const storage = createMemoryStorage()
     const first = recordStageClear(storage, createEmptySave(), '1-1', {

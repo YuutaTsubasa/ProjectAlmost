@@ -30,9 +30,36 @@ function isStageProgressionSave(value: unknown): value is StageProgressionSave {
   if (!value || typeof value !== 'object') return false
 
   const candidate = value as { version?: unknown; stageRecords?: unknown }
-  return candidate.version === 1
-    && Boolean(candidate.stageRecords)
-    && typeof candidate.stageRecords === 'object'
+  if (candidate.version !== 1 || !candidate.stageRecords || typeof candidate.stageRecords !== 'object') return false
+  if (Array.isArray(candidate.stageRecords)) return false
+
+  return Object.values(candidate.stageRecords).every((record) => isStageRecord(record))
+}
+
+function isStageRecord(value: unknown): value is StageRecord {
+  if (!value || typeof value !== 'object') return false
+
+  const candidate = value as {
+    cleared?: unknown
+    bestTimeMs?: unknown
+    bestTime?: unknown
+    bestRank?: unknown
+    maxCoins?: unknown
+  }
+
+  return candidate.cleared === true || candidate.cleared === false
+    ? typeof candidate.bestTimeMs === 'number'
+      && Number.isFinite(candidate.bestTimeMs)
+      && typeof candidate.bestTime === 'string'
+      && typeof candidate.bestRank === 'string'
+      && (candidate.bestRank === 'S'
+        || candidate.bestRank === 'A'
+        || candidate.bestRank === 'B'
+        || candidate.bestRank === 'C'
+        || candidate.bestRank === 'D')
+      && typeof candidate.maxCoins === 'number'
+      && Number.isFinite(candidate.maxCoins)
+    : false
 }
 
 export function loadStageProgressionSave(storage: ProgressionStorage): StageProgressionSave {
