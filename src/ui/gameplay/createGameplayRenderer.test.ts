@@ -3449,6 +3449,32 @@ describe('createGameplayRendererConfig', () => {
     })
   })
 
+  it('preloads and registers the player crouch animation from the domain actor definition', () => {
+    const runtime = createSceneRuntime()
+    const crouchSprite = playerActorDefinition.sprites.crouch
+
+    runtime.scene.preload()
+    runtime.scene.create()
+
+    expect(runtime.spritesheetCalls).toContainEqual({
+      key: crouchSprite.key,
+      assetRef: crouchSprite.assetRef,
+      frameWidth: crouchSprite.frameWidth,
+      frameHeight: crouchSprite.frameHeight,
+    })
+    expect(runtime.animationCreateCalls).toContainEqual({
+      key: crouchSprite.key,
+      frames: [
+        { key: crouchSprite.key, frame: 0 },
+        { key: crouchSprite.key, frame: 1 },
+        { key: crouchSprite.key, frame: 2 },
+        { key: crouchSprite.key, frame: 3 },
+      ],
+      frameRate: crouchSprite.frameRate,
+      repeat: crouchSprite.repeat,
+    })
+  })
+
   it('preloads and registers the player attack animation', () => {
     const runtime = createSceneRuntime()
     const attackSprite = playerActorDefinition.sprites.attack
