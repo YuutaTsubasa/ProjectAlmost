@@ -310,6 +310,7 @@ describe('localize', () => {
         recordUnavailable: '--',
         reachGoal: 'Reach the goal',
         defeatBoss: 'Defeat the boss',
+        stageClear: 'Stage clear',
       },
       ja: {
         title: 'ステージ選択',
@@ -322,6 +323,7 @@ describe('localize', () => {
         recordUnavailable: '--',
         reachGoal: 'ゴールに到達',
         defeatBoss: 'ボスを倒す',
+        stageClear: 'ステージクリア',
       },
       zhHant: {
         title: '關卡選擇',
@@ -334,6 +336,7 @@ describe('localize', () => {
         recordUnavailable: '--',
         reachGoal: '抵達終點',
         defeatBoss: '擊敗首領',
+        stageClear: '關卡完成',
       },
       ko: {
         title: '스테이지 선택',
@@ -346,6 +349,7 @@ describe('localize', () => {
         recordUnavailable: '--',
         reachGoal: '목표 지점에 도달',
         defeatBoss: '보스 처치',
+        stageClear: '스테이지 클리어',
       },
     } as const
 
@@ -373,6 +377,9 @@ describe('localize', () => {
       )
       expect(resolveLocalizedText(localize, locale, 'stageObjectives.defeatBoss')).toBe(
         expectedByLocale[locale].defeatBoss,
+      )
+      expect(resolveLocalizedText(localize, locale, 'stageObjectives.stageClear')).toBe(
+        expectedByLocale[locale].stageClear,
       )
     }
   })

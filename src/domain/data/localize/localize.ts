@@ -17,6 +17,7 @@ export type StageSelectLocalizationKey =
 export type StageObjectiveLocalizationKey =
   | 'stageObjectives.reachGoal'
   | 'stageObjectives.defeatBoss'
+  | 'stageObjectives.stageClear'
 
 export type StageLocalizationKey =
   `stages.${1 | 2 | 3 | 4 | 5 | 6}-${1 | 2 | 3 | 4 | 5 | 6}.${'title' | 'subtitle'}`
@@ -244,6 +245,7 @@ const catalog: LocalizedTextCatalog = {
     'stageSelect.aria.map': 'Stage route map',
     'stageObjectives.reachGoal': 'Reach the goal',
     'stageObjectives.defeatBoss': 'Defeat the boss',
+    'stageObjectives.stageClear': 'Stage clear',
     'stages.1-1.title': 'White Palace 1-1',
     'stages.1-1.subtitle': 'The First Gate',
     'stages.1-2.title': 'White Palace 1-2',
@@ -399,6 +401,7 @@ const catalog: LocalizedTextCatalog = {
     'stageSelect.aria.map': 'ステージ進行マップ',
     'stageObjectives.reachGoal': 'ゴールに到達',
     'stageObjectives.defeatBoss': 'ボスを倒す',
+    'stageObjectives.stageClear': 'ステージクリア',
     'stages.1-1.title': 'ホワイトパレス 1-1',
     'stages.1-1.subtitle': '最初の門',
     'stages.1-2.title': 'ホワイトパレス 1-2',
@@ -554,6 +557,7 @@ const catalog: LocalizedTextCatalog = {
     'stageSelect.aria.map': '關卡路線地圖',
     'stageObjectives.reachGoal': '抵達終點',
     'stageObjectives.defeatBoss': '擊敗首領',
+    'stageObjectives.stageClear': '關卡完成',
     'stages.1-1.title': '白色宮殿 1-1',
     'stages.1-1.subtitle': '最初之門',
     'stages.1-2.title': '白色宮殿 1-2',
@@ -709,6 +713,7 @@ const catalog: LocalizedTextCatalog = {
     'stageSelect.aria.map': '스테이지 경로 지도',
     'stageObjectives.reachGoal': '목표 지점에 도달',
     'stageObjectives.defeatBoss': '보스 처치',
+    'stageObjectives.stageClear': '스테이지 클리어',
     'stages.1-1.title': '화이트 팰리스 1-1',
     'stages.1-1.subtitle': '첫 번째 문',
     'stages.1-2.title': '화이트 팰리스 1-2',

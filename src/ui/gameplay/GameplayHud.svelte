@@ -30,7 +30,7 @@
   }
 
   function objectiveText(): string {
-    if (state.cleared) return 'Stage clear'
+    if (state.cleared) return text('stageObjectives.stageClear')
     if (state.bossPhaseMax > 0) return text('stageObjectives.defeatBoss')
     return text('stageObjectives.reachGoal')
   }
