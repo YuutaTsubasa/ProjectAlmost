@@ -100,6 +100,7 @@ describe('Gameplay HUD Svelte UI', () => {
       hudSource.indexOf('.boss-phase-hud strong'),
     )
 
+    expect(bossPhaseStyle).toContain('top: 2.2cqh')
     expect(bossPhaseStyle).toContain('left: 1.25cqw')
     expect(bossPhaseStyle).not.toContain('right:')
     expect(bossPhaseStyle).not.toMatch(/\b\d*\.?\d+vw\b/)

@@ -485,7 +485,7 @@
   }
 
   .boss-phase-hud {
-    top: 32.2cqh;
+    top: 2.2cqh;
     left: 1.25cqw;
     width: 24cqw;
     padding: 1.67cqh 1.1cqw;
