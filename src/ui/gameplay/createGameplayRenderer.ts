@@ -441,6 +441,14 @@ class GameplayMapScene extends Phaser.Scene {
         .setScrollFactor(layer.scrollFactor)
         .setDepth(layer.depth)
 
+      if (layer.alpha !== undefined) {
+        sprite.setAlpha(layer.alpha)
+      }
+
+      if (layer.tint !== undefined) {
+        sprite.setTint(layer.tint)
+      }
+
       return { sprite, parallaxFactor: layer.parallaxFactor }
     })
   }

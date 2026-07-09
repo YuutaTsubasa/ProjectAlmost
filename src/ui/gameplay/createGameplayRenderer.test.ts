@@ -300,12 +300,15 @@ function createEnemyFixtureStage(): GameplayStageMap {
   }
 }
 
-function createFakeTileSprite() {
+function createFakeTileSprite(input: { texture: string }) {
   const sprite = {
+    texture: input.texture,
     depth: 0,
     scrollFactor: 0,
     tilePositionX: 0,
     tilePositionY: 0,
+    alpha: 1,
+    tint: undefined as number | undefined,
     setOrigin: () => sprite,
     setScrollFactor: (value: number) => {
       sprite.scrollFactor = value
@@ -318,6 +321,14 @@ function createFakeTileSprite() {
     setTilePosition: (x: number, y: number) => {
       sprite.tilePositionX = x
       sprite.tilePositionY = y
+      return sprite
+    },
+    setAlpha: (value: number) => {
+      sprite.alpha = value
+      return sprite
+    },
+    setTint: (value: number) => {
+      sprite.tint = value
       return sprite
     },
   }
@@ -762,6 +773,7 @@ function createSceneRuntime(input: {
   const spriteCalls: Array<ReturnType<typeof createFakeArcadeSprite>> = []
   const staticSpriteCalls: Array<ReturnType<typeof createFakeArcadeSprite>> = []
   const staticImageCalls: Array<ReturnType<typeof createFakeArcadeSprite>> = []
+  const tileSprites: Array<ReturnType<typeof createFakeTileSprite>> = []
   const terrainLayer = createFakeTerrainLayer()
   const playerKeys: FakePlayerKeys = {
     left: { isDown: false },
@@ -853,7 +865,11 @@ function createSceneRuntime(input: {
   }
 
   scene.add = {
-    tileSprite: () => createFakeTileSprite(),
+    tileSprite: (_x, _y, _width, _height, texture) => {
+      const sprite = createFakeTileSprite({ texture })
+      tileSprites.push(sprite)
+      return sprite
+    },
     image: (x, y, texture) => {
       const image = createFakeImage({ x, y, texture })
       images.push(image)
@@ -937,6 +953,7 @@ function createSceneRuntime(input: {
     spriteCalls,
     staticSpriteCalls,
     staticImageCalls,
+    tileSprites,
     generateTextureCalls,
     tweenCalls,
     images,
@@ -1545,6 +1562,29 @@ describe('createGameplayRendererConfig', () => {
       })
     },
   )
+
+  it('applies background layer alpha and tint from converted stage data', () => {
+    const stage = getGameplayStageMap('3-1')
+    expect(stage).toBeDefined()
+    if (!stage) return
+
+    const runtime = createSceneRuntime({ stage })
+
+    runtime.scene.preload()
+    runtime.scene.create()
+
+    const farLayer = runtime.tileSprites.find((sprite) => sprite.texture === 'far')
+    const midLayer = runtime.tileSprites.find((sprite) => sprite.texture === 'mid')
+
+    expect(farLayer).toBeDefined()
+    expect(midLayer).toBeDefined()
+    if (!farLayer || !midLayer) return
+
+    expect(farLayer.alpha).toBe(0.32)
+    expect(farLayer.tint).toBe(0x8be7ff)
+    expect(midLayer.alpha).toBe(0.2)
+    expect(midLayer.tint).toBe(0xdff8ff)
+  })
 
   it('uses the domain player gravity in Phaser config', () => {
     const stage = getGameplayStageMap('1-1')
