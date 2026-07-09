@@ -985,7 +985,13 @@ class GameplayMapScene extends Phaser.Scene {
   }
 
   private completeStage(): void {
-    if (this.isPlayerDead || !canCompleteStage({ stageCleared: this.stageCleared })) {
+    if (
+      this.isPlayerDead ||
+      !canCompleteStage({
+        stageCleared: this.stageCleared,
+        bossDefeated: this.isBossStage ? (this.bossPrototype?.defeated ?? false) : undefined,
+      })
+    ) {
       return
     }
 

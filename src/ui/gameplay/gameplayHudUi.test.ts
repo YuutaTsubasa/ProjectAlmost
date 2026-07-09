@@ -65,7 +65,9 @@ describe('Gameplay HUD Svelte UI', () => {
 
   it('renders objective, controls, readouts, and rank fields', () => {
     expect(hudSource).toContain('Objective')
-    expect(hudSource).toContain('Reach the goal')
+    expect(hudSource).toContain('state.bossPhaseMax > 0 && !state.cleared')
+    expect(hudSource).toContain("text('stageObjectives.defeatBoss')")
+    expect(hudSource).toContain("text('stageObjectives.reachGoal')")
     expect(hudSource).toContain('Controls')
     expect(hudSource).toContain('Move')
     expect(hudSource).toContain('Jump')
@@ -98,6 +100,15 @@ describe('Gameplay HUD Svelte UI', () => {
     expect(hudSource).not.toContain('>gameplayHud.bossPhaseHint</p>')
     expect(hudSource).not.toContain('>hud.bossPhase</div>')
     expect(hudSource).not.toContain('>hud.bossPhaseHint</p>')
+  })
+
+  it('renders localized HUD status text from the gameplay state instead of raw keys', () => {
+    expect(hudSource).toContain('state.statusMessageKey')
+    expect(hudSource).toContain('{statusMessageText()}')
+    expect(hudSource).toContain("replace('{phase}', String(state.bossPhase))")
+    expect(hudSource).toContain("replace('{max}', String(state.bossPhaseMax))")
+    expect(hudSource).not.toContain('>status.bossPattern<')
+    expect(hudSource).not.toContain('>status.initial<')
   })
 
   it('wires GameplayScreen stage display data to the HUD', () => {

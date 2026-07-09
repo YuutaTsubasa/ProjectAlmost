@@ -2675,6 +2675,29 @@ describe('createGameplayRendererConfig', () => {
     expect(boss?.visible).toBe(false)
   })
 
+  it('ignores boss-stage goal overlap until the boss is defeated', () => {
+    const stage = getGameplayStageMap('1-6')
+    expect(stage).toBeDefined()
+    if (!stage) return
+    const runtime = createSceneRuntime({ stage })
+
+    runtime.scene.preload()
+    runtime.scene.create()
+    startGameplay(runtime)
+
+    const activeTimersBefore = runtime.timerEvents.filter((event) => event.active).length
+    const projectileCountBefore = getBossProjectileSprites(runtime).length
+    const updateCountBeforeGoalOverlap = runtime.hudUpdates.length
+
+    runtime.triggerGoalOverlap(getGoalSprite(runtime))
+
+    expect(runtime.hudUpdates).toHaveLength(updateCountBeforeGoalOverlap)
+    expect(runtime.hudUpdates.some((patch) => patch.cleared === true)).toBe(false)
+    expect(runtime.hudUpdates.some((patch) => patch.result)).toBe(false)
+    expect(runtime.timerEvents.filter((event) => event.active)).toHaveLength(activeTimersBefore)
+    expect(getBossProjectileSprites(runtime)).toHaveLength(projectileCountBefore)
+  })
+
   it('clears boss projectiles on player defeat and restarts the current phase after respawn', () => {
     const stage = getGameplayStageMap('1-6')
     expect(stage).toBeDefined()
@@ -2702,7 +2725,7 @@ describe('createGameplayRendererConfig', () => {
     expect(runtime.timerEvents.filter((event) => event.active)).toHaveLength(1)
   })
 
-  it('stops boss pattern and clears boss projectiles when the boss stage clears', () => {
+  it('clears the boss stage normally after the boss is defeated', () => {
     const stage = getGameplayStageMap('1-6')
     expect(stage).toBeDefined()
     if (!stage) return
@@ -2711,19 +2734,31 @@ describe('createGameplayRendererConfig', () => {
     runtime.scene.preload()
     runtime.scene.create()
     startGameplay(runtime)
-    runtime.advanceTime(getBossPatternDelayMs({ phase: 0 }))
-
-    expect(getBossProjectileSprites(runtime)).toHaveLength(2)
-    expect(runtime.timerEvents.filter((event) => event.active)).toHaveLength(1)
+    runtime.hitBossWithMelee()
+    runtime.runDelayedCalls(620)
+    runtime.hitBossWithMelee()
+    runtime.runDelayedCalls(620)
+    runtime.hitBossWithMelee()
+    runtime.runDelayedCalls(620)
+    runtime.hitBossWithMelee()
+    expect(runtime.timerEvents.filter((event) => event.active)).toHaveLength(0)
+    const projectileCountAfterDefeat = getBossProjectileSprites(runtime).length
 
     runtime.triggerGoalOverlap(getGoalSprite(runtime))
 
-    expect(getBossProjectileSprites(runtime)).toHaveLength(0)
+    expect(runtime.hudUpdates).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          cleared: true,
+          result: expect.any(Object),
+        }),
+      ]),
+    )
     expect(runtime.timerEvents.filter((event) => event.active)).toHaveLength(0)
 
     runtime.advanceTime(getBossPatternDelayMs({ phase: 0 }) * 2)
 
-    expect(getBossProjectileSprites(runtime)).toHaveLength(0)
+    expect(getBossProjectileSprites(runtime)).toHaveLength(projectileCountAfterDefeat)
     expect(runtime.timerEvents.filter((event) => event.active)).toHaveLength(0)
   })
 

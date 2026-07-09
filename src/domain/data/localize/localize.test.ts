@@ -382,6 +382,12 @@ describe('localize', () => {
       en: {
         bossPhase: 'Boss Phase',
         bossPhaseHint: 'Each hit starts the next pattern from the entrance.',
+        initial: 'Advance to the exit.',
+        checkpoint: 'Checkpoint synchronized.',
+        restored: 'Checkpoint restored.',
+        fall: 'Altitude lost. Recovering.',
+        critical: 'Critical damage. Avoid contact.',
+        goal: 'Exit reached.',
         bossPattern: 'Boss phase {phase}/{max}. Evade the barrage.',
         bossVulnerable: 'Attack window open. Strike the Boss now.',
         bossDefeated: 'Boss signal defeated. The exit is open.',
@@ -389,6 +395,12 @@ describe('localize', () => {
       ja: {
         bossPhase: 'ボスフェーズ',
         bossPhaseHint: '攻撃が当たるたび入口から次のパターンが始まります。',
+        initial: '出口へ進んでください。',
+        checkpoint: 'チェックポイントを同期しました。',
+        restored: 'チェックポイントから復帰しました。',
+        fall: '高度を失いました。復帰します。',
+        critical: '致命傷です。接触を避けてください。',
+        goal: '出口に到達しました。',
         bossPattern: 'ボスフェーズ {phase}/{max}。弾幕を回避してください。',
         bossVulnerable: '攻撃チャンス。今すぐボスを攻撃してください。',
         bossDefeated: 'ボス信号を撃破。出口が開きました。',
@@ -396,6 +408,12 @@ describe('localize', () => {
       zhHant: {
         bossPhase: 'Boss 階段',
         bossPhaseHint: '每次命中後會回到入口，並進入下一段彈幕。',
+        initial: '前往出口。',
+        checkpoint: '檢查點已同步。',
+        restored: '已從檢查點恢復。',
+        fall: '高度流失，正在復原。',
+        critical: '損傷過重，避免接觸。',
+        goal: '已抵達出口。',
         bossPattern: 'Boss 階段 {phase}/{max}，閃避彈幕。',
         bossVulnerable: '攻擊窗口開啟，現在攻擊 Boss。',
         bossDefeated: 'Boss 已擊敗，出口已開啟。',
@@ -403,6 +421,12 @@ describe('localize', () => {
       ko: {
         bossPhase: '보스 페이즈',
         bossPhaseHint: '한 번 맞힐 때마다 입구에서 다음 패턴이 시작됩니다.',
+        initial: '출구로 전진하세요.',
+        checkpoint: '체크포인트 동기화 완료.',
+        restored: '체크포인트에서 복귀했습니다.',
+        fall: '고도를 잃었습니다. 복구 중입니다.',
+        critical: '치명적인 피해입니다. 접촉을 피하세요.',
+        goal: '출구에 도달했습니다.',
         bossPattern: '보스 페이즈 {phase}/{max}. 탄막을 피하세요.',
         bossVulnerable: '공격 기회가 열렸습니다. 지금 보스를 공격하세요.',
         bossDefeated: '보스 신호를 격파했습니다. 출구가 열렸습니다.',
@@ -415,6 +439,24 @@ describe('localize', () => {
       )
       expect(resolveLocalizedText(localize, locale, 'hud.bossPhaseHint')).toBe(
         expectedByLocale[locale].bossPhaseHint,
+      )
+      expect(resolveLocalizedText(localize, locale, 'status.initial')).toBe(
+        expectedByLocale[locale].initial,
+      )
+      expect(resolveLocalizedText(localize, locale, 'status.checkpoint')).toBe(
+        expectedByLocale[locale].checkpoint,
+      )
+      expect(resolveLocalizedText(localize, locale, 'status.restored')).toBe(
+        expectedByLocale[locale].restored,
+      )
+      expect(resolveLocalizedText(localize, locale, 'status.fall')).toBe(
+        expectedByLocale[locale].fall,
+      )
+      expect(resolveLocalizedText(localize, locale, 'status.critical')).toBe(
+        expectedByLocale[locale].critical,
+      )
+      expect(resolveLocalizedText(localize, locale, 'status.goal')).toBe(
+        expectedByLocale[locale].goal,
       )
       expect(resolveLocalizedText(localize, locale, 'status.bossPattern')).toBe(
         expectedByLocale[locale].bossPattern,

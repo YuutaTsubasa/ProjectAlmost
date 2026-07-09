@@ -9,6 +9,11 @@ describe('stage clear gate', () => {
   it('blocks duplicate stage completion after the stage is cleared', () => {
     expect(canCompleteStage({ stageCleared: true })).toBe(false)
   })
+
+  it('blocks boss-stage completion until the boss is defeated', () => {
+    expect(canCompleteStage({ stageCleared: false, bossDefeated: false })).toBe(false)
+    expect(canCompleteStage({ stageCleared: false, bossDefeated: true })).toBe(true)
+  })
 })
 
 describe('stage clear state', () => {

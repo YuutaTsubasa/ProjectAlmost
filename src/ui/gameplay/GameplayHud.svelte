@@ -2,7 +2,7 @@
   import {
     localize,
     resolveLocalizedText,
-    type GameplayHudLocalizationKey,
+    type LocalizationKey,
     type LocaleCode,
   } from '../../domain/data/localize/localize'
   import type { GameplayHudState } from '../../domain/gameplay/gameplayHud'
@@ -25,8 +25,20 @@
     return Math.max(0, Math.min(100, (state.hp / state.hpMax) * 100))
   }
 
-  function text(key: GameplayHudLocalizationKey): string {
+  function text(key: LocalizationKey): string {
     return resolveLocalizedText(localize, locale, key)
+  }
+
+  function objectiveText(): string {
+    if (state.cleared) return 'Stage clear'
+    if (state.bossPhaseMax > 0) return text('stageObjectives.defeatBoss')
+    return text('stageObjectives.reachGoal')
+  }
+
+  function statusMessageText(): string {
+    return text(state.statusMessageKey)
+      .replace('{phase}', String(state.bossPhase))
+      .replace('{max}', String(state.bossPhaseMax))
   }
 </script>
 
@@ -48,6 +60,7 @@
         <div class="bar" aria-hidden="true">
           <i style:width={`${getHpWidthPercent()}%`}></i>
         </div>
+        <p class="status-message">{statusMessageText()}</p>
       </div>
     </div>
   </section>
@@ -114,7 +127,7 @@
     <span class="corner tl"></span>
     <span class="corner br"></span>
     <div class="hud-label"><span></span>Objective</div>
-    <p>{state.cleared ? 'Stage clear' : 'Reach the goal'}</p>
+    <p>{objectiveText()}</p>
   </section>
 
   {#if state.bossPhaseMax > 0 && !state.cleared}
@@ -302,6 +315,15 @@
     height: 100%;
     border-radius: inherit;
     background: linear-gradient(90deg, #e2574c, #ffb0a7);
+  }
+
+  .status-message {
+    margin: 1.1cqh 0 0;
+    color: var(--hud-soft);
+    font-size: 0.74cqw;
+    font-weight: 700;
+    line-height: 1.15;
+    overflow-wrap: anywhere;
   }
 
   .stage-banner {

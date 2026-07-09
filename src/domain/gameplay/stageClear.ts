@@ -7,8 +7,9 @@ export type StageClearState = {
 
 export function canCompleteStage(input: {
   stageCleared: boolean
+  bossDefeated?: boolean
 }): boolean {
-  return !input.stageCleared
+  return !input.stageCleared && input.bossDefeated !== false
 }
 
 export function getStageClearState(): StageClearState {

@@ -78,6 +78,12 @@ export type GameplayHudLocalizationKey =
   | 'hud.bossPhaseHint'
 
 export type GameplayStatusLocalizationKey =
+  | 'status.initial'
+  | 'status.checkpoint'
+  | 'status.restored'
+  | 'status.fall'
+  | 'status.critical'
+  | 'status.goal'
   | 'status.bossPattern'
   | 'status.bossVulnerable'
   | 'status.bossDefeated'
@@ -347,6 +353,12 @@ const catalog: LocalizedTextCatalog = {
     'pause.aria.menu': 'Pause menu',
     'hud.bossPhase': 'Boss Phase',
     'hud.bossPhaseHint': 'Each hit starts the next pattern from the entrance.',
+    'status.initial': 'Advance to the exit.',
+    'status.checkpoint': 'Checkpoint synchronized.',
+    'status.restored': 'Checkpoint restored.',
+    'status.fall': 'Altitude lost. Recovering.',
+    'status.critical': 'Critical damage. Avoid contact.',
+    'status.goal': 'Exit reached.',
     'status.bossPattern': 'Boss phase {phase}/{max}. Evade the barrage.',
     'status.bossVulnerable': 'Attack window open. Strike the Boss now.',
     'status.bossDefeated': 'Boss signal defeated. The exit is open.',
@@ -496,6 +508,12 @@ const catalog: LocalizedTextCatalog = {
     'pause.aria.menu': 'ポーズメニュー',
     'hud.bossPhase': 'ボスフェーズ',
     'hud.bossPhaseHint': '攻撃が当たるたび入口から次のパターンが始まります。',
+    'status.initial': '出口へ進んでください。',
+    'status.checkpoint': 'チェックポイントを同期しました。',
+    'status.restored': 'チェックポイントから復帰しました。',
+    'status.fall': '高度を失いました。復帰します。',
+    'status.critical': '致命傷です。接触を避けてください。',
+    'status.goal': '出口に到達しました。',
     'status.bossPattern': 'ボスフェーズ {phase}/{max}。弾幕を回避してください。',
     'status.bossVulnerable': '攻撃チャンス。今すぐボスを攻撃してください。',
     'status.bossDefeated': 'ボス信号を撃破。出口が開きました。',
@@ -645,6 +663,12 @@ const catalog: LocalizedTextCatalog = {
     'pause.aria.menu': '暫停選單',
     'hud.bossPhase': 'Boss 階段',
     'hud.bossPhaseHint': '每次命中後會回到入口，並進入下一段彈幕。',
+    'status.initial': '前往出口。',
+    'status.checkpoint': '檢查點已同步。',
+    'status.restored': '已從檢查點恢復。',
+    'status.fall': '高度流失，正在復原。',
+    'status.critical': '損傷過重，避免接觸。',
+    'status.goal': '已抵達出口。',
     'status.bossPattern': 'Boss 階段 {phase}/{max}，閃避彈幕。',
     'status.bossVulnerable': '攻擊窗口開啟，現在攻擊 Boss。',
     'status.bossDefeated': 'Boss 已擊敗，出口已開啟。',
@@ -794,6 +818,12 @@ const catalog: LocalizedTextCatalog = {
     'pause.aria.menu': '일시 정지 메뉴',
     'hud.bossPhase': '보스 페이즈',
     'hud.bossPhaseHint': '한 번 맞힐 때마다 입구에서 다음 패턴이 시작됩니다.',
+    'status.initial': '출구로 전진하세요.',
+    'status.checkpoint': '체크포인트 동기화 완료.',
+    'status.restored': '체크포인트에서 복귀했습니다.',
+    'status.fall': '고도를 잃었습니다. 복구 중입니다.',
+    'status.critical': '치명적인 피해입니다. 접촉을 피하세요.',
+    'status.goal': '출구에 도달했습니다.',
     'status.bossPattern': '보스 페이즈 {phase}/{max}. 탄막을 피하세요.',
     'status.bossVulnerable': '공격 기회가 열렸습니다. 지금 보스를 공격하세요.',
     'status.bossDefeated': '보스 신호를 격파했습니다. 출구가 열렸습니다.',
