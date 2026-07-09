@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { hazardActorDefinitions } from './hazardActor'
 import { enemyActorDefinitions } from './enemyActor'
@@ -463,5 +464,69 @@ describe('gameplayStageMaps', () => {
       expect(assetRefs.every((assetRef) => assetRef.startsWith('/assets/'))).toBe(true)
       expect(assetRefs.every((assetRef) => !assetRef.includes('__prototype__'))).toBe(true)
     }
+  })
+
+  it('uses Prototype-matching visual assets for representative converted themes', () => {
+    expect(getGameplayStageMap('1-1')).toMatchObject({
+      backgroundLayers: [
+        { id: 'sky', assetRef: '/assets/maps/white_palace_sky.webp' },
+        { id: 'far', assetRef: '/assets/maps/white_palace_far_bg.webp' },
+        { id: 'mid', assetRef: '/assets/maps/white_palace_mid_bg_loop.webp' },
+      ],
+      terrain: {
+        tilesetAssetRef: '/assets/tiles/white_palace_platform_tiles.webp',
+      },
+    })
+
+    expect(getGameplayStageMap('2-1')).toMatchObject({
+      backgroundLayers: [
+        { id: 'sky', assetRef: '/assets/maps/emerald_sanctuary_sky.webp' },
+        { id: 'far', assetRef: '/assets/maps/emerald_sanctuary_far_bg.webp' },
+        { id: 'mid', assetRef: '/assets/maps/emerald_sanctuary_mid_bg_loop.webp', width: 3840 },
+      ],
+      terrain: {
+        tilesetAssetRef: '/assets/tiles/emerald_sanctuary_platform_tiles.webp',
+      },
+    })
+
+    expect(getGameplayStageMap('3-1')).toMatchObject({
+      backgroundLayers: [
+        { id: 'sky', assetRef: '/assets/maps/cerulean_depths_stage_select.webp' },
+        { id: 'far', assetRef: '/assets/maps/cerulean_depths_stage_select.webp', alpha: 0.32, tint: 0x8be7ff },
+        { id: 'mid', assetRef: '/assets/maps/cerulean_depths_stage_select.webp', alpha: 0.2, tint: 0xdff8ff },
+      ],
+    })
+
+    expect(getGameplayStageMap('4-1')).toMatchObject({
+      backgroundLayers: [
+        { id: 'sky', assetRef: '/assets/maps/frostveil_peaks_stage_select.webp' },
+        { id: 'far', assetRef: '/assets/maps/frostveil_peaks_stage_select.webp', alpha: 0.32, tint: 0xccefff },
+        { id: 'mid', assetRef: '/assets/maps/frostveil_peaks_stage_select.webp', alpha: 0.2, tint: 0xf3fbff },
+      ],
+    })
+
+    expect(getGameplayStageMap('5-1')).toMatchObject({
+      backgroundLayers: [
+        { id: 'sky', assetRef: '/assets/maps/emberfall_caldera_stage_select.webp' },
+        { id: 'far', assetRef: '/assets/maps/emberfall_caldera_stage_select.webp', alpha: 0.35, tint: 0xff8a4b },
+        { id: 'mid', assetRef: '/assets/maps/emberfall_caldera_stage_select.webp', alpha: 0.22, tint: 0xffd19b },
+      ],
+    })
+
+    expect(getGameplayStageMap('6-1')).toMatchObject({
+      backgroundLayers: [
+        { id: 'sky', assetRef: '/assets/maps/abyssal_hollow_stage_select.webp' },
+        { id: 'far', assetRef: '/assets/maps/abyssal_hollow_stage_select.webp', alpha: 0.34, tint: 0xb58cff },
+        { id: 'mid', assetRef: '/assets/maps/abyssal_hollow_stage_select.webp', alpha: 0.22, tint: 0xff8ee8 },
+      ],
+    })
+  })
+
+  it('has copied Emerald Sanctuary gameplay assets into rebuilt public assets', () => {
+    expect(readFileSync('public/assets/maps/emerald_sanctuary_sky.webp').byteLength).toBeGreaterThan(0)
+    expect(readFileSync('public/assets/maps/emerald_sanctuary_far_bg.webp').byteLength).toBeGreaterThan(0)
+    expect(readFileSync('public/assets/maps/emerald_sanctuary_mid_bg_loop.webp').byteLength).toBeGreaterThan(0)
+    expect(readFileSync('public/assets/maps/emerald_sanctuary_gameplay_bg.webp').byteLength).toBeGreaterThan(0)
+    expect(readFileSync('public/assets/tiles/emerald_sanctuary_platform_tiles.webp').byteLength).toBeGreaterThan(0)
   })
 })

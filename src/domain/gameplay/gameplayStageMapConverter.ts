@@ -8,36 +8,21 @@ import {
   type GameplayStageConversionDiagnostic,
   type GameplayStageSource,
   type GameplayStageSourceTheme,
-  type GameplayThemeAssets,
 } from './gameplayStageSource'
+import type { GameplayStageVisualProfile } from './gameplayStageVisualProfile'
 
 export type GameplayStageMapConversionResult = {
   map: GameplayStageMap
   diagnostics: readonly GameplayStageConversionDiagnostic[]
 }
 
-const BACKGROUND_LAYER_PRESENTATION = {
-  sky: { width: 1920, height: 1080, depth: -30, scrollFactor: 0, parallaxFactor: 0 },
-  far: { width: 1920, height: 1080, depth: -20, scrollFactor: 0, parallaxFactor: 0.08 },
-  mid: { width: 1920, height: 1080, depth: -10, scrollFactor: 0, parallaxFactor: 0.18 },
-} as const
-
 export function convertGameplayStageSource(
   source: GameplayStageSource,
-  themeAssets: Record<GameplayStageSourceTheme, GameplayThemeAssets>,
+  visualProfiles: Record<GameplayStageSourceTheme, GameplayStageVisualProfile>,
 ): GameplayStageMapConversionResult {
   const theme = source.theme ?? 'white-palace'
-  const assets = themeAssets[theme]
+  const visualProfile = visualProfiles[theme]
   const diagnostics: GameplayStageConversionDiagnostic[] = []
-
-  if (assets.fallback) {
-    diagnostics.push({
-      stageId: source.id,
-      code: 'theme-asset-fallback',
-      sourceId: theme,
-      message: `Stage ${source.id} uses fallback gameplay assets for theme ${theme}.`,
-    })
-  }
 
   for (const movingPlatform of source.movingPlatforms ?? []) {
     diagnostics.push({
@@ -72,11 +57,7 @@ export function convertGameplayStageSource(
       theme: toGameplayTheme(theme),
       world: { ...source.world },
       rankTargets: { ...source.rankTargets },
-      backgroundLayers: assets.backgroundLayers.map((layer) => ({
-        id: layer.id,
-        assetRef: layer.assetRef,
-        ...BACKGROUND_LAYER_PRESENTATION[layer.id],
-      })),
+      backgroundLayers: visualProfile.backgroundLayers.map((layer) => ({ ...layer })),
       player: {
         actorId: 'player',
         spawn: {
@@ -94,7 +75,7 @@ export function convertGameplayStageSource(
       checkpoints: source.checkpoints.map((checkpoint) => ({ ...checkpoint })),
       goal: { ...source.goal },
       terrain: {
-        tilesetAssetRef: assets.terrainTilesetAssetRef,
+        tilesetAssetRef: visualProfile.terrainTilesetAssetRef,
         solidTileIndexes: [0, 1, 2],
         platforms: source.platforms.map((platform) => ({ ...platform })),
       },

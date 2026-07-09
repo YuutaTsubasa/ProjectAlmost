@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { convertGameplayStageSource } from './gameplayStageMapConverter'
-import { defaultGameplayThemeAssets, type GameplayStageSource } from './gameplayStageSource'
+import type { GameplayStageSource } from './gameplayStageSource'
+import { gameplayStageVisualProfiles } from './gameplayStageVisualProfile'
 
 const firstGateSource: GameplayStageSource = {
   id: '1-1',
@@ -72,7 +73,7 @@ const firstGateSource: GameplayStageSource = {
 
 describe('convertGameplayStageSource', () => {
   it('converts supported stage source fields into a renderer-ready gameplay map', () => {
-    const result = convertGameplayStageSource(firstGateSource, defaultGameplayThemeAssets)
+    const result = convertGameplayStageSource(firstGateSource, gameplayStageVisualProfiles)
 
     expect(result.diagnostics).toEqual([])
     expect(result.map).toMatchObject({
@@ -115,7 +116,7 @@ describe('convertGameplayStageSource', () => {
   })
 
   it('assigns stable coin ids from stage id and source order', () => {
-    const result = convertGameplayStageSource(firstGateSource, defaultGameplayThemeAssets)
+    const result = convertGameplayStageSource(firstGateSource, gameplayStageVisualProfiles)
 
     expect(result.map.coins).toEqual([
       { id: '1-1-coin-001', x: 420, y: 456 },
@@ -124,7 +125,7 @@ describe('convertGameplayStageSource', () => {
   })
 
   it('converts prototype guard enemy shapes into Armor Guard runtime spawns', () => {
-    const result = convertGameplayStageSource(firstGateSource, defaultGameplayThemeAssets)
+    const result = convertGameplayStageSource(firstGateSource, gameplayStageVisualProfiles)
 
     expect(result.map.enemies).toEqual([
       {
@@ -194,7 +195,7 @@ describe('convertGameplayStageSource', () => {
           },
         ],
       },
-      defaultGameplayThemeAssets,
+      gameplayStageVisualProfiles,
     )
 
     expect(result.map.hazards).toEqual([
@@ -227,7 +228,7 @@ describe('convertGameplayStageSource', () => {
 
     const result = convertGameplayStageSource(
       stageWithoutHazards as GameplayStageSource,
-      defaultGameplayThemeAssets,
+      gameplayStageVisualProfiles,
     )
 
     expect(result.map.hazards).toEqual([])
@@ -252,37 +253,41 @@ describe('convertGameplayStageSource', () => {
           ...firstGateSource,
           theme,
         },
-        defaultGameplayThemeAssets,
+        gameplayStageVisualProfiles,
       )
 
       expect(result.map.theme).toBe(theme)
       expect(result.map.backgroundLayers).toHaveLength(3)
-      expect(result.map.backgroundLayers.every((layer) => layer.assetRef.startsWith('/assets/'))).toBe(true)
+      expect(result.map.backgroundLayers.every((layer) => layer.assetRef.startsWith('/assets/'))).toBe(
+        true,
+      )
       expect(result.map.terrain.tilesetAssetRef).toMatch(/^\/assets\//)
+      expect(result.diagnostics).toEqual([])
     }
   })
 
-  it('emits a theme asset fallback diagnostic for non-white themes while still producing renderable assets', () => {
+  it('uses complete non-white theme profiles without fallback diagnostics', () => {
     const result = convertGameplayStageSource(
       {
         ...firstGateSource,
         theme: 'emerald-sanctuary',
       },
-      defaultGameplayThemeAssets,
+      gameplayStageVisualProfiles,
     )
 
     expect(result.map.theme).toBe('emerald-sanctuary')
-    expect(result.map.backgroundLayers.every((layer) => layer.assetRef.startsWith('/assets/'))).toBe(
-      true,
-    )
-    expect(result.map.terrain.tilesetAssetRef).toMatch(/^\/assets\//)
-    expect(result.diagnostics).toEqual([
-      {
-        stageId: '1-1',
-        code: 'theme-asset-fallback',
-        sourceId: 'emerald-sanctuary',
-        message: 'Stage 1-1 uses fallback gameplay assets for theme emerald-sanctuary.',
-      },
+    expect(result.map.backgroundLayers.map((layer) => layer.assetRef)).toEqual([
+      '/assets/maps/emerald_sanctuary_sky.webp',
+      '/assets/maps/emerald_sanctuary_far_bg.webp',
+      '/assets/maps/emerald_sanctuary_mid_bg_loop.webp',
     ])
+    expect(result.map.backgroundLayers[2]).toMatchObject({
+      id: 'mid',
+      width: 3840,
+    })
+    expect(result.map.terrain.tilesetAssetRef).toBe(
+      '/assets/tiles/emerald_sanctuary_platform_tiles.webp',
+    )
+    expect(result.diagnostics).toEqual([])
   })
 })

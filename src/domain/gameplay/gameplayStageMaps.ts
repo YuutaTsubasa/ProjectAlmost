@@ -1,11 +1,9 @@
 import type { StageId } from '../data/worlds/worldTypes'
 import type { GameplayStageMap } from './gameplayMapTypes'
 import { convertGameplayStageSource } from './gameplayStageMapConverter'
-import {
-  defaultGameplayThemeAssets,
-  type GameplayStageConversionDiagnostic,
-} from './gameplayStageSource'
+import type { GameplayStageConversionDiagnostic } from './gameplayStageSource'
 import { gameplayStageSources } from './gameplayStageSources'
+import { gameplayStageVisualProfiles } from './gameplayStageVisualProfile'
 
 export type GameplayStageMapCatalog = {
   order: readonly StageId[]
@@ -15,7 +13,7 @@ export type GameplayStageMapCatalog = {
 const conversionEntries = gameplayStageSources.order.map((stageId) => {
   const source = gameplayStageSources.items[stageId]
 
-  return [stageId, convertGameplayStageSource(source, defaultGameplayThemeAssets)] as const
+  return [stageId, convertGameplayStageSource(source, gameplayStageVisualProfiles)] as const
 })
 
 export const gameplayStageConversionDiagnostics: readonly GameplayStageConversionDiagnostic[] =

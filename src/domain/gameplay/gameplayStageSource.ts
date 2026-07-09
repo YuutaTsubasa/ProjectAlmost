@@ -125,79 +125,12 @@ export type GameplayStageConversionDiagnosticCode =
   | 'unsupported-gravity-zone'
   | 'unsupported-surface-zone'
   | 'unsupported-hazard'
-  | 'theme-asset-fallback'
 
 export type GameplayStageConversionDiagnostic = {
   stageId: StageId
   code: GameplayStageConversionDiagnosticCode
   sourceId?: string
   message: string
-}
-
-export type GameplayThemeAssets = {
-  backgroundLayers: readonly [
-    { id: 'sky'; assetRef: string },
-    { id: 'far'; assetRef: string },
-    { id: 'mid'; assetRef: string },
-  ]
-  terrainTilesetAssetRef: string
-  fallback?: true
-}
-
-export const defaultGameplayThemeAssets: Record<GameplayStageSourceTheme, GameplayThemeAssets> = {
-  'white-palace': {
-    backgroundLayers: [
-      { id: 'sky', assetRef: '/assets/maps/white_palace_sky.webp' },
-      { id: 'far', assetRef: '/assets/maps/white_palace_far_bg.webp' },
-      { id: 'mid', assetRef: '/assets/maps/white_palace_mid_bg_loop.webp' },
-    ],
-    terrainTilesetAssetRef: '/assets/tiles/white_palace_platform_tiles.webp',
-  },
-  'emerald-sanctuary': {
-    backgroundLayers: [
-      { id: 'sky', assetRef: '/assets/maps/white_palace_sky.webp' },
-      { id: 'far', assetRef: '/assets/maps/white_palace_far_bg.webp' },
-      { id: 'mid', assetRef: '/assets/maps/white_palace_mid_bg_loop.webp' },
-    ],
-    terrainTilesetAssetRef: '/assets/tiles/white_palace_platform_tiles.webp',
-    fallback: true,
-  },
-  'cerulean-depths': {
-    backgroundLayers: [
-      { id: 'sky', assetRef: '/assets/maps/white_palace_sky.webp' },
-      { id: 'far', assetRef: '/assets/maps/white_palace_far_bg.webp' },
-      { id: 'mid', assetRef: '/assets/maps/white_palace_mid_bg_loop.webp' },
-    ],
-    terrainTilesetAssetRef: '/assets/tiles/white_palace_platform_tiles.webp',
-    fallback: true,
-  },
-  'frostveil-peaks': {
-    backgroundLayers: [
-      { id: 'sky', assetRef: '/assets/maps/white_palace_sky.webp' },
-      { id: 'far', assetRef: '/assets/maps/white_palace_far_bg.webp' },
-      { id: 'mid', assetRef: '/assets/maps/white_palace_mid_bg_loop.webp' },
-    ],
-    terrainTilesetAssetRef: '/assets/tiles/white_palace_platform_tiles.webp',
-    fallback: true,
-  },
-  'emberfall-caldera': {
-    backgroundLayers: [
-      { id: 'sky', assetRef: '/assets/maps/white_palace_sky.webp' },
-      { id: 'far', assetRef: '/assets/maps/white_palace_far_bg.webp' },
-      { id: 'mid', assetRef: '/assets/maps/white_palace_mid_bg_loop.webp' },
-    ],
-    terrainTilesetAssetRef: '/assets/tiles/white_palace_platform_tiles.webp',
-    fallback: true,
-  },
-  'abyssal-hollow': {
-    backgroundLayers: [
-      { id: 'sky', assetRef: '/assets/maps/white_palace_sky.webp' },
-      { id: 'far', assetRef: '/assets/maps/white_palace_far_bg.webp' },
-      { id: 'mid', assetRef: '/assets/maps/white_palace_mid_bg_loop.webp' },
-    ],
-    terrainTilesetAssetRef: '/assets/tiles/white_palace_platform_tiles.webp',
-    fallback: true,
-  },
 }
 
 export function toGameplayTheme(theme: GameplayStageSourceTheme): GameplayTheme {
