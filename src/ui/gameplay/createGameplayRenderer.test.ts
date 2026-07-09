@@ -4414,6 +4414,67 @@ describe('createGameplayRendererConfig', () => {
     })
   })
 
+  it.each(['down', 's'] as const)(
+    'enters crouch from grounded %s input and restores standing body on release',
+    (key) => {
+      const runtime = createSceneRuntime()
+
+      runtime.scene.create()
+      startGameplay(runtime)
+
+      runtime.playerKeys[key].isDown = true
+      runtime.scene.update()
+
+      expect(runtime.playerSprite?.playCalls.at(-1)).toEqual({
+        key: playerActorDefinition.sprites.crouch.key,
+        ignoreIfPlaying: true,
+      })
+      expect(runtime.playerSprite?.body.size).toEqual({
+        width: playerActorDefinition.crouch.body.width,
+        height: playerActorDefinition.crouch.body.height,
+      })
+      expect(runtime.playerSprite?.body.offset).toEqual({
+        x: playerActorDefinition.crouch.body.offsetX,
+        y: playerActorDefinition.crouch.body.offsetY,
+      })
+      expect(runtime.playerSprite?.accelerationX).toBe(0)
+      expect(runtime.playerSprite?.velocityX).toBe(0)
+
+      runtime.playerKeys[key].isDown = false
+      runtime.scene.update()
+
+      expect(runtime.playerSprite?.body.size).toEqual({
+        width: playerActorDefinition.body.width,
+        height: playerActorDefinition.body.height,
+      })
+      expect(runtime.playerSprite?.body.offset).toEqual({
+        x: playerActorDefinition.body.offsetX,
+        y: playerActorDefinition.body.offsetY,
+      })
+    },
+  )
+
+  it('does not crouch while airborne', () => {
+    const runtime = createSceneRuntime()
+
+    runtime.scene.create()
+    startGameplay(runtime)
+
+    runtime.playerSprite!.body.blocked.down = false
+    runtime.playerSprite!.body.touching.down = false
+    runtime.playerKeys.down.isDown = true
+    runtime.scene.update()
+
+    expect(runtime.playerSprite?.playCalls.at(-1)).not.toEqual({
+      key: playerActorDefinition.sprites.crouch.key,
+      ignoreIfPlaying: true,
+    })
+    expect(runtime.playerSprite?.body.size).toEqual({
+      width: playerActorDefinition.body.width,
+      height: playerActorDefinition.body.height,
+    })
+  })
+
   it('applies jump velocity for a grounded Space press', () => {
     const runtime = createSceneRuntime()
 

@@ -70,10 +70,13 @@ import {
   type MovableActorJumpState,
 } from '../../domain/gameplay/movableActorState'
 import {
+  getPlayerBodyDefinition,
   getPlayerCenterY,
+  getPlayerCrouchState,
   getPlayerHorizontalMovementDecision,
   playerActorDefinition,
   type PlayerAnimationKey,
+  type PlayerBodyPose,
 } from '../../domain/gameplay/playerActor'
 import {
   PLAYER_MAX_HEALTH,
@@ -239,6 +242,8 @@ class GameplayMapScene extends Phaser.Scene {
     z: Phaser.Input.Keyboard.Key
   } | null = null
   private playerJumpState: MovableActorJumpState | null = null
+  private isCrouching = false
+  private playerBodyPose: PlayerBodyPose = 'standing'
   private wasJumpDown = false
   private attackReady = true
   private isAttacking = false
@@ -978,6 +983,8 @@ class GameplayMapScene extends Phaser.Scene {
 
     player.body.setSize(playerActorDefinition.body.width, playerActorDefinition.body.height)
     player.body.setOffset(playerActorDefinition.body.offsetX, playerActorDefinition.body.offsetY)
+    this.playerBodyPose = 'standing'
+    this.isCrouching = false
     this.playPlayerAnimation(player, 'idle')
 
     this.physics.add.collider(player, this.terrainLayer)
@@ -1360,9 +1367,30 @@ class GameplayMapScene extends Phaser.Scene {
   }
 
   private isPlayerCrouching(): boolean {
+    return this.isCrouching
+  }
+
+  private getCrouchHeld(): boolean {
     if (!this.playerKeys) return false
 
-    return this.isPlayerGrounded() && (this.playerKeys.down.isDown || this.playerKeys.s.isDown)
+    return this.playerKeys.down.isDown || this.playerKeys.s.isDown
+  }
+
+  private applyPlayerBodyPose(pose: PlayerBodyPose): void {
+    if (!this.player || this.playerBodyPose === pose) return
+
+    const bodyDefinition = getPlayerBodyDefinition({ pose })
+    const body = this.player.body
+    if (!body) return
+
+    body.setSize(bodyDefinition.width, bodyDefinition.height)
+    body.setOffset(bodyDefinition.offsetX, bodyDefinition.offsetY)
+    this.playerBodyPose = pose
+  }
+
+  private clearPlayerCrouch(): void {
+    this.isCrouching = false
+    this.applyPlayerBodyPose('standing')
   }
 
   private tryStartPlayerAttack(grounded: boolean, facing: PlayerFacingDirection): void {
@@ -2106,6 +2134,16 @@ class GameplayMapScene extends Phaser.Scene {
       grounded,
       config: playerActorDefinition.jump,
     })
+    const crouch = getPlayerCrouchState({
+      crouchHeld: this.getCrouchHeld(),
+      grounded,
+      attacking: this.isAttacking || this.isHomingAttacking,
+      hurting: this.isPlayerHurting,
+      dead: this.isPlayerDead,
+      stageCleared: this.stageCleared,
+    })
+    this.isCrouching = crouch.crouching
+    this.applyPlayerBodyPose(crouch.pose)
     const jumpDown = this.isJumpDown()
     if (jumpDown && !this.wasJumpDown) {
       this.playerJumpState = bufferMovableActorJump({
@@ -2124,12 +2162,14 @@ class GameplayMapScene extends Phaser.Scene {
     this.playerJumpState = jumpDecision.state
     const jumpingThisFrame = jumpDecision.type !== 'none'
     if (jumpDecision.type !== 'none') {
+      this.clearPlayerCrouch()
       this.player.setVelocityY(playerActorDefinition.jump.velocityY)
     }
 
     const decision = getPlayerHorizontalMovementDecision({
       left: this.playerKeys.left.isDown || this.playerKeys.a.isDown,
       right: this.playerKeys.right.isDown || this.playerKeys.d.isDown,
+      crouching: this.isCrouching,
     })
     const facing: PlayerFacingDirection =
       decision.direction === 'left'
@@ -2144,6 +2184,9 @@ class GameplayMapScene extends Phaser.Scene {
 
     this.player.setDragX(decision.dragX)
     this.player.setAccelerationX(decision.accelerationX)
+    if (decision.stopVelocityX) {
+      this.player.setVelocityX(0)
+    }
     if (decision.direction === 'left') {
       this.player.setFlipX(true)
     } else if (decision.direction === 'right') {
@@ -2157,6 +2200,8 @@ class GameplayMapScene extends Phaser.Scene {
       this.playPlayerAnimation(this.player, 'attack')
     } else if (!grounded || jumpingThisFrame) {
       this.playPlayerAnimation(this.player, 'jump')
+    } else if (this.isCrouching) {
+      this.playPlayerAnimation(this.player, 'crouch')
     } else if (decision.direction === 'left') {
       this.playPlayerAnimation(this.player, 'run')
     } else if (decision.direction === 'right') {
