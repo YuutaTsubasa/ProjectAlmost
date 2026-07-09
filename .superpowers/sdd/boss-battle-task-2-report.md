@@ -9,10 +9,13 @@ GREEN commands and pass summaries:
 - Passed: 3 files, 51 tests.
 - `npm run test`
 - Passed: 49 files, 509 tests.
+- `npm run check`
+- Passed: svelte-check found 0 errors and 0 warnings; node TypeScript check passed.
 - `git diff --check`
 - Passed with no diff whitespace or conflict-marker issues.
 
 Files changed:
+- `src/domain/gameplay/gameplayStageSource.ts`
 - `src/domain/gameplay/gameplayMapTypes.ts`
 - `src/domain/gameplay/gameplayStageMapConverter.ts`
 - `src/domain/gameplay/gameplayStageMapConverter.test.ts`
@@ -22,7 +25,7 @@ Files changed:
 - `.superpowers/sdd/boss-battle-task-2-report.md`
 
 Commit hash:
-- `7073840`
+- `254a705`, plus the follow-up verification fix in HEAD.
 
 Concerns, if any:
 - None.

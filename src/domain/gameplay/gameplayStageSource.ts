@@ -86,7 +86,13 @@ export type GameplayStageSourceCoin = {
   y: number
 }
 
-export type GameplayStageSourceGuardEnemy = {
+export type GameplayStageSourceEnemyRuntimeMetadata = {
+  respawnPolicy?: 'persistent' | 'regenerate'
+  respawnDelayMs?: number
+  countsForScore?: boolean
+}
+
+export type GameplayStageSourceGuardEnemy = GameplayStageSourceEnemyRuntimeMetadata & {
   id: string
   type?: 'guard'
   x: number
@@ -95,12 +101,9 @@ export type GameplayStageSourceGuardEnemy = {
   patrolMaxX: number
 }
 
-export type GameplayStageSourceAzureCoreEnemy = {
+export type GameplayStageSourceAzureCoreEnemy = GameplayStageSourceEnemyRuntimeMetadata & {
   id: string
   type: 'azure-core'
-  respawnPolicy?: 'persistent' | 'regenerate'
-  respawnDelayMs?: number
-  countsForScore?: boolean
   x: number
   y: number
   patrolMinX: number
