@@ -23,6 +23,31 @@ Concerns:
 ---
 
 Fix status:
+- DONE: dead-window boss updates no longer recreate the boss timer or immediate projectile volley before respawn.
+
+RED command and failure summary:
+- `npm run test -- src/ui/gameplay/createGameplayRenderer.test.ts -t "does not restart the boss pattern on update while the player is dead"` failed because a second `scene.update()` during the death window recreated one `boss-projectile` sprite before respawn.
+
+GREEN command summaries:
+- Focused regression: `npm run test -- src/ui/gameplay/createGameplayRenderer.test.ts -t "does not restart the boss pattern on update while the player is dead"` passed.
+- Full renderer file: `npm run test -- src/ui/gameplay/createGameplayRenderer.test.ts` passed with 120 tests green.
+- Type/script verification: `npm run check` passed with 0 errors and 0 warnings.
+- Diff sanity: `git diff --check` passed with no whitespace or path issues.
+
+Files changed:
+- `src/ui/gameplay/createGameplayRenderer.ts`
+- `src/ui/gameplay/createGameplayRenderer.test.ts`
+- `.superpowers/sdd/boss-battle-task-3-report.md`
+
+Commit hash:
+- Pending `fix: prevent dead boss pattern restart`
+
+Concerns:
+- None.
+
+---
+
+Fix status:
 - DONE: boss projectile lifecycle cleanup now stops the boss timer and clears in-flight boss projectiles on boss-stage player defeat, respawn cleanup, and stage clear.
 
 RED command and failure summary:

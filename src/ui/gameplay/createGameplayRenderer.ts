@@ -384,7 +384,7 @@ class GameplayMapScene extends Phaser.Scene {
       return
     }
 
-    if (this.bossPrototype && !this.bossPatternEvent) {
+    if (!this.isPlayerDead && this.bossPrototype && !this.bossPatternEvent) {
       this.startBossPattern()
     }
 
