@@ -70,6 +70,32 @@ describe('browser stage progression store', () => {
     expect(loadStageProgressionSave(storage)).toEqual(createEmptySave())
   })
 
+  it('loads an empty save when stage records mark cleared as false', () => {
+    const storage = createMemoryStorage({
+      [STAGE_PROGRESSION_SAVE_KEY]: JSON.stringify({
+        version: 1,
+        stageRecords: {
+          '1-1': { cleared: false, bestTimeMs: 1000, bestTime: '00:01.00', bestRank: 'S', maxCoins: 1 },
+        },
+      }),
+    })
+
+    expect(loadStageProgressionSave(storage)).toEqual(createEmptySave())
+  })
+
+  it('loads an empty save when stage records contain contradictory best time values', () => {
+    const storage = createMemoryStorage({
+      [STAGE_PROGRESSION_SAVE_KEY]: JSON.stringify({
+        version: 1,
+        stageRecords: {
+          '1-1': { cleared: true, bestTimeMs: 2_000, bestTime: '00:01.00', bestRank: 'S', maxCoins: 1 },
+        },
+      }),
+    })
+
+    expect(loadStageProgressionSave(storage)).toEqual(createEmptySave())
+  })
+
   it('loads an empty save when stage keys are outside stage id format', () => {
     const storage = createMemoryStorage({
       [STAGE_PROGRESSION_SAVE_KEY]: JSON.stringify({

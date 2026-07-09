@@ -1,6 +1,7 @@
 import {
   createEmptyStageRecords,
   mergeStageClearRecord,
+  parseStageTimeMs,
   type StageClearResult,
   type StageRecord,
 } from '../../domain/progression/stageProgression'
@@ -57,12 +58,13 @@ function isStageRecord(value: unknown): value is StageRecord {
     maxCoins?: unknown
   }
 
-  return candidate.cleared === true || candidate.cleared === false
-    ? typeof candidate.bestTimeMs === 'number'
+  return candidate.cleared === true
+    && typeof candidate.bestTimeMs === 'number'
       && Number.isInteger(candidate.bestTimeMs)
       && Number.isFinite(candidate.bestTimeMs)
       && candidate.bestTimeMs >= 0
       && isStageTimeLabel(candidate.bestTime)
+      && parseStageTimeMs(candidate.bestTime) === candidate.bestTimeMs
       && typeof candidate.bestRank === 'string'
       && (candidate.bestRank === 'S'
         || candidate.bestRank === 'A'
@@ -73,7 +75,6 @@ function isStageRecord(value: unknown): value is StageRecord {
       && Number.isInteger(candidate.maxCoins)
       && Number.isFinite(candidate.maxCoins)
       && candidate.maxCoins >= 0
-    : false
 }
 
 export function loadStageProgressionSave(storage: ProgressionStorage): StageProgressionSave {
