@@ -217,6 +217,7 @@ On final hit:
 - mark the boss as defeated.
 - disable the boss body.
 - play the boss defeat presentation.
+- the boss defeat presentation uses the Prototype death animation cadence (`4` frames at `5fps`) and remains visible; it must not be replaced by the ordinary enemy hide/fade presentation.
 - reveal and enable the stage goal if it was locked by the boss battle.
 - update HUD/status.
 - allow the stage to be cleared.

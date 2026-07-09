@@ -42,7 +42,7 @@ export const bossPriestessSpriteAssets = {
     frameHeight: 128,
     frameStart: 0,
     frameEnd: 3,
-    frameRate: 8,
+    frameRate: 5,
     repeat: 0,
     scale: 1.2,
     origin: { x: 0.5, y: 0.5 },
