@@ -3,6 +3,7 @@ import {
   createEmptyStageRecords,
   mergeStageClearRecord,
   parseStageTimeMs,
+  type StageRecordMap,
 } from './stageProgression'
 
 describe('stage progression record rules', () => {
@@ -75,7 +76,7 @@ describe('stage progression record rules', () => {
   })
 
   it('preserves other stage records when merging one stage', () => {
-    const records = mergeStageClearRecord({}, '1-1', {
+    const records: StageRecordMap<'1-1' | '1-2'> = mergeStageClearRecord({}, '1-1', {
       time: '00:50.00',
       rank: 'A',
       coins: 4,

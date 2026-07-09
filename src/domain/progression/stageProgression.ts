@@ -44,19 +44,26 @@ export function mergeStageClearRecord<TStageId extends string>(
 ): StageRecordMap<TStageId> {
   const previous = records[stageId]
   const timeMs = parseStageTimeMs(result.time)
-  const bestTimeIsPrevious = previous ? previous.bestTimeMs <= timeMs : false
-  const bestRankIsPrevious = previous
-    ? rankValues[previous.bestRank] >= rankValues[result.rank]
-    : false
+  const nextRecord: StageRecord = previous
+    ? {
+        cleared: true,
+        bestTimeMs: Math.min(previous.bestTimeMs, timeMs),
+        bestTime: previous.bestTimeMs <= timeMs ? previous.bestTime : result.time,
+        bestRank: rankValues[previous.bestRank] >= rankValues[result.rank]
+          ? previous.bestRank
+          : result.rank,
+        maxCoins: Math.max(previous.maxCoins, result.coins),
+      }
+    : {
+        cleared: true,
+        bestTimeMs: timeMs,
+        bestTime: result.time,
+        bestRank: result.rank,
+        maxCoins: result.coins,
+      }
 
   return {
     ...records,
-    [stageId]: {
-      cleared: true,
-      bestTimeMs: bestTimeIsPrevious ? previous.bestTimeMs : timeMs,
-      bestTime: bestTimeIsPrevious ? previous.bestTime : result.time,
-      bestRank: bestRankIsPrevious ? previous.bestRank : result.rank,
-      maxCoins: Math.max(previous?.maxCoins ?? 0, result.coins),
-    },
+    [stageId]: nextRecord,
   }
 }
