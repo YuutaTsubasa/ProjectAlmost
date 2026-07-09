@@ -164,6 +164,13 @@ type TimerEventCall = {
   nextFireAt: number
 }
 
+type DelayedCall = {
+  delay: number
+  callback: () => void
+  scheduledAt: number
+  fired: boolean
+}
+
 type FakePlayerKeys = {
   left: { isDown: boolean }
   right: { isDown: boolean }
@@ -794,7 +801,8 @@ function createSceneRuntime(input: {
   const tweenCalls: TweenCall[] = []
   const images: Array<ReturnType<typeof createFakeImage>> = []
   const ellipses: Array<ReturnType<typeof createFakeEllipse>> = []
-  const delayedCalls: Array<{ delay: number; callback: () => void }> = []
+  const delayedCalls: DelayedCall[] = []
+  let delayedTimeNow = 0
   const timerEvents: TimerEventCall[] = []
   const killedTweenTargets: unknown[] = []
   const colliderCalls: Array<{ a: unknown; b: unknown }> = []
@@ -960,7 +968,12 @@ function createSceneRuntime(input: {
   scene.time = {
     now: 0,
     delayedCall: (delay, callback) => {
-      delayedCalls.push({ delay, callback })
+      delayedCalls.push({
+        delay,
+        callback,
+        scheduledAt: delayedTimeNow + delay,
+        fired: false,
+      })
     },
     addEvent: ({ delay, loop, callback }) => {
       const event: TimerEventCall = {
@@ -1049,9 +1062,23 @@ function createSceneRuntime(input: {
     terrainLayer,
     playerKeys,
     runDelayedCalls: (delay: number) => {
-      for (const call of delayedCalls.filter((candidate) => candidate.delay === delay)) {
-        call.callback()
+      const targetTime = delayedTimeNow + delay
+
+      while (true) {
+        const nextCall = delayedCalls
+          .filter((candidate) => !candidate.fired && candidate.scheduledAt <= targetTime)
+          .sort((left, right) => left.scheduledAt - right.scheduledAt)[0]
+
+        if (!nextCall) {
+          break
+        }
+
+        nextCall.fired = true
+        delayedTimeNow = nextCall.scheduledAt
+        nextCall.callback()
       }
+
+      delayedTimeNow = targetTime
     },
     advanceTime,
     triggerEnemyOverlap: (enemy: ReturnType<typeof createFakeArcadeSprite>) => {
@@ -2584,6 +2611,31 @@ describe('createGameplayRendererConfig', () => {
     )
   })
 
+  it('restarts the advanced boss phase only once after the transition delay', () => {
+    const stage = getGameplayStageMap('1-6')
+    expect(stage).toBeDefined()
+    if (!stage) return
+    const runtime = createSceneRuntime({ stage })
+
+    runtime.scene.preload()
+    runtime.scene.create()
+    startGameplay(runtime)
+
+    runtime.hitBossWithMelee()
+    expect(runtime.timerEvents.filter((event) => event.active)).toHaveLength(0)
+
+    runtime.runDelayedCalls(620)
+
+    const projectilesAfterRestart = getBossProjectileSprites(runtime).length
+    expect(projectilesAfterRestart).toBeGreaterThan(0)
+    expect(runtime.timerEvents.filter((event) => event.active)).toHaveLength(1)
+
+    runtime.runDelayedCalls(620)
+
+    expect(getBossProjectileSprites(runtime)).toHaveLength(projectilesAfterRestart)
+    expect(runtime.timerEvents.filter((event) => event.active)).toHaveLength(1)
+  })
+
   it('defeats the boss on the final boss phase hit', () => {
     const stage = getGameplayStageMap('1-6')
     expect(stage).toBeDefined()
@@ -2603,7 +2655,11 @@ describe('createGameplayRendererConfig', () => {
     runtime.hitBossWithMelee()
 
     const boss = runtime.getBossSprite()
-    expect(boss?.visible).toBe(false)
+    const defeatTween = runtime.tweenCalls.find(
+      (call) => call.targets === boss && call.duration === 260 && call.ease === 'Quad.easeOut',
+    )
+
+    expect(boss?.visible).toBe(true)
     expect(boss?.body.enable).toBe(false)
     expect(runtime.hudUpdates).toEqual(
       expect.arrayContaining([
@@ -2614,6 +2670,9 @@ describe('createGameplayRendererConfig', () => {
         }),
       ]),
     )
+
+    defeatTween?.onComplete?.()
+    expect(boss?.visible).toBe(false)
   })
 
   it('clears boss projectiles on player defeat and restarts the current phase after respawn', () => {
@@ -2635,6 +2694,12 @@ describe('createGameplayRendererConfig', () => {
     runtime.runDelayedCalls(500)
 
     expect(runtime.sprites.some((sprite) => sprite.texture === 'boss-projectile' && !sprite.destroyed)).toBe(true)
+    expect(runtime.timerEvents.filter((event) => event.active)).toHaveLength(1)
+
+    runtime.runDelayedCalls(500)
+
+    expect(runtime.sprites.filter((sprite) => sprite.texture === 'boss-projectile' && !sprite.destroyed)).toHaveLength(1)
+    expect(runtime.timerEvents.filter((event) => event.active)).toHaveLength(1)
   })
 
   it('stops boss pattern and clears boss projectiles when the boss stage clears', () => {

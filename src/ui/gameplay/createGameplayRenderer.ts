@@ -1741,7 +1741,6 @@ class GameplayMapScene extends Phaser.Scene {
       ease: 'Quad.easeOut',
       onComplete: () => boss.sprite.setVisible(false),
     })
-    boss.sprite.setVisible(false)
 
     const phase = getBossHudPhaseDisplay({
       isBossStage: this.isBossStage,
