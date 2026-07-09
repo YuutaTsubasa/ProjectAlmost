@@ -10,6 +10,16 @@ import {
   type EnemyPatrolDirection,
 } from '../../domain/gameplay/enemyActor'
 import {
+  canFireBossVolley,
+  canRunBossPatternTick,
+  canStartBossPattern,
+  getBossHudPhaseDisplay,
+  getBossPatternDelayMs,
+  getBossVolleyShots,
+  isBossStageDefinition,
+  shouldResetBossSupportCore,
+} from '../../domain/gameplay/bossBattle'
+import {
   checkpointActorDefinition,
   getCheckpointBottomY,
 } from '../../domain/gameplay/checkpointActor'
@@ -120,6 +130,14 @@ import {
   getTileRowCount,
   validatePlatformBounds,
 } from '../../domain/gameplay/terrain'
+import {
+  getBossProjectileHitDecision,
+  getBossProjectileLifecycleDecision,
+  getBossProjectileVelocity,
+  isBossProjectileExpired,
+  isBossProjectileOutOfBounds,
+  shouldUpdateBossProjectiles,
+} from '../../domain/gameplay/bossProjectile'
 
 type GameplayRendererInput = {
   parent: HTMLElement
@@ -146,6 +164,8 @@ type EnemyRuntime = {
   direction: EnemyPatrolDirection
   defeated: boolean
 }
+
+type BossProjectileRuntime = Phaser.Physics.Arcade.Sprite
 
 type CoinRuntime = {
   sprite: Phaser.GameObjects.Image
@@ -197,8 +217,10 @@ class GameplayMapScene extends Phaser.Scene {
   private playerKeys: {
     left: Phaser.Input.Keyboard.Key
     right: Phaser.Input.Keyboard.Key
+    down: Phaser.Input.Keyboard.Key
     a: Phaser.Input.Keyboard.Key
     d: Phaser.Input.Keyboard.Key
+    s: Phaser.Input.Keyboard.Key
     j: Phaser.Input.Keyboard.Key
     space: Phaser.Input.Keyboard.Key
     up: Phaser.Input.Keyboard.Key
@@ -216,6 +238,12 @@ class GameplayMapScene extends Phaser.Scene {
   private isPlayerInvulnerable = false
   private isPlayerDead = false
   private isHomingAttacking = false
+  private bossPrototype: EnemyRuntime | null = null
+  private bossProjectiles: BossProjectileRuntime[] = []
+  private bossPhase = 0
+  private bossShotIndex = 0
+  private bossPatternGeneration = 0
+  private bossPatternEvent?: Phaser.Time.TimerEvent
   private homingTarget: Phaser.Physics.Arcade.Sprite | null = null
   private homingReticle: Phaser.GameObjects.Image | null = null
   private hazards: HazardRuntime[] = []
@@ -241,6 +269,13 @@ class GameplayMapScene extends Phaser.Scene {
       surfaceY: stage.player.spawn.surfaceY,
       gravity: 'down',
     }
+  }
+
+  private get isBossStage(): boolean {
+    return isBossStageDefinition({
+      stageId: this.stageMap.id,
+      enemies: this.stageMap.enemies,
+    })
   }
 
   preload(): void {
@@ -314,20 +349,29 @@ class GameplayMapScene extends Phaser.Scene {
     this.createAttackHitboxTexture()
     this.createHomingReticleTexture()
     this.createCoinTexture()
+    this.createBossProjectileTexture()
     this.createEnemyAnimations()
     this.createEnemies()
+    this.initializeBossPrototype()
     this.createHazards()
     this.createCheckpoints()
     this.createGoal()
     this.createCoins()
     this.playerKeys = this.createPlayerKeys()
     this.createPlayer()
+    if (this.bossPrototype && !this.bossPatternEvent) {
+      this.startBossPattern()
+    }
     this.damageTaken = 0
     this.falls = 0
     this.enemiesDefeated = 0
     this.gameplayElapsedMs = 0
     this.gameplayStartGateState = createInitialGameplayStartGateState()
     this.emitHudPatch(createInitialGameplayHudState(this.stageMap))
+
+    if (this.isBossStage) {
+      this.emitBossHudPatch()
+    }
   }
 
   update(_time?: number, delta?: number): void {
@@ -346,6 +390,7 @@ class GameplayMapScene extends Phaser.Scene {
     this.advanceGameplayElapsed(delta)
 
     this.updateEnemyPatrol()
+    this.updateBossProjectiles()
     this.processActiveMeleeHitboxes()
     this.updateHomingAttack()
     this.updateCoins()
@@ -519,6 +564,20 @@ class GameplayMapScene extends Phaser.Scene {
     graphics.fillStyle(0x4be8ff, 0.2)
     graphics.lineStyle(2, 0x4f7dff, 0.8)
     graphics.generateTexture('attack-hitbox', meleeHitboxSize.width, meleeHitboxSize.height)
+    graphics.destroy()
+  }
+
+  private createBossProjectileTexture(): void {
+    if (!this.isBossStage) return
+
+    const graphics = this.make.graphics()
+    graphics.fillStyle(0xffffff, 0.95)
+    graphics.fillCircle(14, 14, 8)
+    graphics.lineStyle(4, 0x8be7ff, 0.9)
+    graphics.strokeCircle(14, 14, 10)
+    graphics.lineStyle(2, 0x4be8ff, 0.8)
+    graphics.strokeCircle(14, 14, 13)
+    graphics.generateTexture('boss-projectile', 28, 28)
     graphics.destroy()
   }
 
@@ -832,8 +891,10 @@ class GameplayMapScene extends Phaser.Scene {
     const keys = this.input.keyboard.addKeys({
       left: Phaser.Input.Keyboard.KeyCodes.LEFT,
       right: Phaser.Input.Keyboard.KeyCodes.RIGHT,
+      down: Phaser.Input.Keyboard.KeyCodes.DOWN,
       a: Phaser.Input.Keyboard.KeyCodes.A,
       d: Phaser.Input.Keyboard.KeyCodes.D,
+      s: Phaser.Input.Keyboard.KeyCodes.S,
       j: Phaser.Input.Keyboard.KeyCodes.J,
       space: Phaser.Input.Keyboard.KeyCodes.SPACE,
       up: Phaser.Input.Keyboard.KeyCodes.UP,
@@ -1065,6 +1126,98 @@ class GameplayMapScene extends Phaser.Scene {
     })
   }
 
+  private initializeBossPrototype(): void {
+    if (!this.isBossStage) return
+
+    this.bossPrototype = this.enemies.find((enemy) => enemy.spawn.id === 'boss-prototype') ?? null
+
+    if (this.bossPrototype) {
+      this.startBossPattern()
+    }
+  }
+
+  private startBossPattern(): void {
+    const boss = this.bossPrototype
+    if (!this.player) {
+      return
+    }
+    if (!canStartBossPattern({
+      bossExists: boss !== null,
+      bossType: boss?.spawn.type,
+      bossPhase: this.bossPhase,
+      stageCleared: this.stageCleared,
+    }) || !boss) {
+      return
+    }
+
+    const generation = ++this.bossPatternGeneration
+    this.clearBossProjectiles()
+    this.bossPatternEvent?.remove(false)
+    this.bossPatternEvent = undefined
+    this.bossShotIndex = 0
+
+    for (const enemy of this.enemies) {
+      if (shouldResetBossSupportCore({ sameAsBoss: enemy === boss, enemyType: enemy.spawn.type })) {
+        enemy.defeated = false
+        enemy.sprite.setVisible(true)
+        const body = enemy.sprite.body as Phaser.Physics.Arcade.Body | null
+        if (body) {
+          body.enable = true
+        }
+      }
+    }
+
+    this.emitBossHudPatch()
+    this.fireBossVolley(this.bossPhase, this.bossShotIndex++)
+    this.bossPatternEvent = this.time.addEvent({
+      delay: getBossPatternDelayMs({ phase: this.bossPhase }),
+      loop: true,
+      callback: () => {
+        if (!canRunBossPatternTick({
+          generation,
+          currentGeneration: this.bossPatternGeneration,
+          stageCleared: this.stageCleared,
+          playerDead: this.isPlayerDead,
+        })) {
+          return
+        }
+
+        this.fireBossVolley(this.bossPhase, this.bossShotIndex++)
+      },
+    })
+  }
+
+  private fireBossVolley(phase: number, shotIndex: number): void {
+    const boss = this.bossPrototype
+    if (!canFireBossVolley({
+      bossExists: boss !== null,
+      bossVisible: boss?.sprite.visible ?? false,
+    }) || !boss || !this.player) {
+      return
+    }
+
+    const aimedAngle = Phaser.Math.Angle.Between(
+      boss.sprite.x,
+      boss.sprite.y,
+      this.player.x,
+      this.player.y,
+    )
+    for (const shot of getBossVolleyShots({ phase, shotIndex, aimedAngle })) {
+      this.spawnBossProjectile(boss.sprite.x, boss.sprite.y, shot.angle, shot.speed)
+    }
+  }
+
+  private spawnBossProjectile(x: number, y: number, angle: number, speed: number): void {
+    const projectile = this.physics.add.sprite(x, y, 'boss-projectile')
+    projectile.body.allowGravity = false
+    const velocity = getBossProjectileVelocity({ angle, speed })
+    projectile.setVelocity(velocity.x, velocity.y)
+    projectile.setDepth(16)
+    projectile.setBlendMode(Phaser.BlendModes.ADD)
+    projectile.setData('spawnedAt', this.time.now)
+    this.bossProjectiles.push(projectile)
+  }
+
   private createAzureCoreFloat(sprite: Phaser.Physics.Arcade.Sprite, spawnY: number): void {
     const floating = enemyActorDefinitions['azure-core'].floating
     if (!floating) return
@@ -1100,6 +1253,12 @@ class GameplayMapScene extends Phaser.Scene {
     if (!this.playerKeys) return false
 
     return this.playerKeys.j.isDown || this.playerKeys.z.isDown
+  }
+
+  private isPlayerCrouching(): boolean {
+    if (!this.playerKeys) return false
+
+    return this.isPlayerGrounded() && (this.playerKeys.down.isDown || this.playerKeys.s.isDown)
   }
 
   private tryStartPlayerAttack(grounded: boolean, facing: PlayerFacingDirection): void {
@@ -1314,6 +1473,76 @@ class GameplayMapScene extends Phaser.Scene {
       hitbox.image.destroy()
     }
     this.activeMeleeHitboxes = []
+  }
+
+  private updateBossProjectiles(): void {
+    if (!shouldUpdateBossProjectiles({ projectileCount: this.bossProjectiles.length })) return
+    if (!this.player) return
+
+    for (const projectile of [...this.bossProjectiles]) {
+      const expired = isBossProjectileExpired({
+        now: this.time.now,
+        spawnedAt: Number(projectile.getData('spawnedAt')),
+      })
+      const outside = isBossProjectileOutOfBounds({
+        x: projectile.x,
+        y: projectile.y,
+        worldWidth: this.stageMap.world.width,
+        worldHeight: this.stageMap.world.height,
+      })
+      const lifecycle = getBossProjectileLifecycleDecision({ outside, expired })
+      if (lifecycle === 'destroy') {
+        this.destroyBossProjectile(projectile)
+        continue
+      }
+      if (lifecycle === 'fade') {
+        this.fadeBossProjectile(projectile)
+        continue
+      }
+
+      const hit = getBossProjectileHitDecision({
+        playerDead: this.isPlayerDead,
+        playerCrouching: this.isPlayerCrouching(),
+        distanceToPlayer: Phaser.Math.Distance.Between(
+          this.player.x,
+          this.player.y,
+          projectile.x,
+          projectile.y,
+        ),
+      })
+      if (hit === 'blocked-by-crouch') {
+        this.destroyBossProjectile(projectile)
+      } else if (hit === 'hit') {
+        this.destroyBossProjectile(projectile)
+        this.applyPlayerContactDamage(projectile.x)
+      }
+    }
+  }
+
+  private destroyBossProjectile(projectile: BossProjectileRuntime): void {
+    this.bossProjectiles = this.bossProjectiles.filter((candidate) => candidate !== projectile)
+    projectile.destroy()
+  }
+
+  private fadeBossProjectile(projectile: BossProjectileRuntime, durationMs = 220): void {
+    this.bossProjectiles = this.bossProjectiles.filter((candidate) => candidate !== projectile)
+    const body = projectile.body as Phaser.Physics.Arcade.Body | null
+    if (body) {
+      body.enable = false
+    }
+    this.tweens.add({
+      targets: projectile,
+      alpha: 0,
+      scale: projectile.scale * 0.72,
+      duration: durationMs,
+      onComplete: () => projectile.destroy(),
+    })
+  }
+
+  private clearBossProjectiles(): void {
+    for (const projectile of [...this.bossProjectiles]) {
+      this.fadeBossProjectile(projectile, 160)
+    }
   }
 
   private processEnemyHitsForHitbox(hitbox: ActiveMeleeHitbox): void {
@@ -1571,6 +1800,18 @@ class GameplayMapScene extends Phaser.Scene {
     this.isHomingAttacking = false
     this.homingTarget = null
     this.homingReticle?.setVisible(false)
+  }
+
+  private emitBossHudPatch(): void {
+    const phase = getBossHudPhaseDisplay({
+      isBossStage: this.isBossStage,
+      bossPhase: this.bossPhase,
+    })
+    this.emitHudPatch({
+      bossPhase: phase.phase,
+      bossPhaseMax: phase.max,
+      statusMessageKey: 'status.bossPattern',
+    })
   }
 
   private updatePlayerMovement(): void {

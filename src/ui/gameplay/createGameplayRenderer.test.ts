@@ -34,6 +34,7 @@ import {
 import { calculateStageRank } from '../../domain/gameplay/stageResult'
 import { createGameplayRendererConfig } from './createGameplayRenderer'
 import rendererSource from './createGameplayRenderer.ts?raw'
+import Phaser from 'phaser'
 
 vi.mock('phaser', () => {
   class Scene {
@@ -64,8 +65,10 @@ vi.mock('phaser', () => {
           KeyCodes: {
             LEFT: 37,
             RIGHT: 39,
+            DOWN: 40,
             A: 65,
             D: 68,
+            S: 83,
             J: 74,
             SPACE: 32,
             UP: 38,
@@ -82,6 +85,10 @@ vi.mock('phaser', () => {
         },
       },
       Math: {
+        Angle: {
+          Between: (x1: number, y1: number, x2: number, y2: number) =>
+            Math.atan2(y2 - y1, x2 - x1),
+        },
         Distance: {
           Between: (x1: number, y1: number, x2: number, y2: number) =>
             Math.hypot(x2 - x1, y2 - y1),
@@ -151,8 +158,10 @@ type CameraFadeCall = {
 type FakePlayerKeys = {
   left: { isDown: boolean }
   right: { isDown: boolean }
+  down: { isDown: boolean }
   a: { isDown: boolean }
   d: { isDown: boolean }
+  s: { isDown: boolean }
   j: { isDown: boolean }
   space: { isDown: boolean }
   up: { isDown: boolean }
@@ -377,6 +386,7 @@ function createFakeArcadeSprite(input: { x: number; y: number; texture: string }
     visible: true,
     destroyed: false,
     immovable: false,
+    data: {} as Record<string, unknown>,
     displaySize: { width: 0, height: 0 },
     refreshedBody: false,
     playCalls: [] as Array<{ key: string; ignoreIfPlaying?: boolean }>,
@@ -475,6 +485,11 @@ function createFakeArcadeSprite(input: { x: number; y: number; texture: string }
       sprite.blendMode = value
       return sprite
     },
+    setData: (key: string, value: unknown) => {
+      sprite.data[key] = value
+      return sprite
+    },
+    getData: (key: string) => sprite.data[key],
     setImmovable: (value: boolean) => {
       sprite.immovable = value
       return sprite
@@ -734,6 +749,11 @@ function createSceneRuntime(input: {
     time: {
       now: number
       delayedCall: (delay: number, callback: () => void) => void
+      addEvent: (config: {
+        delay: number
+        loop?: boolean
+        callback: () => void
+      }) => { remove: (dispatchCallback?: boolean) => void }
     }
     tweens: {
       add: (config: TweenCall) => void
@@ -744,8 +764,10 @@ function createSceneRuntime(input: {
         addKeys: (mapping: Record<string, number>) => {
           left: { isDown: boolean }
           right: { isDown: boolean }
+          down: { isDown: boolean }
           a: { isDown: boolean }
           d: { isDown: boolean }
+          s: { isDown: boolean }
           j: { isDown: boolean }
           space: { isDown: boolean }
           up: { isDown: boolean }
@@ -778,8 +800,10 @@ function createSceneRuntime(input: {
   const playerKeys: FakePlayerKeys = {
     left: { isDown: false },
     right: { isDown: false },
+    down: { isDown: false },
     a: { isDown: false },
     d: { isDown: false },
+    s: { isDown: false },
     j: { isDown: false },
     space: { isDown: false },
     up: { isDown: false },
@@ -924,6 +948,11 @@ function createSceneRuntime(input: {
     delayedCall: (delay, callback) => {
       delayedCalls.push({ delay, callback })
     },
+    addEvent: ({ callback }) => ({
+      remove: () => {
+        void callback
+      },
+    }),
   }
 
   scene.tweens = {
@@ -942,6 +971,7 @@ function createSceneRuntime(input: {
   }
 
   return {
+    Phaser,
     stage,
     config,
     scene,
@@ -955,6 +985,7 @@ function createSceneRuntime(input: {
     staticImageCalls,
     tileSprites,
     generateTextureCalls,
+    generatedTextures: generateTextureCalls,
     tweenCalls,
     images,
     ellipses,
@@ -2234,6 +2265,39 @@ describe('createGameplayRendererConfig', () => {
       width: enemyActorDefinitions['azure-core'].generatedTexture?.width,
       height: enemyActorDefinitions['azure-core'].generatedTexture?.height,
     })
+  })
+
+  it('creates a boss projectile texture for boss stages', () => {
+    const stage = getGameplayStageMap('1-6')
+    expect(stage).toBeDefined()
+    if (!stage) return
+    const runtime = createSceneRuntime({ stage })
+
+    runtime.scene.preload()
+    runtime.scene.create()
+
+    expect(runtime.generatedTextures).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ key: 'boss-projectile', width: 28, height: 28 }),
+      ]),
+    )
+  })
+
+  it('starts boss pattern with an immediate phase zero aimed projectile', () => {
+    const stage = getGameplayStageMap('1-6')
+    expect(stage).toBeDefined()
+    if (!stage) return
+    const runtime = createSceneRuntime({ stage })
+
+    runtime.scene.preload()
+    runtime.scene.create()
+
+    const projectile = runtime.sprites.find((sprite) => sprite.texture === 'boss-projectile')
+    expect(projectile).toBeDefined()
+    expect(projectile?.depth).toBe(16)
+    expect(projectile?.blendMode).toBe(runtime.Phaser.BlendModes.ADD)
+    expect(projectile?.body.allowGravity).toBe(false)
+    expect(projectile?.velocityX).not.toBe(0)
   })
 
   it('creates the generated Homing reticle texture from prototype dimensions', () => {
