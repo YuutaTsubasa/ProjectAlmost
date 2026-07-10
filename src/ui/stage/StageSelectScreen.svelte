@@ -7,7 +7,8 @@
     type LocalizeData,
   } from '../../domain/data/localize/localize'
   import type { StageCatalog, StageData } from '../../domain/data/stages/stageTypes'
-  import type { WorldCatalog, WorldData } from '../../domain/data/worlds/worldTypes'
+  import type { StageId, WorldCatalog, WorldData } from '../../domain/data/worlds/worldTypes'
+  import type { StageProgressionOptionState } from '../../domain/progression/stageProgression'
   import {
     mapGamepadControlIntents,
     mapKeyboardControlIntent,
@@ -23,6 +24,7 @@
     locale?: LocaleCode
     selectedWorldIndex: number
     selectedStageIndex: number
+    stageProgressionOptions?: readonly StageProgressionOptionState<StageId>[]
     onControlIntent: (intent: ControlIntent) => void
     onSelectStage: (index: number) => void
     onConfirmStage: () => void
@@ -36,6 +38,7 @@
     locale = 'en',
     selectedWorldIndex,
     selectedStageIndex,
+    stageProgressionOptions: receivedStageProgressionOptions = [],
     onControlIntent,
     onSelectStage,
     onConfirmStage,
@@ -53,6 +56,10 @@
   const selectedWorld = $derived((orderedWorlds[selectedWorldIndex] ?? orderedWorlds[0]) as WorldData)
   const stageOptions = $derived(selectedWorld.stageIds.map((stageId) => stages.items[stageId]))
   const selectedStage = $derived((stageOptions[selectedStageIndex] ?? stageOptions[0]) as StageData)
+  const progressionByStageId = $derived(
+    new Map(receivedStageProgressionOptions.map((option) => [option.stageId, option])),
+  )
+  const selectedStageProgression = $derived(stageProgression(selectedStage.id))
 
   function text(key: LocalizationKey): string {
     return resolveLocalizedText(localizeData, locale, key)
@@ -74,7 +81,24 @@
     return stage.previewBackgroundAssetRef ?? stage.previewAssetRef
   }
 
+  function stageProgression(stageId: StageId): StageProgressionOptionState<StageId> {
+    return progressionByStageId.get(stageId) ?? {
+      stageId,
+      unlocked: true,
+      cleared: false,
+      record: undefined,
+    }
+  }
+
+  function isLiveStage(index: number): boolean {
+    const nextStage = stageOptions[index + 1]
+    return stageProgression(stageOptions[index].id).unlocked
+      && Boolean(nextStage)
+      && stageProgression(nextStage.id).unlocked
+  }
+
   function handleConfirmStage() {
+    if (!selectedStageProgression.unlocked) return
     confirming = true
     onConfirmStage()
     if (confirmResetTimer) window.clearTimeout(confirmResetTimer)
@@ -176,6 +200,9 @@
           alt=""
           draggable="false"
         />
+        {#if !selectedStageProgression.unlocked}
+          <div class="stage-preview-lock">{text('common.locked')}</div>
+        {/if}
       </div>
     </div>
     <strong class="stage-title">{worldTitle(selectedWorld)} {selectedStage.id}</strong>
@@ -184,22 +211,24 @@
     <div class="stage-rule"></div>
 
     <span class="stage-label">{text(stageSelectRefs.objective)}</span>
-    <p class="stage-objective">{stageObjective(selectedStage)}</p>
+    <p class="stage-objective">
+      {selectedStageProgression.unlocked ? stageObjective(selectedStage) : text('common.locked')}
+    </p>
 
     <span class="stage-label">{text(stageSelectRefs.collectibles)}</span>
     <div class="stage-collectible">
       <span class="coin-mark" aria-hidden="true">I</span>
-      <b>0 <small>/ {selectedStage.collectibleCount}</small></b>
+      <b>{selectedStageProgression.record?.maxCoins ?? 0} <small>/ {selectedStage.collectibleCount}</small></b>
     </div>
 
     <div class="stage-stats">
       <div>
         <span class="stage-label">{text(stageSelectRefs.bestTime)}</span>
-        <b>{text(stageSelectRefs.recordUnavailable)}</b>
+        <b>{selectedStageProgression.record?.bestTime ?? text(stageSelectRefs.recordUnavailable)}</b>
       </div>
       <div>
         <span class="stage-label">{text(stageSelectRefs.rank)}</span>
-        <b>{text(stageSelectRefs.recordUnavailable)}</b>
+        <b>{selectedStageProgression.record?.bestRank ?? text(stageSelectRefs.recordUnavailable)}</b>
       </div>
     </div>
 
@@ -211,8 +240,13 @@
       </div>
     </div>
 
-    <button class="stage-deploy" type="button" onclick={handleConfirmStage}>
-      <span>{text(stageSelectRefs.deploy)}</span>
+    <button
+      class="stage-deploy"
+      type="button"
+      disabled={!selectedStageProgression.unlocked || confirming}
+      onclick={handleConfirmStage}
+    >
+      <span>{selectedStageProgression.unlocked ? text(stageSelectRefs.deploy) : text('common.locked')}</span>
       <b aria-hidden="true">›</b>
     </button>
   </aside>
@@ -233,6 +267,9 @@
       <button
         class:active={index === selectedStageIndex}
         class:boss={stage.isBoss}
+        class:locked={!stageProgression(stage.id).unlocked}
+        class:cleared={stageProgression(stage.id).cleared}
+        class:live={isLiveStage(index)}
         class="stage-node"
         style={`left:${stage.nodePosition.x}%;top:${stage.nodePosition.y}%;--node-index:${index}`}
         type="button"
@@ -244,9 +281,10 @@
         }}
       >
         <i aria-hidden="true"></i>
-        <b>{stage.id}</b>
+        <b>{stageProgression(stage.id).unlocked ? stage.id : '◆'}</b>
         <span><strong>{stage.id}</strong>{stageSubtitle(stage)}</span>
       </button>
+      <!-- class:live={stageProgression(stage.id).unlocked && stageProgression(stageOptions[index + 1].id).unlocked} -->
     {/each}
   </div>
 

@@ -44,6 +44,7 @@ export type CommonLocalizationKey =
   | 'common.cancel'
   | 'common.delete'
   | 'common.warning'
+  | 'common.locked'
 
 export type LanguageLocalizationKey = `language.${LocaleCode}`
 
@@ -223,6 +224,7 @@ const catalog: LocalizedTextCatalog = {
     'common.cancel': 'Cancel',
     'common.delete': 'Delete',
     'common.warning': 'Warning',
+    'common.locked': 'Locked',
     'title.prompt.pressAnyButton': 'Press Any Button',
     'title.menu.start': 'Start Game',
     'title.menu.settings': 'Settings',
@@ -379,6 +381,7 @@ const catalog: LocalizedTextCatalog = {
     'common.cancel': 'キャンセル',
     'common.delete': '削除',
     'common.warning': '警告',
+    'common.locked': 'ロック中',
     'title.prompt.pressAnyButton': 'いずれかのボタンを押してください',
     'title.menu.start': 'ゲーム開始',
     'title.menu.settings': '設定',
@@ -535,6 +538,7 @@ const catalog: LocalizedTextCatalog = {
     'common.cancel': '取消',
     'common.delete': '刪除',
     'common.warning': '警告',
+    'common.locked': '未解鎖',
     'title.prompt.pressAnyButton': '按下任意按鈕',
     'title.menu.start': '開始遊戲',
     'title.menu.settings': '設定',
@@ -691,6 +695,7 @@ const catalog: LocalizedTextCatalog = {
     'common.cancel': '취소',
     'common.delete': '삭제',
     'common.warning': '경고',
+    'common.locked': '잠김',
     'title.prompt.pressAnyButton': '아무 버튼이나 누르세요',
     'title.menu.start': '게임 시작',
     'title.menu.settings': '설정',

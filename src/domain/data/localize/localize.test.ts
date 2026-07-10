@@ -621,6 +621,13 @@ describe('localize', () => {
       expect(resolveLocalizedText(localize, locale, 'language.en')).toBe(expectedByLocale[locale].english)
     }
   })
+
+  it('includes localized locked copy for every supported locale', () => {
+    expect(resolveLocalizedText(localize, 'en', 'common.locked')).toBe('Locked')
+    expect(resolveLocalizedText(localize, 'ja', 'common.locked')).toBe('ロック中')
+    expect(resolveLocalizedText(localize, 'zhHant', 'common.locked')).toBe('未解鎖')
+    expect(resolveLocalizedText(localize, 'ko', 'common.locked')).toBe('잠김')
+  })
 })
 
 describe('resolveLocalizedText', () => {
