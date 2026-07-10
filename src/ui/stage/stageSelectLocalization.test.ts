@@ -1,6 +1,5 @@
-import { readFileSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
+import appCss from '../../app.css?raw'
 import stageSelectSource from './StageSelectScreen.svelte?raw'
 
 describe('Stage Select localization contract', () => {
@@ -90,16 +89,11 @@ describe('Stage Select progression UI contract', () => {
 })
 
 describe('Stage Select progression visual styles', () => {
-  it('defines locked preview, disabled deploy, live path, locked node, and cleared node classes', async () => {
-    const dynamicCssModule = await import('../../app.css?raw')
-    const css = ((dynamicCssModule as { default?: string }).default?.trim())
-      ? (dynamicCssModule as { default?: string }).default
-      : readFileSync(fileURLToPath(new URL('../../app.css', import.meta.url)), 'utf8')
-
-    expect(css).toContain('.stage-preview-lock')
-    expect(css).toContain('.stage-deploy:disabled')
-    expect(css).toContain('.stage-paths line.live')
-    expect(css).toContain('.stage-node.locked')
-    expect(css).toContain('.stage-node.cleared')
+  it('defines locked preview, disabled deploy, live path, locked node, and cleared node classes', () => {
+    expect(appCss).toContain('.stage-preview-lock')
+    expect(appCss).toContain('.stage-deploy:disabled')
+    expect(appCss).toContain('.stage-paths line.live')
+    expect(appCss).toContain('.stage-node.locked')
+    expect(appCss).toContain('.stage-node.cleared')
   })
 })
