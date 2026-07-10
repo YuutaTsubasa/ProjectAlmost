@@ -83,7 +83,7 @@ export function getNextStageId<TStageId extends string>(
   stageOrder: readonly TStageId[],
   stageId: string,
 ): TStageId | null {
-  const stageIndex = stageOrder.indexOf(stageId)
+  const stageIndex = findStageIndex(stageOrder, stageId)
   if (stageIndex < 0) return null
 
   return stageOrder[stageIndex + 1] ?? null
@@ -97,11 +97,18 @@ export function isStageUnlocked<TStageId extends string>(
 ): boolean {
   if (debugUnlockAllStages) return true
 
-  const stageIndex = stageOrder.indexOf(stageId)
+  const stageIndex = findStageIndex(stageOrder, stageId)
   if (stageIndex < 0) return false
   if (stageIndex === 0) return true
 
   return hasClearedRecord(records[stageOrder[stageIndex - 1]])
+}
+
+function findStageIndex<TStageId extends string>(
+  stageOrder: readonly TStageId[],
+  stageId: string,
+): number {
+  return stageOrder.findIndex((value) => value === stageId)
 }
 
 export function projectStageProgressionOptions<TStageId extends string>(
