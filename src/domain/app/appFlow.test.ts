@@ -13,6 +13,7 @@ import {
   moveStageSelection,
   moveTitleMenuSelection,
   moveWorldSelection,
+  openNextGameplayStage,
   openSettingsDeleteConfirm,
   openTitleMenu,
   getGameplayScreenKey,
@@ -267,6 +268,41 @@ describe('confirmSelectedStage', () => {
     const state = createInitialAppState()
 
     expect(confirmSelectedStage(state)).toBe(state)
+  })
+})
+
+describe('stage unlock guarded app flow', () => {
+  it('does not open gameplay when the selected stage is locked', () => {
+    const state = {
+      screen: { type: 'stage-select', selectedWorldIndex: 1, worldId: 'world02', selectedStageIndex: 4 },
+    } as const
+
+    expect(confirmSelectedStage(state, { isStageUnlocked: () => false })).toBe(state)
+  })
+
+  it('opens gameplay when the selected stage is unlocked', () => {
+    const state = {
+      screen: { type: 'stage-select', selectedWorldIndex: 1, worldId: 'world02', selectedStageIndex: 4 },
+    } as const
+
+    expect(confirmSelectedStage(state, { isStageUnlocked: (stageId) => stageId === '2-5' })).toEqual({
+      screen: { type: 'gameplay', stageId: '2-5', runId: 0 },
+    })
+  })
+
+  it('opens the next gameplay stage when it exists and is unlocked', () => {
+    const state = { screen: { type: 'gameplay', stageId: '1-1', runId: 3 } } as const
+
+    expect(openNextGameplayStage(state, '1-2', { isStageUnlocked: (stageId) => stageId === '1-2' })).toEqual({
+      screen: { type: 'gameplay', stageId: '1-2', runId: 4 },
+    })
+  })
+
+  it('does not open the next gameplay stage when it is locked or missing', () => {
+    const state = { screen: { type: 'gameplay', stageId: '1-1', runId: 3 } } as const
+
+    expect(openNextGameplayStage(state, '1-2', { isStageUnlocked: () => false })).toBe(state)
+    expect(openNextGameplayStage(state, null, { isStageUnlocked: () => true })).toBe(state)
   })
 })
 

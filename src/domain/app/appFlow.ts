@@ -61,6 +61,14 @@ function getStageIdForSelection(screen: StageSelectScreen): StageId {
   return `${worldNumber}-${stageNumber}` as StageId
 }
 
+export type StageUnlockGuard = {
+  isStageUnlocked?: (stageId: StageId) => boolean
+}
+
+function canOpenStage(stageId: StageId, guard: StageUnlockGuard | undefined): boolean {
+  return guard?.isStageUnlocked ? guard.isStageUnlocked(stageId) : true
+}
+
 export function createInitialAppState(): AppState {
   return {
     screen: { type: 'title-intro' },
@@ -172,11 +180,27 @@ export function selectStage(state: AppState, selectedStageIndex: number): AppSta
   }
 }
 
-export function confirmSelectedStage(state: AppState): AppState {
+export function confirmSelectedStage(state: AppState, guard?: StageUnlockGuard): AppState {
   if (state.screen.type !== 'stage-select') return state
 
+  const stageId = getStageIdForSelection(state.screen)
+  if (!canOpenStage(stageId, guard)) return state
+
   return {
-    screen: { type: 'gameplay', stageId: getStageIdForSelection(state.screen), runId: 0 },
+    screen: { type: 'gameplay', stageId, runId: 0 },
+  }
+}
+
+export function openNextGameplayStage(
+  state: AppState,
+  nextStageId: StageId | null,
+  guard?: StageUnlockGuard,
+): AppState {
+  if (state.screen.type !== 'gameplay' || !nextStageId) return state
+  if (!canOpenStage(nextStageId, guard)) return state
+
+  return {
+    screen: { type: 'gameplay', stageId: nextStageId, runId: state.screen.runId + 1 },
   }
 }
 
