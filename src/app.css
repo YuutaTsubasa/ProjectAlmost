@@ -1660,9 +1660,11 @@ input {
 }
 
 .stage-paths line.live {
-  stroke: #000;
+  stroke: rgba(255, 255, 255, 0.92);
   stroke-dasharray: none;
-  filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.62));
+  filter:
+    drop-shadow(0 0 4px rgba(142, 201, 255, 0.42))
+    drop-shadow(0 0 1px rgba(255, 255, 255, 0.72));
 }
 
 .stage-node {
