@@ -383,7 +383,7 @@ import { getGameplayHudStageDisplay } from './gameplayHudDisplay'
         result={hudState.result}
         {stageDisplay}
         selectedAction={selectedResultAction}
-        {nextStageAvailable}
+        nextStageAvailable={nextStageAvailable}
         onSelectAction={(index) => (selectedResultAction = index)}
         onAction={handleResultAction}
       />

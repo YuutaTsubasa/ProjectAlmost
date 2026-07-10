@@ -7,7 +7,7 @@ describe('GameplayScreen result wiring', () => {
     expect(gameplayScreenSource).toContain('<StageResult')
     expect(gameplayScreenSource).toContain('result={hudState.result}')
     expect(gameplayScreenSource).toContain('selectedAction={selectedResultAction}')
-    expect(gameplayScreenSource).toContain('{nextStageAvailable}')
+    expect(gameplayScreenSource).toContain('nextStageAvailable={nextStageAvailable}')
     expect(gameplayScreenSource).toContain('onSelectAction={(index) => (selectedResultAction = index)}')
     expect(gameplayScreenSource).toContain('onAction={handleResultAction}')
   })
@@ -35,7 +35,7 @@ describe('GameplayScreen result wiring', () => {
 })
 
 it('keeps Result HUD next-stage lock treatment driven by nextStageAvailable', () => {
-  expect(gameplayScreenSource).toContain('{nextStageAvailable}')
+  expect(gameplayScreenSource).toContain('nextStageAvailable={nextStageAvailable}')
   expect(gameplayScreenSource).toContain('resolveStageResultActionIntent')
-  expect(gameplayScreenSource).toContain('{nextStageAvailable}')
+  expect(gameplayScreenSource).toContain('nextStageAvailable={nextStageAvailable}')
 })
