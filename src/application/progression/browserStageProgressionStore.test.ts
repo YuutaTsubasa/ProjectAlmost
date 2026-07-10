@@ -4,6 +4,9 @@ import {
   deleteStageProgressionSave,
   loadStageProgressionSave,
   recordStageClear,
+  getDebugUnlockAllStages,
+  resolveDebugUnlockAllStages,
+  STAGE_PROGRESSION_DEBUG_UNLOCK_KEY,
   STAGE_PROGRESSION_SAVE_KEY,
   type ProgressionStorage,
 } from './browserStageProgressionStore'
@@ -169,5 +172,70 @@ describe('browser stage progression store', () => {
 
     expect(deleteStageProgressionSave(storage)).toEqual(createEmptySave())
     expect(storage.snapshot()).toEqual({})
+  })
+})
+
+describe('browser stage progression debug unlock', () => {
+  it('enables debug unlock from development query params and persists the flag', () => {
+    const storage = createMemoryStorage()
+
+    expect(resolveDebugUnlockAllStages({
+      storage,
+      search: '?debugUnlock=1',
+      dev: true,
+    })).toBe(true)
+    expect(storage.snapshot()[STAGE_PROGRESSION_DEBUG_UNLOCK_KEY]).toBe('true')
+  })
+
+  it('also supports the debugUnlockStages query param', () => {
+    const storage = createMemoryStorage()
+
+    expect(resolveDebugUnlockAllStages({
+      storage,
+      search: '?debugUnlockStages=true',
+      dev: true,
+    })).toBe(true)
+    expect(storage.snapshot()[STAGE_PROGRESSION_DEBUG_UNLOCK_KEY]).toBe('true')
+  })
+
+  it('clears debug unlock from development falsey query params', () => {
+    const storage = createMemoryStorage({ [STAGE_PROGRESSION_DEBUG_UNLOCK_KEY]: 'true' })
+
+    expect(resolveDebugUnlockAllStages({
+      storage,
+      search: '?debugUnlock=false',
+      dev: true,
+    })).toBe(false)
+    expect(storage.snapshot()[STAGE_PROGRESSION_DEBUG_UNLOCK_KEY]).toBeUndefined()
+  })
+
+  it('loads the persisted debug unlock flag when no query override is present', () => {
+    const storage = createMemoryStorage({ [STAGE_PROGRESSION_DEBUG_UNLOCK_KEY]: 'true' })
+
+    expect(getDebugUnlockAllStages(storage, true)).toBe(true)
+    expect(resolveDebugUnlockAllStages({ storage, search: '', dev: true })).toBe(true)
+  })
+
+  it('ignores debug unlock outside development mode', () => {
+    const storage = createMemoryStorage({ [STAGE_PROGRESSION_DEBUG_UNLOCK_KEY]: 'true' })
+
+    expect(getDebugUnlockAllStages(storage, false)).toBe(false)
+    expect(resolveDebugUnlockAllStages({
+      storage,
+      search: '?debugUnlock=1',
+      dev: false,
+    })).toBe(false)
+    expect(storage.snapshot()[STAGE_PROGRESSION_DEBUG_UNLOCK_KEY]).toBe('true')
+  })
+
+  it('delete save preserves the debug unlock flag', () => {
+    const storage = createMemoryStorage({
+      [STAGE_PROGRESSION_SAVE_KEY]: JSON.stringify(createEmptySave()),
+      [STAGE_PROGRESSION_DEBUG_UNLOCK_KEY]: 'true',
+    })
+
+    deleteStageProgressionSave(storage)
+
+    expect(storage.snapshot()).toEqual({ [STAGE_PROGRESSION_DEBUG_UNLOCK_KEY]: 'true' })
   })
 })

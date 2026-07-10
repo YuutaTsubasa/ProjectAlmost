@@ -8,10 +8,17 @@ import {
 import type { StageId } from '../../domain/data/worlds/worldTypes'
 
 export const STAGE_PROGRESSION_SAVE_KEY = 'project-almost:save'
+export const STAGE_PROGRESSION_DEBUG_UNLOCK_KEY = 'project-almost:debugUnlockAllStages'
 
 export type StageProgressionSave = {
   version: 1
   stageRecords: Partial<Record<StageId, StageRecord>>
+}
+
+export type DebugUnlockResolutionInput = {
+  storage: ProgressionStorage
+  search: string
+  dev: boolean
 }
 
 export type ProgressionStorage = {
@@ -112,4 +119,33 @@ export function recordStageClear(
 export function deleteStageProgressionSave(storage: ProgressionStorage): StageProgressionSave {
   storage.removeItem(STAGE_PROGRESSION_SAVE_KEY)
   return createEmptySave()
+}
+
+function parseDebugUnlockQuery(search: string): boolean | null {
+  const params = new URLSearchParams(search)
+  const rawValue = params.get('debugUnlock') ?? params.get('debugUnlockStages')
+  if (rawValue === '1' || rawValue === 'true') return true
+  if (rawValue === '0' || rawValue === 'false') return false
+
+  return null
+}
+
+export function getDebugUnlockAllStages(storage: ProgressionStorage, dev: boolean): boolean {
+  return dev && storage.getItem(STAGE_PROGRESSION_DEBUG_UNLOCK_KEY) === 'true'
+}
+
+export function resolveDebugUnlockAllStages(input: DebugUnlockResolutionInput): boolean {
+  if (!input.dev) return false
+
+  const queryValue = parseDebugUnlockQuery(input.search)
+  if (queryValue === true) {
+    input.storage.setItem(STAGE_PROGRESSION_DEBUG_UNLOCK_KEY, 'true')
+    return true
+  }
+  if (queryValue === false) {
+    input.storage.removeItem(STAGE_PROGRESSION_DEBUG_UNLOCK_KEY)
+    return false
+  }
+
+  return getDebugUnlockAllStages(input.storage, true)
 }
