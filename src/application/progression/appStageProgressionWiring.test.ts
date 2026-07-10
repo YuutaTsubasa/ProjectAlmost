@@ -23,3 +23,29 @@ describe('App stage progression record wiring', () => {
     expect(source).toContain('stageProgressionSave = deleteStageProgressionSave(localStorage)')
   })
 })
+
+describe('App stage unlock projection wiring', () => {
+  it('loads development debug unlock state on mount', () => {
+    expect(source).toContain('resolveDebugUnlockAllStages')
+    expect(source).toContain('window.location.search')
+    expect(source).toContain('import.meta.env.DEV')
+  })
+
+  it('derives stage unlock state from catalog order, records, and debug unlock', () => {
+    expect(source).toContain('const stageOrder = $derived(projectData.stages.order)')
+    expect(source).toContain('isStageUnlocked(')
+    expect(source).toContain('stageProgressionSave.stageRecords')
+    expect(source).toContain('debugUnlockAllStages')
+  })
+
+  it('guards direct stage confirm and control-intent confirm with unlock state', () => {
+    expect(source).toContain('function isGameplayStageUnlocked')
+    expect(source).toContain('confirmSelectedStage(appState, { isStageUnlocked: isGameplayStageUnlocked })')
+    expect(source).toContain('applyControlIntent({ ...appState, settings, isStageUnlocked: isGameplayStageUnlocked }, intent)')
+  })
+
+  it('prepares guarded next-stage navigation for Result HUD integration', () => {
+    expect(source).toContain('getNextStageId(stageOrder, appState.screen.stageId)')
+    expect(source).toContain('openNextGameplayStage(appState, nextStageId, { isStageUnlocked: isGameplayStageUnlocked })')
+  })
+})

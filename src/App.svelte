@@ -8,6 +8,7 @@
     confirmSelectedWorld,
     createInitialAppState,
     getGameplayScreenKey,
+    openNextGameplayStage,
     retryGameplayStage,
     returnFromGameplayToStageSelect,
     selectStage,
@@ -21,41 +22,58 @@
     type BrowserAudioController,
   } from './application/audio/browserAudioController'
   import { applyControlIntent } from './application/input/appControls'
+  import {
+    createEmptySave,
+    deleteStageProgressionSave,
+    loadStageProgressionSave,
+    recordStageClear,
+    resolveDebugUnlockAllStages,
+  } from './application/progression/browserStageProgressionStore'
   import { createProjectIdentity } from './domain/app/projectIdentity'
   import { projectData } from './domain/data/projectData'
-import type { LocaleCode } from './domain/data/localize/localize'
-import { getGameplayStageMap } from './domain/gameplay/gameplayStageMaps'
-import type { ControlIntent } from './domain/input/controlIntents'
-import {
-  createEmptySave,
-  deleteStageProgressionSave,
-  loadStageProgressionSave,
-  recordStageClear,
-} from './application/progression/browserStageProgressionStore'
-import {
-  adjustSettingsRow,
-  parseStoredSettings,
-  resetSettings,
-  SETTINGS_STORAGE_KEY,
-  type GameSettings,
-} from './domain/settings/settings'
-import type { StageClearResult } from './domain/progression/stageProgression'
-import ResolutionFrame from './ui/layout/ResolutionFrame.svelte'
-import GameplayScreen from './ui/gameplay/GameplayScreen.svelte'
-import SettingsScreen from './ui/settings/SettingsScreen.svelte'
-import StageSelectScreen from './ui/stage/StageSelectScreen.svelte'
-import TitleScreen from './ui/title/TitleScreen.svelte'
+  import type { LocaleCode } from './domain/data/localize/localize'
+  import { getGameplayStageMap } from './domain/gameplay/gameplayStageMaps'
+  import type { ControlIntent } from './domain/input/controlIntents'
+  import type { StageId } from './domain/data/worlds/worldTypes'
+  import {
+    getNextStageId,
+    isStageUnlocked,
+    type StageClearResult,
+  } from './domain/progression/stageProgression'
+  import {
+    adjustSettingsRow,
+    parseStoredSettings,
+    resetSettings,
+    SETTINGS_STORAGE_KEY,
+    type GameSettings,
+  } from './domain/settings/settings'
+  import ResolutionFrame from './ui/layout/ResolutionFrame.svelte'
+  import GameplayScreen from './ui/gameplay/GameplayScreen.svelte'
+  import SettingsScreen from './ui/settings/SettingsScreen.svelte'
+  import StageSelectScreen from './ui/stage/StageSelectScreen.svelte'
+  import TitleScreen from './ui/title/TitleScreen.svelte'
   import WorldSelectScreen from './ui/world/WorldSelectScreen.svelte'
 
   let settings: GameSettings = $state(parseStoredSettings(null, false))
   let appState = $state(createInitialAppState())
   let stageProgressionSave = $state(createEmptySave())
+  let debugUnlockAllStages = $state(false)
   let audio: BrowserAudioController | undefined
   const identity = createProjectIdentity()
   const locale: LocaleCode = $derived(settings.language)
+  const stageOrder = $derived(projectData.stages.order)
   const gameplayStageMap = $derived(
     appState.screen.type === 'gameplay' ? getGameplayStageMap(appState.screen.stageId) : undefined,
   )
+
+  function isGameplayStageUnlocked(stageId: StageId): boolean {
+    return isStageUnlocked(
+      stageOrder,
+      stageProgressionSave.stageRecords,
+      stageId,
+      debugUnlockAllStages,
+    )
+  }
 
   function syncMusicForCurrentState() {
     audio?.execute(createMusicCommand(appState.screen, settings))
@@ -102,7 +120,7 @@ import TitleScreen from './ui/title/TitleScreen.svelte'
   function handleControlIntent(intent: ControlIntent) {
     const previousScreen = appState.screen
     const previousFullscreen = settings.fullscreen
-    const nextState = applyControlIntent({ ...appState, settings }, intent)
+    const nextState = applyControlIntent({ ...appState, settings, isStageUnlocked: isGameplayStageUnlocked }, intent)
     appState = { screen: nextState.screen }
 
     if (nextState.settings) {
@@ -151,8 +169,20 @@ import TitleScreen from './ui/title/TitleScreen.svelte'
 
   function handleConfirmStage() {
     playUiSfx('confirm')
-    appState = confirmSelectedStage(appState)
+    appState = confirmSelectedStage(appState, { isStageUnlocked: isGameplayStageUnlocked })
     syncMusicForCurrentState()
+  }
+
+  function handleNextGameplayStage() {
+    if (appState.screen.type !== 'gameplay') return
+
+    const nextStageId = getNextStageId(stageOrder, appState.screen.stageId)
+    const previousScreen = appState.screen
+    appState = openNextGameplayStage(appState, nextStageId, { isStageUnlocked: isGameplayStageUnlocked })
+    if (appState.screen !== previousScreen) {
+      playUiSfx('confirm')
+      syncMusicForCurrentState()
+    }
   }
 
   function handleRetryGameplayStage() {
@@ -250,6 +280,11 @@ import TitleScreen from './ui/title/TitleScreen.svelte'
   }
 
   onMount(() => {
+    debugUnlockAllStages = resolveDebugUnlockAllStages({
+      storage: localStorage,
+      search: window.location.search,
+      dev: import.meta.env.DEV,
+    })
     stageProgressionSave = loadStageProgressionSave(localStorage)
     audio = createBrowserAudioController()
     syncSettings(parseStoredSettings(localStorage.getItem(SETTINGS_STORAGE_KEY), actualFullscreen()))
