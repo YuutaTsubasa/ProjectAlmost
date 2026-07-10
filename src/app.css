@@ -1462,6 +1462,22 @@ input {
   transform: translateX(-50%);
 }
 
+.stage-preview-lock {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  background:
+    linear-gradient(135deg, rgba(11, 23, 48, 0.62), rgba(19, 57, 96, 0.58)),
+    rgba(8, 18, 36, 0.42);
+  color: #fff;
+  font-size: min(1.05cqw, 20px);
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
 .stage-title,
 .stage-subtitle {
   display: block;
@@ -1607,6 +1623,14 @@ input {
   text-transform: uppercase;
 }
 
+.stage-deploy:disabled {
+  border-color: rgba(87, 104, 128, 0.34);
+  background: linear-gradient(100deg, rgba(77, 91, 112, 0.72), rgba(104, 119, 139, 0.64));
+  box-shadow: none;
+  color: rgba(255, 255, 255, 0.72);
+  cursor: default;
+}
+
 .stage-deploy span {
   font-size: min(0.8cqw, 16px);
   font-weight: 800;
@@ -1633,6 +1657,12 @@ input {
   stroke-width: 0.6;
   stroke-dasharray: 0.8 1.4;
   filter: drop-shadow(0 0 3px rgba(47, 111, 208, 0.8));
+}
+
+.stage-paths line.live {
+  stroke: rgba(255, 230, 160, 0.92);
+  stroke-dasharray: none;
+  filter: drop-shadow(0 0 5px rgba(255, 230, 160, 0.65));
 }
 
 .stage-node {
@@ -1664,6 +1694,22 @@ input {
 
 .stage-node.boss i {
   background: linear-gradient(145deg, #ffb5a8, #d83a32 52%, #791314);
+}
+
+.stage-node.locked {
+  color: rgba(255, 255, 255, 0.82);
+  filter: drop-shadow(0 6px 10px rgba(18, 26, 43, 0.42)) grayscale(0.25);
+}
+
+.stage-node.locked i {
+  border-color: rgba(255, 255, 255, 0.62);
+  background: linear-gradient(145deg, rgba(119, 136, 158, 0.92), rgba(53, 65, 86, 0.94));
+}
+
+.stage-node.cleared i {
+  box-shadow:
+    0 0 0 2px rgba(255, 230, 160, 0.72),
+    0 0 18px rgba(255, 230, 160, 0.48);
 }
 
 .stage-node b {

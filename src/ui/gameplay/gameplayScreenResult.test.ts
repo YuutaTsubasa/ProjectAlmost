@@ -33,3 +33,9 @@ describe('GameplayScreen result wiring', () => {
     expect(gameplayScreenSource).not.toContain('applyGameplayResultAction')
   })
 })
+
+it('keeps Result HUD next-stage lock treatment driven by nextStageAvailable', () => {
+  expect(gameplayScreenSource).toContain('{nextStageAvailable}')
+  expect(gameplayScreenSource).toContain('resolveStageResultActionIntent')
+  expect(gameplayScreenSource).toContain('{nextStageAvailable}')
+})

@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import stageSelectSource from './StageSelectScreen.svelte?raw'
 
@@ -84,5 +86,16 @@ describe('Stage Select progression UI contract', () => {
     expect(stageSelectSource).toContain(
       'selectedStageProgression.record?.bestRank ?? text(stageSelectRefs.recordUnavailable)',
     )
+  })
+})
+
+describe('Stage Select progression visual styles', () => {
+  it('defines locked preview, disabled deploy, live path, locked node, and cleared node classes', () => {
+    const css = readFileSync(fileURLToPath(new URL('../../app.css', import.meta.url)), 'utf8')
+    expect(css).toContain('.stage-preview-lock')
+    expect(css).toContain('.stage-deploy:disabled')
+    expect(css).toContain('.stage-paths line.live')
+    expect(css).toContain('.stage-node.locked')
+    expect(css).toContain('.stage-node.cleared')
   })
 })
