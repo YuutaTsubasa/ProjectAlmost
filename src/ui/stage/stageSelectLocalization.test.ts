@@ -57,10 +57,11 @@ describe('Stage Select progression UI contract', () => {
   })
 
   it('keeps deploy and double-click inert for locked stages', () => {
-    expect(stageSelectSource).toContain('if (!selectedStageProgression.unlocked) return')
+    expect(stageSelectSource).toContain('if (!stageProgressionState.unlocked) return')
     expect(stageSelectSource).toContain('disabled={!selectedStageProgression.unlocked || confirming}')
     expect(stageSelectSource).toContain('onSelectStage(index)')
-    expect(stageSelectSource).toContain('handleConfirmStage()')
+    expect(stageSelectSource).toContain('handleConfirmStage(selectedStageProgression)')
+    expect(stageSelectSource).toContain('handleConfirmStage(stageProgression(stage.id))')
   })
 
   it('renders cleared records from the progression option state', () => {

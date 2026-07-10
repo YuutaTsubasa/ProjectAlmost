@@ -97,8 +97,8 @@
       && stageProgression(nextStage.id).unlocked
   }
 
-  function handleConfirmStage() {
-    if (!selectedStageProgression.unlocked) return
+  function handleConfirmStage(stageProgressionState: StageProgressionOptionState<StageId>) {
+    if (!stageProgressionState.unlocked) return
     confirming = true
     onConfirmStage()
     if (confirmResetTimer) window.clearTimeout(confirmResetTimer)
@@ -244,7 +244,7 @@
       class="stage-deploy"
       type="button"
       disabled={!selectedStageProgression.unlocked || confirming}
-      onclick={handleConfirmStage}
+      onclick={() => handleConfirmStage(selectedStageProgression)}
     >
       <span>{selectedStageProgression.unlocked ? text(stageSelectRefs.deploy) : text('common.locked')}</span>
       <b aria-hidden="true">›</b>
@@ -277,7 +277,7 @@
         onclick={() => onSelectStage(index)}
         ondblclick={() => {
           onSelectStage(index)
-          handleConfirmStage()
+          handleConfirmStage(stageProgression(stage.id))
         }}
       >
         <i aria-hidden="true"></i>
