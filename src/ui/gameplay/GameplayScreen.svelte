@@ -48,6 +48,7 @@ import { getGameplayHudStageDisplay } from './gameplayHudDisplay'
     localeCodes: readonly LocaleCode[]
     onRetry: () => void
     onStageSelect: () => void
+    onNextStage: () => void
     onSettingsChange: (settings: GameSettings, fullscreenChanged: boolean) => void
     onConfirmSettingsDelete: () => void
     onStageClear: (result: StageClearResult) => void
@@ -61,6 +62,7 @@ import { getGameplayHudStageDisplay } from './gameplayHudDisplay'
     localeCodes,
     onRetry,
     onStageSelect,
+    onNextStage,
     onSettingsChange,
     onConfirmSettingsDelete,
     onStageClear,
@@ -94,6 +96,11 @@ import { getGameplayHudStageDisplay } from './gameplayHudDisplay'
 
     if (action === 'stage-select') {
       onStageSelect()
+      return
+    }
+
+    if (action === 'next-stage') {
+      onNextStage()
     }
   }
 

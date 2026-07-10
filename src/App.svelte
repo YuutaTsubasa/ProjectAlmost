@@ -362,6 +362,7 @@
           localeCodes={projectData.localize.languages.map((language) => language.code)}
           onRetry={handleRetryGameplayStage}
           onStageSelect={handleReturnFromGameplayToStageSelect}
+          onNextStage={handleNextGameplayStage}
           onSettingsChange={handleGameplaySettingsChange}
           onConfirmSettingsDelete={handleConfirmDelete}
           onStageClear={handleStageClear}

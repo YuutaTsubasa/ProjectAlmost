@@ -47,5 +47,6 @@ describe('App stage unlock projection wiring', () => {
   it('prepares guarded next-stage navigation for Result HUD integration', () => {
     expect(source).toContain('getNextStageId(stageOrder, appState.screen.stageId)')
     expect(source).toContain('openNextGameplayStage(appState, nextStageId, { isStageUnlocked: isGameplayStageUnlocked })')
+    expect(source).toContain('onNextStage={handleNextGameplayStage}')
   })
 })

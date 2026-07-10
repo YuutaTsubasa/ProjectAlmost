@@ -13,6 +13,8 @@ describe('GameplayScreen result wiring', () => {
   })
 
   it('keeps result callback dispatch in GameplayScreen instead of the domain app flow', () => {
+    expect(gameplayScreenSource).toContain('onNextStage: () => void')
+    expect(gameplayScreenSource).toContain('onNextStage,')
     expect(gameplayScreenSource).toContain('mapKeyboardControlIntent')
     expect(gameplayScreenSource).toContain('mapGamepadControlIntents')
     expect(gameplayScreenSource).toContain('<svelte:window onkeydown={handleKeydown} />')
@@ -20,6 +22,8 @@ describe('GameplayScreen result wiring', () => {
     expect(gameplayScreenSource).toContain('resolveStageResultActionIntent')
     expect(gameplayScreenSource).toContain("if (action === 'retry')")
     expect(gameplayScreenSource).toContain("if (action === 'stage-select')")
+    expect(gameplayScreenSource).toContain("if (action === 'next-stage')")
+    expect(gameplayScreenSource).toContain('onNextStage()')
     expect(gameplayScreenSource).not.toContain('applyGameplayResultAction')
   })
 })
