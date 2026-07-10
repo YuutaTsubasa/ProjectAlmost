@@ -84,7 +84,7 @@
   function stageProgression(stageId: StageId): StageProgressionOptionState<StageId> {
     return progressionByStageId.get(stageId) ?? {
       stageId,
-      unlocked: true,
+      unlocked: false,
       cleared: false,
       record: undefined,
     }
@@ -255,6 +255,7 @@
     <svg class="stage-paths" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
       {#each stageOptions.slice(0, -1) as stage, index}
         <line
+          class:live={isLiveStage(index)}
           x1={stage.nodePosition.x}
           y1={stage.nodePosition.y}
           x2={stageOptions[index + 1].nodePosition.x}
@@ -269,7 +270,6 @@
         class:boss={stage.isBoss}
         class:locked={!stageProgression(stage.id).unlocked}
         class:cleared={stageProgression(stage.id).cleared}
-        class:live={isLiveStage(index)}
         class="stage-node"
         style={`left:${stage.nodePosition.x}%;top:${stage.nodePosition.y}%;--node-index:${index}`}
         type="button"
@@ -279,12 +279,11 @@
           onSelectStage(index)
           handleConfirmStage(stageProgression(stage.id))
         }}
-      >
+        >
         <i aria-hidden="true"></i>
         <b>{stageProgression(stage.id).unlocked ? stage.id : '◆'}</b>
         <span><strong>{stage.id}</strong>{stageSubtitle(stage)}</span>
       </button>
-      <!-- class:live={stageProgression(stage.id).unlocked && stageProgression(stageOptions[index + 1].id).unlocked} -->
     {/each}
   </div>
 

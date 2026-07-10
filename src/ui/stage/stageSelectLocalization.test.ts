@@ -38,6 +38,7 @@ describe('Stage Select progression UI contract', () => {
     expect(stageSelectSource).toContain('stageProgressionOptions')
     expect(stageSelectSource).toContain('progressionByStageId')
     expect(stageSelectSource).toContain('selectedStageProgression')
+    expect(stageSelectSource).toContain('unlocked: false')
   })
 
   it('renders localized locked state without hiding the selected preview', () => {
@@ -50,8 +51,19 @@ describe('Stage Select progression UI contract', () => {
   it('renders locked, cleared, and live route markers like the Prototype state surface', () => {
     expect(stageSelectSource).toContain('class:locked={!stageProgression(stage.id).unlocked}')
     expect(stageSelectSource).toContain('class:cleared={stageProgression(stage.id).cleared}')
-    expect(stageSelectSource).toContain(
+    expect(stageSelectSource).toContain('<line')
+    expect(stageSelectSource).toContain('class:live={isLiveStage(index)}')
+    expect(stageSelectSource).not.toContain(
       'class:live={stageProgression(stage.id).unlocked && stageProgression(stageOptions[index + 1].id).unlocked}',
+    )
+    expect(stageSelectSource).not.toContain(
+      '<button\n        class:active={index === selectedStageIndex}\n        class:boss={stage.isBoss}\n        class:locked={!stageProgression(stage.id).unlocked}\n        class:cleared={stageProgression(stage.id).cleared}\n        class:live={isLiveStage(index)}\n        class="stage-node"',
+    )
+    expect(stageSelectSource).toContain(
+      '<button\n        class:active={index === selectedStageIndex}\n        class:boss={stage.isBoss}\n        class:locked={!stageProgression(stage.id).unlocked}\n        class:cleared={stageProgression(stage.id).cleared}\n        class="stage-node"',
+    )
+    expect(stageSelectSource).not.toContain(
+      '<!-- class:live={stageProgression(stage.id).unlocked && stageProgression(stageOptions[index + 1].id).unlocked} -->',
     )
     expect(stageSelectSource).toContain("{stageProgression(stage.id).unlocked ? stage.id : '◆'}")
   })
