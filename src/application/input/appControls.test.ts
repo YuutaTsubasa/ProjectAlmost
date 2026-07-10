@@ -74,6 +74,27 @@ describe('applyControlIntent', () => {
     })
   })
 
+  it('respects the stage unlock guard when confirming stage select through controls', () => {
+    const lockedState = {
+      screen: { type: 'stage-select', selectedWorldIndex: 2, worldId: 'world03', selectedStageIndex: 0 },
+      isStageUnlocked: () => false,
+    } as const
+
+    expect(applyControlIntent(lockedState, 'confirm')).toBe(lockedState)
+
+    expect(
+      applyControlIntent(
+        {
+          ...lockedState,
+          isStageUnlocked: (stageId) => stageId === '3-1',
+        },
+        'confirm',
+      ),
+    ).toEqual({
+      screen: { type: 'gameplay', stageId: '3-1', runId: 0 },
+    })
+  })
+
   it('moves, adjusts, activates, and backs out of settings', () => {
     const settingsState = {
       screen: { type: 'settings', selectedItemIndex: 0, deleteConfirm: null },

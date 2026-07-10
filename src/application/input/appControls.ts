@@ -17,12 +17,14 @@ import {
   type AppState,
 } from '../../domain/app/appFlow'
 import { projectData } from '../../domain/data/projectData'
+import type { StageId } from '../../domain/data/worlds/worldTypes'
 import type { ControlIntent } from '../../domain/input/controlIntents'
 import type { GameSettings } from '../../domain/settings/settings'
 import { applySettingsControlIntent } from './settingsControls'
 
 export type SettingsStateCarrier = AppState & {
   settings?: GameSettings
+  isStageUnlocked?: (stageId: StageId) => boolean
 }
 
 export function applyControlIntent(state: SettingsStateCarrier, intent: ControlIntent): SettingsStateCarrier {
@@ -94,7 +96,7 @@ export function applyControlIntent(state: SettingsStateCarrier, intent: ControlI
   if (state.screen.type === 'stage-select') {
     if (intent === 'move-right' || intent === 'move-down') return moveStageSelection(state, 1)
     if (intent === 'move-left' || intent === 'move-up') return moveStageSelection(state, -1)
-    if (intent === 'confirm') return confirmSelectedStage(state)
+    if (intent === 'confirm') return confirmSelectedStage(state, { isStageUnlocked: state.isStageUnlocked })
     if (intent === 'back') return backFromStageSelect(state)
 
     return state
