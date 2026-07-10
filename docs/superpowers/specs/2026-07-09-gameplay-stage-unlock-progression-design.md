@@ -120,6 +120,7 @@ Prototype parity requirements:
 - locked objective/deploy text uses localized locked copy.
 - deploy click and double-click do nothing for locked stages.
 - path lines are visually active only when both adjacent stages are unlocked.
+- visually active unlocked path lines use black strokes to match the current Prototype parity target.
 - cleared stage nodes get a cleared visual state.
 - selected locked stages still update the detail panel so the player can inspect the stage position and title.
 

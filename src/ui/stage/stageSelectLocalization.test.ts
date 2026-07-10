@@ -93,6 +93,7 @@ describe('Stage Select progression visual styles', () => {
     expect(appCss).toContain('.stage-preview-lock')
     expect(appCss).toContain('.stage-deploy:disabled')
     expect(appCss).toContain('.stage-paths line.live')
+    expect(appCss).toContain('stroke: #000;')
     expect(appCss).toContain('.stage-node.locked')
     expect(appCss).toContain('.stage-node.cleared')
   })
