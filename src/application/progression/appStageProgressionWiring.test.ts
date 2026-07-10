@@ -49,4 +49,10 @@ describe('App stage unlock projection wiring', () => {
     expect(source).toContain('openNextGameplayStage(appState, nextStageId, { isStageUnlocked: isGameplayStageUnlocked })')
     expect(source).toContain('onNextStage={handleNextGameplayStage}')
   })
+
+  it('projects next-stage availability from progression state into GameplayScreen', () => {
+    expect(source).toContain("appState.screen.type === 'gameplay' ? getNextStageId(stageOrder, appState.screen.stageId) : null")
+    expect(source).toContain('isGameplayStageUnlocked(nextGameplayStageId)')
+    expect(source).toContain('nextStageAvailable={nextGameplayStageAvailable}')
+  })
 })

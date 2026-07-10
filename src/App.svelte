@@ -65,6 +65,12 @@
   const gameplayStageMap = $derived(
     appState.screen.type === 'gameplay' ? getGameplayStageMap(appState.screen.stageId) : undefined,
   )
+  const nextGameplayStageId = $derived(
+    appState.screen.type === 'gameplay' ? getNextStageId(stageOrder, appState.screen.stageId) : null,
+  )
+  const nextGameplayStageAvailable = $derived(
+    nextGameplayStageId !== null && isGameplayStageUnlocked(nextGameplayStageId),
+  )
 
   function isGameplayStageUnlocked(stageId: StageId): boolean {
     return isStageUnlocked(
@@ -360,6 +366,7 @@
           localizeData={projectData.localize}
           {locale}
           localeCodes={projectData.localize.languages.map((language) => language.code)}
+          nextStageAvailable={nextGameplayStageAvailable}
           onRetry={handleRetryGameplayStage}
           onStageSelect={handleReturnFromGameplayToStageSelect}
           onNextStage={handleNextGameplayStage}

@@ -46,6 +46,7 @@ import { getGameplayHudStageDisplay } from './gameplayHudDisplay'
     localizeData: LocalizeData
     locale: LocaleCode
     localeCodes: readonly LocaleCode[]
+    nextStageAvailable: boolean
     onRetry: () => void
     onStageSelect: () => void
     onNextStage: () => void
@@ -60,6 +61,7 @@ import { getGameplayHudStageDisplay } from './gameplayHudDisplay'
     localizeData,
     locale,
     localeCodes,
+    nextStageAvailable,
     onRetry,
     onStageSelect,
     onNextStage,
@@ -82,7 +84,6 @@ import { getGameplayHudStageDisplay } from './gameplayHudDisplay'
   let selectedResultAction = $state(0)
   let previousGamepadSnapshot: GamepadControlSnapshot | null = null
   const stageDisplay = $derived(getGameplayHudStageDisplay(stage.id))
-  const nextStageAvailable = false
 
   $effect(() => {
     hudState = createInitialGameplayHudState(stage)

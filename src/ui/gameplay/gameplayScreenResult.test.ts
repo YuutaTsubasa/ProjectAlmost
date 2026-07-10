@@ -12,6 +12,12 @@ describe('GameplayScreen result wiring', () => {
     expect(gameplayScreenSource).toContain('onAction={handleResultAction}')
   })
 
+  it('accepts nextStageAvailable from the parent instead of hard-coding result navigation off', () => {
+    expect(gameplayScreenSource).toContain('nextStageAvailable: boolean')
+    expect(gameplayScreenSource).toContain('nextStageAvailable,')
+    expect(gameplayScreenSource).not.toContain('const nextStageAvailable = false')
+  })
+
   it('keeps result callback dispatch in GameplayScreen instead of the domain app flow', () => {
     expect(gameplayScreenSource).toContain('onNextStage: () => void')
     expect(gameplayScreenSource).toContain('onNextStage,')
