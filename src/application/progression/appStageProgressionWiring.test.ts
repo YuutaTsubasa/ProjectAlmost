@@ -56,3 +56,16 @@ describe('App stage unlock projection wiring', () => {
     expect(source).toContain('nextStageAvailable={nextGameplayStageAvailable}')
   })
 })
+
+describe('App stage select progression UI wiring', () => {
+  it('projects stage progression options for Stage Select from records and debug unlock', () => {
+    expect(source).toContain('projectStageProgressionOptions(')
+    expect(source).toContain('stageProgressionSave.stageRecords')
+    expect(source).toContain('debugUnlockAllStages')
+    expect(source).toContain('const stageProgressionOptions = $derived(')
+  })
+
+  it('passes projected stage progression options into StageSelectScreen', () => {
+    expect(source).toContain('stageProgressionOptions={stageProgressionOptions}')
+  })
+})

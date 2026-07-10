@@ -38,6 +38,7 @@
   import {
     getNextStageId,
     isStageUnlocked,
+    projectStageProgressionOptions,
     type StageClearResult,
   } from './domain/progression/stageProgression'
   import {
@@ -62,6 +63,13 @@
   const identity = createProjectIdentity()
   const locale: LocaleCode = $derived(settings.language)
   const stageOrder = $derived(projectData.stages.order)
+  const stageProgressionOptions = $derived(
+    projectStageProgressionOptions(
+      stageOrder,
+      stageProgressionSave.stageRecords,
+      debugUnlockAllStages,
+    ),
+  )
   const gameplayStageMap = $derived(
     appState.screen.type === 'gameplay' ? getGameplayStageMap(appState.screen.stageId) : undefined,
   )
@@ -353,6 +361,7 @@
         locale={locale}
         selectedWorldIndex={appState.screen.selectedWorldIndex}
         selectedStageIndex={appState.screen.selectedStageIndex}
+        stageProgressionOptions={stageProgressionOptions}
         onControlIntent={handleControlIntent}
         onSelectStage={handleSelectStage}
         onConfirmStage={handleConfirmStage}
