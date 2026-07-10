@@ -67,3 +67,56 @@ export function mergeStageClearRecord<TStageId extends string>(
     [stageId]: nextRecord,
   }
 }
+
+export type StageProgressionOptionState<TStageId extends string> = {
+  stageId: TStageId
+  unlocked: boolean
+  cleared: boolean
+  record: StageRecord | undefined
+}
+
+function hasClearedRecord(record: StageRecord | undefined): boolean {
+  return record?.cleared === true
+}
+
+export function getNextStageId<TStageId extends string>(
+  stageOrder: readonly TStageId[],
+  stageId: string,
+): TStageId | null {
+  const stageIndex = stageOrder.indexOf(stageId)
+  if (stageIndex < 0) return null
+
+  return stageOrder[stageIndex + 1] ?? null
+}
+
+export function isStageUnlocked<TStageId extends string>(
+  stageOrder: readonly TStageId[],
+  records: StageRecordMap<TStageId>,
+  stageId: string,
+  debugUnlockAllStages: boolean,
+): boolean {
+  if (debugUnlockAllStages) return true
+
+  const stageIndex = stageOrder.indexOf(stageId)
+  if (stageIndex < 0) return false
+  if (stageIndex === 0) return true
+
+  return hasClearedRecord(records[stageOrder[stageIndex - 1]])
+}
+
+export function projectStageProgressionOptions<TStageId extends string>(
+  stageOrder: readonly TStageId[],
+  records: StageRecordMap<TStageId>,
+  debugUnlockAllStages: boolean,
+): StageProgressionOptionState<TStageId>[] {
+  return stageOrder.map((stageId) => {
+    const record = records[stageId]
+
+    return {
+      stageId,
+      unlocked: isStageUnlocked(stageOrder, records, stageId, debugUnlockAllStages),
+      cleared: hasClearedRecord(record),
+      record,
+    }
+  })
+}

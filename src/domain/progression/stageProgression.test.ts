@@ -3,6 +3,9 @@ import {
   createEmptyStageRecords,
   mergeStageClearRecord,
   parseStageTimeMs,
+  getNextStageId,
+  isStageUnlocked,
+  projectStageProgressionOptions,
   type StageRecordMap,
 } from './stageProgression'
 
@@ -98,5 +101,53 @@ describe('stage progression record rules', () => {
         bestTime: '01:10.00',
       },
     })
+  })
+})
+
+describe('stage unlock projection', () => {
+  const order: readonly string[] = ['1-1', '1-2', '1-3']
+  const clearRecord = {
+    cleared: true,
+    bestTimeMs: 10_000,
+    bestTime: '00:10.00',
+    bestRank: 'A',
+    maxCoins: 3,
+  } as const
+
+  it('unlocks the first ordered stage for empty records', () => {
+    expect(isStageUnlocked(order, {}, '1-1', false)).toBe(true)
+  })
+
+  it('locks later stages until the previous ordered stage is cleared', () => {
+    expect(isStageUnlocked(order, {}, '1-2', false)).toBe(false)
+    expect(isStageUnlocked(order, { '1-1': clearRecord }, '1-2', false)).toBe(true)
+    expect(isStageUnlocked(order, { '1-2': clearRecord }, '1-3', false)).toBe(true)
+  })
+
+  it('does not unlock unknown stages unless debug unlock is enabled', () => {
+    expect(isStageUnlocked(order, { '1-1': clearRecord }, '9-9', false)).toBe(false)
+    expect(isStageUnlocked(order, {}, '9-9', true)).toBe(true)
+  })
+
+  it('looks up the next stage from catalog order', () => {
+    expect(getNextStageId(order, '1-1')).toBe('1-2')
+    expect(getNextStageId(order, '1-3')).toBeNull()
+    expect(getNextStageId(order, '9-9')).toBeNull()
+  })
+
+  it('projects locked, unlocked, and cleared option states', () => {
+    expect(projectStageProgressionOptions(order, { '1-1': clearRecord }, false)).toEqual([
+      { stageId: '1-1', unlocked: true, cleared: true, record: clearRecord },
+      { stageId: '1-2', unlocked: true, cleared: false, record: undefined },
+      { stageId: '1-3', unlocked: false, cleared: false, record: undefined },
+    ])
+  })
+
+  it('projects every ordered stage as unlocked when debug unlock is enabled', () => {
+    expect(projectStageProgressionOptions(order, {}, true).map((state) => state.unlocked)).toEqual([
+      true,
+      true,
+      true,
+    ])
   })
 })
