@@ -18,6 +18,13 @@ describe('App stage progression record wiring', () => {
     expect(source).toContain('onStageClear={handleStageClear}')
   })
 
+  it('routes gameplay sfx actions through the existing audio command path', () => {
+    expect(source).toContain("import type { GameplaySfxAction } from './domain/audio/audioPolicy'")
+    expect(source).toContain('function playGameplaySfx(action: GameplaySfxAction)')
+    expect(source).toContain('audio?.execute(createSfxCommand(action, settings))')
+    expect(source).toContain('onGameplaySfx={playGameplaySfx}')
+  })
+
   it('deletes progression save when settings delete is confirmed', () => {
     expect(source).toContain('deleteStageProgressionSave(localStorage)')
     expect(source).toContain('stageProgressionSave = deleteStageProgressionSave(localStorage)')

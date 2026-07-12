@@ -27,17 +27,18 @@
     type GamepadControlSnapshot,
   } from '../../domain/input/controlIntents'
   import type { GameSettings } from '../../domain/settings/settings'
-import {
-  resolveStageResultActionIntent,
-  type StageResultActionType,
-  type StageResultControlIntent,
-} from '../../domain/gameplay/stageResult'
-import type { StageClearResult } from '../../domain/progression/stageProgression'
-import GameplayHud from './GameplayHud.svelte'
-import PauseMenu from './PauseMenu.svelte'
-import StageResult from './StageResult.svelte'
-import { createGameplayRenderer } from './createGameplayRenderer'
-import { getGameplayHudStageDisplay } from './gameplayHudDisplay'
+  import type { GameplaySfxAction } from '../../domain/audio/audioPolicy'
+  import {
+    resolveStageResultActionIntent,
+    type StageResultActionType,
+    type StageResultControlIntent,
+  } from '../../domain/gameplay/stageResult'
+  import type { StageClearResult } from '../../domain/progression/stageProgression'
+  import GameplayHud from './GameplayHud.svelte'
+  import PauseMenu from './PauseMenu.svelte'
+  import StageResult from './StageResult.svelte'
+  import { createGameplayRenderer } from './createGameplayRenderer'
+  import { getGameplayHudStageDisplay } from './gameplayHudDisplay'
   import SettingsPanel from '../settings/SettingsPanel.svelte'
 
   type Props = {
@@ -53,6 +54,7 @@ import { getGameplayHudStageDisplay } from './gameplayHudDisplay'
     onSettingsChange: (settings: GameSettings, fullscreenChanged: boolean) => void
     onConfirmSettingsDelete: () => void
     onStageClear: (result: StageClearResult) => void
+    onGameplaySfx: (action: GameplaySfxAction) => void
   }
 
   let {
@@ -68,6 +70,7 @@ import { getGameplayHudStageDisplay } from './gameplayHudDisplay'
     onSettingsChange,
     onConfirmSettingsDelete,
     onStageClear,
+    onGameplaySfx,
   }: Props = $props()
 
   let container: HTMLDivElement
@@ -287,6 +290,7 @@ import { getGameplayHudStageDisplay } from './gameplayHudDisplay'
       onHudUpdate: (patch) => {
         hudState = applyGameplayHudPatch(hudState ?? createInitialGameplayHudState(stage), patch)
       },
+      onSfx: onGameplaySfx,
     })
 
     function pollGamepad() {

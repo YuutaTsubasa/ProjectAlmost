@@ -9,6 +9,13 @@ describe('GameplayScreen stage clear callback wiring', () => {
     expect(source).toContain('onStageClear,')
   })
 
+  it('passes gameplay sfx callback into the renderer config', () => {
+    expect(source).toContain("import type { GameplaySfxAction } from '../../domain/audio/audioPolicy'")
+    expect(source).toContain('onGameplaySfx: (action: GameplaySfxAction) => void')
+    expect(source).toContain('onGameplaySfx,')
+    expect(source).toContain('onSfx: onGameplaySfx')
+  })
+
   it('emits the clear result once per mounted gameplay run', () => {
     expect(source).toContain('let stageClearRecorded = $state(false)')
     expect(source).toContain('if (!hudState?.result || stageClearRecorded) return')

@@ -1,4 +1,5 @@
 import Phaser from 'phaser'
+import type { GameplaySfxAction } from '../../domain/audio/audioPolicy'
 import {
   enemyActorDefinitions,
   enemyDefeatPresentation,
@@ -158,6 +159,7 @@ type GameplayRendererInput = {
   parent: HTMLElement
   stage: GameplayStageMap
   onHudUpdate?: (patch: GameplayHudPatch) => void
+  onSfx?: (action: GameplaySfxAction) => void
 }
 
 export type GameplayRendererController = {
@@ -224,7 +226,7 @@ const checkpointActivatedTint = 0xfff0a8
 
 class GameplayMapScene extends Phaser.Scene {
   private readonly stageMap: GameplayStageMap
-  private readonly onHudUpdate?: (patch: GameplayHudPatch) => void
+  private readonly options: Pick<GameplayRendererInput, 'onHudUpdate' | 'onSfx'>
   private backgroundLayers: BackgroundRuntimeLayer[] = []
   private terrainLayer: Phaser.Tilemaps.TilemapLayer | null = null
   private enemies: EnemyRuntime[] = []
@@ -277,11 +279,12 @@ class GameplayMapScene extends Phaser.Scene {
   private stageCleared = false
   private gameplayElapsedMs = 0
   private gameplayStartGateState: GameplayStartGateState = createInitialGameplayStartGateState()
+  private readonly armorStepSfxLastPlayedAt = new WeakMap<Phaser.Physics.Arcade.Sprite, number>()
 
-  constructor(stage: GameplayStageMap, onHudUpdate?: (patch: GameplayHudPatch) => void) {
+  constructor(stage: GameplayStageMap, options: Pick<GameplayRendererInput, 'onHudUpdate' | 'onSfx'> = {}) {
     super(`GameplayMapScene:${stage.id}`)
     this.stageMap = stage
-    this.onHudUpdate = onHudUpdate
+    this.options = options
     this.currentRespawnPoint = {
       x: stage.player.spawn.x,
       surfaceY: stage.player.spawn.surfaceY,
@@ -478,7 +481,11 @@ class GameplayMapScene extends Phaser.Scene {
   }
 
   private emitHudPatch(patch: GameplayHudPatch): void {
-    this.onHudUpdate?.(patch)
+    this.options.onHudUpdate?.(patch)
+  }
+
+  private emitGameplaySfx(action: GameplaySfxAction): void {
+    this.options.onSfx?.(action)
   }
 
   private emitHudPositionPatch(): void {
@@ -842,6 +849,7 @@ class GameplayMapScene extends Phaser.Scene {
     if (checkpoint.activated) return
 
     this.activeCheckpointIndex = index
+    this.emitGameplaySfx('checkpoint-activated')
     this.emitHudPatch({
       activeCheckpointIndex: this.activeCheckpointIndex,
       checkpointsReached: this.getReachedCheckpointCount(),
@@ -870,6 +878,7 @@ class GameplayMapScene extends Phaser.Scene {
     if (coin.collected) return
 
     coin.collected = true
+    this.emitGameplaySfx('coin-collected')
     this.collectedCoins += 1
     this.emitHudPatch({ coins: this.collectedCoins })
     this.tweens.killTweensOf(coin.sprite)
@@ -1045,6 +1054,7 @@ class GameplayMapScene extends Phaser.Scene {
 
     const clearState = getStageClearState()
     this.stageCleared = clearState.stageCleared
+    this.emitGameplaySfx('goal-opened')
     this.isAttacking = clearState.attacking
     this.isHomingAttacking = clearState.homingAttacking
     this.attackReady = clearState.attackReady
@@ -1758,6 +1768,7 @@ class GameplayMapScene extends Phaser.Scene {
     }
 
     enemy.defeated = true
+    this.emitGameplaySfx('player-hit')
     this.enemiesDefeated += 1
     this.emitHudPatch({
       enemiesDefeated: this.enemiesDefeated,
@@ -1813,6 +1824,7 @@ class GameplayMapScene extends Phaser.Scene {
     }
 
     this.stopBossPattern('fade')
+    this.emitGameplaySfx('player-hit')
 
     const outcome = getBossHitOutcome({ currentPhase: this.bossPhase })
     this.bossPhase = outcome.nextPhase
@@ -1928,6 +1940,7 @@ class GameplayMapScene extends Phaser.Scene {
 
     const damageOutcome = getPlayerDamageOutcome({ currentHealth: this.playerHealth })
     this.playerHealth = damageOutcome.nextHealth
+    this.emitGameplaySfx('player-hit')
     this.damageTaken += 1
     this.emitHudPatch({
       hp: Math.max(0, this.playerHealth),
@@ -2022,6 +2035,7 @@ class GameplayMapScene extends Phaser.Scene {
 
     const entry = getPlayerDefeatEntryState()
     this.isPlayerDead = entry.dead
+    this.emitGameplaySfx('player-death')
     this.isPlayerHurting = entry.hurting
     this.isPlayerInvulnerable = entry.invulnerable
     this.isAttacking = entry.attacking
@@ -2261,7 +2275,16 @@ class GameplayMapScene extends Phaser.Scene {
 
       enemy.sprite.setVelocityX(enemy.direction * speed)
       enemy.sprite.setFlipX(enemy.direction > 0)
+      this.emitArmorGuardStepSfx(enemy)
     }
+  }
+
+  private emitArmorGuardStepSfx(enemy: EnemyRuntime): void {
+    const lastPlayedAt = this.armorStepSfxLastPlayedAt.get(enemy.sprite) ?? -Infinity
+    if (this.time.now - lastPlayedAt < 420) return
+
+    this.armorStepSfxLastPlayedAt.set(enemy.sprite, this.time.now)
+    this.emitGameplaySfx('armor-guard-step')
   }
 
   private getPlayerFacingSign(): -1 | 1 {
@@ -2366,7 +2389,10 @@ export function createGameplayRendererConfig(
       mode: Phaser.Scale.FIT,
       autoCenter: Phaser.Scale.CENTER_BOTH,
     },
-    scene: [new GameplayMapScene(input.stage, input.onHudUpdate)],
+    scene: [new GameplayMapScene(input.stage, {
+      onHudUpdate: input.onHudUpdate,
+      onSfx: input.onSfx,
+    })],
   }
 }
 

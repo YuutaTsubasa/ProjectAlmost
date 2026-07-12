@@ -4955,3 +4955,19 @@ describe('gameplay renderer pause controller contract', () => {
     expect(rendererSource).not.toContain('pause.stageSelect')
   })
 })
+
+describe('gameplay renderer sfx contract', () => {
+  it('emits typed gameplay sfx actions through the renderer callback boundary', () => {
+    expect(rendererSource).toContain("import type { GameplaySfxAction } from '../../domain/audio/audioPolicy'")
+    expect(rendererSource).toContain('onSfx?: (action: GameplaySfxAction) => void')
+    expect(rendererSource).toContain('private emitGameplaySfx(action: GameplaySfxAction): void')
+    expect(rendererSource).toContain('this.options.onSfx?.(action)')
+    expect(rendererSource).toContain("this.emitGameplaySfx('coin-collected')")
+    expect(rendererSource).toContain("this.emitGameplaySfx('checkpoint-activated')")
+    expect(rendererSource).toContain("this.emitGameplaySfx('goal-opened')")
+    expect(rendererSource).toContain("this.emitGameplaySfx('player-hit')")
+    expect(rendererSource).toContain("this.emitGameplaySfx('player-death')")
+    expect(rendererSource).toContain("this.emitGameplaySfx('armor-guard-step')")
+    expect(rendererSource).not.toContain('projectrun:sfx')
+  })
+})

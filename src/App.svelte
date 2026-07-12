@@ -31,6 +31,7 @@
   } from './application/progression/browserStageProgressionStore'
   import { createProjectIdentity } from './domain/app/projectIdentity'
   import { projectData } from './domain/data/projectData'
+  import type { GameplaySfxAction } from './domain/audio/audioPolicy'
   import type { LocaleCode } from './domain/data/localize/localize'
   import { getGameplayStageMap } from './domain/gameplay/gameplayStageMaps'
   import type { ControlIntent } from './domain/input/controlIntents'
@@ -94,6 +95,10 @@
   }
 
   function playUiSfx(action: 'move' | 'confirm' | 'back') {
+    audio?.execute(createSfxCommand(action, settings))
+  }
+
+  function playGameplaySfx(action: GameplaySfxAction) {
     audio?.execute(createSfxCommand(action, settings))
   }
 
@@ -382,6 +387,7 @@
           onSettingsChange={handleGameplaySettingsChange}
           onConfirmSettingsDelete={handleConfirmDelete}
           onStageClear={handleStageClear}
+          onGameplaySfx={playGameplaySfx}
         />
       {/key}
     {:else if appState.screen.type === 'gameplay'}
