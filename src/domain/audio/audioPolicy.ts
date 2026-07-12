@@ -10,7 +10,7 @@ export type GameplaySfxAction =
   | 'coin-collected'
   | 'player-death'
   | 'checkpoint-activated'
-  | 'armor-guard-step'
+  | 'player-footstep'
   | 'goal-opened'
 export type SfxAction = UiSfxAction | GameplaySfxAction
 
@@ -79,7 +79,7 @@ export function getSfxForAction(action: SfxAction): SfxId {
   if (action === 'coin-collected') return 'coin'
   if (action === 'player-death') return 'death'
   if (action === 'checkpoint-activated') return 'checkpoint'
-  if (action === 'armor-guard-step') return 'armor-step'
+  if (action === 'player-footstep') return 'armor-step'
   if (action === 'goal-opened') return 'goal'
   return 'ui-confirm'
 }

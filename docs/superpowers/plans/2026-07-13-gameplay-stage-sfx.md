@@ -39,7 +39,7 @@ expect(rendererSource).toContain("this.emitGameplaySfx('checkpoint-activated')")
 expect(rendererSource).toContain("this.emitGameplaySfx('goal-opened')")
 expect(rendererSource).toContain("this.emitGameplaySfx('player-hit')")
 expect(rendererSource).toContain("this.emitGameplaySfx('player-death')")
-expect(rendererSource).toContain("this.emitGameplaySfx('armor-guard-step')")
+expect(rendererSource).toContain("this.emitGameplaySfx('player-footstep')")
 expect(rendererSource).not.toContain("projectrun:sfx")
 ```
 

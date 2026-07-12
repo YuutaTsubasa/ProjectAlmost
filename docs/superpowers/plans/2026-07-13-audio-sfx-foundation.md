@@ -53,7 +53,7 @@ expect(getSfxForAction('player-hit')).toBe('hit')
 expect(getSfxForAction('coin-collected')).toBe('coin')
 expect(getSfxForAction('player-death')).toBe('death')
 expect(getSfxForAction('checkpoint-activated')).toBe('checkpoint')
-expect(getSfxForAction('armor-guard-step')).toBe('armor-step')
+expect(getSfxForAction('player-footstep')).toBe('armor-step')
 expect(getSfxForAction('goal-opened')).toBe('goal')
 ```
 
@@ -76,7 +76,7 @@ export type GameplaySfxAction =
   | 'coin-collected'
   | 'player-death'
   | 'checkpoint-activated'
-  | 'armor-guard-step'
+  | 'player-footstep'
   | 'goal-opened'
 export type SfxAction = UiSfxAction | GameplaySfxAction
 ```

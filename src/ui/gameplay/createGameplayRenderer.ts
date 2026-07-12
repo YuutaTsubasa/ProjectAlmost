@@ -80,6 +80,10 @@ import {
   type PlayerBodyPose,
 } from '../../domain/gameplay/playerActor'
 import {
+  RUNNING_FOOTSTEP_INTERVAL_MS,
+  getPlayerMovementFootstepDecision,
+} from '../../domain/gameplay/playerMovementSfx'
+import {
   PLAYER_MAX_HEALTH,
   PLAYER_OUT_OF_BOUNDS_MARGIN,
   canApplyPlayerDamage,
@@ -279,7 +283,8 @@ class GameplayMapScene extends Phaser.Scene {
   private stageCleared = false
   private gameplayElapsedMs = 0
   private gameplayStartGateState: GameplayStartGateState = createInitialGameplayStartGateState()
-  private readonly armorStepSfxLastPlayedAt = new WeakMap<Phaser.Physics.Arcade.Sprite, number>()
+  private wasPlayerGroundedForSfx = true
+  private nextPlayerFootstepSfxAt = 0
 
   constructor(stage: GameplayStageMap, options: Pick<GameplayRendererInput, 'onHudUpdate' | 'onSfx'> = {}) {
     super(`GameplayMapScene:${stage.id}`)
@@ -2126,6 +2131,8 @@ class GameplayMapScene extends Phaser.Scene {
       grounded: true,
       config: playerActorDefinition.jump,
     })
+    this.wasPlayerGroundedForSfx = true
+    this.nextPlayerFootstepSfxAt = 0
     this.playPlayerAnimation(this.player, 'idle')
   }
 
@@ -2192,6 +2199,8 @@ class GameplayMapScene extends Phaser.Scene {
     if (jumpDecision.type !== 'none') {
       this.clearPlayerCrouch()
       this.player.setVelocityY(playerActorDefinition.jump.velocityY)
+      this.emitGameplaySfx('player-footstep')
+      this.nextPlayerFootstepSfxAt = this.time.now + RUNNING_FOOTSTEP_INTERVAL_MS
     }
 
     const decision = getPlayerHorizontalMovementDecision({
@@ -2220,6 +2229,7 @@ class GameplayMapScene extends Phaser.Scene {
     } else if (decision.direction === 'right') {
       this.player.setFlipX(false)
     }
+    this.updatePlayerMovementSfx(grounded, decision.direction !== 'none')
 
     if (this.isHomingAttacking) {
       this.player.setScale(playerActorDefinition.sprites.attack.scale)
@@ -2275,16 +2285,31 @@ class GameplayMapScene extends Phaser.Scene {
 
       enemy.sprite.setVelocityX(enemy.direction * speed)
       enemy.sprite.setFlipX(enemy.direction > 0)
-      this.emitArmorGuardStepSfx(enemy)
     }
   }
 
-  private emitArmorGuardStepSfx(enemy: EnemyRuntime): void {
-    const lastPlayedAt = this.armorStepSfxLastPlayedAt.get(enemy.sprite) ?? -Infinity
-    if (this.time.now - lastPlayedAt < 420) return
+  private updatePlayerMovementSfx(grounded: boolean, moving: boolean): void {
+    if (!this.player) return
 
-    this.armorStepSfxLastPlayedAt.set(enemy.sprite, this.time.now)
-    this.emitGameplaySfx('armor-guard-step')
+    const bodyVelocityX = this.player.body?.velocity?.x
+    const fallbackVelocityX = 'velocityX' in this.player && typeof this.player.velocityX === 'number'
+      ? this.player.velocityX
+      : 0
+    const decision = getPlayerMovementFootstepDecision({
+      now: this.time.now,
+      grounded,
+      wasGrounded: this.wasPlayerGroundedForSfx,
+      moving,
+      velocityX: bodyVelocityX ?? fallbackVelocityX,
+      nextFootstepAt: this.nextPlayerFootstepSfxAt,
+    })
+
+    if (decision.playSfx) {
+      this.emitGameplaySfx('player-footstep')
+    }
+
+    this.wasPlayerGroundedForSfx = decision.wasGrounded
+    this.nextPlayerFootstepSfxAt = decision.nextFootstepAt
   }
 
   private getPlayerFacingSign(): -1 | 1 {

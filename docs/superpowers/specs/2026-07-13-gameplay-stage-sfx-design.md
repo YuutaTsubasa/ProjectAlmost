@@ -46,7 +46,7 @@ type GameplaySfxAction =
   | 'coin-collected'
   | 'player-death'
   | 'checkpoint-activated'
-  | 'armor-guard-step'
+  | 'player-footstep'
   | 'goal-opened'
 ```
 
@@ -70,9 +70,9 @@ Expected mappings:
 - player death transition start -> `player-death`
 - enemy or boss defeat/hit -> `player-hit`
 - `completeStage()` accepted -> `goal-opened`
-- armor guard step cadence -> `armor-guard-step`
+- player jump launch, landing, and grounded running footstep -> `player-footstep`
 
-Armor guard step SFX must be cadence-gated. It should only emit for alive moving armor guards after a minimum interval per guard, so it does not play every update tick.
+Movement SFX must be cadence-gated by a pure domain decision. It should only emit for player foot contact events, not enemy patrol updates or every update tick.
 
 ### Svelte Wiring
 
