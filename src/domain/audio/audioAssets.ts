@@ -18,6 +18,12 @@ export const SFX_ASSETS = {
   'ui-move': '/assets/audio/sfx/ui-move.wav',
   'ui-confirm': '/assets/audio/sfx/ui-confirm.wav',
   'ui-back': '/assets/audio/sfx/ui-back.wav',
+  hit: '/assets/audio/sfx/hit.wav',
+  coin: '/assets/audio/sfx/coin.wav',
+  death: '/assets/audio/sfx/death.wav',
+  checkpoint: '/assets/audio/sfx/checkpoint.wav',
+  'armor-step': '/assets/audio/sfx/armor-step.wav',
+  goal: '/assets/audio/sfx/goal.wav',
 } as const
 
 export type MusicTrackId = keyof typeof MUSIC_ASSETS

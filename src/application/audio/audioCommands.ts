@@ -4,7 +4,7 @@ import {
   computeSfxVolume,
   getMusicForScreen,
   getSfxForAction,
-  type UiSfxAction,
+  type SfxAction,
 } from '../../domain/audio/audioPolicy'
 import type { GameSettings } from '../../domain/settings/settings'
 
@@ -25,7 +25,7 @@ export function createPrepareMusicCommand(track: MusicTrackId): PrepareMusicComm
   return { type: 'prepare-music', track }
 }
 
-export function createSfxCommand(action: UiSfxAction, settings: GameSettings): PlaySfxCommand | null {
+export function createSfxCommand(action: SfxAction, settings: GameSettings): PlaySfxCommand | null {
   const volume = computeSfxVolume(settings)
   if (volume <= 0) return null
 

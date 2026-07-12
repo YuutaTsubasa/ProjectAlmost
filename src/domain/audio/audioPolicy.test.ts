@@ -30,6 +30,12 @@ describe('audio asset manifests', () => {
       'ui-move': '/assets/audio/sfx/ui-move.wav',
       'ui-confirm': '/assets/audio/sfx/ui-confirm.wav',
       'ui-back': '/assets/audio/sfx/ui-back.wav',
+      hit: '/assets/audio/sfx/hit.wav',
+      coin: '/assets/audio/sfx/coin.wav',
+      death: '/assets/audio/sfx/death.wav',
+      checkpoint: '/assets/audio/sfx/checkpoint.wav',
+      'armor-step': '/assets/audio/sfx/armor-step.wav',
+      goal: '/assets/audio/sfx/goal.wav',
     })
   })
 })
@@ -93,5 +99,14 @@ describe('ui sfx policy', () => {
     expect(getSfxForAction('move')).toBe('ui-move')
     expect(getSfxForAction('confirm')).toBe('ui-confirm')
     expect(getSfxForAction('back')).toBe('ui-back')
+  })
+
+  it('maps gameplay actions to prototype gameplay sfx ids', () => {
+    expect(getSfxForAction('player-hit')).toBe('hit')
+    expect(getSfxForAction('coin-collected')).toBe('coin')
+    expect(getSfxForAction('player-death')).toBe('death')
+    expect(getSfxForAction('checkpoint-activated')).toBe('checkpoint')
+    expect(getSfxForAction('armor-guard-step')).toBe('armor-step')
+    expect(getSfxForAction('goal-opened')).toBe('goal')
   })
 })

@@ -5,6 +5,14 @@ import { MUSIC_ASSETS, SFX_ASSETS, type MusicTrackId, type SfxId } from './audio
 export { MUSIC_ASSETS, SFX_ASSETS }
 
 export type UiSfxAction = 'move' | 'confirm' | 'back'
+export type GameplaySfxAction =
+  | 'player-hit'
+  | 'coin-collected'
+  | 'player-death'
+  | 'checkpoint-activated'
+  | 'armor-guard-step'
+  | 'goal-opened'
+export type SfxAction = UiSfxAction | GameplaySfxAction
 
 export type MusicDecision = {
   track: MusicTrackId
@@ -64,8 +72,14 @@ export function getMusicForScreen(screen: AppScreen, settings: GameSettings): Mu
   return { track: 'title', volume: computeMusicVolume(settings) }
 }
 
-export function getSfxForAction(action: UiSfxAction): SfxId {
+export function getSfxForAction(action: SfxAction): SfxId {
   if (action === 'move') return 'ui-move'
   if (action === 'back') return 'ui-back'
+  if (action === 'player-hit') return 'hit'
+  if (action === 'coin-collected') return 'coin'
+  if (action === 'player-death') return 'death'
+  if (action === 'checkpoint-activated') return 'checkpoint'
+  if (action === 'armor-guard-step') return 'armor-step'
+  if (action === 'goal-opened') return 'goal'
   return 'ui-confirm'
 }

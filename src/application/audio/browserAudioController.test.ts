@@ -67,6 +67,12 @@ describe('BrowserAudioController', () => {
       '/assets/audio/sfx/ui-move.wav',
       '/assets/audio/sfx/ui-confirm.wav',
       '/assets/audio/sfx/ui-back.wav',
+      '/assets/audio/sfx/hit.wav',
+      '/assets/audio/sfx/coin.wav',
+      '/assets/audio/sfx/death.wav',
+      '/assets/audio/sfx/checkpoint.wav',
+      '/assets/audio/sfx/armor-step.wav',
+      '/assets/audio/sfx/goal.wav',
     ])
     expect(created[0]).toMatchObject({ id: 'bgm-player', hidden: true, loop: true, volume: 0 })
     expect(appended).toEqual([created[0]])
