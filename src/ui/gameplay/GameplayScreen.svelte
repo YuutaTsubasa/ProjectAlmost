@@ -39,6 +39,7 @@
   import StageResult from './StageResult.svelte'
   import { createGameplayRenderer } from './createGameplayRenderer'
   import { getGameplayHudStageDisplay } from './gameplayHudDisplay'
+  import type { GameplayMusicState } from './gameplayMusicState'
   import SettingsPanel from '../settings/SettingsPanel.svelte'
 
   type Props = {
@@ -55,6 +56,7 @@
     onConfirmSettingsDelete: () => void
     onStageClear: (result: StageClearResult) => void
     onGameplaySfx: (action: GameplaySfxAction) => void
+    onGameplayMusicStateChange: (state: GameplayMusicState) => void
   }
 
   let {
@@ -71,6 +73,7 @@
     onConfirmSettingsDelete,
     onStageClear,
     onGameplaySfx,
+    onGameplayMusicStateChange,
   }: Props = $props()
 
   let container: HTMLDivElement
@@ -87,6 +90,13 @@
   let selectedResultAction = $state(0)
   let previousGamepadSnapshot: GamepadControlSnapshot | null = null
   const stageDisplay = $derived(getGameplayHudStageDisplay(stage.id))
+
+  $effect(() => {
+    onGameplayMusicStateChange({
+      resultVisible: Boolean(hudState?.result),
+      paused: pauseState.mode !== 'playing',
+    })
+  })
 
   $effect(() => {
     hudState = createInitialGameplayHudState(stage)

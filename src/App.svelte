@@ -51,6 +51,8 @@
   } from './domain/settings/settings'
   import ResolutionFrame from './ui/layout/ResolutionFrame.svelte'
   import GameplayScreen from './ui/gameplay/GameplayScreen.svelte'
+  import { initialGameplayMusicState } from './ui/gameplay/gameplayMusicState'
+  import type { GameplayMusicState } from './ui/gameplay/gameplayMusicState'
   import SettingsScreen from './ui/settings/SettingsScreen.svelte'
   import StageSelectScreen from './ui/stage/StageSelectScreen.svelte'
   import TitleScreen from './ui/title/TitleScreen.svelte'
@@ -60,6 +62,7 @@
   let appState = $state(createInitialAppState())
   let stageProgressionSave = $state(createEmptySave())
   let debugUnlockAllStages = $state(false)
+  let gameplayMusicState = $state<GameplayMusicState>(initialGameplayMusicState)
   let audio: BrowserAudioController | undefined
   const identity = createProjectIdentity()
   const locale: LocaleCode = $derived(settings.language)
@@ -90,8 +93,20 @@
     )
   }
 
+  function currentGameplayMusicContext() {
+    if (appState.screen.type !== 'gameplay') return undefined
+    const stage = projectData.stages.items[appState.screen.stageId]
+
+    return {
+      stageId: appState.screen.stageId,
+      isBoss: stage?.isBoss ?? false,
+      resultVisible: gameplayMusicState.resultVisible,
+      paused: gameplayMusicState.paused,
+    }
+  }
+
   function syncMusicForCurrentState() {
-    audio?.execute(createMusicCommand(appState.screen, settings))
+    audio?.execute(createMusicCommand(appState.screen, settings, currentGameplayMusicContext()))
   }
 
   function playUiSfx(action: 'move' | 'confirm' | 'back') {
@@ -100,6 +115,18 @@
 
   function playGameplaySfx(action: GameplaySfxAction) {
     audio?.execute(createSfxCommand(action, settings))
+  }
+
+  function handleGameplayMusicStateChange(state: GameplayMusicState) {
+    if (
+      gameplayMusicState.resultVisible === state.resultVisible &&
+      gameplayMusicState.paused === state.paused
+    ) {
+      return
+    }
+
+    gameplayMusicState = state
+    syncMusicForCurrentState()
   }
 
   function syncSettings(nextSettings: GameSettings) {
@@ -189,6 +216,7 @@
   function handleConfirmStage() {
     playUiSfx('confirm')
     appState = confirmSelectedStage(appState, { isStageUnlocked: isGameplayStageUnlocked })
+    gameplayMusicState = initialGameplayMusicState
     syncMusicForCurrentState()
   }
 
@@ -200,6 +228,7 @@
     appState = openNextGameplayStage(appState, nextStageId, { isStageUnlocked: isGameplayStageUnlocked })
     if (appState.screen !== previousScreen) {
       playUiSfx('confirm')
+      gameplayMusicState = initialGameplayMusicState
       syncMusicForCurrentState()
     }
   }
@@ -207,6 +236,7 @@
   function handleRetryGameplayStage() {
     playUiSfx('confirm')
     appState = retryGameplayStage(appState)
+    gameplayMusicState = initialGameplayMusicState
     syncMusicForCurrentState()
   }
 
@@ -388,6 +418,7 @@
           onConfirmSettingsDelete={handleConfirmDelete}
           onStageClear={handleStageClear}
           onGameplaySfx={playGameplaySfx}
+          onGameplayMusicStateChange={handleGameplayMusicStateChange}
         />
       {/key}
     {:else if appState.screen.type === 'gameplay'}

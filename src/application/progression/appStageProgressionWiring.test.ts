@@ -25,6 +25,15 @@ describe('App stage progression record wiring', () => {
     expect(source).toContain('onGameplaySfx={playGameplaySfx}')
   })
 
+  it('routes gameplay, result, and pause music through the audio command path', () => {
+    expect(source).toContain("import type { GameplayMusicState } from './ui/gameplay/gameplayMusicState'")
+    expect(source).toContain('let gameplayMusicState = $state<GameplayMusicState>')
+    expect(source).toContain('function currentGameplayMusicContext()')
+    expect(source).toContain('createMusicCommand(appState.screen, settings, currentGameplayMusicContext())')
+    expect(source).toContain('function handleGameplayMusicStateChange(state: GameplayMusicState)')
+    expect(source).toContain('onGameplayMusicStateChange={handleGameplayMusicStateChange}')
+  })
+
   it('deletes progression save when settings delete is confirmed', () => {
     expect(source).toContain('deleteStageProgressionSave(localStorage)')
     expect(source).toContain('stageProgressionSave = deleteStageProgressionSave(localStorage)')
