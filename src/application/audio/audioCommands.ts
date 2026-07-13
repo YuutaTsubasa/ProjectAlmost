@@ -2,8 +2,10 @@ import type { AppScreen } from '../../domain/app/appFlow'
 import type { MusicTrackId, SfxId } from '../../domain/audio/audioAssets'
 import {
   computeSfxVolume,
+  getGameplayMusic,
   getMusicForScreen,
   getSfxForAction,
+  type GameplayMusicContext,
   type SfxAction,
 } from '../../domain/audio/audioPolicy'
 import type { GameSettings } from '../../domain/settings/settings'
@@ -14,8 +16,15 @@ export type PlaySfxCommand = { type: 'play-sfx'; sound: SfxId; volume: number }
 
 export type AudioCommand = SetMusicCommand | PrepareMusicCommand | PlaySfxCommand
 
-export function createMusicCommand(screen: AppScreen, settings: GameSettings): SetMusicCommand | null {
-  const decision = getMusicForScreen(screen, settings)
+export function createMusicCommand(
+  screen: AppScreen,
+  settings: GameSettings,
+  gameplayContext?: GameplayMusicContext,
+): SetMusicCommand | null {
+  const decision =
+    screen.type === 'gameplay' && gameplayContext
+      ? getGameplayMusic(gameplayContext, settings)
+      : getMusicForScreen(screen, settings)
   if (!decision) return null
 
   return { type: 'set-music', ...decision }

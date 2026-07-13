@@ -12,7 +12,45 @@ describe('createMusicCommand', () => {
     })
   })
 
-  it('returns null for gameplay so the current music keeps playing', () => {
+  it('creates gameplay music commands from explicit gameplay context', () => {
+    expect(
+      createMusicCommand(
+        { type: 'gameplay', stageId: '1-1', runId: 0 },
+        DEFAULT_SETTINGS,
+        { stageId: '1-1', isBoss: false, resultVisible: false, paused: false },
+      ),
+    ).toEqual({
+      type: 'set-music',
+      track: 'world01Bgm',
+      volume: 0.336,
+    })
+
+    expect(
+      createMusicCommand(
+        { type: 'gameplay', stageId: '1-6', runId: 0 },
+        DEFAULT_SETTINGS,
+        { stageId: '1-6', isBoss: true, resultVisible: false, paused: false },
+      ),
+    ).toEqual({
+      type: 'set-music',
+      track: 'world01Boss',
+      volume: 0.336,
+    })
+
+    expect(
+      createMusicCommand(
+        { type: 'gameplay', stageId: '1-6', runId: 0 },
+        DEFAULT_SETTINGS,
+        { stageId: '1-6', isBoss: true, resultVisible: true, paused: false },
+      ),
+    ).toEqual({
+      type: 'set-music',
+      track: 'result',
+      volume: 0.336,
+    })
+  })
+
+  it('returns null for gameplay without explicit gameplay context so the current music keeps playing', () => {
     expect(createMusicCommand({ type: 'gameplay', stageId: '1-1', runId: 0 }, DEFAULT_SETTINGS)).toBeNull()
   })
 })
