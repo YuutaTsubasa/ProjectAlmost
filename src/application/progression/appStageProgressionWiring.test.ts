@@ -34,6 +34,13 @@ describe('App stage progression record wiring', () => {
     expect(source).toContain('onGameplayMusicStateChange={handleGameplayMusicStateChange}')
   })
 
+  it('resets gameplay music state before syncing music after control intent enters gameplay', () => {
+    expect(source).toContain("const enteredGameplay = previousScreen.type !== 'gameplay' && appState.screen.type === 'gameplay'")
+    expect(source).toMatch(
+      /function handleControlIntent\(intent: ControlIntent\) \{[\s\S]*const enteredGameplay = previousScreen\.type !== 'gameplay' && appState\.screen\.type === 'gameplay'[\s\S]*if \(enteredGameplay\) \{[\s\S]*gameplayMusicState = initialGameplayMusicState[\s\S]*\}[\s\S]*syncMusicForCurrentState\(\)/,
+    )
+  })
+
   it('deletes progression save when settings delete is confirmed', () => {
     expect(source).toContain('deleteStageProgressionSave(localStorage)')
     expect(source).toContain('stageProgressionSave = deleteStageProgressionSave(localStorage)')

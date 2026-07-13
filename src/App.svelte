@@ -168,6 +168,11 @@
     const previousFullscreen = settings.fullscreen
     const nextState = applyControlIntent({ ...appState, settings, isStageUnlocked: isGameplayStageUnlocked }, intent)
     appState = { screen: nextState.screen }
+    const enteredGameplay = previousScreen.type !== 'gameplay' && appState.screen.type === 'gameplay'
+
+    if (enteredGameplay) {
+      gameplayMusicState = initialGameplayMusicState
+    }
 
     if (nextState.settings) {
       syncSettings(nextState.settings)
