@@ -1,4 +1,5 @@
 import type { AppScreen } from '../app/appFlow'
+import type { StageId } from '../data/worlds/worldTypes'
 import type { GameSettings } from '../settings/settings'
 import { MUSIC_ASSETS, SFX_ASSETS, type MusicTrackId, type SfxId } from './audioAssets'
 
@@ -21,6 +22,7 @@ export type MusicDecision = {
 
 const BASE_MUSIC_VOLUME = 0.42
 const TITLE_INTRO_VOLUME_MULTIPLIER = 0.35
+const GAMEPLAY_PAUSED_VOLUME_MULTIPLIER = 0.45
 const WORLD_BGM_TRACKS: readonly MusicTrackId[] = [
   'world01Bgm',
   'world02Bgm',
@@ -37,6 +39,25 @@ const WORLD_MAP_TRACKS: readonly MusicTrackId[] = [
   'world05Map',
   'world06Map',
 ]
+const WORLD_BOSS_TRACKS: readonly MusicTrackId[] = [
+  'world01Boss',
+  'world02Boss',
+  'world03Boss',
+  'world04Boss',
+  'world05Boss',
+  'world06Boss',
+]
+
+export type GameplayMusicContext = {
+  stageId: StageId
+  isBoss: boolean
+  resultVisible: boolean
+  paused: boolean
+}
+
+function getWorldIndexFromStageId(stageId: StageId): number {
+  return Math.max(0, Number(stageId.split('-')[0]) - 1)
+}
 
 export function computeMusicVolume(settings: GameSettings, multiplier = 1): number {
   return BASE_MUSIC_VOLUME * (settings.masterVolume / 100) * (settings.musicVolume / 100) * multiplier
@@ -44,6 +65,20 @@ export function computeMusicVolume(settings: GameSettings, multiplier = 1): numb
 
 export function computeSfxVolume(settings: GameSettings): number {
   return (settings.masterVolume / 100) * (settings.sfxVolume / 100)
+}
+
+export function getGameplayMusic(context: GameplayMusicContext, settings: GameSettings): MusicDecision {
+  if (context.resultVisible) {
+    return { track: 'result', volume: computeMusicVolume(settings) }
+  }
+
+  const worldIndex = getWorldIndexFromStageId(context.stageId)
+  const track = context.isBoss
+    ? WORLD_BOSS_TRACKS[worldIndex] ?? 'world01Boss'
+    : WORLD_BGM_TRACKS[worldIndex] ?? 'world01Bgm'
+  const multiplier = context.paused ? GAMEPLAY_PAUSED_VOLUME_MULTIPLIER : 1
+
+  return { track, volume: computeMusicVolume(settings, multiplier) }
 }
 
 export function getMusicForScreen(screen: AppScreen, settings: GameSettings): MusicDecision | null {

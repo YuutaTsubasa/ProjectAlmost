@@ -5,6 +5,7 @@ import {
   SFX_ASSETS,
   computeMusicVolume,
   computeSfxVolume,
+  getGameplayMusic,
   getMusicForScreen,
   getSfxForAction,
 } from './audioPolicy'
@@ -96,6 +97,70 @@ describe('screen music policy', () => {
       ),
     ).toEqual({
       track: 'world01Map',
+      volume: 0.336,
+    })
+  })
+})
+
+describe('gameplay music policy', () => {
+  it('maps gameplay stages to normal, boss, result, and paused prototype music', () => {
+    expect(
+      getGameplayMusic(
+        {
+          stageId: '1-1',
+          isBoss: false,
+          resultVisible: false,
+          paused: false,
+        },
+        DEFAULT_SETTINGS,
+      ),
+    ).toEqual({
+      track: 'world01Bgm',
+      volume: 0.336,
+    })
+
+    expect(
+      getGameplayMusic(
+        {
+          stageId: '1-6',
+          isBoss: true,
+          resultVisible: false,
+          paused: false,
+        },
+        DEFAULT_SETTINGS,
+      ),
+    ).toEqual({
+      track: 'world01Boss',
+      volume: 0.336,
+    })
+
+    expect(
+      getGameplayMusic(
+        {
+          stageId: '6-6',
+          isBoss: true,
+          resultVisible: false,
+          paused: true,
+        },
+        DEFAULT_SETTINGS,
+      ),
+    ).toEqual({
+      track: 'world06Boss',
+      volume: 0.1512,
+    })
+
+    expect(
+      getGameplayMusic(
+        {
+          stageId: '3-4',
+          isBoss: false,
+          resultVisible: true,
+          paused: false,
+        },
+        DEFAULT_SETTINGS,
+      ),
+    ).toEqual({
+      track: 'result',
       volume: 0.336,
     })
   })
