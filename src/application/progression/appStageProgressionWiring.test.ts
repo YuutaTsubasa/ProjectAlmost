@@ -92,3 +92,15 @@ describe('App stage select progression UI wiring', () => {
     expect(source).toContain('stageProgressionOptions={stageProgressionOptions}')
   })
 })
+
+describe('App shell backdrop wiring', () => {
+  it('routes shell backdrop through the pure backdrop resolver', () => {
+    expect(source).toContain("import { resolveShellBackdrop, type ShellBackdrop } from './application/shell/shellBackdrop'")
+    expect(source).toContain('let shellBackdrop = $state<ShellBackdrop>')
+    expect(source).toContain('function syncShellBackdrop()')
+    expect(source).toContain('resolveShellBackdrop({')
+    expect(source).toContain('previous: shellBackdrop,')
+    expect(source).toContain('style:--shell-backdrop={`url("${shellBackdrop.assetRef}")`}')
+    expect(source).toContain('class={`shell theme-${shellBackdrop.theme}`}')
+  })
+})

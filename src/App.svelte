@@ -29,6 +29,7 @@
     recordStageClear,
     resolveDebugUnlockAllStages,
   } from './application/progression/browserStageProgressionStore'
+  import { resolveShellBackdrop, type ShellBackdrop } from './application/shell/shellBackdrop'
   import { createProjectIdentity } from './domain/app/projectIdentity'
   import { projectData } from './domain/data/projectData'
   import type { GameplaySfxAction } from './domain/audio/audioPolicy'
@@ -58,11 +59,19 @@
   import TitleScreen from './ui/title/TitleScreen.svelte'
   import WorldSelectScreen from './ui/world/WorldSelectScreen.svelte'
 
+  const initialAppState = createInitialAppState()
   let settings: GameSettings = $state(parseStoredSettings(null, false))
-  let appState = $state(createInitialAppState())
+  let appState = $state(initialAppState)
   let stageProgressionSave = $state(createEmptySave())
   let debugUnlockAllStages = $state(false)
   let gameplayMusicState = $state<GameplayMusicState>(initialGameplayMusicState)
+  let shellBackdrop = $state<ShellBackdrop>(
+    resolveShellBackdrop({
+      screen: initialAppState.screen,
+      worlds: projectData.worlds,
+      stages: projectData.stages,
+    }),
+  )
   let audio: BrowserAudioController | undefined
   const identity = createProjectIdentity()
   const locale: LocaleCode = $derived(settings.language)
@@ -107,6 +116,15 @@
 
   function syncMusicForCurrentState() {
     audio?.execute(createMusicCommand(appState.screen, settings, currentGameplayMusicContext()))
+  }
+
+  function syncShellBackdrop() {
+    shellBackdrop = resolveShellBackdrop({
+      screen: appState.screen,
+      worlds: projectData.worlds,
+      stages: projectData.stages,
+      previous: shellBackdrop,
+    })
   }
 
   function playUiSfx(action: 'move' | 'confirm' | 'back') {
@@ -183,6 +201,7 @@
 
     const sfxAction = getControlIntentSfxAction(previousScreen, appState.screen, intent)
     if (sfxAction) playUiSfx(sfxAction)
+    syncShellBackdrop()
     syncMusicForCurrentState()
   }
 
@@ -196,12 +215,14 @@
     ) {
       playUiSfx('move')
     }
+    syncShellBackdrop()
     syncMusicForCurrentState()
   }
 
   function handleConfirmWorld() {
     playUiSfx('confirm')
     appState = confirmSelectedWorld(appState)
+    syncShellBackdrop()
     syncMusicForCurrentState()
   }
 
@@ -215,6 +236,7 @@
     ) {
       playUiSfx('move')
     }
+    syncShellBackdrop()
     syncMusicForCurrentState()
   }
 
@@ -222,6 +244,7 @@
     playUiSfx('confirm')
     appState = confirmSelectedStage(appState, { isStageUnlocked: isGameplayStageUnlocked })
     gameplayMusicState = initialGameplayMusicState
+    syncShellBackdrop()
     syncMusicForCurrentState()
   }
 
@@ -234,6 +257,7 @@
     if (appState.screen !== previousScreen) {
       playUiSfx('confirm')
       gameplayMusicState = initialGameplayMusicState
+      syncShellBackdrop()
       syncMusicForCurrentState()
     }
   }
@@ -242,6 +266,7 @@
     playUiSfx('confirm')
     appState = retryGameplayStage(appState)
     gameplayMusicState = initialGameplayMusicState
+    syncShellBackdrop()
     syncMusicForCurrentState()
   }
 
@@ -264,18 +289,21 @@
   function handleReturnFromGameplayToStageSelect() {
     playUiSfx('back')
     appState = returnFromGameplayToStageSelect(appState)
+    syncShellBackdrop()
     syncMusicForCurrentState()
   }
 
   function handleBackFromStageSelect() {
     playUiSfx('back')
     appState = backFromStageSelect(appState)
+    syncShellBackdrop()
     syncMusicForCurrentState()
   }
 
   function handleBackFromWorldSelect() {
     playUiSfx('back')
     appState = backFromWorldSelect(appState)
+    syncShellBackdrop()
     syncMusicForCurrentState()
   }
 
@@ -318,6 +346,7 @@
     if (index === 9) {
       appState = { screen: { type: 'title-menu', selectedItemIndex: 1 } }
       playUiSfx('back')
+      syncShellBackdrop()
       syncMusicForCurrentState()
     }
   }
@@ -325,12 +354,14 @@
   function handleCancelDelete() {
     playUiSfx('back')
     appState = cancelDeleteConfirm(appState)
+    syncShellBackdrop()
   }
 
   function handleConfirmDelete() {
     playUiSfx('confirm')
     stageProgressionSave = deleteStageProgressionSave(localStorage)
     appState = cancelDeleteConfirm(appState)
+    syncShellBackdrop()
   }
 
   onMount(() => {
@@ -371,7 +402,10 @@
   })
 </script>
 
-<main class="shell">
+<main
+  class={`shell theme-${shellBackdrop.theme}`}
+  style:--shell-backdrop={`url("${shellBackdrop.assetRef}")`}
+>
   <ResolutionFrame>
     {#if appState.screen.type === 'title-intro' || appState.screen.type === 'title-menu'}
       <TitleScreen
