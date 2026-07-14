@@ -35,6 +35,13 @@ export function canStartSceneTransition(state: SceneTransitionState): boolean {
   return state.phase === 'idle'
 }
 
+export function shouldBlockSceneTransitionReentry(
+  style: SceneTransitionStyle | null,
+  state: SceneTransitionState,
+): boolean {
+  return style !== null && !canStartSceneTransition(state)
+}
+
 export function resolveSceneTransitionStyle(from: AppScreen, to: AppScreen): SceneTransitionStyle | null {
   if (from.type === to.type && to.type !== 'gameplay') return null
   if (from.type === 'world-select' && to.type === 'stage-select') return 'world-stage-forward'

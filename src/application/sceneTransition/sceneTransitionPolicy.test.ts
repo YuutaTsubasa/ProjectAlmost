@@ -3,7 +3,9 @@ import type { AppScreen } from '../../domain/app/appFlow'
 import {
   canStartSceneTransition,
   getSceneTransitionTiming,
+  initialSceneTransitionState,
   resolveSceneTransitionStyle,
+  shouldBlockSceneTransitionReentry,
   type SceneTransitionState,
 } from './sceneTransitionPolicy'
 
@@ -76,5 +78,24 @@ describe('scene transition policy', () => {
     expect(canStartSceneTransition(idle)).toBe(true)
     expect(canStartSceneTransition(covering)).toBe(false)
     expect(canStartSceneTransition(revealing)).toBe(false)
+  })
+
+  it('blocks styled screen replacements while another scene transition is active', () => {
+    const covering: SceneTransitionState = { phase: 'cover', style: 'page' }
+    const revealing: SceneTransitionState = { phase: 'reveal', style: 'gameplay' }
+
+    expect(shouldBlockSceneTransitionReentry('page', covering)).toBe(true)
+    expect(shouldBlockSceneTransitionReentry('gameplay', revealing)).toBe(true)
+    expect(shouldBlockSceneTransitionReentry('page', initialSceneTransitionState)).toBe(false)
+  })
+
+  it('keeps null-style same-screen changes immediate even during an active transition', () => {
+    const covering: SceneTransitionState = { phase: 'cover', style: 'page' }
+
+    expect(shouldBlockSceneTransitionReentry(null, covering)).toBe(false)
+    expect(resolveSceneTransitionStyle(worldSelect, {
+      type: 'world-select',
+      selectedWorldIndex: 1,
+    })).toBeNull()
   })
 })

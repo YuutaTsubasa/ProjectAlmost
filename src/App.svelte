@@ -30,10 +30,10 @@
     resolveDebugUnlockAllStages,
   } from './application/progression/browserStageProgressionStore'
   import {
-    canStartSceneTransition,
     getSceneTransitionTiming,
     initialSceneTransitionState,
     resolveSceneTransitionStyle,
+    shouldBlockSceneTransitionReentry,
     type SceneTransitionState,
   } from './application/sceneTransition/sceneTransitionPolicy'
   import { resolveShellBackdrop, type ShellBackdrop } from './application/shell/shellBackdrop'
@@ -155,7 +155,11 @@
     const previousScreen = appState.screen
     const style = resolveSceneTransitionStyle(previousScreen, nextScreen)
 
-    if (!style || !canStartSceneTransition(sceneTransition)) {
+    if (shouldBlockSceneTransitionReentry(style, sceneTransition)) {
+      return
+    }
+
+    if (!style) {
       applyScreenChange()
       syncShellBackdrop()
       syncMusicForCurrentState()
