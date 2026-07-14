@@ -29,6 +29,13 @@
     recordStageClear,
     resolveDebugUnlockAllStages,
   } from './application/progression/browserStageProgressionStore'
+  import {
+    canStartSceneTransition,
+    getSceneTransitionTiming,
+    initialSceneTransitionState,
+    resolveSceneTransitionStyle,
+    type SceneTransitionState,
+  } from './application/sceneTransition/sceneTransitionPolicy'
   import { resolveShellBackdrop, type ShellBackdrop } from './application/shell/shellBackdrop'
   import { createProjectIdentity } from './domain/app/projectIdentity'
   import { projectData } from './domain/data/projectData'
@@ -57,6 +64,7 @@
   import SettingsScreen from './ui/settings/SettingsScreen.svelte'
   import StageSelectScreen from './ui/stage/StageSelectScreen.svelte'
   import TitleScreen from './ui/title/TitleScreen.svelte'
+  import SceneTransitionOverlay from './ui/transition/SceneTransitionOverlay.svelte'
   import WorldSelectScreen from './ui/world/WorldSelectScreen.svelte'
 
   const initialAppState = createInitialAppState()
@@ -65,6 +73,7 @@
   let stageProgressionSave = $state(createEmptySave())
   let debugUnlockAllStages = $state(false)
   let gameplayMusicState = $state<GameplayMusicState>(initialGameplayMusicState)
+  let sceneTransition = $state<SceneTransitionState>(initialSceneTransitionState)
   let shellBackdrop = $state<ShellBackdrop>(
     resolveShellBackdrop({
       screen: initialAppState.screen,
@@ -135,6 +144,36 @@
     audio?.execute(createSfxCommand(action, settings))
   }
 
+  function waitForSceneTransition(durationMs: number): Promise<void> {
+    return new Promise((resolve) => window.setTimeout(resolve, durationMs))
+  }
+
+  async function transitionToScreen(
+    nextScreen: typeof appState.screen,
+    applyScreenChange: () => void,
+  ) {
+    const previousScreen = appState.screen
+    const style = resolveSceneTransitionStyle(previousScreen, nextScreen)
+
+    if (!style || !canStartSceneTransition(sceneTransition)) {
+      applyScreenChange()
+      syncShellBackdrop()
+      syncMusicForCurrentState()
+      return
+    }
+
+    const timing = getSceneTransitionTiming(style)
+    sceneTransition = { phase: 'cover', style }
+    await waitForSceneTransition(timing.coverMs)
+    applyScreenChange()
+    syncShellBackdrop()
+    syncMusicForCurrentState()
+    await waitForSceneTransition(timing.holdMs)
+    sceneTransition = { phase: 'reveal', style }
+    await waitForSceneTransition(timing.revealMs)
+    sceneTransition = initialSceneTransitionState
+  }
+
   function handleGameplayMusicStateChange(state: GameplayMusicState) {
     if (
       gameplayMusicState.resultVisible === state.resultVisible &&
@@ -185,24 +224,34 @@
     const previousScreen = appState.screen
     const previousFullscreen = settings.fullscreen
     const nextState = applyControlIntent({ ...appState, settings, isStageUnlocked: isGameplayStageUnlocked }, intent)
-    appState = { screen: nextState.screen }
-    const enteredGameplay = previousScreen.type !== 'gameplay' && appState.screen.type === 'gameplay'
+    const sfxAction = getControlIntentSfxAction(previousScreen, nextState.screen, intent)
 
-    if (enteredGameplay) {
-      gameplayMusicState = initialGameplayMusicState
-    }
+    const applyNextState = () => {
+      appState = { screen: nextState.screen }
+      const enteredGameplay = previousScreen.type !== 'gameplay' && appState.screen.type === 'gameplay'
 
-    if (nextState.settings) {
-      syncSettings(nextState.settings)
-      if (nextState.settings.fullscreen !== previousFullscreen) {
-        void setFullscreen(nextState.settings.fullscreen)
+      if (enteredGameplay) {
+        gameplayMusicState = initialGameplayMusicState
+      }
+
+      if (nextState.settings) {
+        syncSettings(nextState.settings)
+        if (nextState.settings.fullscreen !== previousFullscreen) {
+          void setFullscreen(nextState.settings.fullscreen)
+        }
       }
     }
 
-    const sfxAction = getControlIntentSfxAction(previousScreen, appState.screen, intent)
     if (sfxAction) playUiSfx(sfxAction)
-    syncShellBackdrop()
-    syncMusicForCurrentState()
+
+    if (previousScreen.type === nextState.screen.type && nextState.screen.type !== 'gameplay') {
+      applyNextState()
+      syncShellBackdrop()
+      syncMusicForCurrentState()
+      return
+    }
+
+    void transitionToScreen(nextState.screen, applyNextState)
   }
 
   function handleSelectWorld(index: number) {
@@ -221,9 +270,10 @@
 
   function handleConfirmWorld() {
     playUiSfx('confirm')
-    appState = confirmSelectedWorld(appState)
-    syncShellBackdrop()
-    syncMusicForCurrentState()
+    const nextState = confirmSelectedWorld(appState)
+    void transitionToScreen(nextState.screen, () => {
+      appState = nextState
+    })
   }
 
   function handleSelectStage(index: number) {
@@ -242,10 +292,11 @@
 
   function handleConfirmStage() {
     playUiSfx('confirm')
-    appState = confirmSelectedStage(appState, { isStageUnlocked: isGameplayStageUnlocked })
-    gameplayMusicState = initialGameplayMusicState
-    syncShellBackdrop()
-    syncMusicForCurrentState()
+    const nextState = confirmSelectedStage(appState, { isStageUnlocked: isGameplayStageUnlocked })
+    void transitionToScreen(nextState.screen, () => {
+      appState = nextState
+      gameplayMusicState = initialGameplayMusicState
+    })
   }
 
   function handleNextGameplayStage() {
@@ -253,21 +304,23 @@
 
     const nextStageId = getNextStageId(stageOrder, appState.screen.stageId)
     const previousScreen = appState.screen
-    appState = openNextGameplayStage(appState, nextStageId, { isStageUnlocked: isGameplayStageUnlocked })
-    if (appState.screen !== previousScreen) {
-      playUiSfx('confirm')
+    const nextState = openNextGameplayStage(appState, nextStageId, { isStageUnlocked: isGameplayStageUnlocked })
+    if (nextState.screen === previousScreen) return
+
+    playUiSfx('confirm')
+    void transitionToScreen(nextState.screen, () => {
+      appState = nextState
       gameplayMusicState = initialGameplayMusicState
-      syncShellBackdrop()
-      syncMusicForCurrentState()
-    }
+    })
   }
 
   function handleRetryGameplayStage() {
     playUiSfx('confirm')
-    appState = retryGameplayStage(appState)
-    gameplayMusicState = initialGameplayMusicState
-    syncShellBackdrop()
-    syncMusicForCurrentState()
+    const nextState = retryGameplayStage(appState)
+    void transitionToScreen(nextState.screen, () => {
+      appState = nextState
+      gameplayMusicState = initialGameplayMusicState
+    })
   }
 
   function handleStageClear(result: StageClearResult) {
@@ -288,23 +341,26 @@
 
   function handleReturnFromGameplayToStageSelect() {
     playUiSfx('back')
-    appState = returnFromGameplayToStageSelect(appState)
-    syncShellBackdrop()
-    syncMusicForCurrentState()
+    const nextState = returnFromGameplayToStageSelect(appState)
+    void transitionToScreen(nextState.screen, () => {
+      appState = nextState
+    })
   }
 
   function handleBackFromStageSelect() {
     playUiSfx('back')
-    appState = backFromStageSelect(appState)
-    syncShellBackdrop()
-    syncMusicForCurrentState()
+    const nextState = backFromStageSelect(appState)
+    void transitionToScreen(nextState.screen, () => {
+      appState = nextState
+    })
   }
 
   function handleBackFromWorldSelect() {
     playUiSfx('back')
-    appState = backFromWorldSelect(appState)
-    syncShellBackdrop()
-    syncMusicForCurrentState()
+    const nextState = backFromWorldSelect(appState)
+    void transitionToScreen(nextState.screen, () => {
+      appState = nextState
+    })
   }
 
   function handleSelectSettingsItem(index: number) {
@@ -344,10 +400,11 @@
       return
     }
     if (index === 9) {
-      appState = { screen: { type: 'title-menu', selectedItemIndex: 1 } }
       playUiSfx('back')
-      syncShellBackdrop()
-      syncMusicForCurrentState()
+      const nextScreen = { type: 'title-menu', selectedItemIndex: 1 } as const
+      void transitionToScreen(nextScreen, () => {
+        appState = { screen: nextScreen }
+      })
     }
   }
 
@@ -478,6 +535,7 @@
         onConfirmDelete={handleConfirmDelete}
       />
     {/if}
+    <SceneTransitionOverlay phase={sceneTransition.phase} style={sceneTransition.style} />
   </ResolutionFrame>
 </main>
 

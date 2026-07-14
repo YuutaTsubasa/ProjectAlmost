@@ -104,3 +104,17 @@ describe('App shell backdrop wiring', () => {
     expect(source).toContain('class={`shell theme-${shellBackdrop.theme}`}')
   })
 })
+
+describe('App scene transition coordinator wiring', () => {
+  it('routes screen replacements through the scene transition coordinator', () => {
+    expect(source).toContain("import SceneTransitionOverlay from './ui/transition/SceneTransitionOverlay.svelte'")
+    expect(source).toContain('initialSceneTransitionState')
+    expect(source).toContain('resolveSceneTransitionStyle(previousScreen, nextScreen)')
+    expect(source).toContain('async function transitionToScreen(')
+    expect(source).toContain("sceneTransition = { phase: 'cover', style }")
+    expect(source).toContain('await waitForSceneTransition(timing.coverMs)')
+    expect(source).toContain('applyScreenChange()')
+    expect(source).toContain("sceneTransition = { phase: 'reveal', style }")
+    expect(source).toContain('<SceneTransitionOverlay phase={sceneTransition.phase} style={sceneTransition.style} />')
+  })
+})
