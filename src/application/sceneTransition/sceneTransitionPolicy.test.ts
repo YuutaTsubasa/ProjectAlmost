@@ -12,6 +12,7 @@ const worldSelect: AppScreen = { type: 'world-select', selectedWorldIndex: 0 }
 const stageSelect: AppScreen = {
   type: 'stage-select',
   selectedWorldIndex: 0,
+  worldId: 'world01',
   selectedStageIndex: 0,
 }
 const gameplay: AppScreen = { type: 'gameplay', stageId: '1-1', runId: 0 }
@@ -39,6 +40,7 @@ describe('scene transition policy', () => {
     expect(resolveSceneTransitionStyle(stageSelect, {
       type: 'stage-select',
       selectedWorldIndex: 0,
+      worldId: 'world01',
       selectedStageIndex: 1,
     })).toBeNull()
   })

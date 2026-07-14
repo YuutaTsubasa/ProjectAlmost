@@ -16,7 +16,7 @@ describe('shell backdrop resolver', () => {
 
   it('uses the selected world background on stage select', () => {
     expect(resolveShellBackdrop({
-      screen: { type: 'stage-select', selectedWorldIndex: 4, selectedStageIndex: 0 },
+      screen: { type: 'stage-select', selectedWorldIndex: 4, worldId: 'world05', selectedStageIndex: 0 },
       worlds: projectData.worlds,
       stages: projectData.stages,
     })).toEqual({
