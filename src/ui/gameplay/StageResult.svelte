@@ -5,11 +5,13 @@
     getStageResultRowStates,
     type StageResultActionType,
   } from '../../domain/gameplay/stageResult'
+  import type { CharacterInfoViewModel } from '../../application/character/characterInfoPresenter'
   import type { GameplayHudStageDisplay } from './gameplayHudDisplay'
 
   type Props = {
     result: GameplayClearResultSnapshot
     stageDisplay: GameplayHudStageDisplay
+    characterInfo: CharacterInfoViewModel
     selectedAction: number
     nextStageAvailable: boolean
     onSelectAction: (index: number) => void
@@ -19,6 +21,7 @@
   let {
     result,
     stageDisplay,
+    characterInfo,
     selectedAction,
     nextStageAvailable,
     onSelectAction,
@@ -27,10 +30,6 @@
 
   const stageResultCopy = {
     resultTitle: 'Stage Result',
-    hero: {
-      name: 'Yuuta Tsubasa',
-      role: 'Paladin Candidate',
-    },
     stats: {
       clearTime: 'Clear Time',
       coins: 'Coins',
@@ -75,10 +74,10 @@
 <section class="stage-result" aria-label="Stage Result">
   <div class="result-veil"></div>
   <aside class="result-hero" aria-hidden="true">
-    <img src="/assets/results/yuuta-stage-result-standee.webp" alt="" />
+    <img src={characterInfo.result.standeeAssetRef} alt={characterInfo.result.standeeAlt} />
     <div>
-      <strong>{stageResultCopy.hero.name}</strong>
-      <span>{stageResultCopy.hero.role}</span>
+      <strong>{characterInfo.result.name}</strong>
+      <span>{characterInfo.result.roleName}</span>
     </div>
   </aside>
 

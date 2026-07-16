@@ -33,11 +33,19 @@ describe('StageResult UI contract', () => {
     expect(stageResultSource).toContain('class="stage-result"')
     expect(stageResultSource).toContain('class="result-veil"')
     expect(stageResultSource).toContain('class="result-hero"')
-    expect(stageResultSource).toContain('/assets/results/yuuta-stage-result-standee.webp')
+    expect(stageResultSource).toContain('characterInfo.result.standeeAssetRef')
     expect(stageResultSource).toContain('class="result-banner"')
     expect(stageResultSource).toContain('class="result-board"')
     expect(stageResultSource).toContain('class="result-rank"')
     expect(stageResultSource).toContain('class="result-actions"')
+  })
+
+  it('renders result hero identity from the selected character info', () => {
+    expect(stageResultSource).toContain('characterInfo.result.name')
+    expect(stageResultSource).toContain('characterInfo.result.roleName')
+    expect(stageResultSource).toContain('characterInfo.result.standeeAlt')
+    expect(stageResultSource).not.toContain("name: 'Yuuta Tsubasa'")
+    expect(stageResultSource).not.toContain("role: 'Paladin Candidate'")
   })
 
   it('renders all result stats and perfect markers from state', () => {

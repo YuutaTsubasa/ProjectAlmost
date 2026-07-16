@@ -9,6 +9,7 @@
   import type { StageCatalog, StageData } from '../../domain/data/stages/stageTypes'
   import type { StageId, WorldCatalog, WorldData } from '../../domain/data/worlds/worldTypes'
   import type { StageProgressionOptionState } from '../../domain/progression/stageProgression'
+  import type { CharacterInfoViewModel } from '../../application/character/characterInfoPresenter'
   import {
     mapGamepadControlIntents,
     mapKeyboardControlIntent,
@@ -24,6 +25,7 @@
     locale?: LocaleCode
     selectedWorldIndex: number
     selectedStageIndex: number
+    characterInfo: CharacterInfoViewModel
     stageProgressionOptions?: readonly StageProgressionOptionState<StageId>[]
     onControlIntent: (intent: ControlIntent) => void
     onSelectStage: (index: number) => void
@@ -38,6 +40,7 @@
     locale = 'en',
     selectedWorldIndex,
     selectedStageIndex,
+    characterInfo,
     stageProgressionOptions: receivedStageProgressionOptions = [],
     onControlIntent,
     onSelectStage,
@@ -48,8 +51,6 @@
   let previousGamepadSnapshot: GamepadControlSnapshot | null = null
   let confirming = $state(false)
   let confirmResetTimer: ReturnType<typeof window.setTimeout> | undefined
-
-  const activeCharacterName = 'Yuuta Tsubasa'
 
   const orderedWorlds = $derived(worlds.order.map((worldId) => worlds.items[worldId]))
   const stageSelectRefs = $derived(localizeData.references.stageSelect)
@@ -233,10 +234,15 @@
     </div>
 
     <div class="stage-roster">
-      <div class="stage-roster-portrait" aria-hidden="true"></div>
+      <img
+        class="stage-roster-portrait"
+        src={characterInfo.stageSelect.portraitAssetRef}
+        alt={characterInfo.stageSelect.portraitAlt}
+        draggable="false"
+      />
       <div>
         <span>{text(stageSelectRefs.activeCharacter)}</span>
-        <strong>{activeCharacterName}</strong>
+        <strong>{characterInfo.stageSelect.name}</strong>
       </div>
     </div>
 

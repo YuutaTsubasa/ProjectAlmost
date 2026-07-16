@@ -5,20 +5,19 @@
     type LocalizationKey,
     type LocaleCode,
   } from '../../domain/data/localize/localize'
+  import type { CharacterInfoViewModel } from '../../application/character/characterInfoPresenter'
   import type { GameplayHudState } from '../../domain/gameplay/gameplayHud'
-  import {
-    GAMEPLAY_HUD_PLAYER_PORTRAIT_SRC,
-    type GameplayHudStageDisplay,
-  } from './gameplayHudDisplay'
+  import type { GameplayHudStageDisplay } from './gameplayHudDisplay'
 
   type Props = {
     state: GameplayHudState
     stageDisplay: GameplayHudStageDisplay
+    characterInfo: CharacterInfoViewModel
     locale?: LocaleCode
     stageLabel?: string
   }
 
-  let { state, stageDisplay, locale = 'en' }: Props = $props()
+  let { state, stageDisplay, characterInfo, locale = 'en' }: Props = $props()
 
   function getHpWidthPercent() {
     if (state.hpMax <= 0) return 0
@@ -35,11 +34,6 @@
     return text('stageObjectives.reachGoal')
   }
 
-  function statusMessageText(): string {
-    return text(state.statusMessageKey)
-      .replace('{phase}', String(state.bossPhase))
-      .replace('{max}', String(state.bossPhaseMax))
-  }
 </script>
 
 <div class="gameplay-hud" aria-label="Gameplay HUD">
@@ -52,9 +46,14 @@
         <span class="corner br"></span>
         <div class="hud-label"><span></span>System Status</div>
         <div class="status-body">
-          <img class="portrait-slot" src={GAMEPLAY_HUD_PLAYER_PORTRAIT_SRC} alt="Yuuta Tsubasa" />
+          <img
+            class="portrait-slot"
+            src={characterInfo.gameplayHud.portraitAssetRef}
+            alt={characterInfo.gameplayHud.portraitAlt}
+            draggable="false"
+          />
           <div class="status-info">
-            <strong>Yuuta Tsubasa</strong>
+            <strong>{characterInfo.gameplayHud.name}</strong>
             <div class="hp-heading">
               <span>HP</span>
               <b>{state.hp} / {state.hpMax}</b>
@@ -62,7 +61,6 @@
             <div class="bar" aria-hidden="true">
               <i style:width={`${getHpWidthPercent()}%`}></i>
             </div>
-            <p class="status-message">{statusMessageText()}</p>
           </div>
         </div>
       </section>
@@ -355,15 +353,6 @@
     height: 100%;
     border-radius: inherit;
     background: linear-gradient(90deg, #e2574c, #ffb0a7);
-  }
-
-  .status-message {
-    margin: 1.1cqh 0 0;
-    color: var(--hud-soft);
-    font-size: 0.74cqw;
-    font-weight: 700;
-    line-height: 1.15;
-    overflow-wrap: anywhere;
   }
 
   .stage-banner {

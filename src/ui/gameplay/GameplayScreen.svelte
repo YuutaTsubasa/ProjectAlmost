@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte'
+  import type { CharacterInfoViewModel } from '../../application/character/characterInfoPresenter'
   import { applySettingsControlIntent } from '../../application/input/settingsControls'
   import type { SettingsScreen } from '../../domain/app/appFlow'
   import type { LocaleCode, LocalizeData } from '../../domain/data/localize/localize'
@@ -45,6 +46,7 @@
   type Props = {
     stage: GameplayStageMap
     settings: GameSettings
+    characterInfo: CharacterInfoViewModel
     localizeData: LocalizeData
     locale: LocaleCode
     localeCodes: readonly LocaleCode[]
@@ -62,6 +64,7 @@
   let {
     stage,
     settings,
+    characterInfo,
     localizeData,
     locale,
     localeCodes,
@@ -351,6 +354,7 @@
       state={hudState}
       stageLabel={stage.id}
       stageDisplay={stageDisplay}
+      {characterInfo}
       locale={locale}
     />
     {#if pauseState.mode === 'paused' && !hudState?.result}
@@ -396,6 +400,7 @@
       <StageResult
         result={hudState.result}
         {stageDisplay}
+        {characterInfo}
         selectedAction={selectedResultAction}
         nextStageAvailable={nextStageAvailable}
         onSelectAction={(index) => (selectedResultAction = index)}

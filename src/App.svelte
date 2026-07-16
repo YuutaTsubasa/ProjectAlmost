@@ -17,6 +17,7 @@
   } from './domain/app/appFlow'
   import { createMusicCommand, createSfxCommand } from './application/audio/audioCommands'
   import { getControlIntentSfxAction } from './application/audio/audioEvents'
+  import { createCharacterInfoViewModel } from './application/character/characterInfoPresenter'
   import {
     createBrowserAudioController,
     type BrowserAudioController,
@@ -38,6 +39,7 @@
   } from './application/sceneTransition/sceneTransitionPolicy'
   import { resolveShellBackdrop, type ShellBackdrop } from './application/shell/shellBackdrop'
   import { createProjectIdentity } from './domain/app/projectIdentity'
+  import { getCharacterProfile, selectedCharacterId } from './domain/character/characterProfile'
   import { projectData } from './domain/data/projectData'
   import type { GameplaySfxAction } from './domain/audio/audioPolicy'
   import type { LocaleCode } from './domain/data/localize/localize'
@@ -83,6 +85,7 @@
   )
   let audio: BrowserAudioController | undefined
   const identity = createProjectIdentity()
+  const characterInfo = createCharacterInfoViewModel(getCharacterProfile(selectedCharacterId))
   const locale: LocaleCode = $derived(settings.language)
   const stageOrder = $derived(projectData.stages.order)
   const stageProgressionOptions = $derived(
@@ -496,6 +499,7 @@
         locale={locale}
         selectedWorldIndex={appState.screen.selectedWorldIndex}
         selectedStageIndex={appState.screen.selectedStageIndex}
+        {characterInfo}
         stageProgressionOptions={stageProgressionOptions}
         onControlIntent={handleControlIntent}
         onSelectStage={handleSelectStage}
@@ -507,6 +511,7 @@
         <GameplayScreen
           stage={gameplayStageMap}
           {settings}
+          {characterInfo}
           localizeData={projectData.localize}
           {locale}
           localeCodes={projectData.localize.languages.map((language) => language.code)}

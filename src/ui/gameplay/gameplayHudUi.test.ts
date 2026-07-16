@@ -23,11 +23,18 @@ describe('Gameplay HUD Svelte UI', () => {
 
   it('renders status panel with portrait, system label, player name, and HP state', () => {
     expect(hudSource).toContain('System Status')
-    expect(hudSource).toContain('GAMEPLAY_HUD_PLAYER_PORTRAIT_SRC')
+    expect(hudSource).toContain('characterInfo.gameplayHud.portraitAssetRef')
     expect(hudSource).toContain('class="portrait-slot"')
-    expect(hudSource).toContain('Yuuta Tsubasa')
+    expect(hudSource).toContain('characterInfo.gameplayHud.name')
     expect(hudSource).toContain('{state.hp} / {state.hpMax}')
     expect(hudSource).toContain('class="bar"')
+    expect(hudSource).not.toContain('GAMEPLAY_HUD_PLAYER_PORTRAIT_SRC')
+    expect(hudSource).not.toContain('Yuuta Tsubasa')
+  })
+
+  it('does not render objective or status prose under the character info block', () => {
+    expect(hudSource).not.toContain('class="status-message"')
+    expect(hudSource).not.toContain('statusMessageText')
   })
 
   it('renders stage banner with world label, stage id, and subtitle', () => {
@@ -205,13 +212,14 @@ describe('Gameplay HUD Svelte UI', () => {
     expect(hudSource).not.toContain('>hud.bossPhaseHint</p>')
   })
 
-  it('renders localized HUD status text from the gameplay state instead of raw keys', () => {
-    expect(hudSource).toContain('state.statusMessageKey')
-    expect(hudSource).toContain('{statusMessageText()}')
-    expect(hudSource).toContain("replace('{phase}', String(state.bossPhase))")
-    expect(hudSource).toContain("replace('{max}', String(state.bossPhaseMax))")
-    expect(hudSource).not.toContain('>status.bossPattern<')
-    expect(hudSource).not.toContain('>status.initial<')
+  it('keeps objective copy in the objective panel instead of under character info', () => {
+    expect(hudSource).toContain('function objectiveText()')
+    expect(hudSource).toContain("text('stageObjectives.stageClear')")
+    expect(hudSource).toContain("text('stageObjectives.defeatBoss')")
+    expect(hudSource).toContain("text('stageObjectives.reachGoal')")
+    expect(hudSource).toContain('<p>{objectiveText()}</p>')
+    expect(hudSource).not.toContain('state.statusMessageKey')
+    expect(hudSource).not.toContain('{statusMessageText()}')
   })
 
   it('wires GameplayScreen stage display data to the HUD', () => {
