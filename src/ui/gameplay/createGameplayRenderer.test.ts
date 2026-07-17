@@ -2352,6 +2352,69 @@ describe('createGameplayRendererConfig', () => {
     expect(runtime.cameraFollowTarget).toBe(runtime.playerSprite)
   })
 
+  it('creates moving platform sprites from stage map data and registers player collision', () => {
+    const stage = createEnemyFixtureStage()
+    stage.movingPlatforms = [
+      {
+        id: 'test-lift',
+        col: 10,
+        row: 8,
+        width: 3,
+        height: 1,
+        axis: 'y',
+        distance: 64,
+        durationMs: 1000,
+        phase: 0,
+        origin: { x: 736, y: 544 },
+      },
+    ]
+    const runtime = createSceneRuntime({ stage })
+
+    runtime.scene.create()
+
+    const movingPlatform = runtime.staticImageCalls.find(
+      (sprite) => sprite.texture === 'terrain-tiles' && sprite.x === 736,
+    )
+    expect(movingPlatform).toBeDefined()
+    expect(runtime.colliderCalls).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ a: runtime.playerSprite, b: movingPlatform }),
+      ]),
+    )
+  })
+
+  it('updates moving platform positions from elapsed gameplay time', () => {
+    const stage = createEnemyFixtureStage()
+    stage.movingPlatforms = [
+      {
+        id: 'test-ferry',
+        col: 10,
+        row: 8,
+        width: 3,
+        height: 1,
+        axis: 'x',
+        distance: 100,
+        durationMs: 1000,
+        phase: 0,
+        origin: { x: 736, y: 544 },
+      },
+    ]
+    const runtime = createSceneRuntime({ stage })
+    runtime.scene.create()
+
+    const movingPlatform = runtime.staticImageCalls.find(
+      (sprite) => sprite.texture === 'terrain-tiles' && sprite.x === 736,
+    )
+    expect(movingPlatform).toBeDefined()
+    if (!movingPlatform) return
+
+    startGameplay(runtime)
+    runtime.scene.update(250, 234)
+
+    expect(movingPlatform.x).toBe(786)
+    expect(movingPlatform.y).toBe(544)
+  })
+
   it('registers idle and run animations from the domain actor definition', () => {
     const runtime = createSceneRuntime()
 

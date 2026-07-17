@@ -68,7 +68,9 @@ import type {
   GameplayCoinPoint,
   GameplayEnemySpawn,
   GameplayHazardSpawn,
+  GameplayMovingPlatformSpawn,
 } from '../../domain/gameplay/gameplayMapTypes'
+import { getMovingPlatformPositionAtTime } from '../../domain/gameplay/movingPlatform'
 import {
   bufferMovableActorJump,
   createMovableActorJumpState,
@@ -206,6 +208,11 @@ type HazardRuntime = {
   spawn: GameplayHazardSpawn
 }
 
+type MovingPlatformRuntime = {
+  sprite: Phaser.Types.Physics.Arcade.ImageWithStaticBody
+  spawn: GameplayMovingPlatformSpawn
+}
+
 type CheckpointRuntime = {
   sprite: Phaser.GameObjects.Image
   glow: Phaser.GameObjects.Ellipse
@@ -278,6 +285,7 @@ class GameplayMapScene extends Phaser.Scene {
   private homingTarget: Phaser.Physics.Arcade.Sprite | null = null
   private homingReticle: Phaser.GameObjects.Image | null = null
   private hazards: HazardRuntime[] = []
+  private movingPlatforms: MovingPlatformRuntime[] = []
   private checkpoints: CheckpointRuntime[] = []
   private goal: GoalRuntime | null = null
   private activeCheckpointIndex = -1
@@ -385,6 +393,7 @@ class GameplayMapScene extends Phaser.Scene {
 
     this.createBackgroundLayers()
     this.terrainLayer = this.createTerrainLayer(columns, rows)
+    this.createMovingPlatforms()
     this.createPlayerAnimations()
     this.createGoalAnimation()
     this.createEnemyTextures()
@@ -402,6 +411,7 @@ class GameplayMapScene extends Phaser.Scene {
     this.createCoins()
     this.playerKeys = this.createPlayerKeys()
     this.createPlayer()
+    this.createMovingPlatformColliders()
     this.damageTaken = 0
     this.falls = 0
     this.enemiesDefeated = 0
@@ -438,6 +448,7 @@ class GameplayMapScene extends Phaser.Scene {
 
     this.advanceGameplayElapsed(delta)
 
+    this.updateMovingPlatforms()
     this.updateEnemyPatrol()
     this.updateBossProjectiles()
     this.processActiveMeleeHitboxes()
@@ -579,6 +590,54 @@ class GameplayMapScene extends Phaser.Scene {
     layer.setDepth(5)
 
     return layer
+  }
+
+  private createMovingPlatforms(): void {
+    this.movingPlatforms = this.stageMap.movingPlatforms.map((spawn) => {
+      const sprite = this.physics.add.staticImage(
+        spawn.origin.x,
+        spawn.origin.y,
+        'terrain-tiles',
+        1,
+      )
+      sprite.setOrigin(0.5, 0.5)
+      sprite.setDisplaySize(
+        spawn.width * this.stageMap.world.tileSize,
+        spawn.height * this.stageMap.world.tileSize,
+      )
+      sprite.setDepth(6)
+      sprite.refreshBody()
+
+      return { sprite, spawn }
+    })
+  }
+
+  private updateMovingPlatforms(): void {
+    for (const platform of this.movingPlatforms) {
+      const position = getMovingPlatformPositionAtTime({
+        path: {
+          origin: platform.spawn.origin,
+          axis: platform.spawn.axis,
+          distance: platform.spawn.distance,
+          durationMs: platform.spawn.durationMs,
+          phase: platform.spawn.phase,
+        },
+        elapsedMs: this.gameplayElapsedMs,
+      })
+      platform.sprite.setPosition(position.x, position.y)
+      platform.sprite.refreshBody()
+    }
+  }
+
+  private createMovingPlatformColliders(): void {
+    if (!this.player) return
+
+    for (const platform of this.movingPlatforms) {
+      this.physics.add.collider(this.player, platform.sprite)
+      for (const enemy of this.enemies) {
+        this.physics.add.collider(enemy.sprite, platform.sprite)
+      }
+    }
   }
 
   private createPlayerAnimations(): void {
