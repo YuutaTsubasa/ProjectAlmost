@@ -2352,7 +2352,7 @@ describe('createGameplayRendererConfig', () => {
     expect(runtime.cameraFollowTarget).toBe(runtime.playerSprite)
   })
 
-  it('creates moving platform sprites from stage map data and registers player collision', () => {
+  it('creates moving platform sprites from stage map data and registers player and enemy collision', () => {
     const stage = createEnemyFixtureStage()
     stage.movingPlatforms = [
       {
@@ -2376,9 +2376,14 @@ describe('createGameplayRendererConfig', () => {
       (sprite) => sprite.texture === 'terrain-tiles' && sprite.x === 736,
     )
     expect(movingPlatform).toBeDefined()
+    const guard = runtime.enemySprites.find(
+      (sprite) => sprite.texture === enemyActorDefinitions['armor-guard'].sprites?.walk?.key,
+    )
+    expect(guard).toBeDefined()
     expect(runtime.colliderCalls).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ a: runtime.playerSprite, b: movingPlatform }),
+        expect.objectContaining({ a: guard, b: movingPlatform }),
       ]),
     )
   })
