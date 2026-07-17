@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { GameplayStageMap } from './gameplayMapTypes'
+import { getScoreEnemyTargetCount } from './enemyActor'
 import { PLAYER_MAX_HEALTH } from './playerLife'
 import { getGameplayStageMap } from './gameplayStageMaps'
 import {
@@ -55,6 +56,7 @@ function createHudEnemyFixture(): GameplayStageMap {
         y: 320,
         patrolMinX: 1_760,
         patrolMaxX: 1_760,
+        countsForScore: false,
       },
     ],
     coins: [],
@@ -144,7 +146,7 @@ describe('gameplay HUD state', () => {
       damageTaken: 0,
       falls: 0,
       enemiesDefeated: 0,
-      enemyTarget: stage.enemies.length,
+      enemyTarget: getScoreEnemyTargetCount({ enemies: stage.enemies }),
       checkpointsReached: 0,
       checkpointTarget: stage.checkpoints.length,
       activeCheckpointIndex: -1,

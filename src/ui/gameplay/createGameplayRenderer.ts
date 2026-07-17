@@ -3,9 +3,15 @@ import type { GameplaySfxAction } from '../../domain/audio/audioPolicy'
 import {
   enemyActorDefinitions,
   enemyDefeatPresentation,
+  enemyRegenerationPresentation,
+  getEnemyDefeatOutcome,
   getEnemySpawnY,
   getEnemyDefeatPresentation,
+  getEnemyRegenerationDecision,
+  getEnemyRegenerationPresentation,
+  getEnemyRespawnDelayMs,
   getNextEnemyPatrolDirection,
+  getScoreEnemyTargetCount,
   shouldProcessEnemyDefeat,
   shouldUpdateEnemyPatrol,
   type EnemyPatrolDirection,
@@ -184,6 +190,7 @@ type EnemyRuntime = {
   spawn: GameplayEnemySpawn
   direction: EnemyPatrolDirection
   defeated: boolean
+  regenerating: boolean
 }
 
 type BossProjectileRuntime = Phaser.Physics.Arcade.Sprite
@@ -1104,7 +1111,7 @@ class GameplayMapScene extends Phaser.Scene {
       coins: this.collectedCoins,
       coinTarget: this.stageMap.coins.length,
       enemiesDefeated: this.enemiesDefeated,
-      enemyTarget: this.stageMap.enemies.length,
+      enemyTarget: getScoreEnemyTargetCount({ enemies: this.stageMap.enemies }),
       checkpointsReached: this.getReachedCheckpointCount(),
       checkpointTarget: this.stageMap.checkpoints.length,
       damageTaken: this.damageTaken,
@@ -1119,7 +1126,7 @@ class GameplayMapScene extends Phaser.Scene {
       damageTaken: this.damageTaken,
       falls: this.falls,
       enemiesDefeated: this.enemiesDefeated,
-      enemyTarget: this.stageMap.enemies.length,
+      enemyTarget: getScoreEnemyTargetCount({ enemies: this.stageMap.enemies }),
       checkpointsReached: this.getReachedCheckpointCount(),
       checkpointTarget: this.stageMap.checkpoints.length,
       rank,
@@ -1172,6 +1179,7 @@ class GameplayMapScene extends Phaser.Scene {
           spawn,
           direction,
           defeated: false,
+          regenerating: false,
         }
       } else {
         const definition = enemyActorDefinitions['azure-core']
@@ -1206,6 +1214,7 @@ class GameplayMapScene extends Phaser.Scene {
           spawn,
           direction: -1,
           defeated: false,
+          regenerating: false,
         }
       }
     })
@@ -1321,6 +1330,7 @@ class GameplayMapScene extends Phaser.Scene {
     const definition = enemyActorDefinitions[enemy.spawn.type]
 
     enemy.defeated = false
+    enemy.regenerating = false
     enemy.sprite
       .setVisible(true)
       .setAlpha(1)
@@ -1772,9 +1782,11 @@ class GameplayMapScene extends Phaser.Scene {
       return
     }
 
+    const defeatOutcome = getEnemyDefeatOutcome(enemy.spawn)
     enemy.defeated = true
+    enemy.regenerating = false
     this.emitGameplaySfx('player-hit')
-    this.enemiesDefeated += 1
+    this.enemiesDefeated += defeatOutcome.scoreDelta
     this.emitHudPatch({
       enemiesDefeated: this.enemiesDefeated,
       enemyMarkers: getHudEnemyMarkers({
@@ -1813,7 +1825,113 @@ class GameplayMapScene extends Phaser.Scene {
     }
 
     this.time.delayedCall(enemyDefeatPresentation.hideDelayMs, () => {
-      enemy.sprite.setVisible(false)
+      if (enemy.defeated && !enemy.regenerating) {
+        enemy.sprite.setVisible(false)
+      }
+    })
+
+    if (defeatOutcome.shouldRegenerate) {
+      this.scheduleEnemyRegeneration(enemy)
+    }
+  }
+
+  private scheduleEnemyRegeneration(enemy: EnemyRuntime): void {
+    this.time.delayedCall(getEnemyRespawnDelayMs(enemy.spawn), () => {
+      this.tryRegenerateEnemy(enemy)
+    })
+  }
+
+  private tryRegenerateEnemy(enemy: EnemyRuntime): void {
+    const spawnY = getEnemySpawnY(enemy.spawn)
+    const playerDistance = this.player
+      ? Phaser.Math.Distance.Between(this.player.x, this.player.y, enemy.spawn.x, spawnY)
+      : Number.POSITIVE_INFINITY
+    const decision = getEnemyRegenerationDecision({
+      stageCleared: this.stageCleared,
+      enemyDefeated: enemy.defeated,
+      playerDead: this.isPlayerDead,
+      playerDistance,
+    })
+
+    if (decision === 'skip') return
+    if (decision === 'delay') {
+      this.time.delayedCall(enemyRegenerationPresentation.retryDelayMs, () => {
+        this.tryRegenerateEnemy(enemy)
+      })
+      return
+    }
+
+    this.regenerateEnemy(enemy, spawnY)
+  }
+
+  private regenerateEnemy(enemy: EnemyRuntime, spawnY: number): void {
+    this.tweens.killTweensOf(enemy.sprite)
+    enemy.sprite.setPosition(enemy.spawn.x, spawnY)
+    enemy.regenerating = true
+    enemy.direction = enemy.spawn.type === 'armor-guard'
+      ? enemyActorDefinitions['armor-guard'].patrol.initialDirection
+      : -1
+
+    if (getEnemyRegenerationPresentation(enemy.spawn.type) === 'azure-core-materialize') {
+      this.regenerateAzureCore(enemy)
+    } else {
+      this.resetEnemyRuntime(enemy)
+      this.emitEnemyMarkerPatch()
+    }
+  }
+
+  private regenerateAzureCore(enemy: EnemyRuntime): void {
+    const definition = enemyActorDefinitions['azure-core']
+    const textureKey = definition.generatedTexture?.key
+    if (textureKey) {
+      enemy.sprite.setTexture(textureKey)
+    }
+
+    enemy.sprite
+      .setVisible(true)
+      .setAlpha(enemyRegenerationPresentation.azureCore.startAlpha)
+      .setScale(enemyRegenerationPresentation.azureCore.startScale)
+      .setAngle(0)
+      .setVelocity(0, 0)
+
+    const body = enemy.sprite.body as Phaser.Physics.Arcade.Body | null
+    if (body) {
+      body.enable = false
+    }
+
+    if (enemy.spawn.type === 'azure-core') {
+      this.createAzureCoreFloat(enemy.sprite, enemy.spawn.y)
+    }
+
+    this.tweens.add({
+      targets: enemy.sprite,
+      scale: enemyRegenerationPresentation.azureCore.endScale,
+      alpha: enemyRegenerationPresentation.azureCore.endAlpha,
+      duration: enemyRegenerationPresentation.azureCore.durationMs,
+      ease: enemyRegenerationPresentation.azureCore.ease,
+      onComplete: () => {
+        enemy.defeated = false
+        enemy.regenerating = false
+        const completedBody = enemy.sprite.body as Phaser.Physics.Arcade.Body | null
+        if (completedBody) {
+          completedBody.enable = true
+        }
+        this.emitEnemyMarkerPatch()
+      },
+    })
+  }
+
+  private emitEnemyMarkerPatch(): void {
+    this.emitHudPatch({
+      enemyMarkers: getHudEnemyMarkers({
+        enemies: this.enemies.map((candidate) => ({
+          x: candidate.sprite.x,
+          y: candidate.sprite.y,
+          defeated: candidate.defeated,
+        })),
+        worldWidth: this.stageMap.world.width,
+        worldHeight: this.stageMap.world.height,
+      }),
     })
   }
 

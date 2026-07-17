@@ -111,6 +111,7 @@ function convertEnemy(enemy: GameplayStageSource['enemies'][number]): GameplayEn
 function getEnemyRuntimeMetadata(enemy: GameplayStageSource['enemies'][number]) {
   return {
     ...(enemy.respawnPolicy === undefined ? {} : { respawnPolicy: enemy.respawnPolicy }),
+    ...(enemy.respawnDelayMs === undefined ? {} : { respawnDelayMs: enemy.respawnDelayMs }),
     ...(enemy.countsForScore === undefined ? {} : { countsForScore: enemy.countsForScore }),
   }
 }

@@ -180,6 +180,34 @@ describe('convertGameplayStageSource', () => {
     })).toBe(true)
   })
 
+  it('preserves regeneration delay metadata for runtime enemy respawns', () => {
+    const source = {
+      ...firstGateSource,
+      enemies: [
+        {
+          id: 'regenerating-core',
+          type: 'azure-core',
+          x: 1760,
+          y: 320,
+          patrolMinX: 1760,
+          patrolMaxX: 1760,
+          respawnPolicy: 'regenerate',
+          respawnDelayMs: 650,
+          countsForScore: false,
+        },
+      ],
+    } satisfies GameplayStageSource
+
+    const result = convertGameplayStageSource(source, gameplayStageVisualProfiles)
+
+    expect(result.map.enemies[0]).toMatchObject({
+      id: 'regenerating-core',
+      respawnPolicy: 'regenerate',
+      respawnDelayMs: 650,
+      countsForScore: false,
+    })
+  })
+
   it('emits diagnostics for unsupported mechanics without putting them into the runtime map', () => {
     const result = convertGameplayStageSource(
       {

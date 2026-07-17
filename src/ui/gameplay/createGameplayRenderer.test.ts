@@ -1,5 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { enemyActorDefinitions } from '../../domain/gameplay/enemyActor'
+import {
+  enemyActorDefinitions,
+  enemyRegenerationPresentation,
+  getScoreEnemyTargetCount,
+} from '../../domain/gameplay/enemyActor'
 import { checkpointActorDefinition, getCheckpointBottomY } from '../../domain/gameplay/checkpointActor'
 import { bossPriestessSpriteAssets, getBossPatternDelayMs } from '../../domain/gameplay/bossBattle'
 import { getGoalBottomY, goalActorDefinition } from '../../domain/gameplay/goalActor'
@@ -1525,12 +1529,12 @@ describe('createGameplayRendererConfig', () => {
     if (!runtime.playerSprite) return
     startGameplay(runtime)
 
-    const core = runtime.sprites.find((sprite) => sprite.texture === 'azure-core')
-    expect(core).toBeDefined()
-    if (!core) return
+    const guard = runtime.sprites.find((sprite) => sprite.texture === 'enemy-guard-walk')
+    expect(guard).toBeDefined()
+    if (!guard) return
 
-    runtime.playerSprite.x = core.x
-    runtime.playerSprite.y = core.y
+    runtime.playerSprite.x = guard.x - 48
+    runtime.playerSprite.y = guard.y
     runtime.playerKeys.j.isDown = true
     runtime.scene.update()
 
@@ -1607,7 +1611,7 @@ describe('createGameplayRendererConfig', () => {
         coins: 0,
         coinTarget: stage.coins.length,
         enemiesDefeated: 0,
-        enemyTarget: stage.enemies.length,
+        enemyTarget: getScoreEnemyTargetCount({ enemies: stage.enemies }),
         checkpointsReached: 0,
         checkpointTarget: stage.checkpoints.length,
         damageTaken: 0,
@@ -1717,7 +1721,7 @@ describe('createGameplayRendererConfig', () => {
       )
       expect(runtime.hudUpdates[0]).toMatchObject({
         coinTarget: stage.coins.length,
-        enemyTarget: stage.enemies.length,
+        enemyTarget: getScoreEnemyTargetCount({ enemies: stage.enemies }),
         checkpointTarget: stage.checkpoints.length,
       })
     },
@@ -3837,6 +3841,180 @@ describe('createGameplayRendererConfig', () => {
         (call) => call.targets === core && 'scale' in call && call.scale === 1.8,
       ),
     ).toHaveLength(1)
+  })
+
+  it('regenerates Armor Guard enemies from their spawn after the respawn delay', () => {
+    const stage = createEnemyFixtureStage()
+    stage.enemies = [
+      {
+        id: 'regenerating-guard',
+        type: 'armor-guard',
+        x: 720,
+        surfaceY: 512,
+        patrolMinX: 608,
+        patrolMaxX: 832,
+        respawnPolicy: 'regenerate',
+        respawnDelayMs: 650,
+      },
+    ]
+    const runtime = createSceneRuntime({ stage })
+    runtime.scene.create()
+    const guard = getEnemySpriteAt(runtime, 720)
+    startGameplay(runtime)
+
+    runtime.playerSprite!.x = 672
+    runtime.playerSprite!.y = guard.y
+    runtime.playerKeys.j.isDown = true
+    runtime.scene.update()
+
+    expect(guard.body.enable).toBe(false)
+    runtime.playerKeys.j.isDown = false
+    runtime.placePlayerNear(128, 512)
+    guard.x = 999
+    guard.setAlpha(0)
+    guard.setScale(1.8)
+
+    runtime.runDelayedCalls(650)
+
+    expect(guard.x).toBe(720)
+    expect(guard.visible).toBe(true)
+    expect(guard.alpha).toBe(1)
+    expect(guard.scale).toBe(enemyActorDefinitions['armor-guard'].scale)
+    expect(guard.body.enable).toBe(true)
+    expect(guard.playCalls.at(-1)).toEqual({
+      key: enemyActorDefinitions['armor-guard'].sprites?.walk.key,
+      ignoreIfPlaying: true,
+    })
+  })
+
+  it('regenerates Azure Core enemies with materialize tween before re-enabling the body', () => {
+    const stage = createEnemyFixtureStage()
+    stage.enemies = [
+      {
+        id: 'regenerating-core',
+        type: 'azure-core',
+        x: 1760,
+        y: 320,
+        patrolMinX: 1760,
+        patrolMaxX: 1760,
+        respawnPolicy: 'regenerate',
+        respawnDelayMs: 650,
+      },
+    ]
+    const runtime = createSceneRuntime({ stage })
+    runtime.scene.create()
+    const core = getEnemySpriteAt(runtime, 1760)
+    startGameplay(runtime)
+
+    runtime.playerSprite!.x = 1712
+    runtime.playerSprite!.y = core.y
+    runtime.playerKeys.z.isDown = true
+    runtime.scene.update()
+
+    runtime.playerKeys.z.isDown = false
+    runtime.placePlayerNear(128, 512)
+    runtime.runDelayedCalls(650)
+
+    const materializeTween = runtime.tweenCalls.at(-1)
+    expect(core.visible).toBe(true)
+    expect(core.alpha).toBe(enemyRegenerationPresentation.azureCore.startAlpha)
+    expect(core.scale).toBe(enemyRegenerationPresentation.azureCore.startScale)
+    expect(core.body.enable).toBe(false)
+    expect(materializeTween).toMatchObject({
+      targets: core,
+      scale: enemyRegenerationPresentation.azureCore.endScale,
+      alpha: enemyRegenerationPresentation.azureCore.endAlpha,
+      duration: enemyRegenerationPresentation.azureCore.durationMs,
+      ease: enemyRegenerationPresentation.azureCore.ease,
+    })
+
+    materializeTween?.onComplete?.()
+
+    expect(core.body.enable).toBe(true)
+  })
+
+  it('keeps a short-delay Azure Core regeneration visible after the defeat hide callback fires', () => {
+    const stage = createEnemyFixtureStage()
+    stage.enemies = [
+      {
+        id: 'fast-regenerating-core',
+        type: 'azure-core',
+        x: 1760,
+        y: 320,
+        patrolMinX: 1760,
+        patrolMaxX: 1760,
+        respawnPolicy: 'regenerate',
+        respawnDelayMs: 200,
+      },
+    ]
+    const runtime = createSceneRuntime({ stage })
+    runtime.scene.create()
+    const core = getEnemySpriteAt(runtime, 1760)
+    startGameplay(runtime)
+
+    runtime.playerSprite!.x = 1712
+    runtime.playerSprite!.y = core.y
+    runtime.playerKeys.z.isDown = true
+    runtime.scene.update()
+
+    runtime.playerKeys.z.isDown = false
+    runtime.placePlayerNear(128, 512)
+    runtime.runDelayedCalls(200)
+    expect(core.visible).toBe(true)
+
+    runtime.runDelayedCalls(320)
+
+    expect(core.visible).toBe(true)
+    expect(core.body.enable).toBe(false)
+  })
+
+  it('keeps non-scoring regenerating enemies out of defeated HUD score and restores their marker after regeneration', () => {
+    const stage = createEnemyFixtureStage()
+    stage.enemies = [
+      {
+        id: 'regenerating-core',
+        type: 'azure-core',
+        x: 1760,
+        y: 320,
+        patrolMinX: 1760,
+        patrolMaxX: 1760,
+        respawnPolicy: 'regenerate',
+        respawnDelayMs: 650,
+        countsForScore: false,
+      },
+    ]
+    const runtime = createSceneRuntime({ stage })
+    runtime.scene.create()
+    const core = getEnemySpriteAt(runtime, 1760)
+    startGameplay(runtime)
+
+    runtime.playerSprite!.x = 1712
+    runtime.playerSprite!.y = core.y
+    runtime.playerKeys.z.isDown = true
+    runtime.scene.update()
+
+    expect(runtime.hudUpdates).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          enemiesDefeated: 0,
+          enemyMarkers: [],
+        }),
+      ]),
+    )
+
+    runtime.playerKeys.z.isDown = false
+    runtime.placePlayerNear(128, 512)
+    runtime.runDelayedCalls(650)
+    runtime.tweenCalls.at(-1)?.onComplete?.()
+
+    expect(runtime.hudUpdates.at(-1)).toMatchObject({
+      enemyMarkers: [
+        expect.objectContaining({
+          x: 1760 / stage.world.width,
+          y: 320 / stage.world.height,
+        }),
+      ],
+    })
   })
 
   it('applies survived enemy contact damage with hurt knockback, animation, and blink', () => {

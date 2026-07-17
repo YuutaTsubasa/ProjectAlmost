@@ -2,9 +2,16 @@ import { describe, expect, it } from 'vitest'
 import {
   enemyActorDefinitions,
   enemyDefeatPresentation,
+  enemyCountsForScore,
+  enemyRegenerationPresentation,
   getEnemyDefeatPresentation,
+  getEnemyDefeatOutcome,
+  getEnemyRegenerationDecision,
+  getEnemyRegenerationPresentation,
+  getEnemyRespawnDelayMs,
   getEnemySpawnY,
   getNextEnemyPatrolDirection,
+  getScoreEnemyTargetCount,
   shouldProcessEnemyDefeat,
   shouldUpdateEnemyPatrol,
 } from './enemyActor'
@@ -172,5 +179,107 @@ describe('shouldProcessEnemyDefeat', () => {
     expect(shouldProcessEnemyDefeat({ enemyExists: true, defeated: false })).toBe(true)
     expect(shouldProcessEnemyDefeat({ enemyExists: true, defeated: true })).toBe(false)
     expect(shouldProcessEnemyDefeat({ enemyExists: false, defeated: false })).toBe(false)
+  })
+})
+
+describe('enemy scoring rules', () => {
+  it('defaults persistent guards to scoring enemies and regenerating Azure Cores to support enemies', () => {
+    expect(enemyCountsForScore({ type: 'armor-guard' })).toBe(true)
+    expect(enemyCountsForScore({ type: 'azure-core' })).toBe(false)
+  })
+
+  it('allows stage metadata to override score counting', () => {
+    expect(enemyCountsForScore({ type: 'armor-guard', countsForScore: false })).toBe(false)
+    expect(enemyCountsForScore({ type: 'azure-core', countsForScore: true })).toBe(true)
+  })
+
+  it('counts only score-counting enemies for HUD targets and result scoring', () => {
+    expect(getScoreEnemyTargetCount({
+      enemies: [
+        { type: 'armor-guard' },
+        { type: 'azure-core' },
+        { type: 'azure-core', countsForScore: true },
+        { type: 'armor-guard', countsForScore: false },
+      ],
+    })).toBe(2)
+  })
+
+  it('returns defeat outcome score and regeneration routing from enemy metadata', () => {
+    expect(getEnemyDefeatOutcome({ type: 'azure-core' })).toEqual({
+      scoreDelta: 0,
+      shouldRegenerate: true,
+    })
+    expect(getEnemyDefeatOutcome({ type: 'azure-core', respawnPolicy: 'persistent' })).toEqual({
+      scoreDelta: 0,
+      shouldRegenerate: false,
+    })
+    expect(getEnemyDefeatOutcome({ type: 'azure-core', respawnPolicy: 'regenerate' })).toEqual({
+      scoreDelta: 0,
+      shouldRegenerate: true,
+    })
+    expect(getEnemyDefeatOutcome({ type: 'armor-guard', countsForScore: false })).toEqual({
+      scoreDelta: 0,
+      shouldRegenerate: false,
+    })
+  })
+})
+
+describe('enemy regeneration rules', () => {
+  it('uses stage respawn delay overrides and the prototype default delay', () => {
+    expect(getEnemyRespawnDelayMs({ respawnDelayMs: 650 })).toBe(650)
+    expect(getEnemyRespawnDelayMs({})).toBe(1400)
+  })
+
+  it('skips, delays, or regenerates based on stage and player state', () => {
+    expect(getEnemyRegenerationDecision({
+      stageCleared: true,
+      enemyDefeated: true,
+      playerDead: false,
+      playerDistance: 500,
+    })).toBe('skip')
+    expect(getEnemyRegenerationDecision({
+      stageCleared: false,
+      enemyDefeated: false,
+      playerDead: false,
+      playerDistance: 500,
+    })).toBe('skip')
+    expect(getEnemyRegenerationDecision({
+      stageCleared: false,
+      enemyDefeated: true,
+      playerDead: true,
+      playerDistance: 500,
+    })).toBe('delay')
+    expect(getEnemyRegenerationDecision({
+      stageCleared: false,
+      enemyDefeated: true,
+      playerDead: false,
+      playerDistance: 80,
+    })).toBe('delay')
+    expect(getEnemyRegenerationDecision({
+      stageCleared: false,
+      enemyDefeated: true,
+      playerDead: false,
+      playerDistance: 500,
+    })).toBe('regenerate')
+  })
+
+  it('defines prototype presentation values for regenerated enemies', () => {
+    expect(enemyRegenerationPresentation).toEqual({
+      retryDelayMs: 300,
+      safeDistance: 140,
+      azureCore: {
+        startScale: 0.35,
+        endScale: 1,
+        startAlpha: 0,
+        endAlpha: 1,
+        durationMs: 320,
+        ease: 'Back.easeOut',
+      },
+    })
+  })
+
+  it('routes each enemy type to its regeneration presentation', () => {
+    expect(getEnemyRegenerationPresentation('armor-guard')).toBe('armor-guard-restore')
+    expect(getEnemyRegenerationPresentation('azure-core')).toBe('azure-core-materialize')
   })
 })

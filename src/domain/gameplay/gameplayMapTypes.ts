@@ -69,6 +69,7 @@ export type GameplayEnemySpawn = ArmorGuardSpawn | AzureCoreSpawn
 
 export type GameplayEnemyRuntimeMetadata = {
   respawnPolicy?: 'persistent' | 'regenerate'
+  respawnDelayMs?: number
   countsForScore?: boolean
 }
 

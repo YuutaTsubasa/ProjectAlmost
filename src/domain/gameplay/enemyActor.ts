@@ -3,6 +3,9 @@ export type EnemyPlacement = 'grounded' | 'airborne'
 export type EnemyBehavior = 'patrol' | 'homing-target'
 export type EnemyPatrolDirection = -1 | 1
 export type EnemyDefeatPresentation = 'armor-guard-death' | 'azure-core-burst'
+export type EnemyRespawnPolicy = 'persistent' | 'regenerate'
+export type EnemyRegenerationDecision = 'skip' | 'delay' | 'regenerate'
+export type EnemyRegenerationPresentation = 'armor-guard-restore' | 'azure-core-materialize'
 
 export type EnemySpriteDefinition = {
   key: string
@@ -58,6 +61,17 @@ export type AzureCoreSpawnInput = {
 }
 
 export type EnemySpawnYInput = ArmorGuardSpawnInput | AzureCoreSpawnInput
+export type EnemyRuleInput = {
+  type: EnemyActorType
+  respawnPolicy?: EnemyRespawnPolicy
+  respawnDelayMs?: number
+  countsForScore?: boolean
+}
+
+export type EnemyDefeatOutcome = {
+  scoreDelta: number
+  shouldRegenerate: boolean
+}
 
 export const enemyActorDefinitions = {
   'armor-guard': {
@@ -132,6 +146,33 @@ export const enemyDefeatPresentation = {
   },
 } as const
 
+export const enemyRegenerationPresentation = {
+  retryDelayMs: 300,
+  safeDistance: 140,
+  azureCore: {
+    startScale: 0.35,
+    endScale: 1,
+    startAlpha: 0,
+    endAlpha: 1,
+    durationMs: 320,
+    ease: 'Back.easeOut',
+  },
+} as const
+
+const defaultEnemyRules = {
+  'armor-guard': {
+    respawnPolicy: 'persistent',
+    countsForScore: true,
+  },
+  'azure-core': {
+    respawnPolicy: 'regenerate',
+    countsForScore: false,
+  },
+} as const satisfies Record<EnemyActorType, {
+  respawnPolicy: EnemyRespawnPolicy
+  countsForScore: boolean
+}>
+
 export function getEnemySpawnY(input: EnemySpawnYInput): number {
   if (input.type === 'azure-core') {
     return input.y
@@ -159,6 +200,46 @@ export function getEnemyDefeatPresentation(type: EnemyActorType): EnemyDefeatPre
   }
 
   return 'azure-core-burst'
+}
+
+export function enemyCountsForScore(input: Pick<EnemyRuleInput, 'type' | 'countsForScore'>): boolean {
+  return input.countsForScore ?? defaultEnemyRules[input.type].countsForScore
+}
+
+export function getScoreEnemyTargetCount(input: {
+  enemies: readonly Pick<EnemyRuleInput, 'type' | 'countsForScore'>[]
+}): number {
+  return input.enemies.filter((enemy) => enemyCountsForScore(enemy)).length
+}
+
+export function getEnemyDefeatOutcome(input: Pick<EnemyRuleInput, 'type' | 'respawnPolicy' | 'countsForScore'>): EnemyDefeatOutcome {
+  const respawnPolicy = input.respawnPolicy ?? defaultEnemyRules[input.type].respawnPolicy
+
+  return {
+    scoreDelta: enemyCountsForScore(input) ? 1 : 0,
+    shouldRegenerate: respawnPolicy === 'regenerate',
+  }
+}
+
+export function getEnemyRespawnDelayMs(input: Pick<EnemyRuleInput, 'respawnDelayMs'>): number {
+  return input.respawnDelayMs ?? 1400
+}
+
+export function getEnemyRegenerationDecision(input: {
+  stageCleared: boolean
+  enemyDefeated: boolean
+  playerDead: boolean
+  playerDistance: number
+  safeDistance?: number
+}): EnemyRegenerationDecision {
+  if (input.stageCleared || !input.enemyDefeated) return 'skip'
+  if (input.playerDead) return 'delay'
+  if (input.playerDistance < (input.safeDistance ?? enemyRegenerationPresentation.safeDistance)) return 'delay'
+  return 'regenerate'
+}
+
+export function getEnemyRegenerationPresentation(type: EnemyActorType): EnemyRegenerationPresentation {
+  return type === 'azure-core' ? 'azure-core-materialize' : 'armor-guard-restore'
 }
 
 export function shouldProcessEnemyDefeat(input: {

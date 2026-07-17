@@ -1,5 +1,6 @@
 import type { GameplayStageMap } from './gameplayMapTypes'
 import { getBossHudPhaseDisplay, isBossStageDefinition } from './bossBattle'
+import { getScoreEnemyTargetCount } from './enemyActor'
 import type { ClearRank } from './stageResult'
 import { PLAYER_MAX_HEALTH } from './playerLife'
 import { getTileColumnCount } from './terrain'
@@ -169,7 +170,7 @@ export function createInitialGameplayHudState(stage: GameplayStageMap): Gameplay
     damageTaken: 0,
     falls: 0,
     enemiesDefeated: 0,
-    enemyTarget: stage.enemies.length,
+    enemyTarget: getScoreEnemyTargetCount({ enemies: stage.enemies }),
     checkpointsReached: 0,
     checkpointTarget: stage.checkpoints.length,
     activeCheckpointIndex: -1,
