@@ -28,7 +28,7 @@ Prototype files under `__prototype__/` are reference-only. This feature must not
 - Moving platform motion must be deterministic and pure in the domain layer.
 - A platform moves between its authored tile-grid origin and origin plus `distance` on the configured axis.
 - Movement loops as a ping-pong path: start -> end -> start.
-- `phase` offsets the starting point in the loop; missing phase is `0`.
+- `phase` offsets the starting point in the loop directly; normalized values in `0..1` map to the same cycle offset without scaling, and missing phase is `0`.
 - Renderer code must consume the domain-computed platform state instead of hiding motion rules inside Phaser tweens.
 - Player/platform collision must be handled through the existing Phaser adapter layer.
 - Existing static platforms must keep working unchanged.

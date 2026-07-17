@@ -42,7 +42,7 @@ export function getMovingPlatformPositionAtTime(input: {
   elapsedMs: number
 }): MovingPlatformPosition {
   const durationMs = Math.max(1, input.path.durationMs)
-  const cycleProgress = ((Math.max(0, input.elapsedMs) / durationMs + normalizeMovingPlatformPhase(input.path.phase) * 2) % 1 + 1) % 1
+  const cycleProgress = ((Math.max(0, input.elapsedMs) / durationMs + normalizeMovingPlatformPhase(input.path.phase)) % 1 + 1) % 1
   const progress = cycleProgress <= 0.5 ? cycleProgress * 2 : (1 - cycleProgress) * 2
   const direction: MovingPlatformDirection = cycleProgress < 0.5 ? 1 : -1
   const offset = input.path.distance * progress

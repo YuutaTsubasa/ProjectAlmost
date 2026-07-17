@@ -74,16 +74,33 @@ describe('getMovingPlatformPositionAtTime', () => {
     })
   })
 
-  it('applies phase as a loop offset', () => {
+  it('applies phase directly as a normalized loop offset', () => {
     expect(getMovingPlatformPositionAtTime({
       path: { ...verticalPath, phase: 0.25 },
       elapsedMs: 0,
     })).toEqual({
       x: 1792,
-      y: 680,
-      progress: 1,
-      direction: -1,
+      y: 644,
+      progress: 0.5,
+      direction: 1,
     })
+  })
+
+  it('keeps an upper-half authored phase on the backward half of the loop', () => {
+    const earlyLoopPosition = getMovingPlatformPositionAtTime({
+      path: { ...verticalPath, phase: 0.1 },
+      elapsedMs: 0,
+    })
+    const upperHalfPosition = getMovingPlatformPositionAtTime({
+      path: { ...verticalPath, phase: 0.6 },
+      elapsedMs: 0,
+    })
+
+    expect(earlyLoopPosition).toMatchObject({ x: 1792, y: 622.4, direction: 1 })
+    expect(earlyLoopPosition.progress).toBeCloseTo(0.2)
+    expect(upperHalfPosition).toMatchObject({ x: 1792, y: 665.6, direction: -1 })
+    expect(upperHalfPosition.progress).toBeCloseTo(0.8)
+    expect(upperHalfPosition).not.toEqual(earlyLoopPosition)
   })
 
   it('defaults an omitted phase to the origin position', () => {
