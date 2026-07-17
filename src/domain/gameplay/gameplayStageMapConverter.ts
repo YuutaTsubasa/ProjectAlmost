@@ -10,6 +10,10 @@ import {
   type GameplayStageSourceTheme,
 } from './gameplayStageSource'
 import type { GameplayStageVisualProfile } from './gameplayStageVisualProfile'
+import {
+  getMovingPlatformOrigin,
+  normalizeMovingPlatformPhase,
+} from './movingPlatform'
 
 export type GameplayStageMapConversionResult = {
   map: GameplayStageMap
@@ -23,15 +27,6 @@ export function convertGameplayStageSource(
   const theme = source.theme ?? 'white-palace'
   const visualProfile = visualProfiles[theme]
   const diagnostics: GameplayStageConversionDiagnostic[] = []
-
-  for (const movingPlatform of source.movingPlatforms ?? []) {
-    diagnostics.push({
-      stageId: source.id,
-      code: 'unsupported-moving-platform',
-      sourceId: movingPlatform.id,
-      message: `Stage ${source.id} has unsupported moving platform ${movingPlatform.id}.`,
-    })
-  }
 
   for (const gravityZone of source.gravityZones ?? []) {
     diagnostics.push({
@@ -66,6 +61,17 @@ export function convertGameplayStageSource(
         },
       },
       enemies: source.enemies.map(convertEnemy),
+      movingPlatforms: (source.movingPlatforms ?? []).map((platform) => ({
+        ...platform,
+        phase: normalizeMovingPlatformPhase(platform.phase),
+        origin: getMovingPlatformOrigin({
+          col: platform.col,
+          row: platform.row,
+          width: platform.width,
+          height: platform.height,
+          tileSize: source.world.tileSize,
+        }),
+      })),
       coins: source.coins.map((coin, index) => ({
         id: `${source.id}-coin-${String(index + 1).padStart(3, '0')}`,
         x: coin.x,

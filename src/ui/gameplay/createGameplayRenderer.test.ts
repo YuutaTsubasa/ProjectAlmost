@@ -268,6 +268,7 @@ function createEnemyFixtureStage(): GameplayStageMap {
         patrolMaxX: 1_760,
       },
     ],
+    movingPlatforms: [],
     coins: [
       {
         id: 'test-first-coin',

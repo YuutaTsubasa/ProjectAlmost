@@ -411,13 +411,21 @@ describe('gameplayStageMaps', () => {
     }
   })
 
-  it('exposes diagnostics for unsupported mechanics in converted source stages', () => {
+  it('exposes diagnostics only for mechanics that remain unsupported in converted source stages', () => {
     expect(gameplayStageConversionDiagnostics.some((diagnostic) =>
       diagnostic.stageId === '2-1' && diagnostic.code === 'unsupported-moving-platform',
-    )).toBe(true)
+    )).toBe(false)
     expect(gameplayStageConversionDiagnostics.some((diagnostic) =>
       diagnostic.stageId === '4-4' && diagnostic.code === 'unsupported-surface-zone',
     )).toBe(true)
+  })
+
+  it('preserves 2-1 moving platform runtime data', () => {
+    expect(getGameplayStageMap('2-1')?.movingPlatforms).toEqual([
+      expect.objectContaining({ id: 'first-vine-lift', axis: 'y', distance: 72, durationMs: 2100 }),
+      expect.objectContaining({ id: 'thorn-gap-ferry', axis: 'x', distance: 112, durationMs: 2600, phase: 0.35 }),
+      expect.objectContaining({ id: 'canopy-ferry', axis: 'x', distance: 112, durationMs: 2800, phase: 0.6 }),
+    ])
   })
 
   it('preserves prototype enemy metadata in gameplay stage sources', () => {

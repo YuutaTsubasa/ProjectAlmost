@@ -59,6 +59,7 @@ function createHudEnemyFixture(): GameplayStageMap {
         countsForScore: false,
       },
     ],
+    movingPlatforms: [],
     coins: [],
     hazards: [],
     checkpoints: [],

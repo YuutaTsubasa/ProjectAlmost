@@ -20,6 +20,7 @@ export type GameplayStageMap = {
   backgroundLayers: readonly BackgroundLayer[]
   player: GameplayPlayerSpawn
   enemies: readonly GameplayEnemySpawn[]
+  movingPlatforms: readonly GameplayMovingPlatformSpawn[]
   coins: readonly GameplayCoinPoint[]
   hazards: readonly GameplayHazardSpawn[]
   checkpoints: readonly GameplayCheckpointSpawn[]
@@ -66,6 +67,15 @@ export type GameplayPlayerSpawn = {
 }
 
 export type GameplayEnemySpawn = ArmorGuardSpawn | AzureCoreSpawn
+
+export type GameplayMovingPlatformSpawn = PlatformRect & {
+  id: string
+  axis: 'x' | 'y'
+  distance: number
+  durationMs: number
+  phase: number
+  origin: { x: number; y: number }
+}
 
 export type GameplayEnemyRuntimeMetadata = {
   respawnPolicy?: 'persistent' | 'regenerate'

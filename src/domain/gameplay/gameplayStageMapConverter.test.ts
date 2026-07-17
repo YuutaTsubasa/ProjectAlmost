@@ -125,6 +125,65 @@ describe('convertGameplayStageSource', () => {
     ])
   })
 
+  it('converts supported moving platform source data into runtime map spawns', () => {
+    const source = {
+      ...firstGateSource,
+      movingPlatforms: [
+        {
+          id: 'first-vine-lift',
+          col: 26,
+          row: 9,
+          width: 4,
+          height: 1,
+          axis: 'y',
+          distance: 72,
+          durationMs: 2100,
+        },
+        {
+          id: 'thorn-gap-ferry',
+          col: 52,
+          row: 9,
+          width: 4,
+          height: 1,
+          axis: 'x',
+          distance: 112,
+          durationMs: 2600,
+          phase: 0.35,
+        },
+      ],
+    } satisfies GameplayStageSource
+
+    const result = convertGameplayStageSource(source, gameplayStageVisualProfiles)
+
+    expect(result.map.movingPlatforms).toEqual([
+      {
+        id: 'first-vine-lift',
+        col: 26,
+        row: 9,
+        width: 4,
+        height: 1,
+        axis: 'y',
+        distance: 72,
+        durationMs: 2100,
+        phase: 0,
+        origin: { x: 1792, y: 608 },
+      },
+      {
+        id: 'thorn-gap-ferry',
+        col: 52,
+        row: 9,
+        width: 4,
+        height: 1,
+        axis: 'x',
+        distance: 112,
+        durationMs: 2600,
+        phase: 0.35,
+        origin: { x: 3456, y: 608 },
+      },
+    ])
+    expect(result.diagnostics.some((diagnostic) => diagnostic.code === 'unsupported-moving-platform')).toBe(false)
+  })
+
   it('converts prototype guard enemy shapes into Armor Guard runtime spawns', () => {
     const result = convertGameplayStageSource(firstGateSource, gameplayStageVisualProfiles)
 
@@ -208,7 +267,7 @@ describe('convertGameplayStageSource', () => {
     })
   })
 
-  it('emits diagnostics for unsupported mechanics without putting them into the runtime map', () => {
+  it('emits diagnostics only for unsupported mechanics without putting them into the runtime map', () => {
     const result = convertGameplayStageSource(
       {
         ...firstGateSource,
@@ -271,13 +330,11 @@ describe('convertGameplayStageSource', () => {
       },
     ])
     expect(result.diagnostics.map((diagnostic) => diagnostic.code)).toEqual([
-      'unsupported-moving-platform',
       'unsupported-gravity-zone',
       'unsupported-surface-zone',
       'unsupported-hazard',
     ])
     expect(result.diagnostics.map((diagnostic) => diagnostic.sourceId)).toEqual([
-      'moving-a',
       'gravity-a',
       'ice-a',
       'lava-a',
