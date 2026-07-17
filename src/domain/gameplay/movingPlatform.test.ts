@@ -85,4 +85,21 @@ describe('getMovingPlatformPositionAtTime', () => {
       direction: -1,
     })
   })
+
+  it('defaults an omitted phase to the origin position', () => {
+    expect(getMovingPlatformPositionAtTime({
+      path: {
+        origin: { x: 1792, y: 608 },
+        axis: 'y',
+        distance: 72,
+        durationMs: 2100,
+      },
+      elapsedMs: 0,
+    })).toEqual({
+      x: 1792,
+      y: 608,
+      progress: 0,
+      direction: 1,
+    })
+  })
 })

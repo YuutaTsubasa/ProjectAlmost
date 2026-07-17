@@ -14,7 +14,7 @@ export type MovingPlatformPath = {
   axis: MovingPlatformAxis
   distance: number
   durationMs: number
-  phase: number
+  phase?: number
 }
 
 export type MovingPlatformPosition = {
