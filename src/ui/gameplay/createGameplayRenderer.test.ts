@@ -415,6 +415,7 @@ function createFakeArcadeSprite(input: { x: number; y: number; texture: string }
     displaySize: { width: 0, height: 0 },
     refreshedBody: false,
     refreshBodyCalls: 0,
+    refreshBodyPositions: [] as Array<{ x: number; y: number }>,
     playCalls: [] as Array<{ key: string; ignoreIfPlaying?: boolean }>,
     body: {
       enable: true,
@@ -536,6 +537,7 @@ function createFakeArcadeSprite(input: { x: number; y: number; texture: string }
     refreshBody: () => {
       sprite.refreshedBody = true
       sprite.refreshBodyCalls += 1
+      sprite.refreshBodyPositions.push({ x: sprite.x, y: sprite.y })
       return sprite
     },
     getBounds: () => ({
@@ -2422,6 +2424,7 @@ describe('createGameplayRendererConfig', () => {
     expect(movingPlatform.x).toBe(786)
     expect(movingPlatform.y).toBe(544)
     expect(movingPlatform.refreshBodyCalls).toBe(refreshBodyCallsBeforeUpdate + 1)
+    expect(movingPlatform.refreshBodyPositions.at(-1)).toEqual({ x: 786, y: 544 })
   })
 
   it('registers idle and run animations from the domain actor definition', () => {

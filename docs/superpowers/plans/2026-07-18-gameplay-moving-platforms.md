@@ -115,9 +115,9 @@ describe('getMovingPlatformPositionAtTime', () => {
       elapsedMs: 0,
     })).toEqual({
       x: 1792,
-      y: 680,
-      progress: 1,
-      direction: -1,
+      y: 644,
+      progress: 0.5,
+      direction: 1,
     })
   })
 })
