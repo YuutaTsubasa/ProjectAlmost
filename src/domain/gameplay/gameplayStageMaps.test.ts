@@ -513,7 +513,7 @@ describe('gameplayStageMaps', () => {
         { id: 'mid', assetRef: '/assets/maps/emerald_sanctuary_mid_bg_loop.webp', width: 3840 },
       ],
       terrain: {
-        tilesetAssetRef: '/assets/tiles/emerald_sanctuary_platform_tiles.webp',
+        tilesetAssetRef: '/assets/tiles/emerald_sanctuary_platform_tiles_surface_aligned.webp',
       },
     })
 
@@ -555,6 +555,6 @@ describe('gameplayStageMaps', () => {
     expect(readFileSync('public/assets/maps/emerald_sanctuary_far_bg.webp', 'utf8').length).toBeGreaterThan(0)
     expect(readFileSync('public/assets/maps/emerald_sanctuary_mid_bg_loop.webp', 'utf8').length).toBeGreaterThan(0)
     expect(readFileSync('public/assets/maps/emerald_sanctuary_gameplay_bg.webp', 'utf8').length).toBeGreaterThan(0)
-    expect(readFileSync('public/assets/tiles/emerald_sanctuary_platform_tiles.webp', 'utf8').length).toBeGreaterThan(0)
+    expect(readFileSync('public/assets/tiles/emerald_sanctuary_platform_tiles_surface_aligned.webp', 'utf8').length).toBeGreaterThan(0)
   })
 })

@@ -18,12 +18,12 @@ The renderer already consumes `GameplayStageMap.backgroundLayers` and `GameplayS
 
 Prototype behavior is reference-only. Do not copy Prototype runtime code.
 
-Observed Prototype gameplay visual rules:
+Observed Prototype gameplay visual rules and rebuild asset choices:
 
 | Theme | Background Behavior | Platform Tiles |
 | --- | --- | --- |
 | `white-palace` | Uses `white_palace_sky.webp`, `white_palace_far_bg.webp`, `white_palace_mid_bg_loop.webp` as three parallax layers. | `white_palace_platform_tiles.webp` |
-| `emerald-sanctuary` | Uses `emerald_sanctuary_sky.webp`, `emerald_sanctuary_far_bg.webp`, `emerald_sanctuary_mid_bg_loop.webp` as three parallax layers. Mid layer width is `3840`. | `emerald_sanctuary_platform_tiles.webp` |
+| `emerald-sanctuary` | Uses `emerald_sanctuary_sky.webp`, `emerald_sanctuary_far_bg.webp`, `emerald_sanctuary_mid_bg_loop.webp` as three parallax layers. Mid layer width is `3840`. | `emerald_sanctuary_platform_tiles_surface_aligned.webp` |
 | `cerulean-depths` | Uses `cerulean_depths_stage_select.webp` as the source image for all three background layers. Far layer has `alpha: 0.32`, `tint: 0x8be7ff`; mid layer has `alpha: 0.2`, `tint: 0xdff8ff`. | `white_palace_platform_tiles.webp` |
 | `frostveil-peaks` | Uses `frostveil_peaks_stage_select.webp` as the source image for all three background layers. Far layer has `alpha: 0.32`, `tint: 0xccefff`; mid layer has `alpha: 0.2`, `tint: 0xf3fbff`. | `white_palace_platform_tiles.webp` |
 | `emberfall-caldera` | Uses `emberfall_caldera_stage_select.webp` as the source image for all three background layers. Far layer has `alpha: 0.35`, `tint: 0xff8a4b`; mid layer has `alpha: 0.22`, `tint: 0xffd19b`. | `white_palace_platform_tiles.webp` |
@@ -105,7 +105,7 @@ Copy Emerald Sanctuary gameplay assets from Prototype into rebuilt `public/asset
 - from `__prototype__/public/assets/maps/emerald_sanctuary_far_bg.webp` to `public/assets/maps/emerald_sanctuary_far_bg.webp`
 - from `__prototype__/public/assets/maps/emerald_sanctuary_mid_bg_loop.webp` to `public/assets/maps/emerald_sanctuary_mid_bg_loop.webp`
 - from `__prototype__/public/assets/maps/emerald_sanctuary_gameplay_bg.webp` to `public/assets/maps/emerald_sanctuary_gameplay_bg.webp`
-- from `__prototype__/public/assets/tiles/emerald_sanctuary_platform_tiles.webp` to `public/assets/tiles/emerald_sanctuary_platform_tiles.webp`
+- from `__prototype__/public/assets/tiles/emerald_sanctuary_platform_tiles.webp` to `public/assets/tiles/emerald_sanctuary_platform_tiles.webp`, then derive `public/assets/tiles/emerald_sanctuary_platform_tiles_surface_aligned.webp` with the platform surface aligned to the tile top.
 
 The runtime must reference these files through `/assets/...` URLs only.
 
@@ -118,7 +118,7 @@ Use TDD for every behavior change.
 Domain tests:
 
 - `white-palace` resolves the three White Palace parallax layers and White Palace platform tiles.
-- `emerald-sanctuary` resolves the three Emerald Sanctuary parallax layers and Emerald Sanctuary platform tiles.
+- `emerald-sanctuary` resolves the three Emerald Sanctuary parallax layers and the surface-aligned Emerald Sanctuary platform tiles so the visible platform top matches the collision top.
 - `cerulean-depths`, `frostveil-peaks`, `emberfall-caldera`, and `abyssal-hollow` resolve their stage-select image as all three background layers, with Prototype-matching `alpha` and `tint` on far/mid layers.
 - all theme profiles use `/assets/...` refs and no `__prototype__` paths.
 - non-white themes no longer emit `theme-asset-fallback` diagnostics when a visual profile exists.

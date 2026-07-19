@@ -404,7 +404,7 @@ describe('convertGameplayStageSource', () => {
       width: 3840,
     })
     expect(result.map.terrain.tilesetAssetRef).toBe(
-      '/assets/tiles/emerald_sanctuary_platform_tiles.webp',
+      '/assets/tiles/emerald_sanctuary_platform_tiles_surface_aligned.webp',
     )
     expect(result.diagnostics).toEqual([])
   })

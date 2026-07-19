@@ -80,7 +80,7 @@ export const gameplayStageVisualProfiles: Record<GameplayStageSourceTheme, Gamep
         width: 3840,
       },
     ],
-    terrainTilesetAssetRef: '/assets/tiles/emerald_sanctuary_platform_tiles.webp',
+    terrainTilesetAssetRef: '/assets/tiles/emerald_sanctuary_platform_tiles_surface_aligned.webp',
   },
   'cerulean-depths': stageSelectProfile({
     assetRef: '/assets/maps/cerulean_depths_stage_select.webp',

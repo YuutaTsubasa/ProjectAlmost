@@ -56,7 +56,7 @@ describe('gameplayStageVisualProfiles', () => {
     })
   })
 
-  it('matches Prototype Emerald Sanctuary gameplay visuals', () => {
+  it('uses Emerald Sanctuary gameplay backgrounds with rebuild-aligned terrain tiles', () => {
     expect(gameplayStageVisualProfiles['emerald-sanctuary']).toEqual({
       backgroundLayers: [
         {
@@ -87,7 +87,7 @@ describe('gameplayStageVisualProfiles', () => {
           parallaxFactor: 0.18,
         },
       ],
-      terrainTilesetAssetRef: '/assets/tiles/emerald_sanctuary_platform_tiles.webp',
+      terrainTilesetAssetRef: '/assets/tiles/emerald_sanctuary_platform_tiles_surface_aligned.webp',
     })
   })
 
