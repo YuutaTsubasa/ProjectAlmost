@@ -121,6 +121,8 @@ Prototype parity requirements:
 - deploy click and double-click do nothing for locked stages.
 - path lines are visually active only when both adjacent stages are unlocked.
 - visually active unlocked path lines use white strokes with a subtle cool glow to match the current Prototype parity target.
+- visually active unlocked path lines reveal with a short draw animation, staggered by route segment index, so debug unlock and newly unlocked stages do not appear as static instant lines.
+- users who prefer reduced motion see the final active white/glow path line state without the draw animation.
 - cleared stage nodes get a cleared visual state.
 - selected locked stages still update the detail panel so the player can inspect the stage position and title.
 

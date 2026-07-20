@@ -262,6 +262,8 @@
       {#each stageOptions.slice(0, -1) as stage, index}
         <line
           class:live={isLiveStage(index)}
+          style={`--path-index:${index}`}
+          pathLength="1"
           x1={stage.nodePosition.x}
           y1={stage.nodePosition.y}
           x2={stageOptions[index + 1].nodePosition.x}
