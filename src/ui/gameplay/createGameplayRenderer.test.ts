@@ -424,6 +424,24 @@ function createFakeArcadeSprite(input: { x: number; y: number; texture: string }
       touching: { down: true },
       size: { width: 0, height: 0 },
       offset: { x: 0, y: 0 },
+      get width() {
+        return sprite.body.size.width || sprite.displaySize.width
+      },
+      get height() {
+        return sprite.body.size.height || sprite.displaySize.height
+      },
+      get x() {
+        return sprite.x - sprite.body.width / 2 + sprite.body.offset.x
+      },
+      get y() {
+        return sprite.y - sprite.body.height / 2 + sprite.body.offset.y
+      },
+      get right() {
+        return sprite.body.x + sprite.body.width
+      },
+      get bottom() {
+        return sprite.body.y + sprite.body.height
+      },
       setSize: (width: number, height: number) => {
         sprite.body.size = { width, height }
       },
@@ -540,12 +558,23 @@ function createFakeArcadeSprite(input: { x: number; y: number; texture: string }
       sprite.refreshBodyPositions.push({ x: sprite.x, y: sprite.y })
       return sprite
     },
-    getBounds: () => ({
-      x: sprite.x - sprite.body.size.width / 2,
-      y: sprite.y - sprite.body.size.height / 2,
-      width: sprite.body.size.width,
-      height: sprite.body.size.height,
-    }),
+    getBounds: () => {
+      const width = sprite.body.size.width || sprite.displaySize.width
+      const height = sprite.body.size.height || sprite.displaySize.height
+      const left = sprite.x - width / 2
+      const top = sprite.y - height / 2
+
+      return {
+        x: left,
+        y: top,
+        left,
+        right: left + width,
+        top,
+        bottom: top + height,
+        width,
+        height,
+      }
+    },
     getCenter: () => ({
       x: sprite.x,
       y: sprite.y,
@@ -2425,6 +2454,154 @@ describe('createGameplayRendererConfig', () => {
     expect(movingPlatform.y).toBe(544)
     expect(movingPlatform.refreshBodyCalls).toBe(refreshBodyCallsBeforeUpdate + 1)
     expect(movingPlatform.refreshBodyPositions.at(-1)).toEqual({ x: 786, y: 544 })
+  })
+
+  it('keeps the player grounded across consecutive descending moving platform updates', () => {
+    const stage = createEnemyFixtureStage()
+    stage.movingPlatforms = [
+      {
+        id: 'test-descending-lift',
+        col: 10,
+        row: 8,
+        width: 3,
+        height: 1,
+        axis: 'y',
+        distance: 64,
+        durationMs: 1000,
+        phase: 0,
+        origin: { x: 736, y: 544 },
+      },
+    ]
+    const runtime = createSceneRuntime({ stage })
+    runtime.scene.create()
+    expect(runtime.playerSprite).toBeDefined()
+    if (!runtime.playerSprite) return
+    const movingPlatform = runtime.staticImageCalls.find(
+      (sprite) => sprite.texture === 'terrain-tiles' && sprite.x === 736,
+    )
+    expect(movingPlatform).toBeDefined()
+    if (!movingPlatform) return
+
+    startGameplay(runtime)
+    runtime.playerSprite.body.blocked.down = false
+    runtime.playerSprite.body.touching.down = false
+    runtime.playerSprite.body.size = { width: 48, height: 72 }
+    runtime.playerSprite.body.offset = { x: 0, y: 0 }
+    const playerYBeforeUpdate = movingPlatform.y - movingPlatform.displaySize.height / 2 - runtime.playerSprite.body.size.height / 2
+    runtime.playerSprite.setPosition(736, playerYBeforeUpdate)
+    const platformYBeforeUpdate = movingPlatform.y
+
+    runtime.scene.update(250, 234)
+
+    expect(movingPlatform.y).toBe(576)
+    expect(runtime.playerSprite.y).toBeCloseTo(playerYBeforeUpdate + movingPlatform.y - platformYBeforeUpdate)
+    expect(runtime.playerSprite.playCalls.at(-1)).toEqual({
+      key: playerActorDefinition.sprites.idle.key,
+      ignoreIfPlaying: true,
+    })
+
+    const playerYBeforeSecondUpdate = runtime.playerSprite.y
+    const platformYBeforeSecondUpdate = movingPlatform.y
+
+    runtime.scene.update(500, 250)
+
+    expect(runtime.playerSprite.y).toBeCloseTo(playerYBeforeSecondUpdate + movingPlatform.y - platformYBeforeSecondUpdate)
+    expect(runtime.playerSprite.playCalls.at(-1)).toEqual({
+      key: playerActorDefinition.sprites.idle.key,
+      ignoreIfPlaying: true,
+    })
+  })
+
+  it('carries the player once when overlapping moving platforms update in the same frame', () => {
+    const stage = createEnemyFixtureStage()
+    stage.movingPlatforms = [
+      {
+        id: 'first-overlap-lift',
+        col: 10,
+        row: 8,
+        width: 3,
+        height: 1,
+        axis: 'y',
+        distance: 64,
+        durationMs: 1000,
+        phase: 0,
+        origin: { x: 736, y: 544 },
+      },
+      {
+        id: 'second-overlap-lift',
+        col: 10,
+        row: 8,
+        width: 3,
+        height: 1,
+        axis: 'y',
+        distance: 64,
+        durationMs: 1000,
+        phase: 0,
+        origin: { x: 736, y: 544 },
+      },
+    ]
+    const runtime = createSceneRuntime({ stage })
+    runtime.scene.create()
+    expect(runtime.playerSprite).toBeDefined()
+    if (!runtime.playerSprite) return
+    const movingPlatforms = runtime.staticImageCalls.filter(
+      (sprite) => sprite.texture === 'terrain-tiles' && sprite.x === 736,
+    )
+    expect(movingPlatforms).toHaveLength(2)
+    const [firstPlatform] = movingPlatforms
+    if (!firstPlatform) return
+
+    startGameplay(runtime)
+    runtime.playerSprite.body.blocked.down = false
+    runtime.playerSprite.body.touching.down = false
+    runtime.playerSprite.body.size = { width: 48, height: 72 }
+    runtime.playerSprite.body.offset = { x: 0, y: 0 }
+    const playerYBeforeUpdate = firstPlatform.y - firstPlatform.displaySize.height / 2 - runtime.playerSprite.body.size.height / 2
+    runtime.playerSprite.setPosition(736, playerYBeforeUpdate)
+    const platformYBeforeUpdate = firstPlatform.y
+
+    runtime.scene.update(250, 234)
+
+    expect(runtime.playerSprite.y).toBeCloseTo(playerYBeforeUpdate + firstPlatform.y - platformYBeforeUpdate)
+  })
+
+  it('does not carry the player when only the rendered sprite overlaps a moving platform', () => {
+    const stage = createEnemyFixtureStage()
+    stage.movingPlatforms = [
+      {
+        id: 'test-body-separated-lift',
+        col: 10,
+        row: 8,
+        width: 3,
+        height: 1,
+        axis: 'y',
+        distance: 64,
+        durationMs: 1000,
+        phase: 0,
+        origin: { x: 736, y: 544 },
+      },
+    ]
+    const runtime = createSceneRuntime({ stage })
+    runtime.scene.create()
+    expect(runtime.playerSprite).toBeDefined()
+    if (!runtime.playerSprite) return
+    const movingPlatform = runtime.staticImageCalls.find(
+      (sprite) => sprite.texture === 'terrain-tiles' && sprite.x === 736,
+    )
+    expect(movingPlatform).toBeDefined()
+    if (!movingPlatform) return
+
+    startGameplay(runtime)
+    runtime.playerSprite.body.blocked.down = false
+    runtime.playerSprite.body.touching.down = false
+    runtime.playerSprite.body.size = { width: 34, height: 72 }
+    runtime.playerSprite.body.offset = { x: 144, y: 0 }
+    const playerYBeforeUpdate = movingPlatform.y - movingPlatform.displaySize.height / 2 - runtime.playerSprite.body.size.height / 2
+    runtime.playerSprite.setPosition(736, playerYBeforeUpdate)
+
+    runtime.scene.update(250, 234)
+
+    expect(runtime.playerSprite.y).toBe(playerYBeforeUpdate)
   })
 
   it('registers idle and run animations from the domain actor definition', () => {

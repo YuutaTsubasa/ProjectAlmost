@@ -64,6 +64,8 @@ Domain functions:
 - `getMovingPlatformOrigin(...)`: convert tile-grid `col` and `row` into world coordinates.
 - `getMovingPlatformPositionAtTime(...)`: compute position from path and elapsed milliseconds.
 - `normalizeMovingPlatformPhase(...)`: clamp/wrap unsafe phase values into a stable `0..1` loop offset.
+- `getMovingPlatformCarriedActorPosition(...)`: apply a platform position delta to an actor position.
+- `isMovingPlatformRider(...)`: decide whether an actor's physics body is horizontally over the platform surface and close enough to the platform top to be carried.
 
 These functions must be pure and deterministic. They cannot depend on Phaser, DOM, browser clocks, timers, random values, or mutable global state.
 
@@ -91,6 +93,13 @@ The converter should stop emitting `unsupported-moving-platform` for moving plat
 
 Renderer code may manage Phaser objects and body updates, but not own the movement math.
 
+When a player stands on a moving platform, the renderer must preserve the platform/actor relationship during platform motion:
+
+- derive the current platform delta from the previous domain-computed position and the new domain-computed position
+- use the player's Arcade physics body bounds, not rendered sprite bounds, when deciding whether the player is riding
+- carry a riding player by exactly one platform delta per frame, even if multiple moving platforms overlap
+- treat a carried player as grounded for that frame so downward-moving platforms do not make the animation or movement state flicker between airborne and grounded
+
 ## Reactive Boundary
 
 The gameplay loop is the reactive driver. Each tick projects current elapsed time into platform positions. The source of truth is the immutable stage map plus elapsed time, not a chain of mutable tween callbacks.
@@ -109,6 +118,8 @@ Domain tests:
 - horizontal and vertical axes affect only their configured coordinate
 - phase offsets the loop position
 - invalid phase values are normalized
+- carried actor position applies the platform delta
+- rider detection requires physics-body horizontal overlap and surface proximity
 
 Converter tests:
 
@@ -120,6 +131,9 @@ Renderer tests:
 
 - preloading/creation creates moving platform render objects from stage map data
 - `update()` advances platform position according to the domain function
+- a player standing on a descending platform remains grounded across consecutive updates
+- overlapping moving platforms carry a player at most once per frame
+- visual sprite overlap without physics-body overlap does not carry the player
 - player/platform collision is registered
 - static platform behavior remains unchanged
 
@@ -139,7 +153,7 @@ Integration checks:
 - Rotating platforms.
 - Breakable platforms.
 - Moving hazards attached to platforms.
-- Player carry/friction refinements beyond normal Arcade collision behavior.
+- Player friction refinements beyond the explicit one-delta-per-frame carry behavior.
 - Boss behavior.
 - Full 2-1 polish pass.
 - Importing or copying prototype runtime code.

@@ -24,6 +24,23 @@ export type MovingPlatformPosition = {
   direction: MovingPlatformDirection
 }
 
+export type MovingPlatformDelta = {
+  x: number
+  y: number
+}
+
+export type MovingPlatformRiderBounds = {
+  left: number
+  right: number
+  bottom: number
+}
+
+export type MovingPlatformSurfaceBounds = {
+  left: number
+  right: number
+  top: number
+}
+
 export function getMovingPlatformOrigin(input: MovingPlatformOriginInput): { x: number; y: number } {
   return {
     x: (input.col + input.width / 2) * input.tileSize,
@@ -53,4 +70,30 @@ export function getMovingPlatformPositionAtTime(input: {
     progress,
     direction,
   }
+}
+
+export function getMovingPlatformCarriedActorPosition(input: {
+  actor: { x: number; y: number }
+  delta: MovingPlatformDelta
+}): { x: number; y: number } {
+  return {
+    x: input.actor.x + input.delta.x,
+    y: input.actor.y + input.delta.y,
+  }
+}
+
+export function isMovingPlatformRider(input: {
+  actorBounds: MovingPlatformRiderBounds
+  platformBounds: MovingPlatformSurfaceBounds
+  edgeInset?: number
+  surfaceTolerance?: number
+}): boolean {
+  const edgeInset = input.edgeInset ?? 8
+  const surfaceTolerance = input.surfaceTolerance ?? 12
+  const horizontallyOverlapping =
+    input.actorBounds.right > input.platformBounds.left + edgeInset
+    && input.actorBounds.left < input.platformBounds.right - edgeInset
+  const nearPlatformTop = Math.abs(input.actorBounds.bottom - input.platformBounds.top) <= surfaceTolerance
+
+  return horizontallyOverlapping && nearPlatformTop
 }

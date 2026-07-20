@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import {
+  getMovingPlatformCarriedActorPosition,
   getMovingPlatformOrigin,
   getMovingPlatformPositionAtTime,
+  isMovingPlatformRider,
   normalizeMovingPlatformPhase,
 } from './movingPlatform'
 
@@ -14,6 +16,52 @@ describe('getMovingPlatformOrigin', () => {
       height: 1,
       tileSize: 64,
     })).toEqual({ x: 1792, y: 608 })
+  })
+})
+
+describe('getMovingPlatformCarriedActorPosition', () => {
+  it('applies the platform delta to the actor position', () => {
+    expect(getMovingPlatformCarriedActorPosition({
+      actor: { x: 420, y: 512 },
+      delta: { x: 0, y: 8 },
+    })).toEqual({ x: 420, y: 520 })
+  })
+})
+
+describe('isMovingPlatformRider', () => {
+  const baseInput = {
+    actorBounds: {
+      left: 700,
+      right: 772,
+      bottom: 512,
+    },
+    platformBounds: {
+      left: 672,
+      right: 864,
+      top: 520,
+    },
+  }
+
+  it('treats an actor near the platform top as riding while the platform descends', () => {
+    expect(isMovingPlatformRider(baseInput)).toBe(true)
+  })
+
+  it('requires horizontal overlap after platform edge inset', () => {
+    expect(isMovingPlatformRider({
+      ...baseInput,
+      actorBounds: { ...baseInput.actorBounds, right: baseInput.platformBounds.left + 8 },
+    })).toBe(false)
+    expect(isMovingPlatformRider({
+      ...baseInput,
+      actorBounds: { ...baseInput.actorBounds, right: baseInput.platformBounds.left + 9 },
+    })).toBe(true)
+  })
+
+  it('does not use generic downward contact to ride a distant platform', () => {
+    expect(isMovingPlatformRider({
+      ...baseInput,
+      actorBounds: { ...baseInput.actorBounds, bottom: baseInput.platformBounds.top - 24 },
+    })).toBe(false)
   })
 })
 

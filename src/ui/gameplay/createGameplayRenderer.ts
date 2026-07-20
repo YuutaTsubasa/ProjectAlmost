@@ -70,7 +70,11 @@ import type {
   GameplayHazardSpawn,
   GameplayMovingPlatformSpawn,
 } from '../../domain/gameplay/gameplayMapTypes'
-import { getMovingPlatformPositionAtTime } from '../../domain/gameplay/movingPlatform'
+import {
+  getMovingPlatformCarriedActorPosition,
+  getMovingPlatformPositionAtTime,
+  isMovingPlatformRider,
+} from '../../domain/gameplay/movingPlatform'
 import {
   bufferMovableActorJump,
   createMovableActorJumpState,
@@ -211,6 +215,7 @@ type HazardRuntime = {
 type MovingPlatformRuntime = {
   sprite: Phaser.Types.Physics.Arcade.ImageWithStaticBody
   spawn: GameplayMovingPlatformSpawn
+  previousPosition: { x: number; y: number }
 }
 
 type CheckpointRuntime = {
@@ -286,6 +291,7 @@ class GameplayMapScene extends Phaser.Scene {
   private homingReticle: Phaser.GameObjects.Image | null = null
   private hazards: HazardRuntime[] = []
   private movingPlatforms: MovingPlatformRuntime[] = []
+  private playerRidingMovingPlatformThisFrame = false
   private checkpoints: CheckpointRuntime[] = []
   private goal: GoalRuntime | null = null
   private activeCheckpointIndex = -1
@@ -608,11 +614,13 @@ class GameplayMapScene extends Phaser.Scene {
       sprite.setDepth(6)
       sprite.refreshBody()
 
-      return { sprite, spawn }
+      return { sprite, spawn, previousPosition: { x: spawn.origin.x, y: spawn.origin.y } }
     })
   }
 
   private updateMovingPlatforms(): void {
+    this.playerRidingMovingPlatformThisFrame = false
+
     for (const platform of this.movingPlatforms) {
       const position = getMovingPlatformPositionAtTime({
         path: {
@@ -624,9 +632,45 @@ class GameplayMapScene extends Phaser.Scene {
         },
         elapsedMs: this.gameplayElapsedMs,
       })
+      const delta = {
+        x: position.x - platform.previousPosition.x,
+        y: position.y - platform.previousPosition.y,
+      }
+      this.carryPlayerOnMovingPlatform(platform, delta)
       platform.sprite.setPosition(position.x, position.y)
       platform.sprite.refreshBody()
+      platform.previousPosition = { x: position.x, y: position.y }
     }
+  }
+
+  private carryPlayerOnMovingPlatform(platform: MovingPlatformRuntime, delta: { x: number; y: number }): void {
+    if (!this.player || this.playerRidingMovingPlatformThisFrame || (delta.x === 0 && delta.y === 0)) return
+
+    const playerBody = this.player.body as Phaser.Physics.Arcade.Body | null
+    if (!playerBody) return
+    const platformBody = platform.sprite.body
+
+    if (!isMovingPlatformRider({
+      actorBounds: {
+        left: playerBody.x,
+        right: playerBody.right,
+        bottom: playerBody.bottom,
+      },
+      platformBounds: {
+        left: platformBody.x,
+        right: platformBody.right,
+        top: platformBody.y,
+      },
+    })) {
+      return
+    }
+
+    const carried = getMovingPlatformCarriedActorPosition({
+      actor: { x: this.player.x, y: this.player.y },
+      delta,
+    })
+    this.player.setPosition(carried.x, carried.y)
+    this.playerRidingMovingPlatformThisFrame = true
   }
 
   private createMovingPlatformColliders(): void {
@@ -1437,7 +1481,7 @@ class GameplayMapScene extends Phaser.Scene {
 
     if (!body) return false
 
-    return body.blocked.down || body.touching.down
+    return body.blocked.down || body.touching.down || this.playerRidingMovingPlatformThisFrame
   }
 
   private isJumpDown(): boolean {
