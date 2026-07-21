@@ -170,12 +170,18 @@ import {
   isBossProjectileOutOfBounds,
   shouldUpdateBossProjectiles,
 } from '../../domain/gameplay/bossProjectile'
+import {
+  emptyGameplayInputSnapshot,
+  mergeGameplayInputSnapshots,
+  type GameplayInputSnapshot,
+} from '../../domain/input/gameplayInput'
 
 type GameplayRendererInput = {
   parent: HTMLElement
   stage: GameplayStageMap
   onHudUpdate?: (patch: GameplayHudPatch) => void
   onSfx?: (action: GameplaySfxAction) => void
+  getInputSnapshot?: () => Partial<GameplayInputSnapshot>
 }
 
 export type GameplayRendererController = {
@@ -249,7 +255,7 @@ const checkpointActivatedTint = 0xfff0a8
 
 class GameplayMapScene extends Phaser.Scene {
   private readonly stageMap: GameplayStageMap
-  private readonly options: Pick<GameplayRendererInput, 'onHudUpdate' | 'onSfx'>
+  private readonly options: Pick<GameplayRendererInput, 'onHudUpdate' | 'onSfx' | 'getInputSnapshot'>
   private backgroundLayers: BackgroundRuntimeLayer[] = []
   private terrainLayer: Phaser.Tilemaps.TilemapLayer | null = null
   private enemies: EnemyRuntime[] = []
@@ -306,8 +312,9 @@ class GameplayMapScene extends Phaser.Scene {
   private gameplayStartGateState: GameplayStartGateState = createInitialGameplayStartGateState()
   private wasPlayerGroundedForSfx = true
   private nextPlayerFootstepSfxAt = 0
+  private currentExternalGameplayInputSnapshot: Partial<GameplayInputSnapshot> = emptyGameplayInputSnapshot
 
-  constructor(stage: GameplayStageMap, options: Pick<GameplayRendererInput, 'onHudUpdate' | 'onSfx'> = {}) {
+  constructor(stage: GameplayStageMap, options: Pick<GameplayRendererInput, 'onHudUpdate' | 'onSfx' | 'getInputSnapshot'> = {}) {
     super(`GameplayMapScene:${stage.id}`)
     this.stageMap = stage
     this.options = options
@@ -431,6 +438,7 @@ class GameplayMapScene extends Phaser.Scene {
   }
 
   update(_time?: number, delta?: number): void {
+    this.currentExternalGameplayInputSnapshot = this.options.getInputSnapshot?.() ?? emptyGameplayInputSnapshot
     this.updatePresentationOnlySystems()
 
     this.gameplayStartGateState = advanceGameplayStartGate(
@@ -473,18 +481,24 @@ class GameplayMapScene extends Phaser.Scene {
   }
 
   private getGameplayStartInputSnapshot(): GameplayStartInputSnapshot {
+    const input = this.getGameplayInputSnapshot()
+
+    return {
+      leftHeld: input.leftHeld,
+      rightHeld: input.rightHeld,
+      crouchHeld: input.crouchHeld,
+      jumpPressed: input.jumpPressed,
+      jumpHeld: input.jumpHeld,
+      attackPressed: input.attackPressed,
+      attackHeld: input.attackHeld,
+    }
+  }
+
+  private getKeyboardGameplayInputSnapshot(): GameplayInputSnapshot {
     const keys = this.playerKeys
 
     if (!keys) {
-      return {
-        leftHeld: false,
-        rightHeld: false,
-        crouchHeld: false,
-        jumpPressed: false,
-        jumpHeld: false,
-        attackPressed: false,
-        attackHeld: false,
-      }
+      return emptyGameplayInputSnapshot
     }
 
     const jumpHeld = keys.space.isDown || keys.up.isDown || keys.w.isDown
@@ -498,7 +512,15 @@ class GameplayMapScene extends Phaser.Scene {
       jumpHeld,
       attackPressed: attackHeld && !this.wasAttackDown,
       attackHeld,
+      pausePressed: false,
     }
+  }
+
+  private getGameplayInputSnapshot(): GameplayInputSnapshot {
+    return mergeGameplayInputSnapshots([
+      this.getKeyboardGameplayInputSnapshot(),
+      this.currentExternalGameplayInputSnapshot,
+    ])
   }
 
   private advanceGameplayElapsed(delta?: number): void {
@@ -1485,15 +1507,11 @@ class GameplayMapScene extends Phaser.Scene {
   }
 
   private isJumpDown(): boolean {
-    if (!this.playerKeys) return false
-
-    return this.playerKeys.space.isDown || this.playerKeys.up.isDown || this.playerKeys.w.isDown
+    return this.getGameplayInputSnapshot().jumpHeld
   }
 
   private isAttackDown(): boolean {
-    if (!this.playerKeys) return false
-
-    return this.playerKeys.j.isDown || this.playerKeys.z.isDown
+    return this.getGameplayInputSnapshot().attackHeld
   }
 
   private isPlayerCrouching(): boolean {
@@ -1510,9 +1528,7 @@ class GameplayMapScene extends Phaser.Scene {
   }
 
   private getCrouchHeld(): boolean {
-    if (!this.playerKeys) return false
-
-    return this.playerKeys.down.isDown || this.playerKeys.s.isDown
+    return this.getGameplayInputSnapshot().crouchHeld
   }
 
   private applyPlayerBodyPose(pose: PlayerBodyPose): void {
@@ -1533,14 +1549,13 @@ class GameplayMapScene extends Phaser.Scene {
   }
 
   private tryStartPlayerAttack(grounded: boolean, facing: PlayerFacingDirection): void {
-    if (!this.player || !this.playerKeys) return
+    if (!this.player) return
 
-    const attackDown = this.isAttackDown()
-    const attackPressed = attackDown && !this.wasAttackDown
-    this.wasAttackDown = attackDown
+    const input = this.getGameplayInputSnapshot()
+    this.wasAttackDown = input.attackHeld
 
     const decision = getAttackInputDecision({
-      attackPressed,
+      attackPressed: input.attackPressed,
       crouching: this.isCrouching,
       grounded,
     })
@@ -2376,12 +2391,13 @@ class GameplayMapScene extends Phaser.Scene {
   }
 
   private updatePlayerMovement(): void {
-    if (!this.player || !this.playerKeys || !this.playerJumpState) return
+    if (!this.player || !this.playerJumpState) return
 
     if (this.stageCleared || this.isPlayerHurting || this.isPlayerDead) {
       return
     }
 
+    const input = this.getGameplayInputSnapshot()
     const grounded = this.isPlayerGrounded()
     this.updateHomingReticle(grounded)
     this.playerJumpState = updateMovableActorGroundContact({
@@ -2391,7 +2407,7 @@ class GameplayMapScene extends Phaser.Scene {
       config: playerActorDefinition.jump,
     })
     const crouch = getPlayerCrouchState({
-      crouchHeld: this.getCrouchHeld(),
+      crouchHeld: input.crouchHeld,
       grounded,
       attacking: this.isAttacking || this.isHomingAttacking,
       hurting: this.isPlayerHurting,
@@ -2400,15 +2416,14 @@ class GameplayMapScene extends Phaser.Scene {
     })
     this.isCrouching = crouch.crouching
     this.applyPlayerBodyPose(crouch.pose)
-    const jumpDown = this.isJumpDown()
-    if (jumpDown && !this.wasJumpDown) {
+    if (input.jumpPressed) {
       this.playerJumpState = bufferMovableActorJump({
         state: this.playerJumpState,
         now: this.time.now,
         config: playerActorDefinition.jump,
       })
     }
-    this.wasJumpDown = jumpDown
+    this.wasJumpDown = input.jumpHeld
 
     const jumpDecision = getMovableActorJumpDecision({
       state: this.playerJumpState,
@@ -2425,8 +2440,8 @@ class GameplayMapScene extends Phaser.Scene {
     }
 
     const decision = getPlayerHorizontalMovementDecision({
-      left: this.playerKeys.left.isDown || this.playerKeys.a.isDown,
-      right: this.playerKeys.right.isDown || this.playerKeys.d.isDown,
+      left: input.leftHeld,
+      right: input.rightHeld,
       crouching: this.isCrouching,
     })
     const facing: PlayerFacingDirection =
@@ -2638,6 +2653,7 @@ export function createGameplayRendererConfig(
     scene: [new GameplayMapScene(input.stage, {
       onHudUpdate: input.onHudUpdate,
       onSfx: input.onSfx,
+      getInputSnapshot: input.getInputSnapshot,
     })],
   }
 }

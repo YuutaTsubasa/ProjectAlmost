@@ -30,6 +30,10 @@ import {
   type GameplayHudPatch,
 } from '../../domain/gameplay/gameplayHud'
 import {
+  emptyGameplayInputSnapshot,
+  type GameplayInputSnapshot,
+} from '../../domain/input/gameplayInput'
+import {
   meleeAttackTiming,
 } from '../../domain/gameplay/playerAttack'
 import {
@@ -719,6 +723,7 @@ function createFakeEllipse(input: {
 function createSceneRuntime(input: {
   stage?: GameplayStageMap
   onHudUpdate?: (patch: GameplayHudPatch) => void
+  getInputSnapshot?: () => Partial<GameplayInputSnapshot>
 } = {}) {
   const stage = input.stage ?? createEnemyFixtureStage()
 
@@ -730,6 +735,7 @@ function createSceneRuntime(input: {
       hudUpdates.push(patch)
       input.onHudUpdate?.(patch)
     },
+    getInputSnapshot: input.getInputSnapshot,
   })
   const configuredScenes = Array.isArray(config.scene) ? config.scene : [config.scene]
   const scene = configuredScenes[0] as {
@@ -4907,6 +4913,65 @@ describe('createGameplayRendererConfig', () => {
       key: playerActorDefinition.sprites.run.key,
       ignoreIfPlaying: true,
     })
+  })
+
+  it('uses external gameplay input snapshot for active movement and jump actions', () => {
+    let inputSnapshot: GameplayInputSnapshot = {
+      ...emptyGameplayInputSnapshot,
+    }
+    const runtime = createSceneRuntime({
+      getInputSnapshot: () => inputSnapshot,
+    })
+
+    runtime.scene.create()
+    runtime.scene.update(0, 0)
+    inputSnapshot = {
+      ...emptyGameplayInputSnapshot,
+      rightHeld: true,
+      jumpPressed: true,
+      jumpHeld: true,
+    }
+    runtime.scene.update(16, 16)
+
+    expect(runtime.playerSprite?.accelerationX).toBe(playerActorDefinition.movement.groundAcceleration)
+    expect(runtime.playerSprite?.velocityY).toBe(playerActorDefinition.jump.velocityY)
+
+    inputSnapshot = {
+      ...emptyGameplayInputSnapshot,
+      rightHeld: true,
+      jumpHeld: true,
+    }
+    runtime.scene.update(16, 16)
+
+    expect(runtime.playerSprite?.accelerationX).toBe(playerActorDefinition.movement.groundAcceleration)
+    expect(runtime.playerSprite?.velocityY).toBe(playerActorDefinition.jump.velocityY)
+  })
+
+  it('reads external gameplay input snapshot once per scene update', () => {
+    let inputSnapshot: GameplayInputSnapshot = { ...emptyGameplayInputSnapshot }
+    let snapshotReads = 0
+    const runtime = createSceneRuntime({
+      getInputSnapshot: () => {
+        snapshotReads += 1
+        return inputSnapshot
+      },
+    })
+
+    runtime.scene.create()
+    runtime.scene.update(0, 0)
+
+    inputSnapshot = {
+      ...emptyGameplayInputSnapshot,
+      rightHeld: true,
+      jumpPressed: true,
+      jumpHeld: true,
+    }
+    snapshotReads = 0
+    runtime.scene.update(16, 16)
+
+    expect(snapshotReads).toBe(1)
+    expect(runtime.playerSprite?.accelerationX).toBe(playerActorDefinition.movement.groundAcceleration)
+    expect(runtime.playerSprite?.velocityY).toBe(playerActorDefinition.jump.velocityY)
   })
 
   it('updates A-key movement as left movement', () => {

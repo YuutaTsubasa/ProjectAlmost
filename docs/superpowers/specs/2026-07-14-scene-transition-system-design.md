@@ -60,6 +60,8 @@ Screen changes that replace the visible scene should follow this sequence:
 
 Selection-only changes within the same screen, such as changing highlighted world or highlighted stage, must not run a full scene transition. They should continue using the existing local UI animations and SFX.
 
+Title intro and title menu are two states of the same Title scene. Opening the menu from the intro prompt, or returning from the title menu back to the intro prompt, must update immediately without the shell-level scene transition overlay.
+
 ### UI Overlay
 
 Add a presentation-only `SceneTransitionOverlay.svelte`.
@@ -146,6 +148,7 @@ Required tests:
 - transition policy maps `stage-select -> world-select` to `world-stage-back`
 - transition policy maps any navigation into gameplay to `gameplay`
 - transition policy leaves same-screen selection changes as no full transition
+- transition policy leaves title intro/menu internal changes as no full transition
 - transition state rejects reentry while not `idle`
 - shell backdrop resolver maps world select, stage select, and gameplay to the expected world backgrounds
 - shell backdrop resolver preserves the previous backdrop for settings

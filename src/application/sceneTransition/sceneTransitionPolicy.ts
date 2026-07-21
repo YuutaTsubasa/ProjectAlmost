@@ -43,9 +43,14 @@ export function shouldBlockSceneTransitionReentry(
 }
 
 export function resolveSceneTransitionStyle(from: AppScreen, to: AppScreen): SceneTransitionStyle | null {
+  if (isTitleScreen(from) && isTitleScreen(to)) return null
   if (from.type === to.type && to.type !== 'gameplay') return null
   if (from.type === 'world-select' && to.type === 'stage-select') return 'world-stage-forward'
   if (from.type === 'stage-select' && to.type === 'world-select') return 'world-stage-back'
   if (to.type === 'gameplay') return 'gameplay'
   return 'page'
+}
+
+function isTitleScreen(screen: AppScreen): boolean {
+  return screen.type === 'title-intro' || screen.type === 'title-menu'
 }

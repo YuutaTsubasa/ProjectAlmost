@@ -3,7 +3,12 @@
   import type { CharacterInfoViewModel } from '../../application/character/characterInfoPresenter'
   import { applySettingsControlIntent } from '../../application/input/settingsControls'
   import type { SettingsScreen } from '../../domain/app/appFlow'
-  import type { LocaleCode, LocalizeData } from '../../domain/data/localize/localize'
+  import {
+    resolveLocalizedText,
+    type LocaleCode,
+    type LocalizationKey,
+    type LocalizeData,
+  } from '../../domain/data/localize/localize'
   import {
     applyGameplayHudPatch,
     createInitialGameplayHudState,
@@ -27,6 +32,16 @@
     type ControlContext,
     type GamepadControlSnapshot,
   } from '../../domain/input/controlIntents'
+  import {
+    clearVirtualControlsState,
+    emptyGameplayInputSnapshot,
+    getVirtualControlsVisibilityDecision,
+    mapGamepadGameplayInputSnapshot,
+    mergeGameplayInputSnapshots,
+    type GameplayInputSnapshot,
+    type GameplayInputSource,
+    type VirtualControlsState,
+  } from '../../domain/input/gameplayInput'
   import type { GameSettings } from '../../domain/settings/settings'
   import type { GameplaySfxAction } from '../../domain/audio/audioPolicy'
   import {
@@ -38,6 +53,7 @@
   import GameplayHud from './GameplayHud.svelte'
   import PauseMenu from './PauseMenu.svelte'
   import StageResult from './StageResult.svelte'
+  import VirtualControls from './VirtualControls.svelte'
   import { createGameplayRenderer } from './createGameplayRenderer'
   import { getGameplayHudStageDisplay } from './gameplayHudDisplay'
   import type { GameplayMusicState } from './gameplayMusicState'
@@ -92,6 +108,14 @@
   let stageClearRecorded = $state(false)
   let selectedResultAction = $state(0)
   let previousGamepadSnapshot: GamepadControlSnapshot | null = null
+  let gamepadGameplayInput = $state<GameplayInputSnapshot>({ ...emptyGameplayInputSnapshot })
+  let virtualControlsState = $state<VirtualControlsState>({
+    visible: false,
+    moveX: 0,
+    crouchHeld: false,
+  })
+  let virtualJumpPressed = false
+  let virtualAttackPressed = false
   const stageDisplay = $derived(getGameplayHudStageDisplay(stage.id))
 
   $effect(() => {
@@ -119,6 +143,10 @@
     if (action === 'next-stage') {
       onNextStage()
     }
+  }
+
+  function text(key: LocalizationKey): string {
+    return resolveLocalizedText(localizeData, locale, key)
   }
 
   $effect(() => {
@@ -162,6 +190,7 @@
 
   function pauseGameplay(): void {
     if (hudState?.result || pauseState.mode !== 'playing' || !renderer) return
+    virtualControlsState = clearVirtualControlsState(virtualControlsState)
     pauseState = openPauseMenu(pauseState)
     renderer.pause()
   }
@@ -224,6 +253,101 @@
     return pauseSettingsScreen.deleteConfirm ? 'settings-delete-confirm' : 'settings'
   }
 
+  function isGameplayPlayable(): boolean {
+    return pauseState.mode === 'playing' && !hudState?.result
+  }
+
+  function applyVirtualControlsVisibility(source: GameplayInputSource): void {
+    const decision = getVirtualControlsVisibilityDecision({
+      visible: virtualControlsState.visible,
+      source,
+      playable: isGameplayPlayable(),
+    })
+
+    virtualControlsState = decision.resetVirtualState
+      ? clearVirtualControlsState(virtualControlsState)
+      : { ...virtualControlsState, visible: decision.visible }
+  }
+
+  function getVirtualGameplayInputSnapshot(): GameplayInputSnapshot {
+    return {
+      ...emptyGameplayInputSnapshot,
+      leftHeld: virtualControlsState.moveX < 0,
+      rightHeld: virtualControlsState.moveX > 0,
+      crouchHeld: virtualControlsState.crouchHeld,
+      jumpPressed: virtualJumpPressed,
+      attackPressed: virtualAttackPressed,
+    }
+  }
+
+  function getGameplayInputSnapshot(): GameplayInputSnapshot {
+    const snapshot = mergeGameplayInputSnapshots([
+      getVirtualGameplayInputSnapshot(),
+      gamepadGameplayInput,
+    ])
+
+    virtualJumpPressed = false
+    virtualAttackPressed = false
+
+    return snapshot
+  }
+
+  function hasActiveGamepadGameplayInput(input: GameplayInputSnapshot): boolean {
+    return (
+      input.leftHeld ||
+      input.rightHeld ||
+      input.crouchHeld ||
+      input.jumpPressed ||
+      input.jumpHeld ||
+      input.attackPressed ||
+      input.attackHeld
+    )
+  }
+
+  function isKeyboardGameplayInput(event: KeyboardEvent): boolean {
+    return [
+      'ArrowLeft',
+      'ArrowRight',
+      'ArrowDown',
+      'ArrowUp',
+      'a',
+      'A',
+      'd',
+      'D',
+      's',
+      'S',
+      'w',
+      'W',
+      ' ',
+      'Spacebar',
+      'j',
+      'J',
+      'z',
+      'Z',
+    ].includes(event.key)
+  }
+
+  function handleVirtualMove(moveX: -1 | 0 | 1, crouchHeld: boolean): void {
+    virtualControlsState = {
+      ...virtualControlsState,
+      visible: true,
+      moveX,
+      crouchHeld,
+    }
+  }
+
+  function handleVirtualJump(): void {
+    virtualJumpPressed = true
+  }
+
+  function handleVirtualAttack(): void {
+    virtualAttackPressed = true
+  }
+
+  function handleGameplayPointerInteraction(): void {
+    applyVirtualControlsVisibility('virtual-pointer')
+  }
+
   function handlePauseControlIntent(intent: ControlIntent): void {
     if (pauseState.mode === 'playing') {
       if (intent === 'back') pauseGameplay()
@@ -248,6 +372,10 @@
   }
 
   function handleKeydown(event: KeyboardEvent): void {
+    if (isGameplayPlayable() && isKeyboardGameplayInput(event)) {
+      applyVirtualControlsVisibility('keyboard')
+    }
+
     if (hudState?.result) {
       const intent = mapKeyboardControlIntent(
         { key: event.key, repeat: event.repeat },
@@ -304,10 +432,16 @@
         hudState = applyGameplayHudPatch(hudState ?? createInitialGameplayHudState(stage), patch)
       },
       onSfx: onGameplaySfx,
+      getInputSnapshot: getGameplayInputSnapshot,
     })
 
     function pollGamepad() {
       const currentSnapshot = readGamepadSnapshot()
+      gamepadGameplayInput = mapGamepadGameplayInputSnapshot(previousGamepadSnapshot, currentSnapshot)
+      if (isGameplayPlayable() && hasActiveGamepadGameplayInput(gamepadGameplayInput)) {
+        applyVirtualControlsVisibility('gamepad')
+      }
+
       const context = hudState?.result
         ? 'stage-select'
         : pauseState.mode === 'paused'
@@ -347,7 +481,11 @@
 
 <svelte:window onkeydown={handleKeydown} />
 
-<section class="gameplay-screen" aria-label={`Gameplay ${stage.id}`}>
+<section
+  class="gameplay-screen"
+  aria-label={`Gameplay ${stage.id}`}
+  onpointerdown={handleGameplayPointerInteraction}
+>
   <div bind:this={container} class="gameplay-canvas"></div>
   {#if hudState}
     <GameplayHud
@@ -407,6 +545,29 @@
         onAction={handleResultAction}
       />
     {/if}
+    {#if virtualControlsState.visible && isGameplayPlayable()}
+      <VirtualControls
+        {localizeData}
+        {locale}
+        onMove={handleVirtualMove}
+        onJump={handleVirtualJump}
+        onAttack={handleVirtualAttack}
+        onInteraction={() => applyVirtualControlsVisibility('virtual-pointer')}
+      />
+      <button
+        class="virtual-hud-pause"
+        type="button"
+        aria-label={text('touch.pause')}
+        onpointerdown={(event) => {
+          event.preventDefault()
+          applyVirtualControlsVisibility('virtual-pointer')
+          pauseGameplay()
+        }}
+      >
+        <span>Ⅱ</span>
+        <b>{text('touch.pause')}</b>
+      </button>
+    {/if}
   {/if}
 </section>
 
@@ -441,6 +602,61 @@
     pointer-events: auto;
     backdrop-filter: blur(4px) saturate(78%);
     animation: pause-backdrop-in 220ms ease-out both;
+  }
+
+  .virtual-hud-pause {
+    position: absolute;
+    right: 2.25cqw;
+    bottom: 4.35cqh;
+    z-index: 54;
+    display: flex;
+    gap: 0.55cqw;
+    align-items: center;
+    min-width: 8.8cqw;
+    min-height: 5.2cqh;
+    justify-content: center;
+    border: 1.5px solid color-mix(in srgb, #2f6fd0 55%, transparent);
+    border-radius: 6px;
+    background: linear-gradient(
+      180deg,
+      color-mix(in srgb, #ffffff 92%, #2f6fd0),
+      color-mix(in srgb, #ffffff 76%, #2f6fd0)
+    );
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.85) inset,
+      0 0 0 1px rgba(255, 255, 255, 0.42),
+      0 10px 24px -14px rgba(20, 49, 95, 0.72);
+    color: color-mix(in oklab, #2f6fd0 64%, #08152e);
+    font-family: Rajdhani, Verdana, Geneva, sans-serif;
+    pointer-events: auto;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .virtual-hud-pause span {
+    display: grid;
+    width: 2.15cqw;
+    aspect-ratio: 1;
+    place-items: center;
+    border-radius: 50%;
+    background: linear-gradient(180deg, #fff, color-mix(in srgb, #2f6fd0 16%, #ffffff));
+    font-size: 1.05cqw;
+    font-weight: 900;
+    line-height: 1;
+  }
+
+  .virtual-hud-pause b {
+    font-size: 0.72cqw;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    line-height: 1;
+    text-transform: uppercase;
+  }
+
+  .virtual-hud-pause:active {
+    filter: brightness(1.08);
+    scale: 0.98;
   }
 
   @keyframes pause-backdrop-in {

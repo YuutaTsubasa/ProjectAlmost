@@ -79,6 +79,12 @@ export type GameplayHudLocalizationKey =
   | 'hud.bossPhase'
   | 'hud.bossPhaseHint'
 
+export type TouchLocalizationKey =
+  | 'touch.pause'
+  | 'touch.move'
+  | 'touch.jump'
+  | 'touch.attack'
+
 export type GameplayStatusLocalizationKey =
   | 'status.initial'
   | 'status.checkpoint'
@@ -101,6 +107,7 @@ export type LocalizationKey =
   | SettingsLocalizationKey
   | PauseLocalizationKey
   | GameplayHudLocalizationKey
+  | TouchLocalizationKey
   | GameplayStatusLocalizationKey
 
 export interface LocaleRecord {
@@ -225,6 +232,10 @@ const catalog: LocalizedTextCatalog = {
     'common.delete': 'Delete',
     'common.warning': 'Warning',
     'common.locked': 'Locked',
+    'touch.pause': 'Pause',
+    'touch.move': 'Move',
+    'touch.jump': 'Jump',
+    'touch.attack': 'Attack',
     'title.prompt.pressAnyButton': 'Press Any Button',
     'title.menu.start': 'Start Game',
     'title.menu.settings': 'Settings',
@@ -382,6 +393,10 @@ const catalog: LocalizedTextCatalog = {
     'common.delete': '削除',
     'common.warning': '警告',
     'common.locked': 'ロック中',
+    'touch.pause': 'ポーズ',
+    'touch.move': '移動',
+    'touch.jump': 'ジャンプ',
+    'touch.attack': '攻撃',
     'title.prompt.pressAnyButton': 'いずれかのボタンを押してください',
     'title.menu.start': 'ゲーム開始',
     'title.menu.settings': '設定',
@@ -539,6 +554,10 @@ const catalog: LocalizedTextCatalog = {
     'common.delete': '刪除',
     'common.warning': '警告',
     'common.locked': '未解鎖',
+    'touch.pause': '暫停',
+    'touch.move': '移動',
+    'touch.jump': '跳躍',
+    'touch.attack': '攻擊',
     'title.prompt.pressAnyButton': '按下任意按鈕',
     'title.menu.start': '開始遊戲',
     'title.menu.settings': '設定',
@@ -696,6 +715,10 @@ const catalog: LocalizedTextCatalog = {
     'common.delete': '삭제',
     'common.warning': '경고',
     'common.locked': '잠김',
+    'touch.pause': '일시 정지',
+    'touch.move': '이동',
+    'touch.jump': '점프',
+    'touch.attack': '공격',
     'title.prompt.pressAnyButton': '아무 버튼이나 누르세요',
     'title.menu.start': '게임 시작',
     'title.menu.settings': '설정',

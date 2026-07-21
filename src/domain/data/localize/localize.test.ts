@@ -244,6 +244,22 @@ describe('localize', () => {
     }
   })
 
+  it('includes localized touch control values for every supported locale', () => {
+    const expectedByLocale = {
+      en: { pause: 'Pause', move: 'Move', jump: 'Jump', attack: 'Attack' },
+      ja: { pause: 'ポーズ', move: '移動', jump: 'ジャンプ', attack: '攻撃' },
+      zhHant: { pause: '暫停', move: '移動', jump: '跳躍', attack: '攻擊' },
+      ko: { pause: '일시 정지', move: '이동', jump: '점프', attack: '공격' },
+    }
+
+    for (const locale of ['en', 'ja', 'zhHant', 'ko'] as const) {
+      expect(resolveLocalizedText(localize, locale, 'touch.pause')).toBe(expectedByLocale[locale].pause)
+      expect(resolveLocalizedText(localize, locale, 'touch.move')).toBe(expectedByLocale[locale].move)
+      expect(resolveLocalizedText(localize, locale, 'touch.jump')).toBe(expectedByLocale[locale].jump)
+      expect(resolveLocalizedText(localize, locale, 'touch.attack')).toBe(expectedByLocale[locale].attack)
+    }
+  })
+
   it('includes localized gameplay pause values for every supported locale', () => {
     const expectedByLocale = {
       en: {

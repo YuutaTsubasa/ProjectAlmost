@@ -10,6 +10,7 @@ import {
 } from './sceneTransitionPolicy'
 
 const titleMenu: AppScreen = { type: 'title-menu', selectedItemIndex: 0 }
+const titleIntro: AppScreen = { type: 'title-intro' }
 const worldSelect: AppScreen = { type: 'world-select', selectedWorldIndex: 0 }
 const stageSelect: AppScreen = {
   type: 'stage-select',
@@ -45,6 +46,11 @@ describe('scene transition policy', () => {
       worldId: 'world01',
       selectedStageIndex: 1,
     })).toBeNull()
+  })
+
+  it('keeps title intro and menu changes inside the title scene without a route transition', () => {
+    expect(resolveSceneTransitionStyle(titleIntro, titleMenu)).toBeNull()
+    expect(resolveSceneTransitionStyle(titleMenu, titleIntro)).toBeNull()
   })
 
   it('exposes prototype-aligned timing values per style', () => {
