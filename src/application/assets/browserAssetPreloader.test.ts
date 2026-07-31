@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { PreloadAsset } from '../../domain/assets/preloadManifest'
 import { createBrowserAssetPreloader } from './browserAssetPreloader'
 
@@ -8,6 +8,10 @@ const imageAsset: PreloadAsset = {
   kind: 'image',
   group: 'boot',
 }
+
+afterEach(() => {
+  vi.unstubAllGlobals()
+})
 
 describe('browser asset preloader', () => {
   it('reports progress and treats failed assets as non-fatal warnings', async () => {
@@ -141,19 +145,34 @@ describe('browser asset preloader', () => {
     }
   })
 
-  it('starts queued work after a saturated physical load times out', async () => {
+  it('aborts timed-out physical work before starting a saturated queued load', async () => {
     const startedSources: string[] = []
+    const abortedSources: string[] = []
     const progress: Array<{ completed: number; total: number }> = []
+    let active = 0
+    let maxActive = 0
     const firstAsset = { ...imageAsset, id: 'stalled', source: '/assets/stalled.webp' }
     const secondAsset = { ...imageAsset, id: 'queued', source: '/assets/queued.webp' }
     const preloader = createBrowserAssetPreloader({
       concurrency: 1,
       timeoutMs: 5,
-      loadSource: (asset) => {
+      loadSource: (asset, signal) => {
         startedSources.push(asset.source)
-        return asset.source === firstAsset.source
-          ? new Promise<void>(() => undefined)
-          : Promise.resolve()
+        active += 1
+        maxActive = Math.max(maxActive, active)
+
+        if (asset.source === firstAsset.source) {
+          return new Promise<void>((_, reject) => {
+            signal.addEventListener('abort', () => {
+              abortedSources.push(asset.source)
+              active -= 1
+              reject(signal.reason)
+            }, { once: true })
+          })
+        }
+
+        active -= 1
+        return Promise.resolve()
       },
     })
 
@@ -182,6 +201,61 @@ describe('browser asset preloader', () => {
       { completed: 2, total: 2 },
     ])
     expect(startedSources).toEqual([firstAsset.source, secondAsset.source])
+    expect(abortedSources).toEqual([firstAsset.source])
+    expect(maxActive).toBe(1)
+  })
+
+  it('passes the timeout signal to browser fetch loads', async () => {
+    let fetchSignal: AbortSignal | undefined
+    const fetchMock = vi.fn((_source: RequestInfo | URL, init?: RequestInit) => {
+      fetchSignal = init?.signal ?? undefined
+      return new Promise<Response>((_, reject) => {
+        fetchSignal?.addEventListener('abort', () => reject(fetchSignal?.reason), { once: true })
+      })
+    })
+    vi.stubGlobal('fetch', fetchMock)
+    const audioAsset = { ...imageAsset, id: 'music', source: '/assets/music.mp3', kind: 'audio' as const }
+    const preloader = createBrowserAssetPreloader({ timeoutMs: 5 })
+
+    const result = await preloader.preload([audioAsset], { phase: 'boot' })
+
+    expect(result.failures[0]?.message).toBe('Asset load timed out after 5ms')
+    expect(fetchSignal?.aborted).toBe(true)
+    expect(fetchMock).toHaveBeenCalledWith(audioAsset.source, {
+      cache: 'force-cache',
+      signal: fetchSignal,
+    })
+  })
+
+  it('aborts and clears a stalled browser image before starting queued work', async () => {
+    const imageInstances: Array<{ src: string }> = []
+    class FakeImage {
+      src = ''
+
+      constructor() {
+        imageInstances.push(this)
+      }
+
+      decode(): Promise<void> {
+        return this.src.includes('stalled') ? new Promise<void>(() => undefined) : Promise.resolve()
+      }
+    }
+    vi.stubGlobal('Image', FakeImage)
+    const firstAsset = { ...imageAsset, id: 'stalled', source: '/assets/stalled.webp' }
+    const secondAsset = { ...imageAsset, id: 'queued', source: '/assets/queued.webp' }
+    const preloader = createBrowserAssetPreloader({ concurrency: 1, timeoutMs: 5 })
+
+    const result = await Promise.race([
+      preloader.preload([firstAsset, secondAsset], { phase: 'boot' }),
+      new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('queued image did not start after abort')), 100)
+      }),
+    ])
+
+    expect(result).toMatchObject({ status: 'ready-with-errors', completed: 2, total: 2 })
+    expect(imageInstances).toHaveLength(2)
+    expect(imageInstances[0]?.src).toBe('')
+    expect(imageInstances[1]?.src).toBe(secondAsset.source)
   })
 
   it('limits active loads to the configured concurrency while running in parallel', async () => {

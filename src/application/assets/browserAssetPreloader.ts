@@ -9,7 +9,7 @@ import {
   type PreloadProgressSnapshot,
 } from './preloadProgress'
 
-export type AssetSourceLoader = (asset: PreloadAsset) => Promise<void>
+export type AssetSourceLoader = (asset: PreloadAsset, signal: AbortSignal) => Promise<void>
 
 export const DEFAULT_PRELOAD_TIMEOUT_MS = 10_000
 export const DEFAULT_PRELOAD_CONCURRENCY = 4
@@ -38,15 +38,47 @@ function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error)
 }
 
-async function loadWithBrowser(asset: PreloadAsset): Promise<void> {
-  if (asset.kind === 'image' || asset.kind === 'spritesheet') {
-    const image = new Image()
+function abortReason(signal: AbortSignal): unknown {
+  return signal.reason ?? new Error('Asset load aborted')
+}
+
+function loadImageWithBrowser(asset: PreloadAsset, signal: AbortSignal): Promise<void> {
+  if (signal.aborted) return Promise.reject(abortReason(signal))
+
+  const image = new Image()
+  return new Promise<void>((resolve, reject) => {
+    let settled = false
+    const cleanup = (): void => signal.removeEventListener('abort', handleAbort)
+    const resolveLoad = (): void => {
+      if (settled) return
+      settled = true
+      cleanup()
+      resolve()
+    }
+    const rejectLoad = (error: unknown): void => {
+      if (settled) return
+      settled = true
+      cleanup()
+      reject(error)
+    }
+    const handleAbort = (): void => {
+      image.src = ''
+      rejectLoad(abortReason(signal))
+    }
+
+    signal.addEventListener('abort', handleAbort, { once: true })
     image.src = asset.source
-    await image.decode()
+    void image.decode().then(resolveLoad, rejectLoad)
+  })
+}
+
+async function loadWithBrowser(asset: PreloadAsset, signal: AbortSignal): Promise<void> {
+  if (asset.kind === 'image' || asset.kind === 'spritesheet') {
+    await loadImageWithBrowser(asset, signal)
     return
   }
 
-  const response = await fetch(asset.source, { cache: 'force-cache' })
+  const response = await fetch(asset.source, { cache: 'force-cache', signal })
   if (!response.ok) throw new Error(`${response.status} ${response.statusText}`.trim())
 }
 
@@ -54,10 +86,18 @@ function normalizePositiveInteger(value: number | undefined, fallback: number): 
   return Number.isFinite(value) ? Math.max(1, Math.floor(value as number)) : fallback
 }
 
-function waitForLoad(request: Promise<void>, timeoutMs: number): Promise<void> {
+function waitForLoad(
+  request: Promise<void>,
+  timeoutMs: number,
+  abortController: AbortController,
+): Promise<void> {
   let timeoutId: ReturnType<typeof setTimeout> | undefined
   const timeout = new Promise<never>((_, reject) => {
-    timeoutId = setTimeout(() => reject(new Error(`Asset load timed out after ${timeoutMs}ms`)), timeoutMs)
+    timeoutId = setTimeout(() => {
+      const error = new Error(`Asset load timed out after ${timeoutMs}ms`)
+      reject(error)
+      abortController.abort(error)
+    }, timeoutMs)
   })
 
   return Promise.race([request, timeout]).finally(() => {
@@ -106,13 +146,12 @@ export function createBrowserAssetPreloader(options: BrowserAssetPreloaderOption
         activeLoads -= 1
         runQueuedLoads()
       }
-      const sourceLoad = Promise.resolve().then(() => loadSource(asset))
-      void waitForLoad(sourceLoad, timeoutMs)
+      const abortController = new AbortController()
+      const sourceLoad = Promise.resolve().then(() => loadSource(asset, abortController.signal))
+      void waitForLoad(sourceLoad, timeoutMs, abortController)
         .then(() => {
-          releaseSlot()
           resolveRequest()
         }, (error) => {
-          releaseSlot()
           rejectRequest(error)
         })
 
@@ -122,6 +161,7 @@ export function createBrowserAssetPreloader(options: BrowserAssetPreloaderOption
         }, () => undefined)
         .finally(() => {
           if (pendingSources.get(asset.source) === request) pendingSources.delete(asset.source)
+          releaseSlot()
         })
     })
     runQueuedLoads()
