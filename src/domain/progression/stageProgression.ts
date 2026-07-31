@@ -1,4 +1,4 @@
-import { type ClearRank } from '../gameplay/stageResult'
+import { CLEAR_RANKS, type ClearRank } from '../gameplay/stageResult'
 
 export type StageRecord = {
   cleared: boolean
@@ -16,13 +16,9 @@ export type StageClearResult = {
 
 export type StageRecordMap<TStageId extends string> = Partial<Record<TStageId, StageRecord>>
 
-const rankValues: Record<ClearRank, number> = {
-  S: 5,
-  A: 4,
-  B: 3,
-  C: 2,
-  D: 1,
-}
+const rankValues: Record<ClearRank, number> = Object.fromEntries(
+  CLEAR_RANKS.map((rank, index) => [rank, CLEAR_RANKS.length - index]),
+) as Record<ClearRank, number>
 
 export function createEmptyStageRecords<TStageId extends string>(): StageRecordMap<TStageId> {
   return {}

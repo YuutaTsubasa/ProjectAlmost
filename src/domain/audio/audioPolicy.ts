@@ -1,5 +1,6 @@
 import type { AppScreen } from '../app/appFlow'
 import type { StageId } from '../data/worlds/worldTypes'
+import { parseStageId } from '../data/worlds/stageId'
 import type { GameSettings } from '../settings/settings'
 import { MUSIC_ASSETS, SFX_ASSETS, type MusicTrackId, type SfxId } from './audioAssets'
 
@@ -56,7 +57,7 @@ export type GameplayMusicContext = {
 }
 
 function getWorldIndexFromStageId(stageId: StageId): number {
-  return Math.max(0, Number(stageId.split('-')[0]) - 1)
+  return Math.max(0, parseStageId(stageId).worldNumber - 1)
 }
 
 export function computeMusicVolume(settings: GameSettings, multiplier = 1): number {

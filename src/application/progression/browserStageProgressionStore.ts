@@ -6,9 +6,12 @@ import {
   type StageRecord,
 } from '../../domain/progression/stageProgression'
 import type { StageId } from '../../domain/data/worlds/worldTypes'
+import { isStageId } from '../../domain/data/worlds/stageId'
+import { isClearRank } from '../../domain/gameplay/stageResult'
+import { storageKey } from '../../domain/app/projectIdentity'
 
-export const STAGE_PROGRESSION_SAVE_KEY = 'project-almost:save'
-export const STAGE_PROGRESSION_DEBUG_UNLOCK_KEY = 'project-almost:debugUnlockAllStages'
+export const STAGE_PROGRESSION_SAVE_KEY = storageKey('save')
+export const STAGE_PROGRESSION_DEBUG_UNLOCK_KEY = storageKey('debugUnlockAllStages')
 
 export type StageProgressionSave = {
   version: 1
@@ -46,10 +49,6 @@ function isStageProgressionSave(value: unknown): value is StageProgressionSave {
   )
 }
 
-function isStageId(value: string): value is StageId {
-  return /^[1-6]-[1-6]$/.test(value)
-}
-
 function isStageTimeLabel(value: unknown): value is string {
   return typeof value === 'string' && /^\d{2}:\d{2}\.\d{2}$/.test(value)
 }
@@ -72,12 +71,7 @@ function isStageRecord(value: unknown): value is StageRecord {
       && candidate.bestTimeMs >= 0
       && isStageTimeLabel(candidate.bestTime)
       && parseStageTimeMs(candidate.bestTime) === candidate.bestTimeMs
-      && typeof candidate.bestRank === 'string'
-      && (candidate.bestRank === 'S'
-        || candidate.bestRank === 'A'
-        || candidate.bestRank === 'B'
-        || candidate.bestRank === 'C'
-        || candidate.bestRank === 'D')
+      && isClearRank(candidate.bestRank)
       && typeof candidate.maxCoins === 'number'
       && Number.isInteger(candidate.maxCoins)
       && Number.isFinite(candidate.maxCoins)

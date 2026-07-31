@@ -1,6 +1,7 @@
 import type { LocaleCode } from '../data/localize/localize'
+import { storageKey } from '../app/projectIdentity'
 
-export const SETTINGS_STORAGE_KEY = 'project-almost:settings'
+export const SETTINGS_STORAGE_KEY = storageKey('settings')
 
 export type GameSettings = {
   masterVolume: number

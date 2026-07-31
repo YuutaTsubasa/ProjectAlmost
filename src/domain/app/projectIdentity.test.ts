@@ -1,14 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { createProjectIdentity } from './projectIdentity'
+import { PRODUCT_NAME, STORAGE_NAMESPACE, storageKey } from './projectIdentity'
 
-describe('createProjectIdentity', () => {
-  it('describes the rebuild as a Tauri v2 and Svelte app', () => {
-    expect(createProjectIdentity()).toEqual({
-      productName: 'Project Almost',
-      shell: 'tauri-v2',
-      ui: 'svelte',
-      domainCore: 'functional',
-      stateModel: 'reactive',
-    })
+describe('project identity', () => {
+  it('exposes the product name', () => {
+    expect(PRODUCT_NAME).toBe('Project Almost')
+  })
+
+  it('builds namespaced storage keys', () => {
+    expect(STORAGE_NAMESPACE).toBe('project-almost')
+    expect(storageKey('save')).toBe('project-almost:save')
   })
 })

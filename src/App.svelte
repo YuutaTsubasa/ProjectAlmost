@@ -38,7 +38,7 @@
     type SceneTransitionState,
   } from './application/sceneTransition/sceneTransitionPolicy'
   import { resolveShellBackdrop, type ShellBackdrop } from './application/shell/shellBackdrop'
-  import { createProjectIdentity } from './domain/app/projectIdentity'
+  import { PRODUCT_NAME } from './domain/app/projectIdentity'
   import { getCharacterProfile, selectedCharacterId } from './domain/character/characterProfile'
   import { projectData } from './domain/data/projectData'
   import type { GameplaySfxAction } from './domain/audio/audioPolicy'
@@ -84,7 +84,6 @@
     }),
   )
   let audio: BrowserAudioController | undefined
-  const identity = createProjectIdentity()
   const characterInfo = createCharacterInfoViewModel(getCharacterProfile(selectedCharacterId))
   const locale: LocaleCode = $derived(settings.language)
   const stageOrder = $derived(projectData.stages.order)
@@ -474,7 +473,7 @@
     {#if appState.screen.type === 'title-intro' || appState.screen.type === 'title-menu'}
       <TitleScreen
         screen={appState.screen}
-        productName={identity.productName}
+        productName={PRODUCT_NAME}
         localizeData={projectData.localize}
         locale={locale}
         onControlIntent={handleControlIntent}
