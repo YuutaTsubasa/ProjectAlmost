@@ -99,12 +99,15 @@ export function createBrowserAssetPreloader(options: BrowserAssetPreloaderOption
     pendingSources.set(asset.source, request)
 
     queuedLoads.push(() => {
-      void Promise.resolve()
-        .then(() => loadSource(asset))
+      const sourceLoad = Promise.resolve().then(() => loadSource(asset))
+      void waitForLoad(sourceLoad, timeoutMs)
         .then(() => {
           completedSources.add(asset.source)
           resolveRequest()
         }, rejectRequest)
+
+      void sourceLoad
+        .then(() => undefined, () => undefined)
         .finally(() => {
           activeLoads -= 1
           if (pendingSources.get(asset.source) === request) pendingSources.delete(asset.source)
@@ -117,7 +120,7 @@ export function createBrowserAssetPreloader(options: BrowserAssetPreloaderOption
   }
 
   function load(asset: PreloadAsset): Promise<void> {
-    return waitForLoad(startOrReuseLoad(asset), timeoutMs)
+    return startOrReuseLoad(asset)
   }
 
   async function preload(

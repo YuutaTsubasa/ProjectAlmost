@@ -87,6 +87,39 @@ describe('browser asset preloader', () => {
     expect(calls).toBe(1)
   })
 
+  it('starts a queued asset timeout only after its physical load begins', async () => {
+    let releaseFirst!: () => void
+    const startedSources: string[] = []
+    const firstAsset = { ...imageAsset, id: 'first', source: '/assets/first.webp' }
+    const secondAsset = { ...imageAsset, id: 'second', source: '/assets/second.webp' }
+    const preloader = createBrowserAssetPreloader({
+      concurrency: 1,
+      timeoutMs: 5,
+      loadSource: (asset) => {
+        startedSources.push(asset.source)
+        if (asset.source === firstAsset.source) {
+          return new Promise<void>((resolve) => {
+            releaseFirst = resolve
+          })
+        }
+        return Promise.resolve()
+      },
+    })
+
+    const first = preloader.preload([firstAsset], { phase: 'boot' })
+    const second = preloader.preload([secondAsset], { phase: 'boot' })
+    await new Promise((resolve) => setTimeout(resolve, 10))
+
+    expect(startedSources).toEqual([firstAsset.source])
+
+    releaseFirst()
+    await first
+    const secondResult = await second
+
+    expect(startedSources).toEqual([firstAsset.source, secondAsset.source])
+    expect(secondResult.status).toBe('ready')
+  })
+
   it('limits active loads to the configured concurrency while running in parallel', async () => {
     const assets = [1, 2, 3, 4].map((id) => ({ ...imageAsset, id: `asset-${id}`, source: `/assets/${id}.webp` }))
     let active = 0
