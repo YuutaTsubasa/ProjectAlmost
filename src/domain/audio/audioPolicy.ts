@@ -107,14 +107,18 @@ export function getMusicForScreen(screen: AppScreen, settings: GameSettings): Mu
   return { track: 'title', volume: computeMusicVolume(settings) }
 }
 
+const SFX_BY_ACTION = {
+  move: 'ui-move',
+  confirm: 'ui-confirm',
+  back: 'ui-back',
+  'player-hit': 'hit',
+  'coin-collected': 'coin',
+  'player-death': 'death',
+  'checkpoint-activated': 'checkpoint',
+  'player-footstep': 'armor-step',
+  'goal-opened': 'goal',
+} as const satisfies Record<SfxAction, SfxId>
+
 export function getSfxForAction(action: SfxAction): SfxId {
-  if (action === 'move') return 'ui-move'
-  if (action === 'back') return 'ui-back'
-  if (action === 'player-hit') return 'hit'
-  if (action === 'coin-collected') return 'coin'
-  if (action === 'player-death') return 'death'
-  if (action === 'checkpoint-activated') return 'checkpoint'
-  if (action === 'player-footstep') return 'armor-step'
-  if (action === 'goal-opened') return 'goal'
-  return 'ui-confirm'
+  return SFX_BY_ACTION[action]
 }

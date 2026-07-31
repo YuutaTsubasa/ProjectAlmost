@@ -26,25 +26,20 @@ export function convertGameplayStageSource(
 ): GameplayStageMapConversionResult {
   const theme = source.theme ?? 'white-palace'
   const visualProfile = visualProfiles[theme]
-  const diagnostics: GameplayStageConversionDiagnostic[] = []
-
-  for (const gravityZone of source.gravityZones ?? []) {
-    diagnostics.push({
+  const diagnostics: GameplayStageConversionDiagnostic[] = [
+    ...(source.gravityZones ?? []).map((gravityZone) => ({
       stageId: source.id,
-      code: 'unsupported-gravity-zone',
+      code: 'unsupported-gravity-zone' as const,
       sourceId: gravityZone.id,
       message: `Stage ${source.id} has unsupported gravity zone ${gravityZone.id}.`,
-    })
-  }
-
-  for (const surfaceZone of source.surfaceZones ?? []) {
-    diagnostics.push({
+    })),
+    ...(source.surfaceZones ?? []).map((surfaceZone) => ({
       stageId: source.id,
-      code: 'unsupported-surface-zone',
+      code: 'unsupported-surface-zone' as const,
       sourceId: surfaceZone.id,
       message: `Stage ${source.id} has unsupported surface zone ${surfaceZone.id}.`,
-    })
-  }
+    })),
+  ]
 
   return {
     map: {
