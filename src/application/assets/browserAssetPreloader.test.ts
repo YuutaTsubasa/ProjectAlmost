@@ -87,6 +87,31 @@ describe('browser asset preloader', () => {
     expect(calls).toBe(1)
   })
 
+  it('caches a physical success that completes after its logical timeout', async () => {
+    let calls = 0
+    let release!: () => void
+    const physicalLoad = new Promise<void>((resolve) => {
+      release = resolve
+    })
+    const preloader = createBrowserAssetPreloader({
+      timeoutMs: 5,
+      loadSource: () => {
+        calls += 1
+        return physicalLoad
+      },
+    })
+
+    const firstResult = await preloader.preload([imageAsset], { phase: 'boot' })
+    release()
+    await physicalLoad
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    const secondResult = await preloader.preload([imageAsset], { phase: 'boot' })
+
+    expect(firstResult.status).toBe('ready-with-errors')
+    expect(secondResult).toMatchObject({ status: 'ready', failures: [] })
+    expect(calls).toBe(1)
+  })
+
   it('starts a queued asset timeout only after its physical load begins', async () => {
     let releaseFirst!: () => void
     const startedSources: string[] = []

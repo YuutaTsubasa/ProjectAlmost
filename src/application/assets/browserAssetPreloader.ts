@@ -102,12 +102,13 @@ export function createBrowserAssetPreloader(options: BrowserAssetPreloaderOption
       const sourceLoad = Promise.resolve().then(() => loadSource(asset))
       void waitForLoad(sourceLoad, timeoutMs)
         .then(() => {
-          completedSources.add(asset.source)
           resolveRequest()
         }, rejectRequest)
 
       void sourceLoad
-        .then(() => undefined, () => undefined)
+        .then(() => {
+          completedSources.add(asset.source)
+        }, () => undefined)
         .finally(() => {
           activeLoads -= 1
           if (pendingSources.get(asset.source) === request) pendingSources.delete(asset.source)
