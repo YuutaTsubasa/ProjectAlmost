@@ -99,20 +99,29 @@ export function createBrowserAssetPreloader(options: BrowserAssetPreloaderOption
     pendingSources.set(asset.source, request)
 
     queuedLoads.push(() => {
+      let slotReleased = false
+      const releaseSlot = (): void => {
+        if (slotReleased) return
+        slotReleased = true
+        activeLoads -= 1
+        runQueuedLoads()
+      }
       const sourceLoad = Promise.resolve().then(() => loadSource(asset))
       void waitForLoad(sourceLoad, timeoutMs)
         .then(() => {
+          releaseSlot()
           resolveRequest()
-        }, rejectRequest)
+        }, (error) => {
+          releaseSlot()
+          rejectRequest(error)
+        })
 
       void sourceLoad
         .then(() => {
           completedSources.add(asset.source)
         }, () => undefined)
         .finally(() => {
-          activeLoads -= 1
           if (pendingSources.get(asset.source) === request) pendingSources.delete(asset.source)
-          runQueuedLoads()
         })
     })
     runQueuedLoads()

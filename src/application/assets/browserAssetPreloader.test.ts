@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import type { PreloadAsset } from '../../domain/assets/preloadManifest'
 import { createBrowserAssetPreloader } from './browserAssetPreloader'
 
@@ -113,36 +113,75 @@ describe('browser asset preloader', () => {
   })
 
   it('starts a queued asset timeout only after its physical load begins', async () => {
-    let releaseFirst!: () => void
+    vi.useFakeTimers()
+    try {
+      const startedSources: string[] = []
+      const firstAsset = { ...imageAsset, id: 'first', source: '/assets/first.webp' }
+      const secondAsset = { ...imageAsset, id: 'second', source: '/assets/second.webp' }
+      const preloader = createBrowserAssetPreloader({
+        concurrency: 1,
+        timeoutMs: 10,
+        loadSource: (asset) => {
+          startedSources.push(asset.source)
+          return new Promise<void>((resolve) => setTimeout(resolve, 8))
+        },
+      })
+
+      const first = preloader.preload([firstAsset], { phase: 'boot' })
+      const second = preloader.preload([secondAsset], { phase: 'boot' })
+
+      await vi.advanceTimersByTimeAsync(8)
+      expect(startedSources).toEqual([firstAsset.source, secondAsset.source])
+
+      await vi.advanceTimersByTimeAsync(8)
+      expect((await first).status).toBe('ready')
+      expect((await second).status).toBe('ready')
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('starts queued work after a saturated physical load times out', async () => {
     const startedSources: string[] = []
-    const firstAsset = { ...imageAsset, id: 'first', source: '/assets/first.webp' }
-    const secondAsset = { ...imageAsset, id: 'second', source: '/assets/second.webp' }
+    const progress: Array<{ completed: number; total: number }> = []
+    const firstAsset = { ...imageAsset, id: 'stalled', source: '/assets/stalled.webp' }
+    const secondAsset = { ...imageAsset, id: 'queued', source: '/assets/queued.webp' }
     const preloader = createBrowserAssetPreloader({
       concurrency: 1,
       timeoutMs: 5,
       loadSource: (asset) => {
         startedSources.push(asset.source)
-        if (asset.source === firstAsset.source) {
-          return new Promise<void>((resolve) => {
-            releaseFirst = resolve
-          })
-        }
-        return Promise.resolve()
+        return asset.source === firstAsset.source
+          ? new Promise<void>(() => undefined)
+          : Promise.resolve()
       },
     })
 
-    const first = preloader.preload([firstAsset], { phase: 'boot' })
-    const second = preloader.preload([secondAsset], { phase: 'boot' })
-    await new Promise((resolve) => setTimeout(resolve, 10))
+    const result = await Promise.race([
+      preloader.preload([firstAsset, secondAsset], {
+        phase: 'boot',
+        onProgress: ({ completed, total }) => progress.push({ completed, total }),
+      }),
+      new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('preload did not resolve after timeout')), 100)
+      }),
+    ])
 
-    expect(startedSources).toEqual([firstAsset.source])
-
-    releaseFirst()
-    await first
-    const secondResult = await second
-
+    expect(result).toMatchObject({
+      status: 'ready-with-errors',
+      completed: 2,
+      total: 2,
+      failures: [{
+        source: firstAsset.source,
+        kind: firstAsset.kind,
+        message: 'Asset load timed out after 5ms',
+      }],
+    })
+    expect(progress).toEqual([
+      { completed: 1, total: 2 },
+      { completed: 2, total: 2 },
+    ])
     expect(startedSources).toEqual([firstAsset.source, secondAsset.source])
-    expect(secondResult.status).toBe('ready')
   })
 
   it('limits active loads to the configured concurrency while running in parallel', async () => {
