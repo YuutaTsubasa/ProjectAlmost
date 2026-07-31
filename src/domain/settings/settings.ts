@@ -1,5 +1,6 @@
 import type { LocaleCode } from '../data/localize/localize'
 import { storageKey } from '../app/projectIdentity'
+import { assertNever } from '../assertNever'
 
 export const SETTINGS_STORAGE_KEY = storageKey('settings')
 
@@ -32,6 +33,10 @@ export type SettingsRow = {
   kind: SettingsRowKind
 }
 
+export const VOLUME_STEP = 10
+const MIN_VOLUME = 0
+const MAX_VOLUME = 100
+
 export const DEFAULT_SETTINGS: GameSettings = {
   masterVolume: 100,
   musicVolume: 80,
@@ -63,6 +68,10 @@ export type DeleteConfirmState = {
   selectedActionIndex: 0 | 1
 }
 
+export function getSettingsRowId(selectedItemIndex: number): SettingsRowId | undefined {
+  return SETTINGS_ROWS[selectedItemIndex]?.id
+}
+
 export function moveSettingsSelection(selectedItemIndex: number, direction: -1 | 1): number {
   return (selectedItemIndex + direction + SETTINGS_ROWS.length) % SETTINGS_ROWS.length
 }
@@ -81,22 +90,30 @@ export function adjustSettingsRow(
   direction: -1 | 1,
   localeCodes: readonly LocaleCode[],
 ): GameSettings {
-  if (selectedItemIndex === 0) {
-    return { ...settings, masterVolume: clampVolume(settings.masterVolume + direction * 10) }
+  const rowId = getSettingsRowId(selectedItemIndex)
+  switch (rowId) {
+    case 'master-volume':
+      return { ...settings, masterVolume: clampVolume(settings.masterVolume + direction * VOLUME_STEP) }
+    case 'music-volume':
+      return { ...settings, musicVolume: clampVolume(settings.musicVolume + direction * VOLUME_STEP) }
+    case 'sfx-volume':
+      return { ...settings, sfxVolume: clampVolume(settings.sfxVolume + direction * VOLUME_STEP) }
+    case 'language':
+      return { ...settings, language: cycleLocale(settings.language, direction, localeCodes) }
+    case 'fullscreen':
+      return { ...settings, fullscreen: !settings.fullscreen }
+    case 'screen-shake':
+      return { ...settings, screenShake: !settings.screenShake }
+    case 'vibration':
+      return { ...settings, vibration: !settings.vibration }
+    case 'reset':
+    case 'delete-save':
+    case 'back':
+    case undefined:
+      return settings
+    default:
+      return assertNever(rowId)
   }
-  if (selectedItemIndex === 1) {
-    return { ...settings, musicVolume: clampVolume(settings.musicVolume + direction * 10) }
-  }
-  if (selectedItemIndex === 2) {
-    return { ...settings, sfxVolume: clampVolume(settings.sfxVolume + direction * 10) }
-  }
-  if (selectedItemIndex === 3) {
-    return { ...settings, language: cycleLocale(settings.language, direction, localeCodes) }
-  }
-  if (selectedItemIndex === 4) return { ...settings, fullscreen: !settings.fullscreen }
-  if (selectedItemIndex === 5) return { ...settings, screenShake: !settings.screenShake }
-  if (selectedItemIndex === 6) return { ...settings, vibration: !settings.vibration }
-  return settings
 }
 
 export function resetSettings(actualFullscreen: boolean): GameSettings {
@@ -128,7 +145,7 @@ function normalizeVolume(value: unknown, fallback: number): number {
 }
 
 function clampVolume(value: number): number {
-  return Math.max(0, Math.min(100, Math.round(value / 10) * 10))
+  return Math.max(MIN_VOLUME, Math.min(MAX_VOLUME, Math.round(value / VOLUME_STEP) * VOLUME_STEP))
 }
 
 function cycleLocale(
