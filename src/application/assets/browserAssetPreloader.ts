@@ -54,16 +54,13 @@ function normalizePositiveInteger(value: number | undefined, fallback: number): 
   return Number.isFinite(value) ? Math.max(1, Math.floor(value as number)) : fallback
 }
 
-function loadWithTimeout(asset: PreloadAsset, loadSource: AssetSourceLoader, timeoutMs: number): Promise<void> {
+function waitForLoad(request: Promise<void>, timeoutMs: number): Promise<void> {
   let timeoutId: ReturnType<typeof setTimeout> | undefined
   const timeout = new Promise<never>((_, reject) => {
     timeoutId = setTimeout(() => reject(new Error(`Asset load timed out after ${timeoutMs}ms`)), timeoutMs)
   })
 
-  return Promise.race([
-    Promise.resolve().then(() => loadSource(asset)),
-    timeout,
-  ]).finally(() => {
+  return Promise.race([request, timeout]).finally(() => {
     if (timeoutId !== undefined) clearTimeout(timeoutId)
   })
 }
@@ -74,20 +71,53 @@ export function createBrowserAssetPreloader(options: BrowserAssetPreloaderOption
   const concurrency = normalizePositiveInteger(options.concurrency, DEFAULT_PRELOAD_CONCURRENCY)
   const completedSources = new Set<string>()
   const pendingSources = new Map<string, Promise<void>>()
+  const queuedLoads: Array<() => void> = []
+  let activeLoads = 0
 
-  function load(asset: PreloadAsset): Promise<void> {
+  function runQueuedLoads(): void {
+    while (activeLoads < concurrency && queuedLoads.length > 0) {
+      const start = queuedLoads.shift()
+      if (start) {
+        activeLoads += 1
+        start()
+      }
+    }
+  }
+
+  function startOrReuseLoad(asset: PreloadAsset): Promise<void> {
     if (completedSources.has(asset.source)) return Promise.resolve()
 
     const pending = pendingSources.get(asset.source)
     if (pending) return pending
 
-    const request = loadWithTimeout(asset, loadSource, timeoutMs).then(() => {
-      completedSources.add(asset.source)
-    }).finally(() => {
-      pendingSources.delete(asset.source)
+    let resolveRequest!: () => void
+    let rejectRequest!: (error: unknown) => void
+    const request = new Promise<void>((resolve, reject) => {
+      resolveRequest = resolve
+      rejectRequest = reject
     })
     pendingSources.set(asset.source, request)
+
+    queuedLoads.push(() => {
+      void Promise.resolve()
+        .then(() => loadSource(asset))
+        .then(() => {
+          completedSources.add(asset.source)
+          resolveRequest()
+        }, rejectRequest)
+        .finally(() => {
+          activeLoads -= 1
+          if (pendingSources.get(asset.source) === request) pendingSources.delete(asset.source)
+          runQueuedLoads()
+        })
+    })
+    runQueuedLoads()
+
     return request
+  }
+
+  function load(asset: PreloadAsset): Promise<void> {
+    return waitForLoad(startOrReuseLoad(asset), timeoutMs)
   }
 
   async function preload(

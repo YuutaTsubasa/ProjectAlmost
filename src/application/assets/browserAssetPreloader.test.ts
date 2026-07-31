@@ -71,6 +71,22 @@ describe('browser asset preloader', () => {
     }])
   })
 
+  it('reuses pending physical work after a logical timeout', async () => {
+    let calls = 0
+    const preloader = createBrowserAssetPreloader({
+      timeoutMs: 5,
+      loadSource: () => {
+        calls += 1
+        return new Promise<void>(() => undefined)
+      },
+    })
+
+    await preloader.preload([imageAsset], { phase: 'boot' })
+    await preloader.preload([imageAsset], { phase: 'boot' })
+
+    expect(calls).toBe(1)
+  })
+
   it('limits active loads to the configured concurrency while running in parallel', async () => {
     const assets = [1, 2, 3, 4].map((id) => ({ ...imageAsset, id: `asset-${id}`, source: `/assets/${id}.webp` }))
     let active = 0
@@ -88,6 +104,37 @@ describe('browser asset preloader', () => {
     const result = await preloader.preload(assets, { phase: 'boot' })
 
     expect(result.status).toBe('ready')
+    expect(maxActive).toBe(2)
+  })
+
+  it('limits physical loads across overlapping preload calls', async () => {
+    const releases: Array<() => void> = []
+    let active = 0
+    let maxActive = 0
+    const preloader = createBrowserAssetPreloader({
+      concurrency: 2,
+      loadSource: () => new Promise<void>((resolve) => {
+        active += 1
+        maxActive = Math.max(maxActive, active)
+        releases.push(() => {
+          active -= 1
+          resolve()
+        })
+      }),
+    })
+    const firstAssets = [1, 2].map((id) => ({ ...imageAsset, id: `first-${id}`, source: `/assets/first-${id}.webp` }))
+    const secondAssets = [1, 2].map((id) => ({ ...imageAsset, id: `second-${id}`, source: `/assets/second-${id}.webp` }))
+
+    const first = preloader.preload(firstAssets, { phase: 'boot' })
+    const second = preloader.preload(secondAssets, { phase: 'background' })
+    await new Promise((resolve) => setTimeout(resolve, 0))
+
+    expect(maxActive).toBe(2)
+    releases.splice(0, 2).forEach((release) => release())
+    await new Promise((resolve) => setTimeout(resolve, 0))
+    releases.splice(0, 2).forEach((release) => release())
+    await Promise.all([first, second])
+
     expect(maxActive).toBe(2)
   })
 })
