@@ -42,7 +42,6 @@
   import { getCharacterProfile, selectedCharacterId } from './domain/character/characterProfile'
   import { projectData } from './domain/data/projectData'
   import type { GameplaySfxAction } from './domain/audio/audioPolicy'
-  import type { LocaleCode } from './domain/data/localize/localize'
   import { getGameplayStageMap } from './domain/gameplay/gameplayStageMaps'
   import type { ControlIntent } from './domain/input/controlIntents'
   import type { StageId } from './domain/data/worlds/worldTypes'
@@ -85,8 +84,8 @@
   )
   let audio: BrowserAudioController | undefined
   const characterInfo = createCharacterInfoViewModel(getCharacterProfile(selectedCharacterId))
-  const locale: LocaleCode = $derived(settings.language)
-  const stageOrder = $derived(projectData.stages.order)
+  const locale = $derived(settings.language)
+  const stageOrder = projectData.stages.order
   const stageProgressionOptions = $derived(
     projectStageProgressionOptions(
       stageOrder,
@@ -209,6 +208,9 @@
       } else if (!enabled && document.fullscreenElement) {
         await document.exitFullscreen()
       }
+    } catch {
+      // Fullscreen request can be rejected (no user gesture, permission denied);
+      // settings are re-synced to the actual state in the finally block below.
     } finally {
       syncSettings({ ...settings, fullscreen: actualFullscreen() })
     }

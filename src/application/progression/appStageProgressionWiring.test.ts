@@ -55,7 +55,7 @@ describe('App stage unlock projection wiring', () => {
   })
 
   it('derives stage unlock state from catalog order, records, and debug unlock', () => {
-    expect(source).toContain('const stageOrder = $derived(projectData.stages.order)')
+    expect(source).toContain('const stageOrder = projectData.stages.order')
     expect(source).toContain('isStageUnlocked(')
     expect(source).toContain('stageProgressionSave.stageRecords')
     expect(source).toContain('debugUnlockAllStages')
