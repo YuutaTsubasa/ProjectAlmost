@@ -67,6 +67,29 @@ export type BossVolleyShot = {
   speed: number
 }
 
+const BOSS_VOLLEY = {
+  phase0: { speed: 330 },
+  phase1: {
+    speed: 350,
+    sweepFrequency: 0.72,
+    sweepAmplitude: 0.36,
+    angleOffsets: [-0.2, 0, 0.2],
+  },
+  phase2: {
+    spreadSpeed: 390,
+    aimedSpeed: 360,
+    verticalBias: 0.5,
+    angleOffsets: [-0.16, 0.16],
+  },
+  phase3: {
+    speed: 390,
+    shotCount: 5,
+    startAngle: Math.PI / 2,
+    angleStep: Math.PI / 4,
+    driftPerShotIndex: 0.1,
+  },
+} as const
+
 export function isBossStageDefinition(input: {
   stageId: string
   enemies: readonly { id?: string }[]
@@ -137,35 +160,38 @@ export function getBossVolleyShots(input: {
   aimedAngle: number
 }): BossVolleyShot[] {
   if (input.phase === 0) {
-    return [{ angle: input.aimedAngle, speed: 330 }]
+    return [{ angle: input.aimedAngle, speed: BOSS_VOLLEY.phase0.speed }]
   }
 
   if (input.phase === 1) {
-    const sweep = Math.sin(input.shotIndex * 0.72) * 0.36
-    return [-0.2, 0, 0.2].map((offset) => ({
+    const { speed, sweepFrequency, sweepAmplitude, angleOffsets } = BOSS_VOLLEY.phase1
+    const sweep = Math.sin(input.shotIndex * sweepFrequency) * sweepAmplitude
+    return angleOffsets.map((offset) => ({
       angle: Math.PI + sweep + offset,
-      speed: 350,
+      speed,
     }))
   }
 
   if (input.phase === 2) {
-    const verticalBias = input.shotIndex % 2 === 0 ? -0.5 : 0.5
-    const shots: BossVolleyShot[] = [-0.16, 0.16].map((offset) => ({
-      angle: Math.PI + verticalBias + offset,
-      speed: 390,
+    const { spreadSpeed, aimedSpeed, verticalBias, angleOffsets } = BOSS_VOLLEY.phase2
+    const bias = input.shotIndex % 2 === 0 ? -verticalBias : verticalBias
+    const shots: BossVolleyShot[] = angleOffsets.map((offset) => ({
+      angle: Math.PI + bias + offset,
+      speed: spreadSpeed,
     }))
 
     if (input.shotIndex % 2 === 0) {
-      shots.push({ angle: input.aimedAngle, speed: 360 })
+      shots.push({ angle: input.aimedAngle, speed: aimedSpeed })
     }
 
     return shots
   }
 
   if (input.phase === 3) {
-    return Array.from({ length: 5 }, (_, index) => ({
-      angle: Math.PI / 2 + (Math.PI * index) / 4 + input.shotIndex * 0.1,
-      speed: 390,
+    const { speed, shotCount, startAngle, angleStep, driftPerShotIndex } = BOSS_VOLLEY.phase3
+    return Array.from({ length: shotCount }, (_, index) => ({
+      angle: startAngle + angleStep * index + input.shotIndex * driftPerShotIndex,
+      speed,
     }))
   }
 

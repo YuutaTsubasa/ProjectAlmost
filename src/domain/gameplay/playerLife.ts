@@ -21,6 +21,12 @@ export const playerDeathTransitionPresentation = {
   color: { red: 245, green: 250, blue: 255 },
 } as const
 
+export const playerKnockback = {
+  hurtVelocityX: 360,
+  hurtVelocityY: 360,
+  defeatVelocityY: 160,
+} as const
+
 export type PlayerDefeatReason = 'damage' | 'fall'
 export type PlayerDamageOutcome =
   | { type: 'survived'; nextHealth: number }
@@ -170,8 +176,8 @@ export function getPlayerHurtVelocity(input: {
   gravitySign: number
 }): { x: number; y: number } {
   return {
-    x: input.direction * 360,
-    y: -360 * input.gravitySign,
+    x: input.direction * playerKnockback.hurtVelocityX,
+    y: -playerKnockback.hurtVelocityY * input.gravitySign,
   }
 }
 
@@ -183,7 +189,7 @@ export function getPlayerDefeatOutcome(input: {
     return { velocityY: 0 }
   }
 
-  return { velocityY: -160 * input.gravitySign }
+  return { velocityY: -playerKnockback.defeatVelocityY * input.gravitySign }
 }
 
 export function isPlayerOutsideWorldBounds(input: {

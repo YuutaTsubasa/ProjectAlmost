@@ -1,6 +1,9 @@
 export type MovingPlatformAxis = 'x' | 'y'
 export type MovingPlatformDirection = -1 | 1
 
+const DEFAULT_RIDER_EDGE_INSET = 8
+const DEFAULT_RIDER_SURFACE_TOLERANCE = 12
+
 export type MovingPlatformOriginInput = {
   col: number
   row: number
@@ -61,7 +64,7 @@ export function getMovingPlatformPositionAtTime(input: {
   const durationMs = Math.max(1, input.path.durationMs)
   const cycleProgress = ((Math.max(0, input.elapsedMs) / durationMs + normalizeMovingPlatformPhase(input.path.phase)) % 1 + 1) % 1
   const progress = cycleProgress <= 0.5 ? cycleProgress * 2 : (1 - cycleProgress) * 2
-  const direction: MovingPlatformDirection = cycleProgress < 0.5 ? 1 : -1
+  const direction = cycleProgress < 0.5 ? 1 : -1
   const offset = input.path.distance * progress
 
   return {
@@ -88,8 +91,8 @@ export function isMovingPlatformRider(input: {
   edgeInset?: number
   surfaceTolerance?: number
 }): boolean {
-  const edgeInset = input.edgeInset ?? 8
-  const surfaceTolerance = input.surfaceTolerance ?? 12
+  const edgeInset = input.edgeInset ?? DEFAULT_RIDER_EDGE_INSET
+  const surfaceTolerance = input.surfaceTolerance ?? DEFAULT_RIDER_SURFACE_TOLERANCE
   const horizontallyOverlapping =
     input.actorBounds.right > input.platformBounds.left + edgeInset
     && input.actorBounds.left < input.platformBounds.right - edgeInset
