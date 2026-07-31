@@ -61,6 +61,49 @@ describe('preload manifest', () => {
     expect(new Set(sources).size).toBe(sources.length)
   })
 
+  it('uses visual asset refs from the supplied gameplay stage map', () => {
+    const stage = getGameplayStageMap('2-1')
+
+    expect(stage).toBeDefined()
+    const customizedStage = {
+      ...stage!,
+      backgroundLayers: stage!.backgroundLayers.map((layer, index) => ({
+        ...layer,
+        assetRef: `/assets/maps/custom-stage-layer-${index}.webp`,
+      })),
+      terrain: {
+        ...stage!.terrain,
+        tilesetAssetRef: '/assets/tiles/custom-stage-tiles.webp',
+      },
+    }
+    const sources = buildStagePreloadPlan(projectData, customizedStage).map((asset) => asset.source)
+
+    expect(sources).toContain('/assets/maps/custom-stage-layer-0.webp')
+    expect(sources).toContain('/assets/maps/custom-stage-layer-1.webp')
+    expect(sources).toContain('/assets/maps/custom-stage-layer-2.webp')
+    expect(sources).toContain('/assets/tiles/custom-stage-tiles.webp')
+    expect(sources).not.toContain('/assets/maps/emerald_sanctuary_sky.webp')
+  })
+
+  it('includes every world map music track in collected runtime sources', () => {
+    const sources = collectRuntimeAssetSources(projectData)
+
+    for (const worldId of projectData.worlds.order) {
+      expect(sources).toContain(projectData.worlds.items[worldId].musicRefs.map)
+    }
+  })
+
+  it('de-duplicates repeated background assets within a stage plan', () => {
+    const stage = getGameplayStageMap('3-1')
+
+    expect(stage).toBeDefined()
+    const sources = buildStagePreloadPlan(projectData, stage!).map((asset) => asset.source)
+    const repeatedBackground = '/assets/maps/cerulean_depths_stage_select.webp'
+
+    expect(stage!.backgroundLayers.filter((layer) => layer.assetRef === repeatedBackground)).toHaveLength(3)
+    expect(sources.filter((source) => source === repeatedBackground)).toHaveLength(1)
+  })
+
   it('includes boss assets and boss music for boss stages', () => {
     const stage = getGameplayStageMap('1-6')
 

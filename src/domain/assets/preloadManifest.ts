@@ -9,7 +9,6 @@ import { goalActorDefinition } from '../gameplay/goalActor'
 import { hazardActorDefinitions } from '../gameplay/hazardActor'
 import { playerActorDefinition } from '../gameplay/playerActor'
 import { gameplayStageMaps } from '../gameplay/gameplayStageMaps'
-import { gameplayStageVisualProfiles } from '../gameplay/gameplayStageVisualProfile'
 
 export type PreloadAssetKind = 'image' | 'spritesheet' | 'audio' | 'font'
 export type PreloadAssetGroup = 'boot' | 'shared-gameplay' | 'stage'
@@ -82,12 +81,11 @@ function toAssets(sources: readonly string[], group: PreloadAssetGroup): Preload
 function stageSources(project: ProjectDataLike, stage: GameplayStageMap): string[] {
   const stageData = project.stages.items[stage.id]
   const world = project.worlds.items[stageData.worldId]
-  const profile = gameplayStageVisualProfiles[stage.theme]
   const music = stageData.isBoss ? world.musicRefs.boss : world.musicRefs.bgm
 
   return [
-    ...profile.backgroundLayers.map((layer) => layer.assetRef),
-    profile.terrainTilesetAssetRef,
+    ...stage.backgroundLayers.map((layer) => layer.assetRef),
+    stage.terrain.tilesetAssetRef,
     music,
     ...(stageData.isBoss
       ? Object.values(bossPriestessSpriteAssets).map((sprite) => sprite.assetRef)
@@ -99,6 +97,7 @@ export function buildBootPreloadPlan(project: ProjectDataLike): PreloadAsset[] {
   return toAssets([
     ...BOOT_SOURCES,
     ...project.worlds.order.map((worldId) => project.worlds.items[worldId].assetRefs.stageSelectBackground),
+    ...project.worlds.order.map((worldId) => project.worlds.items[worldId].musicRefs.map),
   ], 'boot')
 }
 
