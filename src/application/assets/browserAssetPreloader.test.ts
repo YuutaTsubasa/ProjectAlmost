@@ -54,4 +54,40 @@ describe('browser asset preloader', () => {
 
     expect(calls).toBe(1)
   })
+
+  it('resolves a stalled load as a non-fatal timeout failure', async () => {
+    const preloader = createBrowserAssetPreloader({
+      timeoutMs: 5,
+      loadSource: () => new Promise<void>(() => undefined),
+    })
+
+    const result = await preloader.preload([imageAsset], { phase: 'boot' })
+
+    expect(result.status).toBe('ready-with-errors')
+    expect(result.failures).toEqual([{
+      source: imageAsset.source,
+      kind: imageAsset.kind,
+      message: 'Asset load timed out after 5ms',
+    }])
+  })
+
+  it('limits active loads to the configured concurrency while running in parallel', async () => {
+    const assets = [1, 2, 3, 4].map((id) => ({ ...imageAsset, id: `asset-${id}`, source: `/assets/${id}.webp` }))
+    let active = 0
+    let maxActive = 0
+    const preloader = createBrowserAssetPreloader({
+      concurrency: 2,
+      loadSource: async () => {
+        active += 1
+        maxActive = Math.max(maxActive, active)
+        await new Promise<void>((resolve) => setTimeout(resolve, 5))
+        active -= 1
+      },
+    })
+
+    const result = await preloader.preload(assets, { phase: 'boot' })
+
+    expect(result.status).toBe('ready')
+    expect(maxActive).toBe(2)
+  })
 })

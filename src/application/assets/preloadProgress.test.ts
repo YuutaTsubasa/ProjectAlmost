@@ -35,4 +35,15 @@ describe('preload progress presenter', () => {
 
     expect(presentPreloadProgress(state).status).toBe('ready-with-errors')
   })
+
+  it('presents an empty plan as idle', () => {
+    expect(presentPreloadProgress(createInitialPreloadProgress(0, 'boot'))).toEqual({
+      phase: 'boot',
+      completed: 0,
+      total: 0,
+      percent: 0,
+      warningCount: 0,
+      status: 'idle',
+    })
+  })
 })
