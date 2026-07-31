@@ -1334,41 +1334,41 @@ class GameplayMapScene extends Phaser.Scene {
           defeated: false,
           regenerating: false,
         }
-      } else {
-        const definition = enemyActorDefinitions['azure-core']
-        const textureKey = definition.generatedTexture?.key
-        if (!textureKey) {
-          throw new Error(`Enemy ${spawn.id} has no renderable texture.`)
-        }
+      }
 
-        const sprite = this.physics.add.sprite(
-          spawn.x,
-          getEnemySpawnY(spawn),
-          textureKey,
-        )
+      const definition = enemyActorDefinitions['azure-core']
+      const textureKey = definition.generatedTexture?.key
+      if (!textureKey) {
+        throw new Error(`Enemy ${spawn.id} has no renderable texture.`)
+      }
 
-        sprite
-          .setOrigin(definition.origin.x, definition.origin.y)
-          .setScale(definition.scale)
-          .setCollideWorldBounds(true)
-          .setDepth(definition.depth)
+      const sprite = this.physics.add.sprite(
+        spawn.x,
+        getEnemySpawnY(spawn),
+        textureKey,
+      )
 
-        sprite.body.setSize(definition.body.width, definition.body.height)
-        sprite.body.setOffset(definition.body.offsetX, definition.body.offsetY)
+      sprite
+        .setOrigin(definition.origin.x, definition.origin.y)
+        .setScale(definition.scale)
+        .setCollideWorldBounds(true)
+        .setDepth(definition.depth)
 
-        sprite.body.allowGravity = false
-        sprite.setImmovable(true)
-        if (spawn.id !== BOSS_PROTOTYPE_ENEMY_ID) {
-          this.createAzureCoreFloat(sprite, spawn.y)
-        }
+      sprite.body.setSize(definition.body.width, definition.body.height)
+      sprite.body.setOffset(definition.body.offsetX, definition.body.offsetY)
 
-        return {
-          sprite,
-          spawn,
-          direction: -1,
-          defeated: false,
-          regenerating: false,
-        }
+      sprite.body.allowGravity = false
+      sprite.setImmovable(true)
+      if (spawn.id !== BOSS_PROTOTYPE_ENEMY_ID) {
+        this.createAzureCoreFloat(sprite, spawn.y)
+      }
+
+      return {
+        sprite,
+        spawn,
+        direction: -1,
+        defeated: false,
+        regenerating: false,
       }
     })
   }
@@ -1836,24 +1836,23 @@ class GameplayMapScene extends Phaser.Scene {
           projectile.y,
         ),
       })
-      if (hit === 'pass-through-crouch') {
+      if (hit === 'pass-through-crouch') continue
+      if (hit !== 'hit') continue
+
+      this.destroyBossProjectile(projectile)
+      const crouching = this.isPlayerCrouching()
+      if (
+        !canApplyPlayerDamage({
+          invulnerable: this.isPlayerInvulnerable,
+          hurting: this.isPlayerHurting,
+          homingAttacking: this.isHomingAttacking,
+          crouching,
+          dead: this.isPlayerDead,
+        })
+      ) {
         continue
-      } else if (hit === 'hit') {
-        this.destroyBossProjectile(projectile)
-        const crouching = this.isPlayerCrouching()
-        if (
-          !canApplyPlayerDamage({
-            invulnerable: this.isPlayerInvulnerable,
-            hurting: this.isPlayerHurting,
-            homingAttacking: this.isHomingAttacking,
-            crouching,
-            dead: this.isPlayerDead,
-          })
-        ) {
-          continue
-        }
-        this.applyPlayerContactDamage(projectile.x)
       }
+      this.applyPlayerContactDamage(projectile.x)
     }
   }
 
