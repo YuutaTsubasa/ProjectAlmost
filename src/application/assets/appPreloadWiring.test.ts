@@ -72,15 +72,22 @@ describe('App preload wiring', () => {
     const entrySource = getFunctionSource('enterGameplay')
     const reservationCheckIndex = entrySource.indexOf('if (gameplayEntryReserved) return')
     const reservationSetIndex = entrySource.indexOf('gameplayEntryReserved = true')
+    const transitionBlockCheckIndex = entrySource.indexOf(
+      'if (shouldBlockGameplayEntryTransition(nextState.screen)) return',
+    )
     const preloadIndex = entrySource.indexOf('await preloadGameplayEntry(nextState.screen)')
     const transitionIndex = entrySource.indexOf('await transitionToScreen(nextState.screen')
     const releaseIndex = entrySource.lastIndexOf('gameplayEntryReserved = false')
+    const transitionBlockSource = getFunctionSource('shouldBlockGameplayEntryTransition')
 
     expect(reservationCheckIndex).toBeGreaterThan(-1)
     expect(reservationSetIndex).toBeGreaterThan(reservationCheckIndex)
-    expect(preloadIndex).toBeGreaterThan(reservationSetIndex)
+    expect(transitionBlockCheckIndex).toBeGreaterThan(reservationSetIndex)
+    expect(preloadIndex).toBeGreaterThan(transitionBlockCheckIndex)
     expect(transitionIndex).toBeGreaterThan(preloadIndex)
     expect(getTransitionCallbackBody(entrySource)).toContain('appState = nextState')
+    expect(transitionBlockSource).toContain('resolveSceneTransitionStyle(appState.screen, nextScreen)')
+    expect(transitionBlockSource).toContain('shouldBlockSceneTransitionReentry(style, sceneTransition)')
     expect(entrySource).toMatch(
       /finally \{\s*gameplayPreloadActive = false\s*gameplayEntryReserved = false\s*\}/,
     )

@@ -221,11 +221,18 @@
     })
   }
 
+  function shouldBlockGameplayEntryTransition(nextScreen: typeof appState.screen): boolean {
+    const style = resolveSceneTransitionStyle(appState.screen, nextScreen)
+    return shouldBlockSceneTransitionReentry(style, sceneTransition)
+  }
+
   async function enterGameplay(nextState: typeof appState): Promise<void> {
     if (gameplayEntryReserved) return
 
     gameplayEntryReserved = true
     try {
+      if (shouldBlockGameplayEntryTransition(nextState.screen)) return
+
       await preloadGameplayEntry(nextState.screen)
       await transitionToScreen(nextState.screen, () => {
         appState = nextState
