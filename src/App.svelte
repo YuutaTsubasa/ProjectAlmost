@@ -101,9 +101,10 @@
     }),
   )
   const preloader = createBrowserAssetPreloader()
+  const bootPreloadPlan = buildBootPreloadPlan(projectData)
   let loadingGate = $state<LoadingGateState>({
     kind: 'boot',
-    view: presentPreloadProgress(createInitialPreloadProgress(buildBootPreloadPlan(projectData).length, 'boot')),
+    view: presentPreloadProgress(createInitialPreloadProgress(bootPreloadPlan.length, 'boot')),
   })
   let audio: BrowserAudioController | undefined
   const identity = createProjectIdentity()
@@ -557,7 +558,7 @@
     })
     stageProgressionSave = loadStageProgressionSave(localStorage)
     audio = createBrowserAudioController()
-    void preloader.preload(buildBootPreloadPlan(projectData), {
+    void preloader.preload(bootPreloadPlan, {
       phase: 'boot',
       onProgress: (snapshot) => {
         loadingGate = { kind: 'boot', view: snapshot }

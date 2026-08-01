@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { projectData } from '../data/projectData'
+import type { GameplayStageMap } from '../gameplay/gameplayMapTypes'
 import { getGameplayStageMap } from '../gameplay/gameplayStageMaps'
 import {
   buildBootPreloadPlan,
@@ -120,6 +121,34 @@ describe('preload manifest', () => {
 
     expect(() => buildStagePreloadPlan(projectData, prototypeStage)).toThrow(/invalid runtime asset source/i)
     expect(() => buildStagePreloadPlan(projectData, externalStage)).toThrow(/invalid runtime asset source/i)
+  })
+
+  it('throws clear errors when project data is missing stage or world records', () => {
+    const stage = getGameplayStageMap('2-1')
+
+    expect(stage).toBeDefined()
+
+    const orphanStage = { ...stage!, id: 'missing-stage' } as unknown as GameplayStageMap
+    const missingWorldProject = {
+      ...projectData,
+      stages: {
+        ...projectData.stages,
+        items: {
+          ...projectData.stages.items,
+          [stage!.id]: {
+            ...projectData.stages.items[stage!.id],
+            worldId: 'missing-world',
+          },
+        },
+      },
+    } as typeof projectData
+
+    expect(() => buildStagePreloadPlan(projectData, orphanStage)).toThrow(
+      'Missing preload stage data for stage missing-stage',
+    )
+    expect(() => buildStagePreloadPlan(missingWorldProject, stage!)).toThrow(
+      'Missing preload world data for world missing-world',
+    )
   })
 
   it('includes boss assets and boss music for boss stages', () => {

@@ -67,9 +67,12 @@ describe('App preload wiring', () => {
     expect(appSource).toContain("kind: 'idle'")
     expect(appSource).toContain('const activeLoadingView = $derived(')
     expect(appSource).toContain("loadingGate.kind === 'idle' ? null : loadingGate.view")
+    expect(appSource).toContain('const bootPreloadPlan = buildBootPreloadPlan(projectData)')
+    expect(appSource).toContain('createInitialPreloadProgress(bootPreloadPlan.length, \'boot\')')
     expect(getOnMountSource()).toMatch(
-      /void preloader\.preload\(buildBootPreloadPlan\(projectData\), \{\s*phase: 'boot',\s*onProgress:/,
+      /void preloader\.preload\(bootPreloadPlan, \{\s*phase: 'boot',\s*onProgress:/,
     )
+    expect(appSource.match(/buildBootPreloadPlan\(projectData\)/g)).toHaveLength(1)
     expect(appSource).toMatch(
       /\{#if activeLoadingView\}\s*<LoadingScreen[\s\S]*?\/>\s*\{:else if appState\.screen\.type === 'title-intro'/,
     )

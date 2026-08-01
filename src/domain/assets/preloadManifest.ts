@@ -85,7 +85,11 @@ function toAssets(sources: readonly string[], group: PreloadAssetGroup): Preload
 
 function stageSources(project: ProjectDataLike, stage: GameplayStageMap): string[] {
   const stageData = project.stages.items[stage.id]
+  if (!stageData) throw new Error(`Missing preload stage data for stage ${stage.id}`)
+
   const world = project.worlds.items[stageData.worldId]
+  if (!world) throw new Error(`Missing preload world data for world ${stageData.worldId}`)
+
   const music = stageData.isBoss ? world.musicRefs.boss : world.musicRefs.bgm
 
   return [
