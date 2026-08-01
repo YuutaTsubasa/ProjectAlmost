@@ -91,13 +91,6 @@
     }
   }
 
-  function isLiveStage(index: number): boolean {
-    const nextStage = stageOptions[index + 1]
-    return stageProgression(stageOptions[index].id).unlocked
-      && Boolean(nextStage)
-      && stageProgression(nextStage.id).unlocked
-  }
-
   function handleConfirmStage(stageProgressionState: StageProgressionOptionState<StageId>) {
     if (!stageProgressionState.unlocked) return
     confirming = true
@@ -261,7 +254,6 @@
     <svg class="stage-paths" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
       {#each stageOptions.slice(0, -1) as stage, index}
         <line
-          class:live={isLiveStage(index)}
           style={`--path-index:${index}`}
           pathLength="1"
           x1={stage.nodePosition.x}

@@ -7,7 +7,7 @@ import { gameplayStageVisualProfiles } from './gameplayStageVisualProfile'
 
 export type GameplayStageMapCatalog = {
   order: readonly StageId[]
-  items: Record<StageId, GameplayStageMap>
+  items: Readonly<Record<StageId, GameplayStageMap>>
 }
 
 const conversionEntries = gameplayStageSources.order.map((stageId) => {

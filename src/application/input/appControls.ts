@@ -19,7 +19,7 @@ import {
 import { projectData } from '../../domain/data/projectData'
 import type { StageId } from '../../domain/data/worlds/worldTypes'
 import type { ControlIntent } from '../../domain/input/controlIntents'
-import type { GameSettings } from '../../domain/settings/settings'
+import { getSettingsRowId, type GameSettings } from '../../domain/settings/settings'
 import { applySettingsControlIntent } from './settingsControls'
 
 export type SettingsStateCarrier = AppState & {
@@ -55,8 +55,9 @@ export function applyControlIntent(state: SettingsStateCarrier, intent: ControlI
 
       if (intent === 'confirm') {
         if (state.screen.deleteConfirm) return cancelDeleteConfirm(state)
-        if (state.screen.selectedItemIndex === 8) return openSettingsDeleteConfirm(state)
-        if (state.screen.selectedItemIndex === 9) return backFromSettings(state)
+        const rowId = getSettingsRowId(state.screen.selectedItemIndex)
+        if (rowId === 'delete-save') return openSettingsDeleteConfirm(state)
+        if (rowId === 'back') return backFromSettings(state)
         return state
       }
 

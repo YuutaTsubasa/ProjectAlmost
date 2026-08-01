@@ -1,7 +1,50 @@
 import { describe, expect, it } from 'vitest'
+import { projectData } from '../../domain/data/projectData'
 import { DEFAULT_SETTINGS } from '../../domain/settings/settings'
 import audioCommandsSource from './audioCommands.ts?raw'
-import { createMusicCommand, createSfxCommand } from './audioCommands'
+import { createMusicCommand, createSfxCommand, getGameplayMusicContext } from './audioCommands'
+
+describe('getGameplayMusicContext', () => {
+  it('returns undefined when not on the gameplay screen', () => {
+    expect(
+      getGameplayMusicContext(
+        { type: 'world-select', selectedWorldIndex: 0 },
+        projectData.stages,
+        { resultVisible: false, paused: false },
+      ),
+    ).toBeUndefined()
+  })
+
+  it('derives stage id, boss flag, and playback flags for gameplay', () => {
+    expect(
+      getGameplayMusicContext(
+        { type: 'gameplay', stageId: '1-6', runId: 0 },
+        projectData.stages,
+        { resultVisible: true, paused: false },
+      ),
+    ).toEqual({
+      stageId: '1-6',
+      isBoss: true,
+      resultVisible: true,
+      paused: false,
+    })
+  })
+
+  it('marks non-boss stages as isBoss false', () => {
+    expect(
+      getGameplayMusicContext(
+        { type: 'gameplay', stageId: '1-1', runId: 0 },
+        projectData.stages,
+        { resultVisible: false, paused: true },
+      ),
+    ).toEqual({
+      stageId: '1-1',
+      isBoss: false,
+      resultVisible: false,
+      paused: true,
+    })
+  })
+})
 
 describe('createMusicCommand', () => {
   it('wraps screen music policy in a set-music command', () => {

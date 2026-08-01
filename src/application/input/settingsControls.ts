@@ -8,7 +8,12 @@ import {
 } from '../../domain/app/appFlow'
 import type { LocaleCode } from '../../domain/data/localize/localize'
 import type { ControlIntent } from '../../domain/input/controlIntents'
-import { adjustSettingsRow, resetSettings, type GameSettings } from '../../domain/settings/settings'
+import {
+  adjustSettingsRow,
+  getSettingsRowId,
+  resetSettings,
+  type GameSettings,
+} from '../../domain/settings/settings'
 
 export type SettingsControlState = {
   screen: SettingsScreen
@@ -99,7 +104,9 @@ export function applySettingsControlIntent(
   }
 
   if (intent === 'confirm') {
-    if (state.screen.selectedItemIndex === 7) {
+    const rowId = getSettingsRowId(state.screen.selectedItemIndex)
+
+    if (rowId === 'reset') {
       const settings = resetSettings(state.settings.fullscreen)
 
       return {
@@ -111,7 +118,7 @@ export function applySettingsControlIntent(
       }
     }
 
-    if (state.screen.selectedItemIndex === 8) {
+    if (rowId === 'delete-save') {
       return {
         ...state,
         screen: nextSettingsScreen(openSettingsDeleteConfirm(state)),
@@ -121,7 +128,7 @@ export function applySettingsControlIntent(
       }
     }
 
-    if (state.screen.selectedItemIndex === 9) {
+    if (rowId === 'back') {
       return {
         ...state,
         exitRequested: true,

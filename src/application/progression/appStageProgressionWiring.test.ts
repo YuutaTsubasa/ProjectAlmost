@@ -30,14 +30,17 @@ describe('App stage progression record wiring', () => {
     expect(source).toContain('let gameplayMusicState = $state<GameplayMusicState>')
     expect(source).toContain('function currentGameplayMusicContext()')
     expect(source).toContain('createMusicCommand(appState.screen, settings, currentGameplayMusicContext())')
+    expect(source).toMatch(
+      /\$effect\(\(\) => \{\s*audio\?\.execute\(createMusicCommand\(appState\.screen, settings, currentGameplayMusicContext\(\)\)\)\s*\}\)/,
+    )
     expect(source).toContain('function handleGameplayMusicStateChange(state: GameplayMusicState)')
     expect(source).toContain('onGameplayMusicStateChange={handleGameplayMusicStateChange}')
   })
 
-  it('resets gameplay music state before syncing music after control intent enters gameplay', () => {
+  it('resets gameplay music state when control intent enters gameplay', () => {
     expect(source).toContain("const enteredGameplay = previousScreen.type !== 'gameplay' && appState.screen.type === 'gameplay'")
     expect(source).toMatch(
-      /function handleControlIntent\(intent: ControlIntent\) \{[\s\S]*const enteredGameplay = previousScreen\.type !== 'gameplay' && appState\.screen\.type === 'gameplay'[\s\S]*if \(enteredGameplay\) \{[\s\S]*gameplayMusicState = initialGameplayMusicState[\s\S]*\}[\s\S]*syncMusicForCurrentState\(\)/,
+      /function handleControlIntent\(intent: ControlIntent\) \{[\s\S]*const enteredGameplay = previousScreen\.type !== 'gameplay' && appState\.screen\.type === 'gameplay'[\s\S]*if \(enteredGameplay\) \{[\s\S]*gameplayMusicState = initialGameplayMusicState/,
     )
   })
 
@@ -55,7 +58,7 @@ describe('App stage unlock projection wiring', () => {
   })
 
   it('derives stage unlock state from catalog order, records, and debug unlock', () => {
-    expect(source).toContain('const stageOrder = $derived(projectData.stages.order)')
+    expect(source).toContain('const stageOrder = projectData.stages.order')
     expect(source).toContain('isStageUnlocked(')
     expect(source).toContain('stageProgressionSave.stageRecords')
     expect(source).toContain('debugUnlockAllStages')
@@ -95,11 +98,9 @@ describe('App stage select progression UI wiring', () => {
 
 describe('App shell backdrop wiring', () => {
   it('routes shell backdrop through the pure backdrop resolver', () => {
-    expect(source).toContain("import { resolveShellBackdrop, type ShellBackdrop } from './application/shell/shellBackdrop'")
-    expect(source).toContain('let shellBackdrop = $state<ShellBackdrop>')
-    expect(source).toContain('function syncShellBackdrop()')
+    expect(source).toContain("import { resolveShellBackdrop } from './application/shell/shellBackdrop'")
+    expect(source).toContain('const shellBackdrop = $derived(')
     expect(source).toContain('resolveShellBackdrop({')
-    expect(source).toContain('previous: shellBackdrop,')
     expect(source).toContain('style:--shell-backdrop={`url("${shellBackdrop.assetRef}")`}')
     expect(source).toContain('class={`shell theme-${shellBackdrop.theme}`}')
   })
@@ -121,7 +122,7 @@ describe('App scene transition coordinator wiring', () => {
   it('blocks styled transition reentry before applying screen changes while keeping null-style updates immediate', () => {
     expect(source).toContain('shouldBlockSceneTransitionReentry')
     expect(source).toMatch(
-      /const style = resolveSceneTransitionStyle\(previousScreen, nextScreen\)[\s\S]*if \(shouldBlockSceneTransitionReentry\(style, sceneTransition\)\) \{\s*return false\s*\}[\s\S]*if \(!style\) \{[\s\S]*applyScreenChange\(\)[\s\S]*syncShellBackdrop\(\)[\s\S]*syncMusicForCurrentState\(\)[\s\S]*return true/,
+      /const style = resolveSceneTransitionStyle\(previousScreen, nextScreen\)[\s\S]*if \(shouldBlockSceneTransitionReentry\(style, sceneTransition\)\) \{\s*return false\s*\}[\s\S]*if \(!style\) \{[\s\S]*applyScreenChange\(\)[\s\S]*return true/,
     )
   })
 })

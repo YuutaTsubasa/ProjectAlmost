@@ -110,18 +110,16 @@ export function selectNearestHomingTarget<T>(input: {
   facing: -1 | 1
   candidates: HomingTargetCandidate<T>[]
 }): T | undefined {
-  let selected: HomingTargetCandidate<T> | undefined
-  for (const candidate of input.candidates) {
-    if (!isHomingTargetEligible({
+  const selected = input.candidates.reduce<HomingTargetCandidate<T> | undefined>((nearest, candidate) => {
+    const eligible = isHomingTargetEligible({
       playerX: input.playerX,
       targetX: candidate.targetX,
       facing: input.facing,
       distance: candidate.distance,
-    })) {
-      continue
-    }
-    if (!selected || candidate.distance < selected.distance) selected = candidate
-  }
+    })
+    if (!eligible) return nearest
+    return !nearest || candidate.distance < nearest.distance ? candidate : nearest
+  }, undefined)
   return selected?.target
 }
 

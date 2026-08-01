@@ -1,11 +1,21 @@
+<script module lang="ts">
+  import { TITLE_MENU_ITEMS } from '../../domain/app/appFlow'
+  import type { TitleLocalizationKey } from '../../domain/data/localize/localize'
+
+  const menuLabelRefs: Record<(typeof TITLE_MENU_ITEMS)[number], TitleLocalizationKey> = {
+    start: 'title.menu.start',
+    settings: 'title.menu.settings',
+    back: 'title.menu.back',
+  }
+</script>
+
 <script lang="ts">
   import { onMount } from 'svelte'
-  import { TITLE_MENU_ITEMS, type AppScreen } from '../../domain/app/appFlow'
+  import type { AppScreen } from '../../domain/app/appFlow'
   import {
     resolveLocalizedText,
     type LocaleCode,
     type LocalizeData,
-    type TitleLocalizationKey,
   } from '../../domain/data/localize/localize'
   import {
     mapGamepadControlIntents,
@@ -29,12 +39,6 @@
   let { screen, productName, localizeData, locale, onControlIntent, onSelectItem }: Props = $props()
 
   let previousGamepadSnapshot: GamepadControlSnapshot | null = null
-
-  const menuLabelRefs: Record<(typeof TITLE_MENU_ITEMS)[number], TitleLocalizationKey> = {
-    start: 'title.menu.start',
-    settings: 'title.menu.settings',
-    back: 'title.menu.back',
-  }
 
   function text(key: TitleLocalizationKey): string {
     return resolveLocalizedText(localizeData, locale, key)

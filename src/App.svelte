@@ -15,7 +15,11 @@
     selectTitleMenuItem,
     selectWorld,
   } from './domain/app/appFlow'
-  import { createMusicCommand, createSfxCommand } from './application/audio/audioCommands'
+  import {
+    createMusicCommand,
+    createSfxCommand,
+    getGameplayMusicContext,
+  } from './application/audio/audioCommands'
   import { createBrowserAssetPreloader } from './application/assets/browserAssetPreloader'
   import {
     createInitialPreloadProgress,
@@ -43,8 +47,8 @@
     shouldBlockSceneTransitionReentry,
     type SceneTransitionState,
   } from './application/sceneTransition/sceneTransitionPolicy'
-  import { resolveShellBackdrop, type ShellBackdrop } from './application/shell/shellBackdrop'
-  import { createProjectIdentity } from './domain/app/projectIdentity'
+  import { resolveShellBackdrop } from './application/shell/shellBackdrop'
+  import { PRODUCT_NAME } from './domain/app/projectIdentity'
   import {
     buildBootPreloadPlan,
     buildSharedGameplayPreloadPlan,
@@ -53,7 +57,7 @@
   import { getCharacterProfile, selectedCharacterId } from './domain/character/characterProfile'
   import { projectData } from './domain/data/projectData'
   import type { GameplaySfxAction } from './domain/audio/audioPolicy'
-  import { resolveLocalizedText, type LocaleCode } from './domain/data/localize/localize'
+  import { resolveLocalizedText } from './domain/data/localize/localize'
   import { getGameplayStageMap } from './domain/gameplay/gameplayStageMaps'
   import type { ControlIntent } from './domain/input/controlIntents'
   import type { StageId, WorldId } from './domain/data/worlds/worldTypes'
@@ -93,9 +97,9 @@
   let debugUnlockAllStages = $state(false)
   let gameplayMusicState = $state<GameplayMusicState>(initialGameplayMusicState)
   let sceneTransition = $state<SceneTransitionState>(initialSceneTransitionState)
-  let shellBackdrop = $state<ShellBackdrop>(
+  const shellBackdrop = $derived(
     resolveShellBackdrop({
-      screen: initialAppState.screen,
+      screen: appState.screen,
       worlds: projectData.worlds,
       stages: projectData.stages,
     }),
@@ -106,11 +110,10 @@
     kind: 'boot',
     view: presentPreloadProgress(createInitialPreloadProgress(bootPreloadPlan.length, 'boot')),
   })
-  let audio: BrowserAudioController | undefined
-  const identity = createProjectIdentity()
+  let audio = $state<BrowserAudioController | undefined>(undefined)
   const characterInfo = createCharacterInfoViewModel(getCharacterProfile(selectedCharacterId))
-  const locale: LocaleCode = $derived(settings.language)
-  const stageOrder = $derived(projectData.stages.order)
+  const locale = $derived(settings.language)
+  const stageOrder = projectData.stages.order
   const stageProgressionOptions = $derived(
     projectStageProgressionOptions(
       stageOrder,
@@ -144,29 +147,12 @@
   }
 
   function currentGameplayMusicContext() {
-    if (appState.screen.type !== 'gameplay') return undefined
-    const stage = projectData.stages.items[appState.screen.stageId]
-
-    return {
-      stageId: appState.screen.stageId,
-      isBoss: stage?.isBoss ?? false,
-      resultVisible: gameplayMusicState.resultVisible,
-      paused: gameplayMusicState.paused,
-    }
+    return getGameplayMusicContext(appState.screen, projectData.stages, gameplayMusicState)
   }
 
-  function syncMusicForCurrentState() {
+  $effect(() => {
     audio?.execute(createMusicCommand(appState.screen, settings, currentGameplayMusicContext()))
-  }
-
-  function syncShellBackdrop() {
-    shellBackdrop = resolveShellBackdrop({
-      screen: appState.screen,
-      worlds: projectData.worlds,
-      stages: projectData.stages,
-      previous: shellBackdrop,
-    })
-  }
+  })
 
   function playUiSfx(action: 'move' | 'confirm' | 'back') {
     audio?.execute(createSfxCommand(action, settings))
@@ -250,8 +236,6 @@
 
     if (!style) {
       applyScreenChange()
-      syncShellBackdrop()
-      syncMusicForCurrentState()
       return true
     }
 
@@ -259,8 +243,6 @@
     sceneTransition = { phase: 'cover', style }
     await waitForSceneTransition(timing.coverMs)
     applyScreenChange()
-    syncShellBackdrop()
-    syncMusicForCurrentState()
     await waitForSceneTransition(timing.holdMs)
     sceneTransition = { phase: 'reveal', style }
     await waitForSceneTransition(timing.revealMs)
@@ -277,13 +259,11 @@
     }
 
     gameplayMusicState = state
-    syncMusicForCurrentState()
   }
 
   function syncSettings(nextSettings: GameSettings) {
     settings = nextSettings
     localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings))
-    syncMusicForCurrentState()
   }
 
   function actualFullscreen() {
@@ -297,6 +277,9 @@
       } else if (!enabled && document.fullscreenElement) {
         await document.exitFullscreen()
       }
+    } catch {
+      // Fullscreen request can be rejected (no user gesture, permission denied);
+      // settings are re-synced to the actual state in the finally block below.
     } finally {
       syncSettings({ ...settings, fullscreen: actualFullscreen() })
     }
@@ -379,8 +362,6 @@
       ) {
         preloadStageSelectionInBackground(nextState.screen.worldId, nextState.screen.selectedStageIndex)
       }
-      syncShellBackdrop()
-      syncMusicForCurrentState()
       return
     }
 
@@ -398,8 +379,6 @@
       playUiSfx('move')
       preloadWorldRepresentativeInBackground(appState.screen.selectedWorldIndex)
     }
-    syncShellBackdrop()
-    syncMusicForCurrentState()
   }
 
   function handleConfirmWorld() {
@@ -424,8 +403,6 @@
       playUiSfx('move')
       preloadStageSelectionInBackground(appState.screen.worldId, appState.screen.selectedStageIndex)
     }
-    syncShellBackdrop()
-    syncMusicForCurrentState()
   }
 
   async function handleConfirmStage() {
@@ -540,14 +517,12 @@
   function handleCancelDelete() {
     playUiSfx('back')
     appState = cancelDeleteConfirm(appState)
-    syncShellBackdrop()
   }
 
   function handleConfirmDelete() {
     playUiSfx('confirm')
     stageProgressionSave = deleteStageProgressionSave(localStorage)
     appState = cancelDeleteConfirm(appState)
-    syncShellBackdrop()
   }
 
   onMount(() => {
@@ -574,7 +549,6 @@
 
     const unlockAudio = () => {
       audio?.unlock()
-      syncMusicForCurrentState()
     }
 
     const handleFullscreenChange = () => {
@@ -611,7 +585,7 @@
     {:else if appState.screen.type === 'title-intro' || appState.screen.type === 'title-menu'}
       <TitleScreen
         screen={appState.screen}
-        productName={identity.productName}
+        productName={PRODUCT_NAME}
         localizeData={projectData.localize}
         locale={locale}
         onControlIntent={handleControlIntent}

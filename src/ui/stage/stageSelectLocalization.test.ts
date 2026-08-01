@@ -49,15 +49,15 @@ describe('Stage Select progression UI contract', () => {
     expect(stageSelectSource).toContain('stageObjective(selectedStage)')
   })
 
-  it('renders locked, cleared, and live route markers like the Prototype state surface', () => {
+  it('renders locked and cleared markers and animates every route segment', () => {
     expect(stageSelectSource).toContain('class:locked={!stageProgression(stage.id).unlocked}')
     expect(stageSelectSource).toContain('class:cleared={stageProgression(stage.id).cleared}')
     expect(stageSelectSource).toContain('<line')
-    expect(stageSelectSource).toContain('class:live={isLiveStage(index)}')
     expect(stageSelectSource).toContain('style={`--path-index:${index}`}')
-    expect(stageSelectSource).not.toContain(
-      'class:live={stageProgression(stage.id).unlocked && stageProgression(stageOptions[index + 1].id).unlocked}',
-    )
+    // Route lines animate uniformly regardless of unlock state, so there is no
+    // per-segment live gating anymore.
+    expect(stageSelectSource).not.toContain('class:live')
+    expect(stageSelectSource).not.toContain('isLiveStage')
     expect(stageSelectSource).not.toContain(
       '<button\n        class:active={index === selectedStageIndex}\n        class:boss={stage.isBoss}\n        class:locked={!stageProgression(stage.id).unlocked}\n        class:cleared={stageProgression(stage.id).cleared}\n        class:live={isLiveStage(index)}\n        class="stage-node"',
     )
@@ -90,17 +90,17 @@ describe('Stage Select progression UI contract', () => {
 })
 
 describe('Stage Select progression visual styles', () => {
-  it('defines locked preview, disabled deploy, live path, locked node, and cleared node classes', () => {
+  it('defines locked preview, disabled deploy, animated path, locked node, and cleared node classes', () => {
     expect(appCss).toContain('.stage-preview-lock')
     expect(appCss).toContain('.stage-deploy:disabled')
-    expect(appCss).toContain('.stage-paths line.live')
+    expect(appCss).toContain('.stage-paths line {')
+    expect(appCss).not.toContain('.stage-paths line.live')
     expect(appCss).toContain('stroke: rgba(255, 255, 255, 0.92);')
     expect(appCss).toContain('drop-shadow(0 0 4px rgba(142, 201, 255, 0.42))')
     expect(appCss).toContain('animation: stage-path-live-draw')
     expect(appCss).toContain('calc(240ms + var(--path-index) * 90ms)')
     expect(appCss).toContain('@keyframes stage-path-live-draw')
     expect(appCss).toContain('@media (prefers-reduced-motion: reduce)')
-    expect(appCss).toContain('.stage-paths line.live')
     expect(appCss).toContain('animation: none;')
     expect(appCss).toContain('.stage-node.locked')
     expect(appCss).toContain('.stage-node.cleared')

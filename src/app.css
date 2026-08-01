@@ -1992,14 +1992,8 @@ input {
 }
 
 .stage-paths line {
-  stroke: rgba(255, 255, 255, 0.82);
-  stroke-width: 0.6;
-  stroke-dasharray: 0.8 1.4;
-  filter: drop-shadow(0 0 3px rgba(47, 111, 208, 0.8));
-}
-
-.stage-paths line.live {
   stroke: rgba(255, 255, 255, 0.92);
+  stroke-width: 0.6;
   stroke-dasharray: 1;
   stroke-dashoffset: 1;
   filter:
@@ -2185,7 +2179,7 @@ input {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .stage-paths line.live {
+  .stage-paths line {
     animation: none;
     stroke-dashoffset: 0;
   }

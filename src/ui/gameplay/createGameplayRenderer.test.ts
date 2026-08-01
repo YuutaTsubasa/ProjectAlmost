@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import {
   enemyActorDefinitions,
   enemyRegenerationPresentation,
@@ -15,7 +15,7 @@ import {
 } from '../../domain/gameplay/hazardActor'
 import type { GameplayStageMap } from '../../domain/gameplay/gameplayMapTypes'
 import { getGameplayStageMap } from '../../domain/gameplay/gameplayStageMaps'
-import { playerActorDefinition } from '../../domain/gameplay/playerActor'
+import { playerActorDefinition, type PlayerActorDefinition } from '../../domain/gameplay/playerActor'
 import {
   PLAYER_OUT_OF_BOUNDS_MARGIN,
   playerDeathTransitionPresentation,
@@ -194,14 +194,6 @@ type FakePlayerKeys = {
 }
 
 type FakeRuntime = ReturnType<typeof createSceneRuntime>
-
-const originalGravityY = playerActorDefinition.gravityY
-const originalDepth = playerActorDefinition.depth
-
-afterEach(() => {
-  playerActorDefinition.gravityY = originalGravityY
-  playerActorDefinition.depth = originalDepth
-})
 
 function createEnemyFixtureStage(): GameplayStageMap {
   return {
@@ -724,6 +716,7 @@ function createSceneRuntime(input: {
   stage?: GameplayStageMap
   onHudUpdate?: (patch: GameplayHudPatch) => void
   getInputSnapshot?: () => Partial<GameplayInputSnapshot>
+  actorDefinition?: PlayerActorDefinition
 } = {}) {
   const stage = input.stage ?? createEnemyFixtureStage()
 
@@ -736,7 +729,7 @@ function createSceneRuntime(input: {
       input.onHudUpdate?.(patch)
     },
     getInputSnapshot: input.getInputSnapshot,
-  })
+  }, input.actorDefinition)
   const configuredScenes = Array.isArray(config.scene) ? config.scene : [config.scene]
   const scene = configuredScenes[0] as {
     preload: () => void
@@ -1796,10 +1789,11 @@ describe('createGameplayRendererConfig', () => {
     expect(stage).toBeDefined()
     if (!stage) return
 
-    playerActorDefinition.gravityY = 1725
-
     const parent = {} as HTMLElement
-    const config = createGameplayRendererConfig({ parent, stage })
+    const config = createGameplayRendererConfig(
+      { parent, stage },
+      { ...playerActorDefinition, gravityY: 1725 },
+    )
 
     expect(config.parent).toBe(parent)
     expect(config.width).toBe(1280)
@@ -2378,9 +2372,7 @@ describe('createGameplayRendererConfig', () => {
   })
 
   it('creates the player with domain-owned depth and terrain collision wiring', () => {
-    const runtime = createSceneRuntime()
-
-    playerActorDefinition.depth = 17
+    const runtime = createSceneRuntime({ actorDefinition: { ...playerActorDefinition, depth: 17 } })
 
     runtime.scene.create()
 
