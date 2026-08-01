@@ -19,14 +19,11 @@
 </script>
 
 <section class="loading-screen" data-status={progress.status} aria-label={titleLabel}>
-  <div class="loading-screen-sky" aria-hidden="true"></div>
-
-  <header class="loading-screen-logo">
-    <i aria-hidden="true">✦</i>
-    <strong>{productName}</strong>
-  </header>
+  <div class="loading-screen-backdrop" aria-hidden="true"></div>
 
   <div class="loading-screen-panel">
+    <div class="loading-screen-emblem" aria-hidden="true">✦</div>
+
     <div class="loading-screen-label" aria-live="polite">
       <span aria-hidden="true"></span>
       <b>{titleLabel}</b>

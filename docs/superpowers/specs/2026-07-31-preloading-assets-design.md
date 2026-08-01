@@ -74,10 +74,10 @@ It emits no navigation decisions. `App.svelte` coordinates when Loading appears 
 
 The Loading screen must match the current rebuild art direction instead of introducing a separate dark sci-fi system style.
 
-Use the approved Title/HUD hybrid direction:
+Use the approved HUD overlay direction:
 
-- bright blue-white background treatment, closer to Title and Stage Select than the previous dark navy gradient
-- `PROJECT ALMOST` title/logo language with the same light, airy uppercase feel as the Title screen
+- bright blue-white overlay treatment, closer to Stage Select and Gameplay HUD than the previous dark navy gradient
+- no large `PROJECT ALMOST` logo or Title-like hero layout, because that reads as returning to the title screen
 - HUD/Stage Select style translucent white-blue panel with blue linework, inset border, and soft backdrop blur
 - gold status accent that matches existing HUD dots, stars, and result highlights
 - blue-to-gold progress treatment that fits the HUD palette
@@ -171,7 +171,7 @@ Required tests:
 - browser loader reuses pending and completed sources
 - App source contract proves stage confirm, retry, and next-stage flows route gameplay entry through the preload gate
 - Loading screen source contract proves it receives progress data and has no app-flow mutation logic
-- Loading screen source contract proves the visual styling uses the approved Title/HUD hybrid classes and no longer uses the previous dark-tech mark/progress structure
+- Loading screen source contract proves the visual styling uses the approved HUD overlay classes, avoids Title-logo structure, and no longer uses the previous dark-tech mark/progress structure
 
 Before finishing, run:
 
