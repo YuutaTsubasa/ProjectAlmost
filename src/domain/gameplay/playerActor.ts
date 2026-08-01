@@ -61,7 +61,7 @@ export type PlayerHorizontalMovementDecision = {
   stopVelocityX: boolean
 }
 
-export const playerActorDefinition: PlayerActorDefinition = {
+export const playerActorDefinition: Readonly<PlayerActorDefinition> = {
   id: 'player',
   sprites: {
     idle: {

@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import {
   enemyActorDefinitions,
   enemyRegenerationPresentation,
@@ -194,14 +194,6 @@ type FakePlayerKeys = {
 }
 
 type FakeRuntime = ReturnType<typeof createSceneRuntime>
-
-const originalGravityY = playerActorDefinition.gravityY
-const originalDepth = playerActorDefinition.depth
-
-afterEach(() => {
-  playerActorDefinition.gravityY = originalGravityY
-  playerActorDefinition.depth = originalDepth
-})
 
 function createEnemyFixtureStage(): GameplayStageMap {
   return {
@@ -1796,8 +1788,6 @@ describe('createGameplayRendererConfig', () => {
     expect(stage).toBeDefined()
     if (!stage) return
 
-    playerActorDefinition.gravityY = 1725
-
     const parent = {} as HTMLElement
     const config = createGameplayRendererConfig({ parent, stage })
 
@@ -1808,7 +1798,7 @@ describe('createGameplayRendererConfig', () => {
     expect(config.physics).toEqual({
       default: 'arcade',
       arcade: {
-        gravity: { x: 0, y: 1725 },
+        gravity: { x: 0, y: playerActorDefinition.gravityY },
         debug: false,
       },
     })
@@ -2380,12 +2370,10 @@ describe('createGameplayRendererConfig', () => {
   it('creates the player with domain-owned depth and terrain collision wiring', () => {
     const runtime = createSceneRuntime()
 
-    playerActorDefinition.depth = 17
-
     runtime.scene.create()
 
     expect(runtime.playerSprite).not.toBeNull()
-    expect(runtime.playerSprite?.depth).toBe(17)
+    expect(runtime.playerSprite?.depth).toBe(playerActorDefinition.depth)
     expect(runtime.playerSprite?.collideWorldBounds).toBe(false)
     expect(runtime.colliderCalls).toContainEqual({ a: runtime.playerSprite, b: runtime.terrainLayer })
     expect(runtime.cameraFollowTarget).toBe(runtime.playerSprite)

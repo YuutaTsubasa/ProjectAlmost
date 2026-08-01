@@ -37,7 +37,9 @@ export const VOLUME_STEP = 10
 const MIN_VOLUME = 0
 const MAX_VOLUME = 100
 
-export const DEFAULT_SETTINGS: GameSettings = {
+// Frozen at runtime so the shared default can't be mutated in place; the
+// exported type stays mutable because consumers pass it to GameSettings params.
+export const DEFAULT_SETTINGS = Object.freeze({
   masterVolume: 100,
   musicVolume: 80,
   sfxVolume: 80,
@@ -45,7 +47,7 @@ export const DEFAULT_SETTINGS: GameSettings = {
   fullscreen: false,
   screenShake: true,
   vibration: true,
-}
+} satisfies GameSettings) as GameSettings
 
 export const SETTINGS_ROWS: readonly SettingsRow[] = [
   { id: 'master-volume', kind: 'volume' },
