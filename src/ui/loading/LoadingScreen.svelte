@@ -1,21 +1,14 @@
 <script lang="ts">
-  type LoadingProgressView = {
-    completed: number
-    total: number
-    percent: number
-    warningCount: number
-    status: 'idle' | 'loading' | 'ready' | 'ready-with-errors'
-  }
+  import type { PreloadProgressSnapshot } from '../../application/assets/preloadProgress'
 
   type Props = {
-    progress: LoadingProgressView
+    progress: PreloadProgressSnapshot
     phaseLabel: string
-    productName: string
     titleLabel: string
     warningLabel: string
   }
 
-  let { progress, phaseLabel, productName, titleLabel, warningLabel }: Props = $props()
+  let { progress, phaseLabel, titleLabel, warningLabel }: Props = $props()
 </script>
 
 <section class="loading-screen" data-status={progress.status} aria-label={titleLabel}>

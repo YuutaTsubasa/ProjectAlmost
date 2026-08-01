@@ -1,6 +1,6 @@
 import type { PreloadAssetKind } from '../../domain/assets/preloadManifest'
 
-export type PreloadPhase = 'boot' | 'gameplay' | string
+export type PreloadPhase = 'boot' | 'gameplay' | 'background'
 export type PreloadStatus = 'idle' | 'loading' | 'ready' | 'ready-with-errors'
 
 export type PreloadFailure = {
@@ -55,14 +55,25 @@ export function recordPreloadFailure(
   }
 }
 
+function getPreloadStatus(input: {
+  total: number
+  completed: number
+  failureCount: number
+}): PreloadStatus {
+  if (input.total === 0) return 'idle'
+  if (input.completed < input.total) return 'loading'
+
+  return input.failureCount > 0 ? 'ready-with-errors' : 'ready'
+}
+
 export function presentPreloadProgress(state: PreloadProgressState): PreloadProgressSnapshot {
   const completed = Math.min(state.total, state.completedSources.length + state.failures.length)
   const percent = state.total === 0 ? 0 : Math.min(100, Math.max(0, Math.round((completed / state.total) * 100)))
-  const status = state.total === 0
-    ? 'idle'
-    : completed === state.total
-    ? state.failures.length > 0 ? 'ready-with-errors' : 'ready'
-    : 'loading'
+  const status = getPreloadStatus({
+    total: state.total,
+    completed,
+    failureCount: state.failures.length,
+  })
 
   return {
     phase: state.phase,

@@ -81,6 +81,11 @@
   import SceneTransitionOverlay from './ui/transition/SceneTransitionOverlay.svelte'
   import WorldSelectScreen from './ui/world/WorldSelectScreen.svelte'
 
+  type LoadingGateState =
+    | { kind: 'boot'; view: PreloadProgressSnapshot }
+    | { kind: 'gameplay'; view: PreloadProgressSnapshot }
+    | { kind: 'idle' }
+
   const initialAppState = createInitialAppState()
   let settings: GameSettings = $state(parseStoredSettings(null, false))
   let appState = $state(initialAppState)
@@ -96,15 +101,10 @@
     }),
   )
   const preloader = createBrowserAssetPreloader()
-  let bootPreloadView = $state<PreloadProgressSnapshot>(
-    presentPreloadProgress(createInitialPreloadProgress(buildBootPreloadPlan(projectData).length, 'boot')),
-  )
-  let gameplayPreloadView = $state<PreloadProgressSnapshot>(
-    presentPreloadProgress(createInitialPreloadProgress(0, 'gameplay')),
-  )
-  let activeLoadingPhase = $state<'boot' | 'gameplay'>('boot')
-  let gameplayPreloadActive = $state(false)
-  let gameplayEntryReserved = $state(false)
+  let loadingGate = $state<LoadingGateState>({
+    kind: 'boot',
+    view: presentPreloadProgress(createInitialPreloadProgress(buildBootPreloadPlan(projectData).length, 'boot')),
+  })
   let audio: BrowserAudioController | undefined
   const identity = createProjectIdentity()
   const characterInfo = createCharacterInfoViewModel(getCharacterProfile(selectedCharacterId))
@@ -126,14 +126,11 @@
   const nextGameplayStageAvailable = $derived(
     nextGameplayStageId !== null && isGameplayStageUnlocked(nextGameplayStageId),
   )
-  const bootPreloadReady = $derived(
-    bootPreloadView.status === 'ready' || bootPreloadView.status === 'ready-with-errors',
-  )
-  const activeLoadingView = $derived(
-    activeLoadingPhase === 'boot' ? bootPreloadView : gameplayPreloadView,
-  )
-  const activeLoadingPhaseLabel = $derived(
-    resolveLocalizedText(projectData.localize, locale, `loading.phase.${activeLoadingPhase}`),
+  const activeLoadingView = $derived(loadingGate.kind === 'idle' ? null : loadingGate.view)
+  const loadingPhaseLabel = $derived(
+    activeLoadingView
+      ? resolveLocalizedText(projectData.localize, locale, `loading.phase.${activeLoadingView.phase}`)
+      : '',
   )
 
   function isGameplayStageUnlocked(stageId: StageId): boolean {
@@ -210,38 +207,33 @@
       ...buildSharedGameplayPreloadPlan(),
       ...buildStagePreloadPlan(projectData, stage),
     ]
-    activeLoadingPhase = 'gameplay'
-    gameplayPreloadActive = true
-    gameplayPreloadView = presentPreloadProgress(createInitialPreloadProgress(plan.length, 'gameplay'))
-    gameplayPreloadView = await preloader.preload(plan, {
+    loadingGate = {
+      kind: 'gameplay',
+      view: presentPreloadProgress(createInitialPreloadProgress(plan.length, 'gameplay')),
+    }
+    const result = await preloader.preload(plan, {
       phase: 'gameplay',
       onProgress: (snapshot) => {
-        gameplayPreloadView = snapshot
+        loadingGate = { kind: 'gameplay', view: snapshot }
       },
     })
-  }
-
-  function shouldBlockGameplayEntryTransition(nextScreen: typeof appState.screen): boolean {
-    const style = resolveSceneTransitionStyle(appState.screen, nextScreen)
-    return shouldBlockSceneTransitionReentry(style, sceneTransition)
+    loadingGate = { kind: 'gameplay', view: result }
   }
 
   async function enterGameplay(nextState: typeof appState): Promise<void> {
-    if (gameplayEntryReserved) return
+    if (loadingGate.kind === 'gameplay') return
 
-    gameplayEntryReserved = true
-    try {
-      if (shouldBlockGameplayEntryTransition(nextState.screen)) return
-
-      await preloadGameplayEntry(nextState.screen)
-      await transitionToScreen(nextState.screen, () => {
-        gameplayPreloadActive = false
-        appState = nextState
-        gameplayMusicState = initialGameplayMusicState
-      })
-    } finally {
-      gameplayEntryReserved = false
+    loadingGate = {
+      kind: 'gameplay',
+      view: presentPreloadProgress(createInitialPreloadProgress(0, 'gameplay')),
     }
+    await preloadGameplayEntry(nextState.screen)
+    const transitioned = await transitionToScreen(nextState.screen, () => {
+      loadingGate = { kind: 'idle' }
+      appState = nextState
+      gameplayMusicState = initialGameplayMusicState
+    })
+    if (!transitioned && loadingGate.kind === 'gameplay') loadingGate = { kind: 'idle' }
   }
 
   async function transitionToScreen(
@@ -331,7 +323,12 @@
       intent === 'confirm' &&
       nextState.screen.type === 'stage-select'
     ) {
-      handleConfirmWorld()
+      const nextScreen = nextState.screen
+      playUiSfx('confirm')
+      void transitionToScreen(nextState.screen, () => {
+        appState = nextState
+        preloadStageSelectionInBackground(nextScreen.worldId, nextScreen.selectedStageIndex)
+      })
       return
     }
 
@@ -340,7 +337,8 @@
       intent === 'confirm' &&
       nextState.screen.type === 'gameplay'
     ) {
-      void handleConfirmStage()
+      playUiSfx('confirm')
+      void enterGameplay(nextState)
       return
     }
 
@@ -562,10 +560,10 @@
     void preloader.preload(buildBootPreloadPlan(projectData), {
       phase: 'boot',
       onProgress: (snapshot) => {
-        bootPreloadView = snapshot
+        loadingGate = { kind: 'boot', view: snapshot }
       },
-    }).then((result) => {
-      bootPreloadView = result
+    }).then(() => {
+      loadingGate = { kind: 'idle' }
     })
     syncSettings(parseStoredSettings(localStorage.getItem(SETTINGS_STORAGE_KEY), actualFullscreen()))
     const initialMusicCommand = createMusicCommand(appState.screen, settings)
@@ -602,11 +600,10 @@
   style:--shell-backdrop={`url("${shellBackdrop.assetRef}")`}
 >
   <ResolutionFrame>
-    {#if !bootPreloadReady || gameplayPreloadActive}
+    {#if activeLoadingView}
       <LoadingScreen
         progress={activeLoadingView}
-        phaseLabel={activeLoadingPhaseLabel}
-        productName={identity.productName}
+        phaseLabel={loadingPhaseLabel}
         titleLabel={resolveLocalizedText(projectData.localize, locale, 'loading.title')}
         warningLabel={resolveLocalizedText(projectData.localize, locale, 'loading.warning')}
       />

@@ -5,9 +5,10 @@ describe('LoadingScreen UI', () => {
   it('is presentation-only and renders progress inputs', () => {
     expect(source).toContain('progress:')
     expect(source).toContain('phaseLabel:')
-    expect(source).toContain('productName:')
     expect(source).toContain('warningLabel:')
+    expect(source).toContain('PreloadProgressSnapshot')
     expect(source).toContain('aria-valuenow={progress.percent}')
+    expect(source).not.toContain('productName')
     expect(source).not.toContain('appState')
     expect(source).not.toContain('onControlIntent')
     expect(source).not.toContain('createBrowserAssetPreloader')

@@ -5,6 +5,7 @@ import {
   recordPreloadFailure,
   recordPreloadSuccess,
 } from './preloadProgress'
+import source from './preloadProgress.ts?raw'
 
 describe('preload progress presenter', () => {
   it('reports completed, total, percent, and warning count', () => {
@@ -45,5 +46,14 @@ describe('preload progress presenter', () => {
       warningCount: 0,
       status: 'idle',
     })
+  })
+
+  it('uses explicit preload phases including background work', () => {
+    expect(presentPreloadProgress(createInitialPreloadProgress(1, 'background'))).toMatchObject({
+      phase: 'background',
+      status: 'loading',
+    })
+    expect(source).toContain("export type PreloadPhase = 'boot' | 'gameplay' | 'background'")
+    expect(source).not.toContain('| string')
   })
 })

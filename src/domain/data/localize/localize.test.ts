@@ -11,6 +11,7 @@ describe('localize', () => {
     expect(resolveLocalizedText(localize, 'en', 'loading.title')).toBe('Loading')
     expect(resolveLocalizedText(localize, 'en', 'loading.phase.boot')).toBe('Preparing system assets')
     expect(resolveLocalizedText(localize, 'en', 'loading.phase.gameplay')).toBe('Preparing stage assets')
+    expect(resolveLocalizedText(localize, 'en', 'loading.phase.background')).toBe('Preparing nearby assets')
     expect(resolveLocalizedText(localize, 'en', 'loading.warning')).toBe('Some assets could not be prepared')
   })
 

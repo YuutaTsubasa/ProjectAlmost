@@ -16,6 +16,7 @@ This slice covers:
 - A browser preload adapter for image, font, and audio files.
 - A Loading screen shown before the Title flow becomes interactive.
 - A gameplay-entry loading gate that waits for the selected stage's required assets before mounting the Phaser gameplay screen.
+- App models the visible loading gate as an explicit `boot`, `gameplay`, or `idle` state so boot loading, gameplay-entry loading, and background preloading cannot be confused by independent booleans.
 - Background preloading for nearby/world assets when the user is browsing World Select and Stage Select.
 - Source-contract tests that ensure screen-changing gameplay entry routes pass through the preloading boundary.
 

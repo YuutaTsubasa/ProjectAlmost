@@ -1,4 +1,4 @@
-import type { PreloadAsset, PreloadAssetKind } from '../../domain/assets/preloadManifest'
+import type { PreloadAsset } from '../../domain/assets/preloadManifest'
 import {
   createInitialPreloadProgress,
   presentPreloadProgress,
@@ -169,10 +169,6 @@ export function createBrowserAssetPreloader(options: BrowserAssetPreloaderOption
     return request
   }
 
-  function load(asset: PreloadAsset): Promise<void> {
-    return startOrReuseLoad(asset)
-  }
-
   async function preload(
     assets: readonly PreloadAsset[],
     requestOptions: PreloadRequestOptions,
@@ -181,17 +177,18 @@ export function createBrowserAssetPreloader(options: BrowserAssetPreloaderOption
     let state = createInitialPreloadProgress(uniqueAssets.length, requestOptions.phase)
 
     let nextAssetIndex = 0
+    // Physical load slots are shared globally; workers only advance this request's logical progress.
     async function worker(): Promise<void> {
       while (nextAssetIndex < uniqueAssets.length) {
         const asset = uniqueAssets[nextAssetIndex]
         nextAssetIndex += 1
         try {
-          await load(asset)
+          await startOrReuseLoad(asset)
           state = recordPreloadSuccess(state, asset.source)
         } catch (error) {
           state = recordPreloadFailure(state, {
             source: asset.source,
-            kind: asset.kind as PreloadAssetKind,
+            kind: asset.kind,
             message: errorMessage(error),
           })
         }

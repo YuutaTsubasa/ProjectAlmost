@@ -100,6 +100,7 @@ export type LoadingLocalizationKey =
   | 'loading.title'
   | 'loading.phase.boot'
   | 'loading.phase.gameplay'
+  | 'loading.phase.background'
   | 'loading.warning'
 
 export type LocalizationKey =
@@ -228,6 +229,7 @@ const catalog: LocalizedTextCatalog = {
     'loading.title': 'Loading',
     'loading.phase.boot': 'Preparing system assets',
     'loading.phase.gameplay': 'Preparing stage assets',
+    'loading.phase.background': 'Preparing nearby assets',
     'loading.warning': 'Some assets could not be prepared',
     'language.en': 'English',
     'language.ja': 'Japanese',
@@ -393,6 +395,7 @@ const catalog: LocalizedTextCatalog = {
     'loading.title': '読み込み中',
     'loading.phase.boot': 'システムアセットを準備中',
     'loading.phase.gameplay': 'ステージアセットを準備中',
+    'loading.phase.background': '周辺アセットを準備中',
     'loading.warning': '一部のアセットを準備できませんでした',
     'language.en': '英語',
     'language.ja': '日本語',
@@ -558,6 +561,7 @@ const catalog: LocalizedTextCatalog = {
     'loading.title': '載入中',
     'loading.phase.boot': '正在準備系統資產',
     'loading.phase.gameplay': '正在準備關卡資產',
+    'loading.phase.background': '正在準備周邊資產',
     'loading.warning': '部分資產無法準備',
     'language.en': '英文',
     'language.ja': '日文',
@@ -723,6 +727,7 @@ const catalog: LocalizedTextCatalog = {
     'loading.title': '로드 중',
     'loading.phase.boot': '시스템 에셋 준비 중',
     'loading.phase.gameplay': '스테이지 에셋 준비 중',
+    'loading.phase.background': '주변 에셋 준비 중',
     'loading.warning': '일부 에셋을 준비하지 못했습니다',
     'language.en': '영어',
     'language.ja': '일본어',
