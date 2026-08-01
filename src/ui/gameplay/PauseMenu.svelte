@@ -1,18 +1,6 @@
-<script lang="ts">
-  import { PAUSE_MENU_ITEMS, type PauseAction, type PauseMenuItem } from '../../domain/gameplay/gameplayPause'
-  import type { LocalizationKey, LocaleCode, LocalizeData } from '../../domain/data/localize/localize'
-  import { resolveLocalizedText } from '../../domain/data/localize/localize'
-  import ControlHints from '../controls/ControlHints.svelte'
-
-  type Props = {
-    selectedItemIndex: number
-    localizeData: LocalizeData
-    locale: LocaleCode
-    onSelectItem: (index: number) => void
-    onAction: (action: PauseAction) => void
-  }
-
-  let { selectedItemIndex, localizeData, locale, onSelectItem, onAction }: Props = $props()
+<script module lang="ts">
+  import type { PauseAction, PauseMenuItem } from '../../domain/gameplay/gameplayPause'
+  import type { LocalizationKey } from '../../domain/data/localize/localize'
 
   const pauseLabelRefs: Record<PauseMenuItem, LocalizationKey> = {
     'resume': 'pause.resume',
@@ -27,6 +15,23 @@
     'settings': 'open-settings',
     'stage-select': 'stage-select',
   }
+</script>
+
+<script lang="ts">
+  import { PAUSE_MENU_ITEMS } from '../../domain/gameplay/gameplayPause'
+  import type { LocaleCode, LocalizeData } from '../../domain/data/localize/localize'
+  import { resolveLocalizedText } from '../../domain/data/localize/localize'
+  import ControlHints from '../controls/ControlHints.svelte'
+
+  type Props = {
+    selectedItemIndex: number
+    localizeData: LocalizeData
+    locale: LocaleCode
+    onSelectItem: (index: number) => void
+    onAction: (action: PauseAction) => void
+  }
+
+  let { selectedItemIndex, localizeData, locale, onSelectItem, onAction }: Props = $props()
 
   function text(key: LocalizationKey): string {
     return resolveLocalizedText(localizeData, locale, key)

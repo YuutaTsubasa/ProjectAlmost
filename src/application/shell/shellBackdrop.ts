@@ -11,7 +11,6 @@ export type ShellBackdropInput = {
   screen: AppScreen
   worlds: WorldCatalog
   stages: StageCatalog
-  previous?: ShellBackdrop
 }
 
 function fallbackWorld(worlds: WorldCatalog): WorldData {
@@ -37,8 +36,6 @@ function worldForGameplayStage(input: ShellBackdropInput): WorldData {
 }
 
 export function resolveShellBackdrop(input: ShellBackdropInput): ShellBackdrop {
-  if (input.screen.type === 'settings' && input.previous) return input.previous
-
   if (input.screen.type === 'world-select') {
     return backdropForWorld(worldByIndex(input.worlds, input.screen.selectedWorldIndex))
   }

@@ -28,6 +28,26 @@ export type GamepadControlSnapshot = {
   axes: number[]
 }
 
+const KEYBOARD_INTENT_KEYS: readonly { intent: ControlIntent; keys: readonly string[] }[] = [
+  { intent: 'move-up', keys: ['arrowup', 'w'] },
+  { intent: 'move-down', keys: ['arrowdown', 's'] },
+  { intent: 'move-left', keys: ['arrowleft', 'a'] },
+  { intent: 'move-right', keys: ['arrowright', 'd'] },
+  { intent: 'confirm', keys: ['enter', ' '] },
+  { intent: 'back', keys: ['escape'] },
+]
+
+const CONTEXT_INTENTS: Record<ControlContext, readonly ControlIntent[]> = {
+  'title-intro': [],
+  'title-menu': ['move-up', 'move-down', 'confirm', 'back'],
+  'world-select': ['move-up', 'move-down', 'move-left', 'move-right', 'confirm', 'back'],
+  'stage-select': ['move-up', 'move-down', 'move-left', 'move-right', 'confirm', 'back'],
+  settings: ['move-up', 'move-down', 'move-left', 'move-right', 'confirm', 'back'],
+  'settings-delete-confirm': ['move-left', 'move-right', 'confirm', 'back'],
+  'gameplay-active': ['back'],
+  'gameplay-pause-menu': ['move-up', 'move-down', 'confirm', 'back'],
+}
+
 const AXIS_THRESHOLD = 0.5
 const SOUTH_BUTTON_INDEX = 0
 const EAST_BUTTON_INDEX = 1
@@ -46,54 +66,15 @@ export function mapKeyboardControlIntent(
   if (context === 'title-intro') return 'open'
 
   const key = descriptor.key.toLowerCase()
+  const allowedIntents = CONTEXT_INTENTS[context]
 
-  if (context === 'title-menu') {
-    if (descriptor.key === 'ArrowUp' || key === 'w') return 'move-up'
-    if (descriptor.key === 'ArrowDown' || key === 's') return 'move-down'
-    if (descriptor.key === 'Enter' || descriptor.key === ' ') return 'confirm'
-    if (descriptor.key === 'Escape') return 'back'
-    return null
-  }
+  if (context === 'gameplay-active' && key === 'p') return 'back'
 
-  if (context === 'settings') {
-    if (descriptor.key === 'ArrowUp' || key === 'w') return 'move-up'
-    if (descriptor.key === 'ArrowDown' || key === 's') return 'move-down'
-    if (descriptor.key === 'ArrowLeft' || key === 'a') return 'move-left'
-    if (descriptor.key === 'ArrowRight' || key === 'd') return 'move-right'
-    if (descriptor.key === 'Enter' || descriptor.key === ' ') return 'confirm'
-    if (descriptor.key === 'Escape') return 'back'
-    return null
-  }
+  const match = KEYBOARD_INTENT_KEYS.find(
+    (entry) => allowedIntents.includes(entry.intent) && entry.keys.includes(key),
+  )
 
-  if (context === 'settings-delete-confirm') {
-    if (descriptor.key === 'ArrowLeft' || key === 'a') return 'move-left'
-    if (descriptor.key === 'ArrowRight' || key === 'd') return 'move-right'
-    if (descriptor.key === 'Enter' || descriptor.key === ' ') return 'confirm'
-    if (descriptor.key === 'Escape') return 'back'
-    return null
-  }
-
-  if (context === 'gameplay-active') {
-    if (descriptor.key === 'Escape' || key === 'p') return 'back'
-    return null
-  }
-
-  if (context === 'gameplay-pause-menu') {
-    if (descriptor.key === 'ArrowUp' || key === 'w') return 'move-up'
-    if (descriptor.key === 'ArrowDown' || key === 's') return 'move-down'
-    if (descriptor.key === 'Enter' || descriptor.key === ' ') return 'confirm'
-    if (descriptor.key === 'Escape') return 'back'
-    return null
-  }
-
-  if (descriptor.key === 'ArrowRight' || key === 'd') return 'move-right'
-  if (descriptor.key === 'ArrowDown' || key === 's') return 'move-down'
-  if (descriptor.key === 'ArrowLeft' || key === 'a') return 'move-left'
-  if (descriptor.key === 'ArrowUp' || key === 'w') return 'move-up'
-  if (descriptor.key === 'Enter' || descriptor.key === ' ') return 'confirm'
-  if (descriptor.key === 'Escape') return 'back'
-
-  return null
+  return match?.intent ?? null
 }
 
 export function mapGamepadControlIntents(

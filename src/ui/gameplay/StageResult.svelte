@@ -1,32 +1,5 @@
-<script lang="ts">
-  import type { GameplayClearResultSnapshot } from '../../domain/gameplay/gameplayHud'
-  import {
-    getResultActionStates,
-    getStageResultRowStates,
-    type StageResultActionType,
-  } from '../../domain/gameplay/stageResult'
-  import type { CharacterInfoViewModel } from '../../application/character/characterInfoPresenter'
-  import type { GameplayHudStageDisplay } from './gameplayHudDisplay'
-
-  type Props = {
-    result: GameplayClearResultSnapshot
-    stageDisplay: GameplayHudStageDisplay
-    characterInfo: CharacterInfoViewModel
-    selectedAction: number
-    nextStageAvailable: boolean
-    onSelectAction: (index: number) => void
-    onAction: (action: StageResultActionType) => void
-  }
-
-  let {
-    result,
-    stageDisplay,
-    characterInfo,
-    selectedAction,
-    nextStageAvailable,
-    onSelectAction,
-    onAction,
-  }: Props = $props()
+<script module lang="ts">
+  import type { StageResultActionType } from '../../domain/gameplay/stageResult'
 
   const stageResultCopy = {
     resultTitle: 'Stage Result',
@@ -51,13 +24,47 @@
     },
   } as const
 
+  const actionLabelByType: Record<StageResultActionType, string> = {
+    retry: stageResultCopy.actions.retry,
+    'stage-select': stageResultCopy.actions.stageSelect,
+    'next-stage': stageResultCopy.actions.nextStage,
+  }
+</script>
+
+<script lang="ts">
+  import type { GameplayClearResultSnapshot } from '../../domain/gameplay/gameplayHud'
+  import {
+    getResultActionStates,
+    getStageResultRowStates,
+  } from '../../domain/gameplay/stageResult'
+  import type { CharacterInfoViewModel } from '../../application/character/characterInfoPresenter'
+  import type { GameplayHudStageDisplay } from './gameplayHudDisplay'
+
+  type Props = {
+    result: GameplayClearResultSnapshot
+    stageDisplay: GameplayHudStageDisplay
+    characterInfo: CharacterInfoViewModel
+    selectedAction: number
+    nextStageAvailable: boolean
+    onSelectAction: (index: number) => void
+    onAction: (action: StageResultActionType) => void
+  }
+
+  let {
+    result,
+    stageDisplay,
+    characterInfo,
+    selectedAction,
+    nextStageAvailable,
+    onSelectAction,
+    onAction,
+  }: Props = $props()
+
   const rowStates = $derived(getStageResultRowStates(result))
   const actions = $derived(getResultActionStates({ nextStageAvailable }))
 
   function actionLabel(type: StageResultActionType): string {
-    if (type === 'retry') return stageResultCopy.actions.retry
-    if (type === 'stage-select') return stageResultCopy.actions.stageSelect
-    return stageResultCopy.actions.nextStage
+    return actionLabelByType[type]
   }
 
   function activateAction(type: StageResultActionType, disabled: boolean): void {

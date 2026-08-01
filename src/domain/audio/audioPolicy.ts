@@ -1,5 +1,6 @@
 import type { AppScreen } from '../app/appFlow'
 import type { StageId } from '../data/worlds/worldTypes'
+import { parseStageId } from '../data/worlds/stageId'
 import type { GameSettings } from '../settings/settings'
 import { MUSIC_ASSETS, SFX_ASSETS, type MusicTrackId, type SfxId } from './audioAssets'
 
@@ -56,7 +57,7 @@ export type GameplayMusicContext = {
 }
 
 function getWorldIndexFromStageId(stageId: StageId): number {
-  return Math.max(0, Number(stageId.split('-')[0]) - 1)
+  return Math.max(0, parseStageId(stageId).worldNumber - 1)
 }
 
 export function computeMusicVolume(settings: GameSettings, multiplier = 1): number {
@@ -107,14 +108,18 @@ export function getMusicForScreen(screen: AppScreen, settings: GameSettings): Mu
   return { track: 'title', volume: computeMusicVolume(settings) }
 }
 
+const SFX_BY_ACTION = {
+  move: 'ui-move',
+  confirm: 'ui-confirm',
+  back: 'ui-back',
+  'player-hit': 'hit',
+  'coin-collected': 'coin',
+  'player-death': 'death',
+  'checkpoint-activated': 'checkpoint',
+  'player-footstep': 'armor-step',
+  'goal-opened': 'goal',
+} as const satisfies Record<SfxAction, SfxId>
+
 export function getSfxForAction(action: SfxAction): SfxId {
-  if (action === 'move') return 'ui-move'
-  if (action === 'back') return 'ui-back'
-  if (action === 'player-hit') return 'hit'
-  if (action === 'coin-collected') return 'coin'
-  if (action === 'player-death') return 'death'
-  if (action === 'checkpoint-activated') return 'checkpoint'
-  if (action === 'player-footstep') return 'armor-step'
-  if (action === 'goal-opened') return 'goal'
-  return 'ui-confirm'
+  return SFX_BY_ACTION[action]
 }

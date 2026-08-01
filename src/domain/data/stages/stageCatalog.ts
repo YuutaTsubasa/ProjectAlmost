@@ -1,4 +1,5 @@
 import { worlds } from '../worlds/worldCatalog'
+import { STAGES_PER_WORLD, parseStageId } from '../worlds/stageId'
 import type { StageId, WorldData, WorldId } from '../worlds/worldTypes'
 import type { StageCatalog, StageData, StageNodePosition } from './stageTypes'
 
@@ -85,13 +86,13 @@ const previewBackgroundAssetRefs: Partial<Record<WorldId, string>> = {
 }
 
 function getStageNumber(stageId: StageId): StageData['number'] {
-  return Number(stageId.split('-')[1]) as StageData['number']
+  return parseStageId(stageId).stageNumber as StageData['number']
 }
 
 function createStage(world: WorldData, stageId: StageId): StageData {
   const seed = seeds[world.id]
   const stageNumber = getStageNumber(stageId)
-  const isBoss = stageNumber === 6
+  const isBoss = stageNumber === STAGES_PER_WORLD
 
   return {
     id: stageId,

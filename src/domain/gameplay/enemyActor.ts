@@ -194,12 +194,13 @@ export function getNextEnemyPatrolDirection(input: {
   return input.currentDirection
 }
 
-export function getEnemyDefeatPresentation(type: EnemyActorType): EnemyDefeatPresentation {
-  if (type === 'armor-guard') {
-    return 'armor-guard-death'
-  }
+const enemyDefeatPresentationByType = {
+  'armor-guard': 'armor-guard-death',
+  'azure-core': 'azure-core-burst',
+} as const satisfies Record<EnemyActorType, EnemyDefeatPresentation>
 
-  return 'azure-core-burst'
+export function getEnemyDefeatPresentation(type: EnemyActorType): EnemyDefeatPresentation {
+  return enemyDefeatPresentationByType[type]
 }
 
 export function enemyCountsForScore(input: Pick<EnemyRuleInput, 'type' | 'countsForScore'>): boolean {
@@ -221,8 +222,10 @@ export function getEnemyDefeatOutcome(input: Pick<EnemyRuleInput, 'type' | 'resp
   }
 }
 
+const DEFAULT_ENEMY_RESPAWN_DELAY_MS = 1400
+
 export function getEnemyRespawnDelayMs(input: Pick<EnemyRuleInput, 'respawnDelayMs'>): number {
-  return input.respawnDelayMs ?? 1400
+  return input.respawnDelayMs ?? DEFAULT_ENEMY_RESPAWN_DELAY_MS
 }
 
 export function getEnemyRegenerationDecision(input: {

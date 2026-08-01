@@ -1,17 +1,7 @@
-export type ProjectIdentity = {
-  productName: 'Project Almost'
-  shell: 'tauri-v2'
-  ui: 'svelte'
-  domainCore: 'functional'
-  stateModel: 'reactive'
-}
+export const PRODUCT_NAME = 'Project Almost'
 
-export function createProjectIdentity(): ProjectIdentity {
-  return {
-    productName: 'Project Almost',
-    shell: 'tauri-v2',
-    ui: 'svelte',
-    domainCore: 'functional',
-    stateModel: 'reactive',
-  }
+export const STORAGE_NAMESPACE = 'project-almost'
+
+export function storageKey(name: string): string {
+  return `${STORAGE_NAMESPACE}:${name}`
 }

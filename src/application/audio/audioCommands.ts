@@ -8,7 +8,30 @@ import {
   type GameplayMusicContext,
   type SfxAction,
 } from '../../domain/audio/audioPolicy'
+import type { StageCatalog } from '../../domain/data/stages/stageTypes'
 import type { GameSettings } from '../../domain/settings/settings'
+
+export type GameplayMusicPlaybackState = {
+  resultVisible: boolean
+  paused: boolean
+}
+
+export function getGameplayMusicContext(
+  screen: AppScreen,
+  stages: StageCatalog,
+  playback: GameplayMusicPlaybackState,
+): GameplayMusicContext | undefined {
+  if (screen.type !== 'gameplay') return undefined
+
+  const stage = stages.items[screen.stageId]
+
+  return {
+    stageId: screen.stageId,
+    isBoss: stage?.isBoss ?? false,
+    resultVisible: playback.resultVisible,
+    paused: playback.paused,
+  }
+}
 
 export type SetMusicCommand = { type: 'set-music'; track: MusicTrackId; volume: number }
 export type PrepareMusicCommand = { type: 'prepare-music'; track: MusicTrackId }

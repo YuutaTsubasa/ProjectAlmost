@@ -5,6 +5,13 @@ import {
   type DeleteConfirmState,
 } from '../settings/settings'
 import type { StageId, WorldId } from '../data/worlds/worldTypes'
+import {
+  STAGES_PER_WORLD,
+  WORLD_COUNT,
+  formatStageId,
+  parseStageId,
+  worldIdFromNumber,
+} from '../data/worlds/stageId'
 
 export const TITLE_MENU_ITEMS = ['start', 'settings', 'back'] as const
 
@@ -51,14 +58,12 @@ export type AppState = {
   screen: AppScreen
 }
 
-const WORLD_COUNT = 6
-const WORLD_IDS = ['world01', 'world02', 'world03', 'world04', 'world05', 'world06'] as const
-const STAGES_PER_WORLD = 6
-
 function getStageIdForSelection(screen: StageSelectScreen): StageId {
-  const worldNumber = screen.selectedWorldIndex + 1
-  const stageNumber = screen.selectedStageIndex + 1
-  return `${worldNumber}-${stageNumber}` as StageId
+  return formatStageId(screen.selectedWorldIndex + 1, screen.selectedStageIndex + 1)
+}
+
+function clampWorldIndex(index: number): number {
+  return Math.min(Math.max(0, index), WORLD_COUNT - 1)
 }
 
 export type StageUnlockGuard = {
@@ -148,7 +153,7 @@ export function confirmSelectedWorld(state: AppState): AppState {
     screen: {
       type: 'stage-select',
       selectedWorldIndex: state.screen.selectedWorldIndex,
-      worldId: WORLD_IDS[state.screen.selectedWorldIndex] ?? 'world01',
+      worldId: worldIdFromNumber(clampWorldIndex(state.screen.selectedWorldIndex) + 1),
       selectedStageIndex: 0,
     },
   }
@@ -205,14 +210,14 @@ export function openNextGameplayStage(
 }
 
 function getStageSelectionForStageId(stageId: StageId): StageSelectScreen {
-  const [world, stage] = stageId.split('-').map(Number)
-  const selectedWorldIndex = Math.max(0, world - 1)
-  const selectedStageIndex = Math.max(0, stage - 1)
+  const { worldNumber, stageNumber } = parseStageId(stageId)
+  const selectedWorldIndex = clampWorldIndex(worldNumber - 1)
+  const selectedStageIndex = Math.max(0, stageNumber - 1)
 
   return {
     type: 'stage-select',
     selectedWorldIndex,
-    worldId: WORLD_IDS[selectedWorldIndex] ?? 'world01',
+    worldId: worldIdFromNumber(selectedWorldIndex + 1),
     selectedStageIndex,
   }
 }

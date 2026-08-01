@@ -88,6 +88,7 @@ import {
   getPlayerCrouchState,
   getPlayerHorizontalMovementDecision,
   playerActorDefinition,
+  type PlayerActorDefinition,
   type PlayerAnimationKey,
   type PlayerBodyPose,
 } from '../../domain/gameplay/playerActor'
@@ -253,8 +254,37 @@ type PlayerFacingDirection = 'left' | 'right'
 const checkpointInactiveTint = 0x4be8ff
 const checkpointActivatedTint = 0xfff0a8
 
+const renderDepth = {
+  terrain: 5,
+  movingPlatform: 6,
+  hazard: 8,
+  coin: 12,
+  bossProjectile: 16,
+  homingReticle: 20,
+} as const
+
+const textureKeys = {
+  terrainTiles: 'terrain-tiles',
+  attackHitbox: 'attack-hitbox',
+  bossProjectile: 'boss-projectile',
+  coin: 'coin',
+} as const
+
+const bossSequenceTiming = {
+  patternRestartAfterPhaseAdvanceMs: 620,
+  goalRevealAfterDefeatMs: 800,
+  patternRestartAfterRespawnMs: 500,
+} as const
+
+const GAMEPLAY_CANVAS = {
+  width: 1280,
+  height: 720,
+  backgroundColor: '#05070d',
+} as const
+
 class GameplayMapScene extends Phaser.Scene {
   private readonly stageMap: GameplayStageMap
+  private readonly actorDefinition: PlayerActorDefinition
   private readonly options: Pick<GameplayRendererInput, 'onHudUpdate' | 'onSfx' | 'getInputSnapshot'>
   private backgroundLayers: BackgroundRuntimeLayer[] = []
   private terrainLayer: Phaser.Tilemaps.TilemapLayer | null = null
@@ -314,9 +344,14 @@ class GameplayMapScene extends Phaser.Scene {
   private nextPlayerFootstepSfxAt = 0
   private currentExternalGameplayInputSnapshot: Partial<GameplayInputSnapshot> = emptyGameplayInputSnapshot
 
-  constructor(stage: GameplayStageMap, options: Pick<GameplayRendererInput, 'onHudUpdate' | 'onSfx' | 'getInputSnapshot'> = {}) {
+  constructor(
+    stage: GameplayStageMap,
+    options: Pick<GameplayRendererInput, 'onHudUpdate' | 'onSfx' | 'getInputSnapshot'> = {},
+    actorDefinition: PlayerActorDefinition = playerActorDefinition,
+  ) {
     super(`GameplayMapScene:${stage.id}`)
     this.stageMap = stage
+    this.actorDefinition = actorDefinition
     this.options = options
     this.currentRespawnPoint = {
       x: stage.player.spawn.x,
@@ -337,9 +372,9 @@ class GameplayMapScene extends Phaser.Scene {
       this.load.image(layer.id, layer.assetRef)
     }
 
-    this.load.image('terrain-tiles', this.stageMap.terrain.tilesetAssetRef)
+    this.load.image(textureKeys.terrainTiles, this.stageMap.terrain.tilesetAssetRef)
 
-    for (const sprite of Object.values(playerActorDefinition.sprites)) {
+    for (const sprite of Object.values(this.actorDefinition.sprites)) {
       this.load.spritesheet(sprite.key, sprite.assetRef, {
         frameWidth: sprite.frameWidth,
         frameHeight: sprite.frameHeight,
@@ -601,7 +636,7 @@ class GameplayMapScene extends Phaser.Scene {
       tileHeight: this.stageMap.world.tileSize,
     })
     const tileset = map.addTilesetImage(
-      'terrain-tiles',
+      textureKeys.terrainTiles,
       undefined,
       this.stageMap.world.tileSize,
       this.stageMap.world.tileSize,
@@ -615,7 +650,7 @@ class GameplayMapScene extends Phaser.Scene {
     }
 
     layer.setCollision([...this.stageMap.terrain.solidTileIndexes])
-    layer.setDepth(5)
+    layer.setDepth(renderDepth.terrain)
 
     return layer
   }
@@ -625,7 +660,7 @@ class GameplayMapScene extends Phaser.Scene {
       const sprite = this.physics.add.staticImage(
         spawn.origin.x,
         spawn.origin.y,
-        'terrain-tiles',
+        textureKeys.terrainTiles,
         1,
       )
       sprite.setOrigin(0.5, 0.5)
@@ -633,7 +668,7 @@ class GameplayMapScene extends Phaser.Scene {
         spawn.width * this.stageMap.world.tileSize,
         spawn.height * this.stageMap.world.tileSize,
       )
-      sprite.setDepth(6)
+      sprite.setDepth(renderDepth.movingPlatform)
       sprite.refreshBody()
 
       return { sprite, spawn, previousPosition: { x: spawn.origin.x, y: spawn.origin.y } }
@@ -707,7 +742,7 @@ class GameplayMapScene extends Phaser.Scene {
   }
 
   private createPlayerAnimations(): void {
-    for (const sprite of Object.values(playerActorDefinition.sprites)) {
+    for (const sprite of Object.values(this.actorDefinition.sprites)) {
       this.anims.create({
         key: sprite.key,
         frames: this.anims.generateFrameNumbers(sprite.key, {
@@ -741,7 +776,7 @@ class GameplayMapScene extends Phaser.Scene {
     const graphics = this.make.graphics()
     graphics.fillStyle(0x4be8ff, 0.2)
     graphics.lineStyle(2, 0x4f7dff, 0.8)
-    graphics.generateTexture('attack-hitbox', meleeHitboxSize.width, meleeHitboxSize.height)
+    graphics.generateTexture(textureKeys.attackHitbox, meleeHitboxSize.width, meleeHitboxSize.height)
     graphics.destroy()
   }
 
@@ -755,7 +790,7 @@ class GameplayMapScene extends Phaser.Scene {
     graphics.strokeCircle(14, 14, 10)
     graphics.lineStyle(2, 0x4be8ff, 0.8)
     graphics.strokeCircle(14, 14, 13)
-    graphics.generateTexture('boss-projectile', 28, 28)
+    graphics.generateTexture(textureKeys.bossProjectile, 28, 28)
     graphics.destroy()
   }
 
@@ -786,14 +821,14 @@ class GameplayMapScene extends Phaser.Scene {
     graphics.fillEllipse(17, 15, 12, 8)
     graphics.fillStyle(0xc5891f, 0.9)
     graphics.fillRoundedRect(18, 11, 8, 22, 3)
-    graphics.generateTexture('coin', 44, 44)
+    graphics.generateTexture(textureKeys.coin, 44, 44)
     graphics.destroy()
   }
 
   private createCoins(): void {
     this.coins = this.stageMap.coins.map((point, index) => {
-      const sprite = this.add.image(point.x, point.y, 'coin')
-      sprite.setDepth(12)
+      const sprite = this.add.image(point.x, point.y, textureKeys.coin)
+      sprite.setDepth(renderDepth.coin)
 
       this.tweens.add({
         targets: sprite,
@@ -891,7 +926,7 @@ class GameplayMapScene extends Phaser.Scene {
       )
       sprite.setOrigin(definition.origin.x, definition.origin.y)
       sprite.setDisplaySize(spawn.width, spawn.height)
-      sprite.setDepth(8)
+      sprite.setDepth(renderDepth.hazard)
       sprite.refreshBody()
 
       const body = getHazardBodyPresentation({
@@ -1117,19 +1152,19 @@ class GameplayMapScene extends Phaser.Scene {
     const player = this.physics.add.sprite(
       this.stageMap.player.spawn.x,
       getPlayerCenterY({ surfaceY: this.stageMap.player.spawn.surfaceY }),
-      playerActorDefinition.sprites.idle.key,
+      this.actorDefinition.sprites.idle.key,
     )
 
     player
-      .setOrigin(playerActorDefinition.origin.x, playerActorDefinition.origin.y)
-      .setScale(playerActorDefinition.scale)
+      .setOrigin(this.actorDefinition.origin.x, this.actorDefinition.origin.y)
+      .setScale(this.actorDefinition.scale)
       .setCollideWorldBounds(false)
-      .setDragX(playerActorDefinition.movement.idleDragX)
-      .setMaxVelocity(playerActorDefinition.maxVelocity.x, playerActorDefinition.maxVelocity.y)
-      .setDepth(playerActorDefinition.depth)
+      .setDragX(this.actorDefinition.movement.idleDragX)
+      .setMaxVelocity(this.actorDefinition.maxVelocity.x, this.actorDefinition.maxVelocity.y)
+      .setDepth(this.actorDefinition.depth)
 
-    player.body.setSize(playerActorDefinition.body.width, playerActorDefinition.body.height)
-    player.body.setOffset(playerActorDefinition.body.offsetX, playerActorDefinition.body.offsetY)
+    player.body.setSize(this.actorDefinition.body.width, this.actorDefinition.body.height)
+    player.body.setOffset(this.actorDefinition.body.offsetX, this.actorDefinition.body.offsetY)
     this.playerBodyPose = 'standing'
     this.isCrouching = false
     this.playPlayerAnimation(player, 'idle')
@@ -1139,7 +1174,7 @@ class GameplayMapScene extends Phaser.Scene {
     this.playerJumpState = createMovableActorJumpState({
       now: this.time.now,
       grounded: true,
-      config: playerActorDefinition.jump,
+      config: this.actorDefinition.jump,
     })
     this.attackReady = true
     this.isAttacking = false
@@ -1306,41 +1341,41 @@ class GameplayMapScene extends Phaser.Scene {
           defeated: false,
           regenerating: false,
         }
-      } else {
-        const definition = enemyActorDefinitions['azure-core']
-        const textureKey = definition.generatedTexture?.key
-        if (!textureKey) {
-          throw new Error(`Enemy ${spawn.id} has no renderable texture.`)
-        }
+      }
 
-        const sprite = this.physics.add.sprite(
-          spawn.x,
-          getEnemySpawnY(spawn),
-          textureKey,
-        )
+      const definition = enemyActorDefinitions['azure-core']
+      const textureKey = definition.generatedTexture?.key
+      if (!textureKey) {
+        throw new Error(`Enemy ${spawn.id} has no renderable texture.`)
+      }
 
-        sprite
-          .setOrigin(definition.origin.x, definition.origin.y)
-          .setScale(definition.scale)
-          .setCollideWorldBounds(true)
-          .setDepth(definition.depth)
+      const sprite = this.physics.add.sprite(
+        spawn.x,
+        getEnemySpawnY(spawn),
+        textureKey,
+      )
 
-        sprite.body.setSize(definition.body.width, definition.body.height)
-        sprite.body.setOffset(definition.body.offsetX, definition.body.offsetY)
+      sprite
+        .setOrigin(definition.origin.x, definition.origin.y)
+        .setScale(definition.scale)
+        .setCollideWorldBounds(true)
+        .setDepth(definition.depth)
 
-        sprite.body.allowGravity = false
-        sprite.setImmovable(true)
-        if (spawn.id !== BOSS_PROTOTYPE_ENEMY_ID) {
-          this.createAzureCoreFloat(sprite, spawn.y)
-        }
+      sprite.body.setSize(definition.body.width, definition.body.height)
+      sprite.body.setOffset(definition.body.offsetX, definition.body.offsetY)
 
-        return {
-          sprite,
-          spawn,
-          direction: -1,
-          defeated: false,
-          regenerating: false,
-        }
+      sprite.body.allowGravity = false
+      sprite.setImmovable(true)
+      if (spawn.id !== BOSS_PROTOTYPE_ENEMY_ID) {
+        this.createAzureCoreFloat(sprite, spawn.y)
+      }
+
+      return {
+        sprite,
+        spawn,
+        direction: -1,
+        defeated: false,
+        regenerating: false,
       }
     })
   }
@@ -1441,11 +1476,11 @@ class GameplayMapScene extends Phaser.Scene {
   }
 
   private spawnBossProjectile(x: number, y: number, angle: number, speed: number): void {
-    const projectile = this.physics.add.sprite(x, y, 'boss-projectile')
+    const projectile = this.physics.add.sprite(x, y, textureKeys.bossProjectile)
     projectile.body.allowGravity = false
     const velocity = getBossProjectileVelocity({ angle, speed })
     projectile.setVelocity(velocity.x, velocity.y)
-    projectile.setDepth(16)
+    projectile.setDepth(renderDepth.bossProjectile)
     projectile.setBlendMode(Phaser.BlendModes.ADD)
     projectile.setData('spawnedAt', this.time.now)
     this.bossProjectiles.push(projectile)
@@ -1641,8 +1676,8 @@ class GameplayMapScene extends Phaser.Scene {
     })
 
     this.player.setFlipX(target.x < startX)
-    this.player.setScale(playerActorDefinition.sprites.attack.scale)
-    this.player.setTexture(playerActorDefinition.sprites.attack.key, homingAttackPresentation.attackFrame)
+    this.player.setScale(this.actorDefinition.sprites.attack.scale)
+    this.player.setTexture(this.actorDefinition.sprites.attack.key, homingAttackPresentation.attackFrame)
     this.collectCoinsAlongLine(startX, startY, contact.x, contact.y)
     this.emitHomingTrail(startX, startY, contact.x, contact.y)
     this.player.setPosition(contact.x, contact.y)
@@ -1702,7 +1737,7 @@ class GameplayMapScene extends Phaser.Scene {
 
     for (const sample of getHomingTrailSamples({ startX, startY, endX, endY })) {
       const trail = this.add
-        .sprite(sample.x, sample.y, playerActorDefinition.sprites.attack.key, homingAttackPresentation.attackFrame)
+        .sprite(sample.x, sample.y, this.actorDefinition.sprites.attack.key, homingAttackPresentation.attackFrame)
         .setDepth(this.player.depth - 1)
         .setScale(this.player.scale)
         .setFlipX(this.player.flipX)
@@ -1746,7 +1781,7 @@ class GameplayMapScene extends Phaser.Scene {
       playerFlipX: this.player.flipX,
     })
     const hitbox = this.add
-      .image(geometry.x, geometry.y, 'attack-hitbox')
+      .image(geometry.x, geometry.y, textureKeys.attackHitbox)
       .setFlipX(geometry.flipX)
       .setVisible(false)
     const activeHitbox = { image: hitbox, consumed: false }
@@ -1808,24 +1843,23 @@ class GameplayMapScene extends Phaser.Scene {
           projectile.y,
         ),
       })
-      if (hit === 'pass-through-crouch') {
+      if (hit === 'pass-through-crouch') continue
+      if (hit !== 'hit') continue
+
+      this.destroyBossProjectile(projectile)
+      const crouching = this.isPlayerCrouching()
+      if (
+        !canApplyPlayerDamage({
+          invulnerable: this.isPlayerInvulnerable,
+          hurting: this.isPlayerHurting,
+          homingAttacking: this.isHomingAttacking,
+          crouching,
+          dead: this.isPlayerDead,
+        })
+      ) {
         continue
-      } else if (hit === 'hit') {
-        this.destroyBossProjectile(projectile)
-        const crouching = this.isPlayerCrouching()
-        if (
-          !canApplyPlayerDamage({
-            invulnerable: this.isPlayerInvulnerable,
-            hurting: this.isPlayerHurting,
-            homingAttacking: this.isHomingAttacking,
-            crouching,
-            dead: this.isPlayerDead,
-          })
-        ) {
-          continue
-        }
-        this.applyPlayerContactDamage(projectile.x)
       }
+      this.applyPlayerContactDamage(projectile.x)
     }
   }
 
@@ -2109,7 +2143,7 @@ class GameplayMapScene extends Phaser.Scene {
       statusMessageKey: 'status.bossPattern',
     })
     this.bossPatternRestartPending = true
-    this.time.delayedCall(620, () => {
+    this.time.delayedCall(bossSequenceTiming.patternRestartAfterPhaseAdvanceMs, () => {
       this.bossPatternRestartPending = false
       if (this.isPlayerDead) return
       this.startBossPattern()
@@ -2126,7 +2160,7 @@ class GameplayMapScene extends Phaser.Scene {
       body.enable = false
     }
 
-    this.time.delayedCall(800, () => {
+    this.time.delayedCall(bossSequenceTiming.goalRevealAfterDefeatMs, () => {
       if (!this.goal) return
       this.goal.sprite.setVisible(true)
       this.goal.sprite.body.enable = true
@@ -2343,7 +2377,7 @@ class GameplayMapScene extends Phaser.Scene {
       bossPhase: this.bossPhase,
     })) {
       this.bossPatternRestartPending = true
-      this.time.delayedCall(500, () => {
+      this.time.delayedCall(bossSequenceTiming.patternRestartAfterRespawnMs, () => {
         this.bossPatternRestartPending = false
         if (this.isPlayerDead) return
         this.startBossPattern()
@@ -2365,7 +2399,7 @@ class GameplayMapScene extends Phaser.Scene {
     this.playerJumpState = createMovableActorJumpState({
       now: this.time.now,
       grounded: true,
-      config: playerActorDefinition.jump,
+      config: this.actorDefinition.jump,
     })
     this.wasPlayerGroundedForSfx = true
     this.nextPlayerFootstepSfxAt = 0
@@ -2404,7 +2438,7 @@ class GameplayMapScene extends Phaser.Scene {
       state: this.playerJumpState,
       now: this.time.now,
       grounded,
-      config: playerActorDefinition.jump,
+      config: this.actorDefinition.jump,
     })
     const crouch = getPlayerCrouchState({
       crouchHeld: input.crouchHeld,
@@ -2420,7 +2454,7 @@ class GameplayMapScene extends Phaser.Scene {
       this.playerJumpState = bufferMovableActorJump({
         state: this.playerJumpState,
         now: this.time.now,
-        config: playerActorDefinition.jump,
+        config: this.actorDefinition.jump,
       })
     }
     this.wasJumpDown = input.jumpHeld
@@ -2428,13 +2462,13 @@ class GameplayMapScene extends Phaser.Scene {
     const jumpDecision = getMovableActorJumpDecision({
       state: this.playerJumpState,
       now: this.time.now,
-      config: playerActorDefinition.jump,
+      config: this.actorDefinition.jump,
     })
     this.playerJumpState = jumpDecision.state
     const jumpingThisFrame = jumpDecision.type !== 'none'
     if (jumpDecision.type !== 'none') {
       this.clearPlayerCrouch()
-      this.player.setVelocityY(playerActorDefinition.jump.velocityY)
+      this.player.setVelocityY(this.actorDefinition.jump.velocityY)
       this.emitGameplaySfx('player-footstep')
       this.nextPlayerFootstepSfxAt = this.time.now + RUNNING_FOOTSTEP_INTERVAL_MS
     }
@@ -2468,8 +2502,8 @@ class GameplayMapScene extends Phaser.Scene {
     this.updatePlayerMovementSfx(grounded, decision.direction !== 'none')
 
     if (this.isHomingAttacking) {
-      this.player.setScale(playerActorDefinition.sprites.attack.scale)
-      this.player.setTexture(playerActorDefinition.sprites.attack.key, homingAttackPresentation.attackFrame)
+      this.player.setScale(this.actorDefinition.sprites.attack.scale)
+      this.player.setTexture(this.actorDefinition.sprites.attack.key, homingAttackPresentation.attackFrame)
     } else if (this.isAttacking) {
       this.playPlayerAnimation(this.player, 'attack')
     } else if (!grounded || jumpingThisFrame) {
@@ -2489,7 +2523,7 @@ class GameplayMapScene extends Phaser.Scene {
     player: Phaser.Physics.Arcade.Sprite,
     animationKey: PlayerAnimationKey,
   ): void {
-    const sprite = playerActorDefinition.sprites[animationKey]
+    const sprite = this.actorDefinition.sprites[animationKey]
 
     player.setScale(sprite.scale)
     player.play(sprite.key, true)
@@ -2619,7 +2653,7 @@ class GameplayMapScene extends Phaser.Scene {
     if (!this.homingReticle) {
       this.homingReticle = this.add
         .image(target.x, target.y + homingAttackPresentation.reticleYOffset, homingAttackPresentation.reticleTextureKey)
-        .setDepth(20)
+        .setDepth(renderDepth.homingReticle)
         .setBlendMode(Phaser.BlendModes.ADD)
     }
 
@@ -2632,17 +2666,18 @@ class GameplayMapScene extends Phaser.Scene {
 
 export function createGameplayRendererConfig(
   input: GameplayRendererInput,
+  actorDefinition: PlayerActorDefinition = playerActorDefinition,
 ): Phaser.Types.Core.GameConfig {
   return {
     type: Phaser.AUTO,
     parent: input.parent,
-    width: 1280,
-    height: 720,
-    backgroundColor: '#05070d',
+    width: GAMEPLAY_CANVAS.width,
+    height: GAMEPLAY_CANVAS.height,
+    backgroundColor: GAMEPLAY_CANVAS.backgroundColor,
     physics: {
       default: 'arcade',
       arcade: {
-        gravity: { x: 0, y: playerActorDefinition.gravityY },
+        gravity: { x: 0, y: actorDefinition.gravityY },
         debug: false,
       },
     },
@@ -2654,7 +2689,7 @@ export function createGameplayRendererConfig(
       onHudUpdate: input.onHudUpdate,
       onSfx: input.onSfx,
       getInputSnapshot: input.getInputSnapshot,
-    })],
+    }, actorDefinition)],
   }
 }
 

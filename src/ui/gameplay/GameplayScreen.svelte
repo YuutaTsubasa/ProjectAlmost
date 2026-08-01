@@ -96,7 +96,10 @@
   }: Props = $props()
 
   let container: HTMLDivElement
-  let hudState = $state<GameplayHudState | null>(null)
+  // App wraps this component in {#key getGameplayScreenKey(...)}, so it is
+  // recreated whenever `stage` changes; capturing the initial value is intended.
+  // svelte-ignore state_referenced_locally
+  let hudState = $state<GameplayHudState | null>(createInitialGameplayHudState(stage))
   let pauseState = $state<GameplayPauseState>({ mode: 'playing' })
   let renderer: ReturnType<typeof createGameplayRenderer> | null = null
   let pauseSettingsScreen = $state<SettingsScreen>({
@@ -123,10 +126,6 @@
       resultVisible: Boolean(hudState?.result),
       paused: pauseState.mode !== 'playing',
     })
-  })
-
-  $effect(() => {
-    hudState = createInitialGameplayHudState(stage)
   })
 
   function handleResultAction(action: StageResultActionType): void {

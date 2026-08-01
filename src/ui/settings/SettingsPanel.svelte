@@ -1,8 +1,26 @@
+<script module lang="ts">
+  import type { LocalizationKey } from '../../domain/data/localize/localize'
+  import type { SettingsRowId } from '../../domain/settings/settings'
+
+  const rowLabelRefs: Record<SettingsRowId, LocalizationKey> = {
+    'master-volume': 'settings.masterVolume',
+    'music-volume': 'settings.musicVolume',
+    'sfx-volume': 'settings.sfxVolume',
+    language: 'settings.language',
+    fullscreen: 'settings.fullscreen',
+    'screen-shake': 'settings.screenShake',
+    vibration: 'settings.vibration',
+    reset: 'settings.reset',
+    'delete-save': 'settings.deleteSave',
+    back: 'common.back',
+  }
+</script>
+
 <script lang="ts">
   import type { SettingsScreen } from '../../domain/app/appFlow'
-  import type { LocalizationKey, LocaleCode, LocalizeData } from '../../domain/data/localize/localize'
+  import type { LocaleCode, LocalizeData } from '../../domain/data/localize/localize'
   import { resolveLocalizedText } from '../../domain/data/localize/localize'
-  import { SETTINGS_ROWS, type GameSettings, type SettingsRowId } from '../../domain/settings/settings'
+  import { SETTINGS_ROWS, type GameSettings } from '../../domain/settings/settings'
   import ControlHints from '../controls/ControlHints.svelte'
 
   type Props = {
@@ -30,19 +48,6 @@
     onConfirmDelete,
     onBackLabel = 'common.back',
   }: Props = $props()
-
-  const rowLabelRefs: Record<SettingsRowId, LocalizationKey> = {
-    'master-volume': 'settings.masterVolume',
-    'music-volume': 'settings.musicVolume',
-    'sfx-volume': 'settings.sfxVolume',
-    language: 'settings.language',
-    fullscreen: 'settings.fullscreen',
-    'screen-shake': 'settings.screenShake',
-    vibration: 'settings.vibration',
-    reset: 'settings.reset',
-    'delete-save': 'settings.deleteSave',
-    back: 'common.back',
-  }
 
   function text(key: LocalizationKey): string {
     return resolveLocalizedText(localizeData, locale, key)

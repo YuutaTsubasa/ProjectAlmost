@@ -1,4 +1,10 @@
-export type ClearRank = 'S' | 'A' | 'B' | 'C' | 'D'
+export const CLEAR_RANKS = ['S', 'A', 'B', 'C', 'D'] as const
+
+export type ClearRank = (typeof CLEAR_RANKS)[number]
+
+export function isClearRank(value: unknown): value is ClearRank {
+  return typeof value === 'string' && (CLEAR_RANKS as readonly string[]).includes(value)
+}
 
 export type RankTargets = {
   sTime: number
