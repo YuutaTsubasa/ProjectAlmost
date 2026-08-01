@@ -12,4 +12,15 @@ describe('LoadingScreen UI', () => {
     expect(source).not.toContain('onControlIntent')
     expect(source).not.toContain('createBrowserAssetPreloader')
   })
+
+  it('uses the approved Title and HUD visual structure', () => {
+    expect(source).toContain('loading-screen-sky')
+    expect(source).toContain('loading-screen-logo')
+    expect(source).toContain('loading-screen-panel')
+    expect(source).toContain('loading-screen-label')
+    expect(source).toContain('loading-screen-meter')
+    expect(source).toContain('loading-screen-fill')
+    expect(source).not.toContain('loading-screen-mark')
+    expect(source).not.toContain('loading-screen-progress')
+  })
 })
