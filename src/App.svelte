@@ -15,7 +15,11 @@
     selectTitleMenuItem,
     selectWorld,
   } from './domain/app/appFlow'
-  import { createMusicCommand, createSfxCommand } from './application/audio/audioCommands'
+  import {
+    createMusicCommand,
+    createSfxCommand,
+    getGameplayMusicContext,
+  } from './application/audio/audioCommands'
   import { getControlIntentSfxAction } from './application/audio/audioEvents'
   import { createCharacterInfoViewModel } from './application/character/characterInfoPresenter'
   import {
@@ -82,7 +86,7 @@
       stages: projectData.stages,
     }),
   )
-  let audio: BrowserAudioController | undefined
+  let audio = $state<BrowserAudioController | undefined>(undefined)
   const characterInfo = createCharacterInfoViewModel(getCharacterProfile(selectedCharacterId))
   const locale = $derived(settings.language)
   const stageOrder = projectData.stages.order
@@ -113,20 +117,12 @@
   }
 
   function currentGameplayMusicContext() {
-    if (appState.screen.type !== 'gameplay') return undefined
-    const stage = projectData.stages.items[appState.screen.stageId]
-
-    return {
-      stageId: appState.screen.stageId,
-      isBoss: stage?.isBoss ?? false,
-      resultVisible: gameplayMusicState.resultVisible,
-      paused: gameplayMusicState.paused,
-    }
+    return getGameplayMusicContext(appState.screen, projectData.stages, gameplayMusicState)
   }
 
-  function syncMusicForCurrentState() {
+  $effect(() => {
     audio?.execute(createMusicCommand(appState.screen, settings, currentGameplayMusicContext()))
-  }
+  })
 
   function playUiSfx(action: 'move' | 'confirm' | 'back') {
     audio?.execute(createSfxCommand(action, settings))
@@ -153,7 +149,6 @@
 
     if (!style) {
       applyScreenChange()
-      syncMusicForCurrentState()
       return
     }
 
@@ -161,7 +156,6 @@
     sceneTransition = { phase: 'cover', style }
     await waitForSceneTransition(timing.coverMs)
     applyScreenChange()
-    syncMusicForCurrentState()
     await waitForSceneTransition(timing.holdMs)
     sceneTransition = { phase: 'reveal', style }
     await waitForSceneTransition(timing.revealMs)
@@ -177,13 +171,11 @@
     }
 
     gameplayMusicState = state
-    syncMusicForCurrentState()
   }
 
   function syncSettings(nextSettings: GameSettings) {
     settings = nextSettings
     localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settings))
-    syncMusicForCurrentState()
   }
 
   function actualFullscreen() {
@@ -243,7 +235,6 @@
 
     if (previousScreen.type === nextState.screen.type && nextState.screen.type !== 'gameplay') {
       applyNextState()
-      syncMusicForCurrentState()
       return
     }
 
@@ -260,7 +251,6 @@
     ) {
       playUiSfx('move')
     }
-    syncMusicForCurrentState()
   }
 
   function handleConfirmWorld() {
@@ -281,7 +271,6 @@
     ) {
       playUiSfx('move')
     }
-    syncMusicForCurrentState()
   }
 
   function handleConfirmStage() {
@@ -429,7 +418,6 @@
 
     const unlockAudio = () => {
       audio?.unlock()
-      syncMusicForCurrentState()
     }
 
     const handleFullscreenChange = () => {

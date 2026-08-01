@@ -30,14 +30,17 @@ describe('App stage progression record wiring', () => {
     expect(source).toContain('let gameplayMusicState = $state<GameplayMusicState>')
     expect(source).toContain('function currentGameplayMusicContext()')
     expect(source).toContain('createMusicCommand(appState.screen, settings, currentGameplayMusicContext())')
+    expect(source).toMatch(
+      /\$effect\(\(\) => \{\s*audio\?\.execute\(createMusicCommand\(appState\.screen, settings, currentGameplayMusicContext\(\)\)\)\s*\}\)/,
+    )
     expect(source).toContain('function handleGameplayMusicStateChange(state: GameplayMusicState)')
     expect(source).toContain('onGameplayMusicStateChange={handleGameplayMusicStateChange}')
   })
 
-  it('resets gameplay music state before syncing music after control intent enters gameplay', () => {
+  it('resets gameplay music state when control intent enters gameplay', () => {
     expect(source).toContain("const enteredGameplay = previousScreen.type !== 'gameplay' && appState.screen.type === 'gameplay'")
     expect(source).toMatch(
-      /function handleControlIntent\(intent: ControlIntent\) \{[\s\S]*const enteredGameplay = previousScreen\.type !== 'gameplay' && appState\.screen\.type === 'gameplay'[\s\S]*if \(enteredGameplay\) \{[\s\S]*gameplayMusicState = initialGameplayMusicState[\s\S]*\}[\s\S]*syncMusicForCurrentState\(\)/,
+      /function handleControlIntent\(intent: ControlIntent\) \{[\s\S]*const enteredGameplay = previousScreen\.type !== 'gameplay' && appState\.screen\.type === 'gameplay'[\s\S]*if \(enteredGameplay\) \{[\s\S]*gameplayMusicState = initialGameplayMusicState/,
     )
   })
 
@@ -119,7 +122,7 @@ describe('App scene transition coordinator wiring', () => {
   it('blocks styled transition reentry before applying screen changes while keeping null-style updates immediate', () => {
     expect(source).toContain('shouldBlockSceneTransitionReentry')
     expect(source).toMatch(
-      /const style = resolveSceneTransitionStyle\(previousScreen, nextScreen\)[\s\S]*if \(shouldBlockSceneTransitionReentry\(style, sceneTransition\)\) \{\s*return\s*\}[\s\S]*if \(!style\) \{[\s\S]*applyScreenChange\(\)[\s\S]*syncMusicForCurrentState\(\)[\s\S]*return/,
+      /const style = resolveSceneTransitionStyle\(previousScreen, nextScreen\)[\s\S]*if \(shouldBlockSceneTransitionReentry\(style, sceneTransition\)\) \{\s*return\s*\}[\s\S]*if \(!style\) \{[\s\S]*applyScreenChange\(\)[\s\S]*return/,
     )
   })
 })
