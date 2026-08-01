@@ -36,18 +36,14 @@ describe('shell backdrop resolver', () => {
     })
   })
 
-  it('preserves the previous backdrop while settings are open', () => {
+  it('uses the world 01 fallback background while settings are open', () => {
     expect(resolveShellBackdrop({
       screen: { type: 'settings', selectedItemIndex: 0, deleteConfirm: null },
       worlds: projectData.worlds,
       stages: projectData.stages,
-      previous: {
-        assetRef: '/assets/maps/frostveil_peaks_stage_select.webp',
-        theme: 'snow',
-      },
     })).toEqual({
-      assetRef: '/assets/maps/frostveil_peaks_stage_select.webp',
-      theme: 'snow',
+      assetRef: '/assets/maps/white_palace_stage_select.webp',
+      theme: 'palace',
     })
   })
 

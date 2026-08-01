@@ -95,11 +95,9 @@ describe('App stage select progression UI wiring', () => {
 
 describe('App shell backdrop wiring', () => {
   it('routes shell backdrop through the pure backdrop resolver', () => {
-    expect(source).toContain("import { resolveShellBackdrop, type ShellBackdrop } from './application/shell/shellBackdrop'")
-    expect(source).toContain('let shellBackdrop = $state<ShellBackdrop>')
-    expect(source).toContain('function syncShellBackdrop()')
+    expect(source).toContain("import { resolveShellBackdrop } from './application/shell/shellBackdrop'")
+    expect(source).toContain('const shellBackdrop = $derived(')
     expect(source).toContain('resolveShellBackdrop({')
-    expect(source).toContain('previous: shellBackdrop,')
     expect(source).toContain('style:--shell-backdrop={`url("${shellBackdrop.assetRef}")`}')
     expect(source).toContain('class={`shell theme-${shellBackdrop.theme}`}')
   })
@@ -121,7 +119,7 @@ describe('App scene transition coordinator wiring', () => {
   it('blocks styled transition reentry before applying screen changes while keeping null-style updates immediate', () => {
     expect(source).toContain('shouldBlockSceneTransitionReentry')
     expect(source).toMatch(
-      /const style = resolveSceneTransitionStyle\(previousScreen, nextScreen\)[\s\S]*if \(shouldBlockSceneTransitionReentry\(style, sceneTransition\)\) \{\s*return\s*\}[\s\S]*if \(!style\) \{[\s\S]*applyScreenChange\(\)[\s\S]*syncShellBackdrop\(\)[\s\S]*syncMusicForCurrentState\(\)[\s\S]*return/,
+      /const style = resolveSceneTransitionStyle\(previousScreen, nextScreen\)[\s\S]*if \(shouldBlockSceneTransitionReentry\(style, sceneTransition\)\) \{\s*return\s*\}[\s\S]*if \(!style\) \{[\s\S]*applyScreenChange\(\)[\s\S]*syncMusicForCurrentState\(\)[\s\S]*return/,
     )
   })
 })

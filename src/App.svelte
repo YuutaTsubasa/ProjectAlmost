@@ -37,7 +37,7 @@
     shouldBlockSceneTransitionReentry,
     type SceneTransitionState,
   } from './application/sceneTransition/sceneTransitionPolicy'
-  import { resolveShellBackdrop, type ShellBackdrop } from './application/shell/shellBackdrop'
+  import { resolveShellBackdrop } from './application/shell/shellBackdrop'
   import { PRODUCT_NAME } from './domain/app/projectIdentity'
   import { getCharacterProfile, selectedCharacterId } from './domain/character/characterProfile'
   import { projectData } from './domain/data/projectData'
@@ -75,9 +75,9 @@
   let debugUnlockAllStages = $state(false)
   let gameplayMusicState = $state<GameplayMusicState>(initialGameplayMusicState)
   let sceneTransition = $state<SceneTransitionState>(initialSceneTransitionState)
-  let shellBackdrop = $state<ShellBackdrop>(
+  const shellBackdrop = $derived(
     resolveShellBackdrop({
-      screen: initialAppState.screen,
+      screen: appState.screen,
       worlds: projectData.worlds,
       stages: projectData.stages,
     }),
@@ -128,15 +128,6 @@
     audio?.execute(createMusicCommand(appState.screen, settings, currentGameplayMusicContext()))
   }
 
-  function syncShellBackdrop() {
-    shellBackdrop = resolveShellBackdrop({
-      screen: appState.screen,
-      worlds: projectData.worlds,
-      stages: projectData.stages,
-      previous: shellBackdrop,
-    })
-  }
-
   function playUiSfx(action: 'move' | 'confirm' | 'back') {
     audio?.execute(createSfxCommand(action, settings))
   }
@@ -162,7 +153,6 @@
 
     if (!style) {
       applyScreenChange()
-      syncShellBackdrop()
       syncMusicForCurrentState()
       return
     }
@@ -171,7 +161,6 @@
     sceneTransition = { phase: 'cover', style }
     await waitForSceneTransition(timing.coverMs)
     applyScreenChange()
-    syncShellBackdrop()
     syncMusicForCurrentState()
     await waitForSceneTransition(timing.holdMs)
     sceneTransition = { phase: 'reveal', style }
@@ -254,7 +243,6 @@
 
     if (previousScreen.type === nextState.screen.type && nextState.screen.type !== 'gameplay') {
       applyNextState()
-      syncShellBackdrop()
       syncMusicForCurrentState()
       return
     }
@@ -272,7 +260,6 @@
     ) {
       playUiSfx('move')
     }
-    syncShellBackdrop()
     syncMusicForCurrentState()
   }
 
@@ -294,7 +281,6 @@
     ) {
       playUiSfx('move')
     }
-    syncShellBackdrop()
     syncMusicForCurrentState()
   }
 
@@ -419,14 +405,12 @@
   function handleCancelDelete() {
     playUiSfx('back')
     appState = cancelDeleteConfirm(appState)
-    syncShellBackdrop()
   }
 
   function handleConfirmDelete() {
     playUiSfx('confirm')
     stageProgressionSave = deleteStageProgressionSave(localStorage)
     appState = cancelDeleteConfirm(appState)
-    syncShellBackdrop()
   }
 
   onMount(() => {
