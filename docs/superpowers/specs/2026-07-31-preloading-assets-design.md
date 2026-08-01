@@ -70,6 +70,21 @@ It receives:
 
 It emits no navigation decisions. `App.svelte` coordinates when Loading appears and when the next screen becomes interactive.
 
+### Visual Parity
+
+The Loading screen must match the current rebuild art direction instead of introducing a separate dark sci-fi system style.
+
+Use the approved Title/HUD hybrid direction:
+
+- bright blue-white background treatment, closer to Title and Stage Select than the previous dark navy gradient
+- `PROJECT ALMOST` title/logo language with the same light, airy uppercase feel as the Title screen
+- HUD/Stage Select style translucent white-blue panel with blue linework, inset border, and soft backdrop blur
+- gold status accent that matches existing HUD dots, stars, and result highlights
+- blue-to-gold progress treatment that fits the HUD palette
+- warning display as a restrained gold HUD notice, not a red error surface
+
+The screen should still be sparse and transitional. It must not become a marketing-style splash page or a separate menu surface.
+
 ## Asset Groups
 
 `boot`:
@@ -156,6 +171,7 @@ Required tests:
 - browser loader reuses pending and completed sources
 - App source contract proves stage confirm, retry, and next-stage flows route gameplay entry through the preload gate
 - Loading screen source contract proves it receives progress data and has no app-flow mutation logic
+- Loading screen source contract proves the visual styling uses the approved Title/HUD hybrid classes and no longer uses the previous dark-tech mark/progress structure
 
 Before finishing, run:
 
@@ -179,4 +195,5 @@ Also verify in browser:
 - Gameplay screen is not mounted until selected stage gameplay assets finish preloading.
 - Failed individual assets do not permanently block the app.
 - The implementation preserves TDD, DDD, FP, and Reactive boundaries.
+- Loading screen visuals are consistent with the Title, Stage Select, and Gameplay HUD visual language.
 - Work remains on feature branch `codex/preloading-assets` until the user explicitly approves merging.
