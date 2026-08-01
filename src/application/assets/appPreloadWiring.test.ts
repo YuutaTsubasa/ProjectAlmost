@@ -68,7 +68,7 @@ describe('App preload wiring', () => {
     expectGameplayPreloadBeforeTransition('handleNextGameplayStage')
   })
 
-  it('reserves gameplay entry before preload and releases it only after the transition completes', () => {
+  it('reserves gameplay entry before preload and hides loading during the covered gameplay screen swap', () => {
     const entrySource = getFunctionSource('enterGameplay')
     const reservationCheckIndex = entrySource.indexOf('if (gameplayEntryReserved) return')
     const reservationSetIndex = entrySource.indexOf('gameplayEntryReserved = true')
@@ -79,17 +79,21 @@ describe('App preload wiring', () => {
     const transitionIndex = entrySource.indexOf('await transitionToScreen(nextState.screen')
     const releaseIndex = entrySource.lastIndexOf('gameplayEntryReserved = false')
     const transitionBlockSource = getFunctionSource('shouldBlockGameplayEntryTransition')
+    const transitionCallbackBody = getTransitionCallbackBody(entrySource)
+    const hideLoadingIndex = transitionCallbackBody.indexOf('gameplayPreloadActive = false')
+    const applyGameplayIndex = transitionCallbackBody.indexOf('appState = nextState')
 
     expect(reservationCheckIndex).toBeGreaterThan(-1)
     expect(reservationSetIndex).toBeGreaterThan(reservationCheckIndex)
     expect(transitionBlockCheckIndex).toBeGreaterThan(reservationSetIndex)
     expect(preloadIndex).toBeGreaterThan(transitionBlockCheckIndex)
     expect(transitionIndex).toBeGreaterThan(preloadIndex)
-    expect(getTransitionCallbackBody(entrySource)).toContain('appState = nextState')
+    expect(hideLoadingIndex).toBeGreaterThan(-1)
+    expect(applyGameplayIndex).toBeGreaterThan(hideLoadingIndex)
     expect(transitionBlockSource).toContain('resolveSceneTransitionStyle(appState.screen, nextScreen)')
     expect(transitionBlockSource).toContain('shouldBlockSceneTransitionReentry(style, sceneTransition)')
     expect(entrySource).toMatch(
-      /finally \{\s*gameplayPreloadActive = false\s*gameplayEntryReserved = false\s*\}/,
+      /finally \{\s*gameplayEntryReserved = false\s*\}/,
     )
     expect(releaseIndex).toBeGreaterThan(transitionIndex)
   })

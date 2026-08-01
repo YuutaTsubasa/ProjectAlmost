@@ -130,7 +130,8 @@ The planner must return unique asset sources only. Runtime paths must start with
 3. App loads `shared-gameplay + stage` assets for that stage before mutating `appState.screen` to gameplay.
 4. During this wait, `LoadingScreen` is shown inside the frame instead of mounting `GameplayScreen`.
 5. Existing scene transition timing may still wrap the final screen mutation, but the gameplay Phaser scene should mount only after the preload plan has completed.
-6. Retry and Next Stage flows also use the same stage preload gate.
+6. Once the gameplay transition is fully covered, the screen swap must hide `LoadingScreen` before reveal starts so players fade into gameplay, not back into the completed Loading screen.
+7. Retry and Next Stage flows also use the same stage preload gate.
 
 ### Background Preload
 

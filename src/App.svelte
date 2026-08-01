@@ -235,11 +235,11 @@
 
       await preloadGameplayEntry(nextState.screen)
       await transitionToScreen(nextState.screen, () => {
+        gameplayPreloadActive = false
         appState = nextState
         gameplayMusicState = initialGameplayMusicState
       })
     } finally {
-      gameplayPreloadActive = false
       gameplayEntryReserved = false
     }
   }
