@@ -14,20 +14,26 @@ function getFunctionSource(functionName: string): string {
   return appSource.slice(start, end === Infinity ? undefined : end)
 }
 
-function expectGameplayPreloadBeforeScreenMutation(handlerName: string) {
+function expectGameplayPreloadBeforeTransition(handlerName: string) {
   const handlerSource = getFunctionSource(handlerName)
   const preloadIndex = handlerSource.indexOf('await preloadGameplayEntry(nextState.screen)')
-  const mutationIndex = handlerSource.indexOf('appState = nextState')
+  const transitionIndex = handlerSource.indexOf('await transitionToScreen(nextState.screen')
 
   expect(preloadIndex).toBeGreaterThan(-1)
-  expect(mutationIndex).toBeGreaterThan(preloadIndex)
+  expect(transitionIndex).toBeGreaterThan(preloadIndex)
+  expect(handlerSource).toContain('const transitionAccepted = await transitionToScreen')
+  expect(handlerSource).toMatch(
+    /if \(!transitionAccepted\) \{\s*gameplayPreloadActive = false\s*\}/,
+  )
 }
 
 describe('App preload wiring', () => {
   it('renders LoadingScreen before boot is ready', () => {
     expect(appSource).toContain("import LoadingScreen from './ui/loading/LoadingScreen.svelte'")
     expect(appSource).toContain('bootPreloadView')
-    expect(appSource).toContain('LoadingScreen')
+    expect(appSource).toMatch(
+      /\{#if !bootPreloadReady \|\| gameplayPreloadActive\}\s*<LoadingScreen[\s\S]*?\/>\s*\{:else if appState\.screen\.type === 'title-intro'/,
+    )
   })
 
   it('awaits the preload gate before each gameplay entry handler mutates screens', () => {
@@ -35,9 +41,9 @@ describe('App preload wiring', () => {
     expect(appSource).toContain('buildStagePreloadPlan(projectData, stage)')
     expect(appSource).toContain('buildSharedGameplayPreloadPlan()')
 
-    expectGameplayPreloadBeforeScreenMutation('handleConfirmStage')
-    expectGameplayPreloadBeforeScreenMutation('handleRetryGameplayStage')
-    expectGameplayPreloadBeforeScreenMutation('handleNextGameplayStage')
+    expectGameplayPreloadBeforeTransition('handleConfirmStage')
+    expectGameplayPreloadBeforeTransition('handleRetryGameplayStage')
+    expectGameplayPreloadBeforeTransition('handleNextGameplayStage')
   })
 
   it('delegates Stage Select control confirmation to the gated stage confirmation handler', () => {
