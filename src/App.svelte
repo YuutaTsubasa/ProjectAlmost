@@ -300,6 +300,16 @@
     const previousScreen = appState.screen
     const previousFullscreen = settings.fullscreen
     const nextState = applyControlIntent({ ...appState, settings, isStageUnlocked: isGameplayStageUnlocked }, intent)
+
+    if (
+      previousScreen.type === 'stage-select' &&
+      intent === 'confirm' &&
+      nextState.screen.type === 'gameplay'
+    ) {
+      void handleConfirmStage()
+      return
+    }
+
     const sfxAction = getControlIntentSfxAction(previousScreen, nextState.screen, intent)
 
     const applyNextState = () => {
