@@ -21,6 +21,25 @@ function getOnMountSource(): string {
   return appSource.slice(start, end === -1 ? undefined : end)
 }
 
+function getAcceptedTransitionCallbackBody(handlerSource: string): string {
+  const transitionStart = handlerSource.indexOf(
+    'const transitionAccepted = await transitionToScreen(nextState.screen',
+  )
+  const callbackStart = handlerSource.indexOf('() => {', transitionStart)
+  const bodyStart = callbackStart + '() => '.length
+  let depth = 0
+
+  for (let index = bodyStart; index < handlerSource.length; index += 1) {
+    if (handlerSource[index] === '{') depth += 1
+    if (handlerSource[index] === '}') {
+      depth -= 1
+      if (depth === 0) return handlerSource.slice(bodyStart, index + 1)
+    }
+  }
+
+  return ''
+}
+
 function expectGameplayPreloadBeforeTransition(handlerName: string) {
   const handlerSource = getFunctionSource(handlerName)
   const preloadIndex = handlerSource.indexOf('await preloadGameplayEntry(nextState.screen)')
@@ -32,10 +51,7 @@ function expectGameplayPreloadBeforeTransition(handlerName: string) {
   expect(preloadIndex).toBeGreaterThan(-1)
   expect(transitionIndex).toBeGreaterThan(preloadIndex)
   expect(mutationIndex).toBeGreaterThan(transitionIndex)
-  expect(handlerSource.slice(transitionIndex, mutationIndex)).toContain('() => {')
-  expect(handlerSource.slice(transitionIndex)).toMatch(
-    /const transitionAccepted = await transitionToScreen\(nextState\.screen, \(\) => \{[\s\S]*appState = nextState/,
-  )
+  expect(getAcceptedTransitionCallbackBody(handlerSource)).toContain('appState = nextState')
   expect(handlerSource).toContain('const transitionAccepted = await transitionToScreen')
   expect(handlerSource).toMatch(
     /if \(!transitionAccepted\) \{\s*gameplayPreloadActive = false\s*\}/,
@@ -65,6 +81,22 @@ describe('App preload wiring', () => {
     expectGameplayPreloadBeforeTransition('handleConfirmStage')
     expectGameplayPreloadBeforeTransition('handleRetryGameplayStage')
     expectGameplayPreloadBeforeTransition('handleNextGameplayStage')
+  })
+
+  it('preloads highlighted World Select and Stage Select content in the background', () => {
+    const worldSelectionSource = getFunctionSource('handleSelectWorld')
+    const stageSelectionSource = getFunctionSource('handleSelectStage')
+    const backgroundPreloadSource = getFunctionSource('preloadStageInBackground')
+
+    expect(worldSelectionSource).toContain(
+      'preloadWorldRepresentativeInBackground(appState.screen.selectedWorldIndex)',
+    )
+    expect(stageSelectionSource).toContain(
+      'preloadStageSelectionInBackground(appState.screen.worldId, appState.screen.selectedStageIndex)',
+    )
+    expect(backgroundPreloadSource).toMatch(
+      /void preloader\.preloadInBackground\(buildStagePreloadPlan\(projectData, stage\)\)/,
+    )
   })
 
   it('delegates Stage Select control confirmation to the gated stage confirmation handler', () => {
