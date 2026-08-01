@@ -14,13 +14,28 @@ function getFunctionSource(functionName: string): string {
   return appSource.slice(start, end === Infinity ? undefined : end)
 }
 
+function getOnMountSource(): string {
+  const start = appSource.indexOf('onMount(() => {')
+  const end = appSource.indexOf('\n  })', start)
+
+  return appSource.slice(start, end === -1 ? undefined : end)
+}
+
 function expectGameplayPreloadBeforeTransition(handlerName: string) {
   const handlerSource = getFunctionSource(handlerName)
   const preloadIndex = handlerSource.indexOf('await preloadGameplayEntry(nextState.screen)')
-  const transitionIndex = handlerSource.indexOf('await transitionToScreen(nextState.screen')
+  const transitionIndex = handlerSource.indexOf(
+    'const transitionAccepted = await transitionToScreen(nextState.screen',
+  )
+  const mutationIndex = handlerSource.indexOf('appState = nextState')
 
   expect(preloadIndex).toBeGreaterThan(-1)
   expect(transitionIndex).toBeGreaterThan(preloadIndex)
+  expect(mutationIndex).toBeGreaterThan(transitionIndex)
+  expect(handlerSource.slice(transitionIndex, mutationIndex)).toContain('() => {')
+  expect(handlerSource.slice(transitionIndex)).toMatch(
+    /const transitionAccepted = await transitionToScreen\(nextState\.screen, \(\) => \{[\s\S]*appState = nextState/,
+  )
   expect(handlerSource).toContain('const transitionAccepted = await transitionToScreen')
   expect(handlerSource).toMatch(
     /if \(!transitionAccepted\) \{\s*gameplayPreloadActive = false\s*\}/,
@@ -31,6 +46,12 @@ describe('App preload wiring', () => {
   it('renders LoadingScreen before boot is ready', () => {
     expect(appSource).toContain("import LoadingScreen from './ui/loading/LoadingScreen.svelte'")
     expect(appSource).toContain('bootPreloadView')
+    expect(appSource).toMatch(
+      /const bootPreloadReady = \$derived\(\s*bootPreloadView\.status === 'ready' \|\|\s*bootPreloadView\.status === 'ready-with-errors'/,
+    )
+    expect(getOnMountSource()).toMatch(
+      /void preloader\.preload\(buildBootPreloadPlan\(projectData\), \{\s*phase: 'boot',\s*onProgress:/,
+    )
     expect(appSource).toMatch(
       /\{#if !bootPreloadReady \|\| gameplayPreloadActive\}\s*<LoadingScreen[\s\S]*?\/>\s*\{:else if appState\.screen\.type === 'title-intro'/,
     )
