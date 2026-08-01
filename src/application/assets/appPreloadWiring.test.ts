@@ -111,6 +111,9 @@ describe('App preload wiring', () => {
       /appState = nextState[\s\S]*?preloadStageSelectionInBackground\(nextState\.screen\.worldId, nextState\.screen\.selectedStageIndex\)/,
     )
     expect(controlIntentSource).toMatch(
+      /if \(\s*previousScreen\.type === 'world-select' &&\s*intent === 'confirm' &&\s*nextState\.screen\.type === 'stage-select'\s*\) \{\s*handleConfirmWorld\(\)\s*return\s*\}/,
+    )
+    expect(controlIntentSource).toMatch(
       /previousScreen\.type === 'stage-select'[\s\S]*?previousScreen\.selectedStageIndex !== nextState\.screen\.selectedStageIndex[\s\S]*?preloadStageSelectionInBackground\(nextState\.screen\.worldId, nextState\.screen\.selectedStageIndex\)/,
     )
     expect(backgroundPreloadSource).toMatch(

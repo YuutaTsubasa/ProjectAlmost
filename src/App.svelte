@@ -327,6 +327,15 @@
     const nextState = applyControlIntent({ ...appState, settings, isStageUnlocked: isGameplayStageUnlocked }, intent)
 
     if (
+      previousScreen.type === 'world-select' &&
+      intent === 'confirm' &&
+      nextState.screen.type === 'stage-select'
+    ) {
+      handleConfirmWorld()
+      return
+    }
+
+    if (
       previousScreen.type === 'stage-select' &&
       intent === 'confirm' &&
       nextState.screen.type === 'gameplay'
