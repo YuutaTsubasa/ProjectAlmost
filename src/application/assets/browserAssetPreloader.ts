@@ -80,6 +80,7 @@ async function loadWithBrowser(asset: PreloadAsset, signal: AbortSignal): Promis
 
   const response = await fetch(asset.source, { cache: 'force-cache', signal })
   if (!response.ok) throw new Error(`${response.status} ${response.statusText}`.trim())
+  await response.arrayBuffer()
 }
 
 function normalizePositiveInteger(value: number | undefined, fallback: number): number {
@@ -154,15 +155,15 @@ export function createBrowserAssetPreloader(options: BrowserAssetPreloaderOption
         }, (error) => {
           rejectRequest(error)
         })
+        .finally(() => {
+          if (pendingSources.get(asset.source) === request) pendingSources.delete(asset.source)
+          releaseSlot()
+        })
 
       void sourceLoad
         .then(() => {
           completedSources.add(asset.source)
         }, () => undefined)
-        .finally(() => {
-          if (pendingSources.get(asset.source) === request) pendingSources.delete(asset.source)
-          releaseSlot()
-        })
     })
     runQueuedLoads()
 

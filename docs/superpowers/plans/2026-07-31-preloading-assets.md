@@ -331,7 +331,6 @@ describe('LoadingScreen UI', () => {
   it('is presentation-only and renders progress inputs', () => {
     expect(source).toContain('progress:')
     expect(source).toContain('phaseLabel:')
-    expect(source).toContain('productName:')
     expect(source).toContain('warningLabel:')
     expect(source).toContain('aria-valuenow={progress.percent}')
     expect(source).not.toContain('appState')
@@ -359,7 +358,7 @@ type LoadingProgressView = {
 }
 ```
 
-Render product name, localized title/phase, a progress bar, numeric percent, and warning label only when `warningCount > 0`. Add `.loading-screen` rules to `src/app.css` with restrained prototype-adjacent visual treatment.
+Render localized title/phase, a progress bar, numeric percent, and warning label only when `warningCount > 0`. Add `.loading-screen` rules to `src/app.css` with restrained prototype-adjacent visual treatment.
 
 - [ ] **Step 6: Run Loading UI tests**
 

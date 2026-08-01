@@ -64,7 +64,6 @@ Add a presentation-only `LoadingScreen.svelte`.
 
 It receives:
 
-- product name
 - progress summary
 - current phase label from localized application text
 - optional non-fatal warning count

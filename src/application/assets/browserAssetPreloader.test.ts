@@ -75,7 +75,7 @@ describe('browser asset preloader', () => {
     }])
   })
 
-  it('reuses pending physical work after a logical timeout', async () => {
+  it('retries a stalled source after a logical timeout', async () => {
     let calls = 0
     const preloader = createBrowserAssetPreloader({
       timeoutMs: 5,
@@ -88,7 +88,7 @@ describe('browser asset preloader', () => {
     await preloader.preload([imageAsset], { phase: 'boot' })
     await preloader.preload([imageAsset], { phase: 'boot' })
 
-    expect(calls).toBe(1)
+    expect(calls).toBe(2)
   })
 
   it('caches a physical success that completes after its logical timeout', async () => {
@@ -225,6 +225,70 @@ describe('browser asset preloader', () => {
       cache: 'force-cache',
       signal: fetchSignal,
     })
+  })
+
+  it('waits for browser fetch response bodies before reporting non-image assets as loaded', async () => {
+    let releaseBody!: () => void
+    let settled = false
+    const bodyRead = vi.fn(() => new Promise<ArrayBuffer>((resolve) => {
+      releaseBody = () => resolve(new ArrayBuffer(0))
+    }))
+    vi.stubGlobal('fetch', vi.fn(() => Promise.resolve({
+      ok: true,
+      status: 200,
+      statusText: 'OK',
+      arrayBuffer: bodyRead,
+    } as unknown as Response)))
+    const audioAsset = { ...imageAsset, id: 'music', source: '/assets/music.mp3', kind: 'audio' as const }
+    const preloader = createBrowserAssetPreloader()
+
+    const preload = preloader.preload([audioAsset], { phase: 'boot' }).then((result) => {
+      settled = true
+      return result
+    })
+    await new Promise((resolve) => setTimeout(resolve, 0))
+
+    expect(bodyRead).toHaveBeenCalledTimes(1)
+    expect(settled).toBe(false)
+
+    releaseBody()
+
+    expect(await preload).toMatchObject({ status: 'ready', failures: [] })
+  })
+
+  it('releases queued assets after a logical timeout even when physical work ignores abort', async () => {
+    const startedSources: string[] = []
+    const firstAsset = { ...imageAsset, id: 'stalled', source: '/assets/stalled.webp' }
+    const secondAsset = { ...imageAsset, id: 'queued', source: '/assets/queued.webp' }
+    const preloader = createBrowserAssetPreloader({
+      concurrency: 1,
+      timeoutMs: 5,
+      loadSource: (asset) => {
+        startedSources.push(asset.source)
+        if (asset.source === firstAsset.source) return new Promise<void>(() => undefined)
+
+        return Promise.resolve()
+      },
+    })
+
+    const result = await Promise.race([
+      preloader.preload([firstAsset, secondAsset], { phase: 'boot' }),
+      new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('queued asset did not start after logical timeout')), 100)
+      }),
+    ])
+
+    expect(result).toMatchObject({
+      status: 'ready-with-errors',
+      completed: 2,
+      total: 2,
+      failures: [{
+        source: firstAsset.source,
+        kind: firstAsset.kind,
+        message: 'Asset load timed out after 5ms',
+      }],
+    })
+    expect(startedSources).toEqual([firstAsset.source, secondAsset.source])
   })
 
   it('aborts and clears a stalled browser image before starting queued work', async () => {
