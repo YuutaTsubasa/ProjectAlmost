@@ -62,6 +62,10 @@ function getStageIdForSelection(screen: StageSelectScreen): StageId {
   return formatStageId(screen.selectedWorldIndex + 1, screen.selectedStageIndex + 1)
 }
 
+function clampWorldIndex(index: number): number {
+  return Math.min(Math.max(0, index), WORLD_COUNT - 1)
+}
+
 export type StageUnlockGuard = {
   isStageUnlocked?: (stageId: StageId) => boolean
 }
@@ -149,7 +153,7 @@ export function confirmSelectedWorld(state: AppState): AppState {
     screen: {
       type: 'stage-select',
       selectedWorldIndex: state.screen.selectedWorldIndex,
-      worldId: worldIdFromNumber(state.screen.selectedWorldIndex + 1),
+      worldId: worldIdFromNumber(clampWorldIndex(state.screen.selectedWorldIndex) + 1),
       selectedStageIndex: 0,
     },
   }
@@ -207,7 +211,7 @@ export function openNextGameplayStage(
 
 function getStageSelectionForStageId(stageId: StageId): StageSelectScreen {
   const { worldNumber, stageNumber } = parseStageId(stageId)
-  const selectedWorldIndex = Math.max(0, worldNumber - 1)
+  const selectedWorldIndex = clampWorldIndex(worldNumber - 1)
   const selectedStageIndex = Math.max(0, stageNumber - 1)
 
   return {

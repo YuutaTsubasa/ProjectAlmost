@@ -205,6 +205,15 @@ describe('confirmSelectedWorld', () => {
 
     expect(confirmSelectedWorld(state)).toBe(state)
   })
+
+  it('clamps an out-of-range world index to a valid world id', () => {
+    const state = { screen: { type: 'world-select', selectedWorldIndex: 99 } } as const
+
+    expect(confirmSelectedWorld(state).screen).toMatchObject({
+      type: 'stage-select',
+      worldId: 'world06',
+    })
+  })
 })
 
 describe('moveStageSelection', () => {
