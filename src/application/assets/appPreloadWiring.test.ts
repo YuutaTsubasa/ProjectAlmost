@@ -42,9 +42,17 @@ describe('App preload wiring', () => {
 
   it('delegates Stage Select control confirmation to the gated stage confirmation handler', () => {
     const controlIntentSource = getFunctionSource('handleControlIntent')
+    const delegationIndex = controlIntentSource.indexOf("previousScreen.type === 'stage-select'")
+    const genericMutationIndex = controlIntentSource.indexOf('appState = { screen: nextState.screen }')
+    const genericTransitionIndex = controlIntentSource.indexOf(
+      'void transitionToScreen(nextState.screen, applyNextState)',
+    )
 
     expect(controlIntentSource).toMatch(
       /if \(\s*previousScreen\.type === 'stage-select' &&\s*intent === 'confirm' &&\s*nextState\.screen\.type === 'gameplay'\s*\) \{\s*void handleConfirmStage\(\)\s*return\s*\}/,
     )
+    expect(delegationIndex).toBeGreaterThan(-1)
+    expect(genericMutationIndex).toBeGreaterThan(delegationIndex)
+    expect(genericTransitionIndex).toBeGreaterThan(delegationIndex)
   })
 })
