@@ -121,7 +121,7 @@ describe('App scene transition coordinator wiring', () => {
   it('blocks styled transition reentry before applying screen changes while keeping null-style updates immediate', () => {
     expect(source).toContain('shouldBlockSceneTransitionReentry')
     expect(source).toMatch(
-      /const style = resolveSceneTransitionStyle\(previousScreen, nextScreen\)[\s\S]*if \(shouldBlockSceneTransitionReentry\(style, sceneTransition\)\) \{\s*return\s*\}[\s\S]*if \(!style\) \{[\s\S]*applyScreenChange\(\)[\s\S]*syncShellBackdrop\(\)[\s\S]*syncMusicForCurrentState\(\)[\s\S]*return/,
+      /const style = resolveSceneTransitionStyle\(previousScreen, nextScreen\)[\s\S]*if \(shouldBlockSceneTransitionReentry\(style, sceneTransition\)\) \{\s*return false\s*\}[\s\S]*if \(!style\) \{[\s\S]*applyScreenChange\(\)[\s\S]*syncShellBackdrop\(\)[\s\S]*syncMusicForCurrentState\(\)[\s\S]*return true/,
     )
   })
 })
