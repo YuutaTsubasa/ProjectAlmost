@@ -104,6 +104,24 @@ describe('preload manifest', () => {
     expect(sources.filter((source) => source === repeatedBackground)).toHaveLength(1)
   })
 
+  it('rejects invalid runtime asset sources instead of silently omitting them', () => {
+    const stage = getGameplayStageMap('2-1')
+
+    expect(stage).toBeDefined()
+
+    const prototypeStage = {
+      ...stage!,
+      terrain: { ...stage!.terrain, tilesetAssetRef: '/__prototype__/public/tiles/legacy.webp' },
+    }
+    const externalStage = {
+      ...stage!,
+      terrain: { ...stage!.terrain, tilesetAssetRef: 'https://example.com/tiles.webp' },
+    }
+
+    expect(() => buildStagePreloadPlan(projectData, prototypeStage)).toThrow(/invalid runtime asset source/i)
+    expect(() => buildStagePreloadPlan(projectData, externalStage)).toThrow(/invalid runtime asset source/i)
+  })
+
   it('includes boss assets and boss music for boss stages', () => {
     const stage = getGameplayStageMap('1-6')
 

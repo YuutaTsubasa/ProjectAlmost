@@ -104,6 +104,7 @@
   )
   let activeLoadingPhase = $state<'boot' | 'gameplay'>('boot')
   let gameplayPreloadActive = $state(false)
+  let gameplayEntryReserved = $state(false)
   let audio: BrowserAudioController | undefined
   const identity = createProjectIdentity()
   const characterInfo = createCharacterInfoViewModel(getCharacterProfile(selectedCharacterId))
@@ -218,6 +219,22 @@
         gameplayPreloadView = snapshot
       },
     })
+  }
+
+  async function enterGameplay(nextState: typeof appState): Promise<void> {
+    if (gameplayEntryReserved) return
+
+    gameplayEntryReserved = true
+    try {
+      await preloadGameplayEntry(nextState.screen)
+      await transitionToScreen(nextState.screen, () => {
+        appState = nextState
+        gameplayMusicState = initialGameplayMusicState
+      })
+    } finally {
+      gameplayPreloadActive = false
+      gameplayEntryReserved = false
+    }
   }
 
   async function transitionToScreen(
@@ -375,6 +392,9 @@
     const nextState = confirmSelectedWorld(appState)
     void transitionToScreen(nextState.screen, () => {
       appState = nextState
+      if (nextState.screen.type === 'stage-select') {
+        preloadStageSelectionInBackground(nextState.screen.worldId, nextState.screen.selectedStageIndex)
+      }
     })
   }
 
@@ -396,15 +416,7 @@
   async function handleConfirmStage() {
     playUiSfx('confirm')
     const nextState = confirmSelectedStage(appState, { isStageUnlocked: isGameplayStageUnlocked })
-    await preloadGameplayEntry(nextState.screen)
-    const transitionAccepted = await transitionToScreen(nextState.screen, () => {
-      gameplayPreloadActive = false
-      appState = nextState
-      gameplayMusicState = initialGameplayMusicState
-    })
-    if (!transitionAccepted) {
-      gameplayPreloadActive = false
-    }
+    await enterGameplay(nextState)
   }
 
   async function handleNextGameplayStage() {
@@ -416,29 +428,13 @@
     if (nextState.screen === previousScreen) return
 
     playUiSfx('confirm')
-    await preloadGameplayEntry(nextState.screen)
-    const transitionAccepted = await transitionToScreen(nextState.screen, () => {
-      gameplayPreloadActive = false
-      appState = nextState
-      gameplayMusicState = initialGameplayMusicState
-    })
-    if (!transitionAccepted) {
-      gameplayPreloadActive = false
-    }
+    await enterGameplay(nextState)
   }
 
   async function handleRetryGameplayStage() {
     playUiSfx('confirm')
     const nextState = retryGameplayStage(appState)
-    await preloadGameplayEntry(nextState.screen)
-    const transitionAccepted = await transitionToScreen(nextState.screen, () => {
-      gameplayPreloadActive = false
-      appState = nextState
-      gameplayMusicState = initialGameplayMusicState
-    })
-    if (!transitionAccepted) {
-      gameplayPreloadActive = false
-    }
+    await enterGameplay(nextState)
   }
 
   function handleStageClear(result: StageClearResult) {

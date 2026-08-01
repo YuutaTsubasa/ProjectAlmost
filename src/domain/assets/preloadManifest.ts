@@ -65,10 +65,15 @@ function getAssetId(source: string): string {
     .replace(/^-|-$/g, '')
 }
 
+function assertRuntimeAssetSource(source: string): void {
+  if (!source.startsWith('/assets/') || source.includes('__prototype__')) {
+    throw new Error(`Invalid runtime asset source: ${source}`)
+  }
+}
+
 function toAssets(sources: readonly string[], group: PreloadAssetGroup): PreloadAsset[] {
-  const uniqueSources = [...new Set(sources)]
-    .filter((source) => source.startsWith('/assets/') && !source.includes('__prototype__'))
-    .sort()
+  const uniqueSources = [...new Set(sources)].sort()
+  uniqueSources.forEach(assertRuntimeAssetSource)
 
   return uniqueSources.map((source) => ({
     id: `${group}-${getAssetId(source)}`,
