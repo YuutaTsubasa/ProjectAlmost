@@ -15,7 +15,7 @@ import {
 } from '../../domain/gameplay/hazardActor'
 import type { GameplayStageMap } from '../../domain/gameplay/gameplayMapTypes'
 import { getGameplayStageMap } from '../../domain/gameplay/gameplayStageMaps'
-import { playerActorDefinition } from '../../domain/gameplay/playerActor'
+import { playerActorDefinition, type PlayerActorDefinition } from '../../domain/gameplay/playerActor'
 import {
   PLAYER_OUT_OF_BOUNDS_MARGIN,
   playerDeathTransitionPresentation,
@@ -716,6 +716,7 @@ function createSceneRuntime(input: {
   stage?: GameplayStageMap
   onHudUpdate?: (patch: GameplayHudPatch) => void
   getInputSnapshot?: () => Partial<GameplayInputSnapshot>
+  actorDefinition?: PlayerActorDefinition
 } = {}) {
   const stage = input.stage ?? createEnemyFixtureStage()
 
@@ -728,7 +729,7 @@ function createSceneRuntime(input: {
       input.onHudUpdate?.(patch)
     },
     getInputSnapshot: input.getInputSnapshot,
-  })
+  }, input.actorDefinition)
   const configuredScenes = Array.isArray(config.scene) ? config.scene : [config.scene]
   const scene = configuredScenes[0] as {
     preload: () => void
@@ -1789,7 +1790,10 @@ describe('createGameplayRendererConfig', () => {
     if (!stage) return
 
     const parent = {} as HTMLElement
-    const config = createGameplayRendererConfig({ parent, stage })
+    const config = createGameplayRendererConfig(
+      { parent, stage },
+      { ...playerActorDefinition, gravityY: 1725 },
+    )
 
     expect(config.parent).toBe(parent)
     expect(config.width).toBe(1280)
@@ -1798,7 +1802,7 @@ describe('createGameplayRendererConfig', () => {
     expect(config.physics).toEqual({
       default: 'arcade',
       arcade: {
-        gravity: { x: 0, y: playerActorDefinition.gravityY },
+        gravity: { x: 0, y: 1725 },
         debug: false,
       },
     })
@@ -2368,12 +2372,12 @@ describe('createGameplayRendererConfig', () => {
   })
 
   it('creates the player with domain-owned depth and terrain collision wiring', () => {
-    const runtime = createSceneRuntime()
+    const runtime = createSceneRuntime({ actorDefinition: { ...playerActorDefinition, depth: 17 } })
 
     runtime.scene.create()
 
     expect(runtime.playerSprite).not.toBeNull()
-    expect(runtime.playerSprite?.depth).toBe(playerActorDefinition.depth)
+    expect(runtime.playerSprite?.depth).toBe(17)
     expect(runtime.playerSprite?.collideWorldBounds).toBe(false)
     expect(runtime.colliderCalls).toContainEqual({ a: runtime.playerSprite, b: runtime.terrainLayer })
     expect(runtime.cameraFollowTarget).toBe(runtime.playerSprite)

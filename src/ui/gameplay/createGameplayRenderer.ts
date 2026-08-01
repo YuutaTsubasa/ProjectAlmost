@@ -88,6 +88,7 @@ import {
   getPlayerCrouchState,
   getPlayerHorizontalMovementDecision,
   playerActorDefinition,
+  type PlayerActorDefinition,
   type PlayerAnimationKey,
   type PlayerBodyPose,
 } from '../../domain/gameplay/playerActor'
@@ -283,6 +284,7 @@ const GAMEPLAY_CANVAS = {
 
 class GameplayMapScene extends Phaser.Scene {
   private readonly stageMap: GameplayStageMap
+  private readonly actorDefinition: PlayerActorDefinition
   private readonly options: Pick<GameplayRendererInput, 'onHudUpdate' | 'onSfx' | 'getInputSnapshot'>
   private backgroundLayers: BackgroundRuntimeLayer[] = []
   private terrainLayer: Phaser.Tilemaps.TilemapLayer | null = null
@@ -342,9 +344,14 @@ class GameplayMapScene extends Phaser.Scene {
   private nextPlayerFootstepSfxAt = 0
   private currentExternalGameplayInputSnapshot: Partial<GameplayInputSnapshot> = emptyGameplayInputSnapshot
 
-  constructor(stage: GameplayStageMap, options: Pick<GameplayRendererInput, 'onHudUpdate' | 'onSfx' | 'getInputSnapshot'> = {}) {
+  constructor(
+    stage: GameplayStageMap,
+    options: Pick<GameplayRendererInput, 'onHudUpdate' | 'onSfx' | 'getInputSnapshot'> = {},
+    actorDefinition: PlayerActorDefinition = playerActorDefinition,
+  ) {
     super(`GameplayMapScene:${stage.id}`)
     this.stageMap = stage
+    this.actorDefinition = actorDefinition
     this.options = options
     this.currentRespawnPoint = {
       x: stage.player.spawn.x,
@@ -367,7 +374,7 @@ class GameplayMapScene extends Phaser.Scene {
 
     this.load.image(textureKeys.terrainTiles, this.stageMap.terrain.tilesetAssetRef)
 
-    for (const sprite of Object.values(playerActorDefinition.sprites)) {
+    for (const sprite of Object.values(this.actorDefinition.sprites)) {
       this.load.spritesheet(sprite.key, sprite.assetRef, {
         frameWidth: sprite.frameWidth,
         frameHeight: sprite.frameHeight,
@@ -735,7 +742,7 @@ class GameplayMapScene extends Phaser.Scene {
   }
 
   private createPlayerAnimations(): void {
-    for (const sprite of Object.values(playerActorDefinition.sprites)) {
+    for (const sprite of Object.values(this.actorDefinition.sprites)) {
       this.anims.create({
         key: sprite.key,
         frames: this.anims.generateFrameNumbers(sprite.key, {
@@ -1145,19 +1152,19 @@ class GameplayMapScene extends Phaser.Scene {
     const player = this.physics.add.sprite(
       this.stageMap.player.spawn.x,
       getPlayerCenterY({ surfaceY: this.stageMap.player.spawn.surfaceY }),
-      playerActorDefinition.sprites.idle.key,
+      this.actorDefinition.sprites.idle.key,
     )
 
     player
-      .setOrigin(playerActorDefinition.origin.x, playerActorDefinition.origin.y)
-      .setScale(playerActorDefinition.scale)
+      .setOrigin(this.actorDefinition.origin.x, this.actorDefinition.origin.y)
+      .setScale(this.actorDefinition.scale)
       .setCollideWorldBounds(false)
-      .setDragX(playerActorDefinition.movement.idleDragX)
-      .setMaxVelocity(playerActorDefinition.maxVelocity.x, playerActorDefinition.maxVelocity.y)
-      .setDepth(playerActorDefinition.depth)
+      .setDragX(this.actorDefinition.movement.idleDragX)
+      .setMaxVelocity(this.actorDefinition.maxVelocity.x, this.actorDefinition.maxVelocity.y)
+      .setDepth(this.actorDefinition.depth)
 
-    player.body.setSize(playerActorDefinition.body.width, playerActorDefinition.body.height)
-    player.body.setOffset(playerActorDefinition.body.offsetX, playerActorDefinition.body.offsetY)
+    player.body.setSize(this.actorDefinition.body.width, this.actorDefinition.body.height)
+    player.body.setOffset(this.actorDefinition.body.offsetX, this.actorDefinition.body.offsetY)
     this.playerBodyPose = 'standing'
     this.isCrouching = false
     this.playPlayerAnimation(player, 'idle')
@@ -1167,7 +1174,7 @@ class GameplayMapScene extends Phaser.Scene {
     this.playerJumpState = createMovableActorJumpState({
       now: this.time.now,
       grounded: true,
-      config: playerActorDefinition.jump,
+      config: this.actorDefinition.jump,
     })
     this.attackReady = true
     this.isAttacking = false
@@ -1669,8 +1676,8 @@ class GameplayMapScene extends Phaser.Scene {
     })
 
     this.player.setFlipX(target.x < startX)
-    this.player.setScale(playerActorDefinition.sprites.attack.scale)
-    this.player.setTexture(playerActorDefinition.sprites.attack.key, homingAttackPresentation.attackFrame)
+    this.player.setScale(this.actorDefinition.sprites.attack.scale)
+    this.player.setTexture(this.actorDefinition.sprites.attack.key, homingAttackPresentation.attackFrame)
     this.collectCoinsAlongLine(startX, startY, contact.x, contact.y)
     this.emitHomingTrail(startX, startY, contact.x, contact.y)
     this.player.setPosition(contact.x, contact.y)
@@ -1730,7 +1737,7 @@ class GameplayMapScene extends Phaser.Scene {
 
     for (const sample of getHomingTrailSamples({ startX, startY, endX, endY })) {
       const trail = this.add
-        .sprite(sample.x, sample.y, playerActorDefinition.sprites.attack.key, homingAttackPresentation.attackFrame)
+        .sprite(sample.x, sample.y, this.actorDefinition.sprites.attack.key, homingAttackPresentation.attackFrame)
         .setDepth(this.player.depth - 1)
         .setScale(this.player.scale)
         .setFlipX(this.player.flipX)
@@ -2392,7 +2399,7 @@ class GameplayMapScene extends Phaser.Scene {
     this.playerJumpState = createMovableActorJumpState({
       now: this.time.now,
       grounded: true,
-      config: playerActorDefinition.jump,
+      config: this.actorDefinition.jump,
     })
     this.wasPlayerGroundedForSfx = true
     this.nextPlayerFootstepSfxAt = 0
@@ -2431,7 +2438,7 @@ class GameplayMapScene extends Phaser.Scene {
       state: this.playerJumpState,
       now: this.time.now,
       grounded,
-      config: playerActorDefinition.jump,
+      config: this.actorDefinition.jump,
     })
     const crouch = getPlayerCrouchState({
       crouchHeld: input.crouchHeld,
@@ -2447,7 +2454,7 @@ class GameplayMapScene extends Phaser.Scene {
       this.playerJumpState = bufferMovableActorJump({
         state: this.playerJumpState,
         now: this.time.now,
-        config: playerActorDefinition.jump,
+        config: this.actorDefinition.jump,
       })
     }
     this.wasJumpDown = input.jumpHeld
@@ -2455,13 +2462,13 @@ class GameplayMapScene extends Phaser.Scene {
     const jumpDecision = getMovableActorJumpDecision({
       state: this.playerJumpState,
       now: this.time.now,
-      config: playerActorDefinition.jump,
+      config: this.actorDefinition.jump,
     })
     this.playerJumpState = jumpDecision.state
     const jumpingThisFrame = jumpDecision.type !== 'none'
     if (jumpDecision.type !== 'none') {
       this.clearPlayerCrouch()
-      this.player.setVelocityY(playerActorDefinition.jump.velocityY)
+      this.player.setVelocityY(this.actorDefinition.jump.velocityY)
       this.emitGameplaySfx('player-footstep')
       this.nextPlayerFootstepSfxAt = this.time.now + RUNNING_FOOTSTEP_INTERVAL_MS
     }
@@ -2495,8 +2502,8 @@ class GameplayMapScene extends Phaser.Scene {
     this.updatePlayerMovementSfx(grounded, decision.direction !== 'none')
 
     if (this.isHomingAttacking) {
-      this.player.setScale(playerActorDefinition.sprites.attack.scale)
-      this.player.setTexture(playerActorDefinition.sprites.attack.key, homingAttackPresentation.attackFrame)
+      this.player.setScale(this.actorDefinition.sprites.attack.scale)
+      this.player.setTexture(this.actorDefinition.sprites.attack.key, homingAttackPresentation.attackFrame)
     } else if (this.isAttacking) {
       this.playPlayerAnimation(this.player, 'attack')
     } else if (!grounded || jumpingThisFrame) {
@@ -2516,7 +2523,7 @@ class GameplayMapScene extends Phaser.Scene {
     player: Phaser.Physics.Arcade.Sprite,
     animationKey: PlayerAnimationKey,
   ): void {
-    const sprite = playerActorDefinition.sprites[animationKey]
+    const sprite = this.actorDefinition.sprites[animationKey]
 
     player.setScale(sprite.scale)
     player.play(sprite.key, true)
@@ -2659,6 +2666,7 @@ class GameplayMapScene extends Phaser.Scene {
 
 export function createGameplayRendererConfig(
   input: GameplayRendererInput,
+  actorDefinition: PlayerActorDefinition = playerActorDefinition,
 ): Phaser.Types.Core.GameConfig {
   return {
     type: Phaser.AUTO,
@@ -2669,7 +2677,7 @@ export function createGameplayRendererConfig(
     physics: {
       default: 'arcade',
       arcade: {
-        gravity: { x: 0, y: playerActorDefinition.gravityY },
+        gravity: { x: 0, y: actorDefinition.gravityY },
         debug: false,
       },
     },
@@ -2681,7 +2689,7 @@ export function createGameplayRendererConfig(
       onHudUpdate: input.onHudUpdate,
       onSfx: input.onSfx,
       getInputSnapshot: input.getInputSnapshot,
-    })],
+    }, actorDefinition)],
   }
 }
 
