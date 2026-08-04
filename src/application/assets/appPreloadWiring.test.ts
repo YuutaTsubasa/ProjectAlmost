@@ -4,7 +4,7 @@ import appSource from '../../App.svelte?raw'
 function getFunctionSource(functionName: string): string {
   const functionStart = appSource.indexOf(`function ${functionName}`)
   const asyncFunctionStart = appSource.indexOf(`async function ${functionName}`)
-  const start = Math.max(functionStart, asyncFunctionStart)
+  const start = asyncFunctionStart === -1 ? functionStart : asyncFunctionStart
   if (start === -1) throw new Error(`Function ${functionName} was not found in App.svelte`)
 
   const nextFunctionStart = appSource.indexOf('\n  function ', start + 1)
@@ -54,6 +54,7 @@ describe('App preload wiring', () => {
     expect(() => getFunctionSource('missingFunctionForContract')).toThrow(
       'Function missingFunctionForContract was not found in App.svelte',
     )
+    expect(getFunctionSource('enterGameplay')).toMatch(/^async function enterGameplay/)
     expect(() => getTransitionCallbackBody('async function enterGameplay() {}')).toThrow(
       'enterGameplay transition callback was not found',
     )
