@@ -408,6 +408,7 @@
   async function handleConfirmStage() {
     playUiSfx('confirm')
     const nextState = confirmSelectedStage(appState, { isStageUnlocked: isGameplayStageUnlocked })
+    if (nextState.screen === appState.screen) return
     await enterGameplay(nextState)
   }
 

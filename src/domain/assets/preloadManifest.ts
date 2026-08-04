@@ -103,10 +103,17 @@ function stageSources(project: ProjectDataLike, stage: GameplayStageMap): string
 }
 
 export function buildBootPreloadPlan(project: ProjectDataLike): PreloadAsset[] {
+  const worlds = project.worlds.order.map((worldId) => {
+    const world = project.worlds.items[worldId]
+    if (!world) throw new Error(`Missing boot preload world data for world ${worldId}`)
+
+    return world
+  })
+
   return toAssets([
     ...BOOT_SOURCES,
-    ...project.worlds.order.map((worldId) => project.worlds.items[worldId].assetRefs.stageSelectBackground),
-    ...project.worlds.order.map((worldId) => project.worlds.items[worldId].musicRefs.map),
+    ...worlds.map((world) => world.assetRefs.stageSelectBackground),
+    ...worlds.map((world) => world.musicRefs.map),
   ], 'boot')
 }
 

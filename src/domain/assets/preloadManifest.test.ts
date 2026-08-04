@@ -151,6 +151,20 @@ describe('preload manifest', () => {
     )
   })
 
+  it('throws a clear error when boot preload references a missing world record', () => {
+    const missingWorldProject = {
+      ...projectData,
+      worlds: {
+        ...projectData.worlds,
+        order: ['missing-world', ...projectData.worlds.order],
+      },
+    } as typeof projectData
+
+    expect(() => buildBootPreloadPlan(missingWorldProject)).toThrow(
+      'Missing boot preload world data for world missing-world',
+    )
+  })
+
   it('includes boss assets and boss music for boss stages', () => {
     const stage = getGameplayStageMap('1-6')
 

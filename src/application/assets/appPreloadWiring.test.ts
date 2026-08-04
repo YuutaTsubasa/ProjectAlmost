@@ -154,4 +154,13 @@ describe('App preload wiring', () => {
     expect(genericMutationIndex).toBeGreaterThan(delegationIndex)
     expect(genericTransitionIndex).toBeGreaterThan(delegationIndex)
   })
+
+  it('does not enter gameplay when direct Stage Select confirmation stays on the same screen', () => {
+    const stageConfirmationSource = getFunctionSource('handleConfirmStage')
+    const sameScreenGuardIndex = stageConfirmationSource.indexOf('if (nextState.screen === appState.screen) return')
+    const enterGameplayIndex = stageConfirmationSource.indexOf('await enterGameplay(nextState)')
+
+    expect(sameScreenGuardIndex).toBeGreaterThan(-1)
+    expect(enterGameplayIndex).toBeGreaterThan(sameScreenGuardIndex)
+  })
 })
