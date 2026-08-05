@@ -81,8 +81,9 @@ describe('App preload wiring', () => {
 
   it('routes each gameplay entry handler through the shared preload gate', () => {
     expect(appSource).toContain('async function preloadGameplayEntry')
-    expect(appSource).toContain('buildStagePreloadPlan(projectData, stage)')
-    expect(appSource).toContain('buildSharedGameplayPreloadPlan()')
+    expect(appSource).toContain('buildGameplayEntryPreloadPlan(projectData, stage)')
+    expect(appSource).not.toContain('...buildStagePreloadPlan(projectData, stage)')
+    expect(appSource).not.toContain('...buildSharedGameplayPreloadPlan()')
 
     expectGameplayPreloadBeforeTransition('handleConfirmStage')
     expectGameplayPreloadBeforeTransition('handleRetryGameplayStage')

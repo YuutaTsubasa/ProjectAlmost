@@ -51,7 +51,7 @@
   import { PRODUCT_NAME } from './domain/app/projectIdentity'
   import {
     buildBootPreloadPlan,
-    buildSharedGameplayPreloadPlan,
+    buildGameplayEntryPreloadPlan,
     buildStagePreloadPlan,
   } from './domain/assets/preloadManifest'
   import { getCharacterProfile, selectedCharacterId } from './domain/character/characterProfile'
@@ -190,10 +190,7 @@
     const stage = getGameplayStageMap(nextScreen.stageId)
     if (!stage) return
 
-    const plan = [
-      ...buildSharedGameplayPreloadPlan(),
-      ...buildStagePreloadPlan(projectData, stage),
-    ]
+    const plan = buildGameplayEntryPreloadPlan(projectData, stage)
     loadingGate = {
       kind: 'gameplay',
       view: presentPreloadProgress(createInitialPreloadProgress(plan.length, 'gameplay')),

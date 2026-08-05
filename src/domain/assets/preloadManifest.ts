@@ -125,6 +125,17 @@ export function buildStagePreloadPlan(project: ProjectDataLike, stage: GameplayS
   return toAssets(stageSources(project, stage), 'stage')
 }
 
+export function combinePreloadPlans(...plans: readonly PreloadAsset[][]): PreloadAsset[] {
+  return [...new Map(plans.flat().map((asset) => [asset.source, asset])).values()]
+}
+
+export function buildGameplayEntryPreloadPlan(project: ProjectDataLike, stage: GameplayStageMap): PreloadAsset[] {
+  return combinePreloadPlans(
+    buildSharedGameplayPreloadPlan(),
+    buildStagePreloadPlan(project, stage),
+  )
+}
+
 export function collectRuntimeAssetSources(project: ProjectDataLike): string[] {
   const stagePlans = gameplayStageMaps.order.flatMap((stageId) => {
     const stage = gameplayStageMaps.items[stageId]

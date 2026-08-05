@@ -4,6 +4,7 @@ import type { GameplayStageMap } from '../gameplay/gameplayMapTypes'
 import { getGameplayStageMap } from '../gameplay/gameplayStageMaps'
 import {
   buildBootPreloadPlan,
+  buildGameplayEntryPreloadPlan,
   buildSharedGameplayPreloadPlan,
   buildStagePreloadPlan,
   collectRuntimeAssetSources,
@@ -175,5 +176,21 @@ describe('preload manifest', () => {
     expect(sources).toContain('/assets/sprites/boss_priestess_hurt/sheet-transparent.webp')
     expect(sources).toContain('/assets/sprites/boss_priestess_death/sheet-transparent.webp')
     expect(sources).toContain('/assets/audio/world01_boss.mp3')
+  })
+
+  it('builds gameplay entry plans with source de-duplication before progress totals are presented', () => {
+    const stage = getGameplayStageMap('2-1')
+
+    expect(stage).toBeDefined()
+
+    const sharedPlan = buildSharedGameplayPreloadPlan()
+    const stagePlan = buildStagePreloadPlan(projectData, stage!)
+    const entryPlan = buildGameplayEntryPreloadPlan(projectData, stage!)
+    const entrySources = entryPlan.map((asset) => asset.source)
+
+    expect(sharedPlan.map((asset) => asset.source)).toContain(stage!.terrain.tilesetAssetRef)
+    expect(stagePlan.map((asset) => asset.source)).toContain(stage!.terrain.tilesetAssetRef)
+    expect(entryPlan.length).toBeLessThan(sharedPlan.length + stagePlan.length)
+    expect(new Set(entrySources).size).toBe(entrySources.length)
   })
 })

@@ -127,11 +127,13 @@ The planner must return unique asset sources only. Runtime paths must start with
 
 1. User confirms a stage from Stage Select.
 2. App derives the target gameplay screen and selected stage map.
-3. App loads `shared-gameplay + stage` assets for that stage before mutating `appState.screen` to gameplay.
+3. App loads a single normalized `shared-gameplay + stage` plan for that stage before mutating `appState.screen` to gameplay.
 4. During this wait, `LoadingScreen` is shown inside the frame instead of mounting `GameplayScreen`.
 5. Existing scene transition timing may still wrap the final screen mutation, but the gameplay Phaser scene should mount only after the preload plan has completed.
 6. Once the gameplay transition is fully covered, the screen swap must hide `LoadingScreen` before reveal starts so players fade into gameplay, not back into the completed Loading screen.
 7. Retry and Next Stage flows also use the same stage preload gate.
+
+The gameplay-entry `LoadingScreen` initial total must be derived from the normalized plan that will be passed to the preload coordinator. Shared and stage assets can overlap, especially tilesets, so App must not initialize progress from an unmerged array that the loader later de-duplicates differently.
 
 ### Background Preload
 
@@ -167,6 +169,7 @@ Required tests:
 - shared gameplay plan includes player sprites, common sprites, props, HUD/result assets, tiles, gameplay SFX, and result music
 - stage plan includes selected stage background layers, terrain tileset, boss assets for boss stages, and world music
 - plan builder de-duplicates repeated sources
+- gameplay entry plan de-duplicates shared/stage overlaps before App presents initial progress totals
 - progress presenter reports completed, total, percent, and warning count deterministically
 - browser loader reports progress for successful and failed sources
 - browser loader reuses pending and completed sources
