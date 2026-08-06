@@ -103,6 +103,12 @@ export type LoadingLocalizationKey =
   | 'loading.phase.background'
   | 'loading.warning'
 
+export type AvgLocalizationKey =
+  | 'avg.skip'
+  | 'avg.speaker.yuuta'
+  | 'avg.speaker.whitePriestess'
+  | `avg.1-6.line${1 | 2 | 3 | 4 | 5 | 6}`
+
 export type LocalizationKey =
   | WorldLocalizationKey
   | StageSelectLocalizationKey
@@ -117,6 +123,7 @@ export type LocalizationKey =
   | TouchLocalizationKey
   | GameplayStatusLocalizationKey
   | LoadingLocalizationKey
+  | AvgLocalizationKey
 
 export interface LocaleRecord {
   code: LocaleCode
