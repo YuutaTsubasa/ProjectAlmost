@@ -186,7 +186,7 @@ describe('preload manifest', () => {
     ]
 
     for (const source of avgPortraitSources) {
-      expect(readFileSync(`public${source}`).length).toBeGreaterThan(0)
+      expect(readFileSync(`public${source}`, 'utf8').length).toBeGreaterThan(0)
     }
   })
 
