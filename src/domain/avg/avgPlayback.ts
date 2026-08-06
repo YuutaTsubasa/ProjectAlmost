@@ -8,6 +8,7 @@ export type ActiveAvgLineView = {
 }
 
 export function createAvgPlayback(sequence: AvgSequence): AvgPlaybackState {
+  assertValidAvgSequence(sequence)
   return { status: 'active', sequence, lineIndex: 0 }
 }
 
@@ -42,5 +43,20 @@ export function getActiveAvgLineView(state: AvgPlaybackState | null): ActiveAvgL
     speaker,
     lineIndex: state.lineIndex,
     lineCount: state.sequence.lines.length,
+  }
+}
+
+function assertValidAvgSequence(sequence: AvgSequence): void {
+  if (sequence.lines.length === 0) {
+    throw new Error(`AVG sequence ${sequence.id} must contain at least one line.`)
+  }
+
+  const speakerIds = new Set(sequence.characters.map((character) => character.id))
+  for (const [index, line] of sequence.lines.entries()) {
+    if (!speakerIds.has(line.speakerId)) {
+      throw new Error(
+        `AVG sequence ${sequence.id} line ${index + 1} references unknown speaker ${line.speakerId}.`,
+      )
+    }
   }
 }

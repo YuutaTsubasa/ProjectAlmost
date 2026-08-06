@@ -7,6 +7,7 @@ import {
   isAvgPlaybackActive,
   skipAvgPlayback,
 } from './avgPlayback'
+import type { AvgSequence } from './avgTypes'
 
 const sequence = getStageIntroSequence('1-6')!
 
@@ -47,5 +48,24 @@ describe('AVG playback', () => {
 
     expect(skipped).toEqual({ status: 'completed', sequence })
     expect(isAvgPlaybackActive(skipped)).toBe(false)
+  })
+
+  it('rejects an empty sequence instead of creating an invisible active playback state', () => {
+    const emptySequence: AvgSequence = { ...sequence, lines: [] }
+
+    expect(() => createAvgPlayback(emptySequence)).toThrow(
+      'AVG sequence 1-6-intro must contain at least one line.',
+    )
+  })
+
+  it('rejects a sequence whose line speaker is not declared', () => {
+    const missingSpeakerSequence: AvgSequence = {
+      ...sequence,
+      characters: sequence.characters.filter((character) => character.id !== 'white-priestess'),
+    }
+
+    expect(() => createAvgPlayback(missingSpeakerSequence)).toThrow(
+      'AVG sequence 1-6-intro line 1 references unknown speaker white-priestess.',
+    )
   })
 })

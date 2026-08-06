@@ -155,6 +155,7 @@
     }
 
     if (rendererPausedForAvg) {
+      renderer.requireGameplayInputRelease()
       renderer.resume()
       renderer.resetTiming()
       rendererPausedForAvg = false
@@ -431,6 +432,16 @@
   }
 
   function handleKeydown(event: KeyboardEvent): void {
+    if (isAvgPlaybackActive(avgPlayback)) {
+      const intent = mapKeyboardControlIntent(
+        { key: event.key, repeat: event.repeat },
+        'stage-select',
+      )
+      event.preventDefault()
+      if (intent) handleAvgControlIntent(intent)
+      return
+    }
+
     if (isGameplayPlayable() && isKeyboardGameplayInput(event)) {
       applyVirtualControlsVisibility('keyboard')
     }
@@ -456,15 +467,6 @@
       if (!intent) return
       event.preventDefault()
       handlePauseSettingsControlIntent(intent)
-      return
-    }
-
-    const intent = mapKeyboardControlIntent(
-      { key: event.key, repeat: event.repeat },
-      'stage-select',
-    )
-    if (intent && handleAvgControlIntent(intent)) {
-      event.preventDefault()
       return
     }
 

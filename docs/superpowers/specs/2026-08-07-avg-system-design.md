@@ -82,6 +82,8 @@ Add `src/domain/avg/`.
 
 The playback state is explicit and immutable. It should not use booleans that can produce invalid combinations such as "completed with an active line".
 
+Playback creation validates its input before returning an active state. A sequence must contain at least one line and every line speaker must be declared in `characters`; invalid content fails with a descriptive error rather than producing an invisible active overlay.
+
 Domain modules must not import Svelte, Phaser, DOM APIs, browser storage, timers, or prototype code.
 
 ### Application / Gameplay Integration
@@ -108,8 +110,11 @@ While AVG is active:
 When AVG finishes:
 
 1. Clear AVG playback state or mark it completed.
-2. Resume the renderer.
-3. Call `renderer.resetTiming()` so the pause duration is not counted into gameplay elapsed time.
+2. Require a neutral gameplay input state before the renderer can run, so the confirm that closed the overlay cannot become a gameplay jump.
+3. Resume the renderer.
+4. Call `renderer.resetTiming()` so the pause duration is not counted into gameplay elapsed time.
+
+While AVG is active, `GameplayScreen` consumes every keyboard event before any stage-result, settings, pause, or gameplay routing. Confirm and back still advance or skip when mapped; unmapped keys, including `P`, are blocked from reaching pause routing.
 
 Do not use `window.dispatchEvent` or a global `projectrun:avg-state` event. The Svelte component owns overlay state and talks to the renderer through its existing controller methods.
 
@@ -191,6 +196,7 @@ Domain tests:
 - `advanceAvgPlayback` advances line-by-line and completes after the final line.
 - `skipAvgPlayback` completes immediately.
 - `getActiveAvgLineView` returns the active line and speaker while active and returns `null` when completed.
+- Playback creation rejects empty sequences and lines whose speakers are absent from the sequence characters.
 
 Localization tests:
 
@@ -207,6 +213,7 @@ UI/source-contract tests:
 
 - `AvgOverlay.svelte` receives data and callbacks, and does not import app flow, preloader, storage, or renderer modules.
 - `GameplayScreen.svelte` integrates stage intro AVG through `getStageIntroSequence`, renderer pause/resume/resetTiming, and local reactive state.
+- AVG input routing consumes unmapped keyboard keys before pause routing and requires neutral gameplay input after AVG completion.
 - `GameplayScreen.svelte` does not contain `projectrun:avg-state` or `window.dispatchEvent` for AVG.
 - Virtual controls are gated off while AVG is active.
 

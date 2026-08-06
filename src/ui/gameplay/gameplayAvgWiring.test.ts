@@ -20,6 +20,30 @@ describe('GameplayScreen AVG wiring', () => {
     expect(resultIntentIndex).toBeGreaterThan(-1)
   })
 
+  it('consumes every keyboard event while AVG is active before pause routing', () => {
+    const keyboardBlockMatch = source.match(/function handleKeydown\(event: KeyboardEvent\): void \{[\s\S]*?\n  \}/)
+    const keyboardBlock = keyboardBlockMatch?.[0] ?? ''
+    const avgInputIndex = keyboardBlock.indexOf('if (isAvgPlaybackActive(avgPlayback)) {')
+    const pauseContextIndex = keyboardBlock.indexOf(
+      "const context = pauseState.mode === 'paused' ? 'gameplay-pause-menu' : 'gameplay-active'",
+    )
+
+    expect(keyboardBlock).toContain(
+      "if (isAvgPlaybackActive(avgPlayback)) {\n      const intent = mapKeyboardControlIntent(",
+    )
+    expect(keyboardBlock).toContain('event.preventDefault()')
+    expect(avgInputIndex).toBeGreaterThan(-1)
+    expect(avgInputIndex).toBeLessThan(pauseContextIndex)
+  })
+
+  it('requires neutral gameplay input before resuming after AVG finishes', () => {
+    const releaseGateIndex = source.indexOf('renderer.requireGameplayInputRelease()')
+    const resumeIndex = source.indexOf('renderer.resume()', releaseGateIndex)
+
+    expect(releaseGateIndex).toBeGreaterThan(-1)
+    expect(resumeIndex).toBeGreaterThan(releaseGateIndex)
+  })
+
   it('pauses and resumes the renderer through local reactive AVG state', () => {
     expect(source).toContain('if (isAvgPlaybackActive(avgPlayback))')
     expect(source).toContain('renderer.pause()')
