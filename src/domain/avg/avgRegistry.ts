@@ -27,12 +27,10 @@ const firstChapterBossIntro: AvgSequence = {
   ],
 } as const
 
-const stageIntroSequences = {
+const stageIntroSequences: Partial<Record<StageId, AvgSequence>> = {
   '1-6': firstChapterBossIntro,
-} as const satisfies Partial<Record<StageId, AvgSequence>>
+}
 
 export function getStageIntroSequence(stageId: StageId): AvgSequence | null {
-  if (stageId !== '1-6') return null
-
-  return stageIntroSequences[stageId]
+  return stageIntroSequences[stageId] ?? null
 }

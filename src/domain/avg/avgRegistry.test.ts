@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { getStageIntroSequence } from './avgRegistry'
+import source from './avgRegistry.ts?raw'
 
 describe('AVG registry', () => {
   it('returns the first chapter boss intro sequence for stage 1-6', () => {
@@ -49,5 +50,10 @@ describe('AVG registry', () => {
       character.portraitAssetRef.startsWith('/assets/')
       && !character.portraitAssetRef.includes('__prototype__'),
     )).toBe(true)
+  })
+
+  it('uses the registry as the single source of truth for stage lookup', () => {
+    expect(source).toContain('return stageIntroSequences[stageId] ?? null')
+    expect(source).not.toContain("if (stageId !== '1-6') return null")
   })
 })
