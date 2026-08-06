@@ -4,6 +4,14 @@
   import { applySettingsControlIntent } from '../../application/input/settingsControls'
   import type { SettingsScreen } from '../../domain/app/appFlow'
   import {
+    advanceAvgPlayback,
+    createAvgPlayback,
+    isAvgPlaybackActive,
+    skipAvgPlayback,
+  } from '../../domain/avg/avgPlayback'
+  import { getStageIntroSequence } from '../../domain/avg/avgRegistry'
+  import type { AvgPlaybackState } from '../../domain/avg/avgTypes'
+  import {
     resolveLocalizedText,
     type LocaleCode,
     type LocalizationKey,
@@ -57,6 +65,7 @@
   import { createGameplayRenderer } from './createGameplayRenderer'
   import { getGameplayHudStageDisplay } from './gameplayHudDisplay'
   import type { GameplayMusicState } from './gameplayMusicState'
+  import AvgOverlay from '../avg/AvgOverlay.svelte'
   import SettingsPanel from '../settings/SettingsPanel.svelte'
 
   type Props = {
@@ -102,6 +111,12 @@
   let hudState = $state<GameplayHudState | null>(createInitialGameplayHudState(stage))
   let pauseState = $state<GameplayPauseState>({ mode: 'playing' })
   let renderer: ReturnType<typeof createGameplayRenderer> | null = null
+  // svelte-ignore state_referenced_locally
+  const stageIntroSequence = getStageIntroSequence(stage.id)
+  let avgPlayback = $state<AvgPlaybackState | null>(
+    stageIntroSequence ? createAvgPlayback(stageIntroSequence) : null,
+  )
+  let rendererPausedForAvg = false
   let pauseSettingsScreen = $state<SettingsScreen>({
     type: 'settings',
     selectedItemIndex: 0,
@@ -126,6 +141,24 @@
       resultVisible: Boolean(hudState?.result),
       paused: pauseState.mode !== 'playing',
     })
+  })
+
+  $effect(() => {
+    if (!renderer) return
+
+    if (isAvgPlaybackActive(avgPlayback)) {
+      if (!rendererPausedForAvg) {
+        renderer.pause()
+        rendererPausedForAvg = true
+      }
+      return
+    }
+
+    if (rendererPausedForAvg) {
+      renderer.resume()
+      renderer.resetTiming()
+      rendererPausedForAvg = false
+    }
   })
 
   function handleResultAction(action: StageResultActionType): void {
@@ -253,7 +286,34 @@
   }
 
   function isGameplayPlayable(): boolean {
-    return pauseState.mode === 'playing' && !hudState?.result
+    return pauseState.mode === 'playing' && !hudState?.result && !isAvgPlaybackActive(avgPlayback)
+  }
+
+  function finishAvgPlayback(nextPlayback: AvgPlaybackState): void {
+    avgPlayback = nextPlayback
+  }
+
+  function advanceAvg(): void {
+    if (!avgPlayback) return
+    finishAvgPlayback(advanceAvgPlayback(avgPlayback))
+  }
+
+  function skipAvg(): void {
+    if (!avgPlayback) return
+    finishAvgPlayback(skipAvgPlayback(avgPlayback))
+  }
+
+  function handleAvgControlIntent(intent: ControlIntent): boolean {
+    if (!isAvgPlaybackActive(avgPlayback)) return false
+    if (intent === 'confirm') {
+      advanceAvg()
+      return true
+    }
+    if (intent === 'back') {
+      skipAvg()
+      return true
+    }
+    return true
   }
 
   function applyVirtualControlsVisibility(source: GameplayInputSource): void {
@@ -399,15 +459,24 @@
       return
     }
 
-    const context = pauseState.mode === 'paused' ? 'gameplay-pause-menu' : 'gameplay-active'
     const intent = mapKeyboardControlIntent(
+      { key: event.key, repeat: event.repeat },
+      'stage-select',
+    )
+    if (intent && handleAvgControlIntent(intent)) {
+      event.preventDefault()
+      return
+    }
+
+    const context = pauseState.mode === 'paused' ? 'gameplay-pause-menu' : 'gameplay-active'
+    const pauseIntent = mapKeyboardControlIntent(
       { key: event.key, repeat: event.repeat },
       context,
     )
-    if (!intent) return
+    if (!pauseIntent) return
 
     event.preventDefault()
-    handlePauseControlIntent(intent)
+    handlePauseControlIntent(pauseIntent)
   }
 
   function readGamepadSnapshot(): GamepadControlSnapshot | null {
@@ -434,6 +503,11 @@
       getInputSnapshot: getGameplayInputSnapshot,
     })
 
+    if (isAvgPlaybackActive(avgPlayback)) {
+      renderer.pause()
+      rendererPausedForAvg = true
+    }
+
     function pollGamepad() {
       const currentSnapshot = readGamepadSnapshot()
       gamepadGameplayInput = mapGamepadGameplayInputSnapshot(previousGamepadSnapshot, currentSnapshot)
@@ -441,13 +515,15 @@
         applyVirtualControlsVisibility('gamepad')
       }
 
-      const context = hudState?.result
+      const context = isAvgPlaybackActive(avgPlayback)
         ? 'stage-select'
-        : pauseState.mode === 'paused'
-          ? 'gameplay-pause-menu'
-          : pauseState.mode === 'settings'
-            ? pauseSettingsControlContext()
-            : 'gameplay-active'
+        : hudState?.result
+          ? 'stage-select'
+          : pauseState.mode === 'paused'
+            ? 'gameplay-pause-menu'
+            : pauseState.mode === 'settings'
+              ? pauseSettingsControlContext()
+              : 'gameplay-active'
       const intents = mapGamepadControlIntents(
         previousGamepadSnapshot,
         currentSnapshot,
@@ -455,6 +531,9 @@
       )
 
       for (const intent of intents) {
+        if (handleAvgControlIntent(intent)) {
+          continue
+        }
         if (hudState?.result) {
           handleResultControlIntent(intent)
         } else if (pauseState.mode === 'settings') {
@@ -544,7 +623,17 @@
         onAction={handleResultAction}
       />
     {/if}
-    {#if virtualControlsState.visible && isGameplayPlayable()}
+    {#if stageIntroSequence && avgPlayback && isAvgPlaybackActive(avgPlayback)}
+      <AvgOverlay
+        sequence={stageIntroSequence}
+        playback={avgPlayback}
+        {localizeData}
+        {locale}
+        onAdvance={advanceAvg}
+        onSkip={skipAvg}
+      />
+    {/if}
+    {#if virtualControlsState.visible && isGameplayPlayable() && !isAvgPlaybackActive(avgPlayback)}
       <VirtualControls
         {localizeData}
         {locale}

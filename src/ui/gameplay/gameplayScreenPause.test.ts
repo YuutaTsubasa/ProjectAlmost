@@ -26,7 +26,10 @@ describe('GameplayScreen pause integration contract', () => {
     const keyboardPauseContextIndex = keyboardBlock[0].indexOf(
       "const context = pauseState.mode === 'paused' ? 'gameplay-pause-menu' : 'gameplay-active'",
     )
-    const gamepadStageResultContextIndex = gamepadBlock[0].indexOf("const context = hudState?.result")
+    const gamepadAvgContextIndex = gamepadBlock[0].indexOf(
+      'const context = isAvgPlaybackActive(avgPlayback)',
+    )
+    const gamepadStageResultContextIndex = gamepadBlock[0].indexOf(': hudState?.result')
     const gamepadPausedContextIndex = gamepadBlock[0].indexOf("? 'gameplay-pause-menu'")
     const gamepadSettingsHandlerIndex = gamepadBlock[0].indexOf(
       "} else if (pauseState.mode === 'settings') {",
@@ -35,7 +38,9 @@ describe('GameplayScreen pause integration contract', () => {
     expect(keyboardStageResultIndex).toBeGreaterThan(-1)
     expect(keyboardStageResultIndex).toBeLessThan(keyboardSettingsIndex)
     expect(keyboardStageResultIndex).toBeLessThan(keyboardPauseContextIndex)
+    expect(gamepadAvgContextIndex).toBeGreaterThan(-1)
     expect(gamepadStageResultContextIndex).toBeGreaterThan(-1)
+    expect(gamepadAvgContextIndex).toBeLessThan(gamepadStageResultContextIndex)
     expect(gamepadStageResultContextIndex).toBeLessThan(gamepadPausedContextIndex)
     expect(gamepadStageResultContextIndex).toBeLessThan(gamepadSettingsHandlerIndex)
   })
