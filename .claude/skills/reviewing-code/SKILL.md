@@ -40,7 +40,7 @@ Skip generated/data catalogs (large stage-data files), `__prototype__/`, lockfil
 | 4 | No magic numbers/strings | unexplained literal in logic | idiomatic 0/1/-1; declarative data catalog |
 | 5 | Constants out of functions | const table/regex/object rebuilt per call | value depends on args |
 | 6 | Shared constants/protocol | same literal or union duplicated across modules | already a shared compiler-checked type |
-| 7 | Braces clarify scope | brace-less body on next line; `case` decls without a block | consistent single-line guards |
+| 7 | Visually delimit begin/end scopes | scope open/close not visually clear — brace-less body on next line; `case` decls without a block | consistent single-line guards |
 | 8 | Declarative collections | empty array + push loop; sum/find/map-shaped loop | per-frame hot path (note the tradeoff); index-coupled |
 | 9 | const & inference | `let` never reassigned; redundant obvious annotation | annotation adds real safety/intent |
 | 10 | Early returns / guards | nested `if` pyramid; `else` after a `return` | — |
