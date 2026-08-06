@@ -20,6 +20,12 @@
     createSfxCommand,
     getGameplayMusicContext,
   } from './application/audio/audioCommands'
+  import { createBrowserAssetPreloader } from './application/assets/browserAssetPreloader'
+  import {
+    createInitialPreloadProgress,
+    presentPreloadProgress,
+    type PreloadProgressSnapshot,
+  } from './application/assets/preloadProgress'
   import { getControlIntentSfxAction } from './application/audio/audioEvents'
   import { createCharacterInfoViewModel } from './application/character/characterInfoPresenter'
   import {
@@ -43,12 +49,18 @@
   } from './application/sceneTransition/sceneTransitionPolicy'
   import { resolveShellBackdrop } from './application/shell/shellBackdrop'
   import { PRODUCT_NAME } from './domain/app/projectIdentity'
+  import {
+    buildBootPreloadPlan,
+    buildGameplayEntryPreloadPlan,
+    buildStagePreloadPlan,
+  } from './domain/assets/preloadManifest'
   import { getCharacterProfile, selectedCharacterId } from './domain/character/characterProfile'
   import { projectData } from './domain/data/projectData'
   import type { GameplaySfxAction } from './domain/audio/audioPolicy'
+  import { resolveLocalizedText } from './domain/data/localize/localize'
   import { getGameplayStageMap } from './domain/gameplay/gameplayStageMaps'
   import type { ControlIntent } from './domain/input/controlIntents'
-  import type { StageId } from './domain/data/worlds/worldTypes'
+  import type { StageId, WorldId } from './domain/data/worlds/worldTypes'
   import {
     getNextStageId,
     isStageUnlocked,
@@ -66,11 +78,17 @@
   import GameplayScreen from './ui/gameplay/GameplayScreen.svelte'
   import { initialGameplayMusicState } from './ui/gameplay/gameplayMusicState'
   import type { GameplayMusicState } from './ui/gameplay/gameplayMusicState'
+  import LoadingScreen from './ui/loading/LoadingScreen.svelte'
   import SettingsScreen from './ui/settings/SettingsScreen.svelte'
   import StageSelectScreen from './ui/stage/StageSelectScreen.svelte'
   import TitleScreen from './ui/title/TitleScreen.svelte'
   import SceneTransitionOverlay from './ui/transition/SceneTransitionOverlay.svelte'
   import WorldSelectScreen from './ui/world/WorldSelectScreen.svelte'
+
+  type LoadingGateState =
+    | { kind: 'boot'; view: PreloadProgressSnapshot }
+    | { kind: 'gameplay'; view: PreloadProgressSnapshot }
+    | { kind: 'idle' }
 
   const initialAppState = createInitialAppState()
   let settings: GameSettings = $state(parseStoredSettings(null, false))
@@ -86,6 +104,12 @@
       stages: projectData.stages,
     }),
   )
+  const preloader = createBrowserAssetPreloader()
+  const bootPreloadPlan = buildBootPreloadPlan(projectData)
+  let loadingGate = $state<LoadingGateState>({
+    kind: 'boot',
+    view: presentPreloadProgress(createInitialPreloadProgress(bootPreloadPlan.length, 'boot')),
+  })
   let audio = $state<BrowserAudioController | undefined>(undefined)
   const characterInfo = createCharacterInfoViewModel(getCharacterProfile(selectedCharacterId))
   const locale = $derived(settings.language)
@@ -105,6 +129,12 @@
   )
   const nextGameplayStageAvailable = $derived(
     nextGameplayStageId !== null && isGameplayStageUnlocked(nextGameplayStageId),
+  )
+  const activeLoadingView = $derived(loadingGate.kind === 'idle' ? null : loadingGate.view)
+  const loadingPhaseLabel = $derived(
+    activeLoadingView
+      ? resolveLocalizedText(projectData.localize, locale, `loading.phase.${activeLoadingView.phase}`)
+      : '',
   )
 
   function isGameplayStageUnlocked(stageId: StageId): boolean {
@@ -136,20 +166,74 @@
     return new Promise((resolve) => window.setTimeout(resolve, durationMs))
   }
 
+  function preloadStageInBackground(stageId: StageId): void {
+    const stage = getGameplayStageMap(stageId)
+    if (!stage) return
+
+    void preloader.preloadInBackground(buildStagePreloadPlan(projectData, stage))
+  }
+
+  function preloadWorldRepresentativeInBackground(selectedWorldIndex: number): void {
+    const worldId = projectData.worlds.order[selectedWorldIndex]
+    const stageId = worldId ? projectData.worlds.items[worldId]?.stageIds[0] : undefined
+    if (stageId) preloadStageInBackground(stageId)
+  }
+
+  function preloadStageSelectionInBackground(worldId: WorldId, selectedStageIndex: number): void {
+    const stageId = projectData.worlds.items[worldId]?.stageIds[selectedStageIndex]
+    if (stageId) preloadStageInBackground(stageId)
+  }
+
+  async function preloadGameplayEntry(nextScreen: typeof appState.screen): Promise<void> {
+    if (nextScreen.type !== 'gameplay') return
+
+    const stage = getGameplayStageMap(nextScreen.stageId)
+    if (!stage) return
+
+    const plan = buildGameplayEntryPreloadPlan(projectData, stage)
+    loadingGate = {
+      kind: 'gameplay',
+      view: presentPreloadProgress(createInitialPreloadProgress(plan.length, 'gameplay')),
+    }
+    const result = await preloader.preload(plan, {
+      phase: 'gameplay',
+      onProgress: (snapshot) => {
+        loadingGate = { kind: 'gameplay', view: snapshot }
+      },
+    })
+    loadingGate = { kind: 'gameplay', view: result }
+  }
+
+  async function enterGameplay(nextState: typeof appState): Promise<void> {
+    if (loadingGate.kind === 'gameplay') return
+
+    loadingGate = {
+      kind: 'gameplay',
+      view: presentPreloadProgress(createInitialPreloadProgress(0, 'gameplay')),
+    }
+    await preloadGameplayEntry(nextState.screen)
+    const transitioned = await transitionToScreen(nextState.screen, () => {
+      loadingGate = { kind: 'idle' }
+      appState = nextState
+      gameplayMusicState = initialGameplayMusicState
+    })
+    if (!transitioned && loadingGate.kind === 'gameplay') loadingGate = { kind: 'idle' }
+  }
+
   async function transitionToScreen(
     nextScreen: typeof appState.screen,
     applyScreenChange: () => void,
-  ) {
+  ): Promise<boolean> {
     const previousScreen = appState.screen
     const style = resolveSceneTransitionStyle(previousScreen, nextScreen)
 
     if (shouldBlockSceneTransitionReentry(style, sceneTransition)) {
-      return
+      return false
     }
 
     if (!style) {
       applyScreenChange()
-      return
+      return true
     }
 
     const timing = getSceneTransitionTiming(style)
@@ -160,6 +244,7 @@
     sceneTransition = { phase: 'reveal', style }
     await waitForSceneTransition(timing.revealMs)
     sceneTransition = initialSceneTransitionState
+    return true
   }
 
   function handleGameplayMusicStateChange(state: GameplayMusicState) {
@@ -213,6 +298,31 @@
     const previousScreen = appState.screen
     const previousFullscreen = settings.fullscreen
     const nextState = applyControlIntent({ ...appState, settings, isStageUnlocked: isGameplayStageUnlocked }, intent)
+
+    if (
+      previousScreen.type === 'world-select' &&
+      intent === 'confirm' &&
+      nextState.screen.type === 'stage-select'
+    ) {
+      const nextScreen = nextState.screen
+      playUiSfx('confirm')
+      void transitionToScreen(nextState.screen, () => {
+        appState = nextState
+        preloadStageSelectionInBackground(nextScreen.worldId, nextScreen.selectedStageIndex)
+      })
+      return
+    }
+
+    if (
+      previousScreen.type === 'stage-select' &&
+      intent === 'confirm' &&
+      nextState.screen.type === 'gameplay'
+    ) {
+      playUiSfx('confirm')
+      void enterGameplay(nextState)
+      return
+    }
+
     const sfxAction = getControlIntentSfxAction(previousScreen, nextState.screen, intent)
 
     const applyNextState = () => {
@@ -235,6 +345,20 @@
 
     if (previousScreen.type === nextState.screen.type && nextState.screen.type !== 'gameplay') {
       applyNextState()
+      if (
+        previousScreen.type === 'world-select' &&
+        nextState.screen.type === 'world-select' &&
+        previousScreen.selectedWorldIndex !== nextState.screen.selectedWorldIndex
+      ) {
+        preloadWorldRepresentativeInBackground(nextState.screen.selectedWorldIndex)
+      }
+      if (
+        previousScreen.type === 'stage-select' &&
+        nextState.screen.type === 'stage-select' &&
+        previousScreen.selectedStageIndex !== nextState.screen.selectedStageIndex
+      ) {
+        preloadStageSelectionInBackground(nextState.screen.worldId, nextState.screen.selectedStageIndex)
+      }
       return
     }
 
@@ -250,6 +374,7 @@
       previousIndex !== appState.screen.selectedWorldIndex
     ) {
       playUiSfx('move')
+      preloadWorldRepresentativeInBackground(appState.screen.selectedWorldIndex)
     }
   }
 
@@ -258,6 +383,9 @@
     const nextState = confirmSelectedWorld(appState)
     void transitionToScreen(nextState.screen, () => {
       appState = nextState
+      if (nextState.screen.type === 'stage-select') {
+        preloadStageSelectionInBackground(nextState.screen.worldId, nextState.screen.selectedStageIndex)
+      }
     })
   }
 
@@ -270,19 +398,18 @@
       previousIndex !== appState.screen.selectedStageIndex
     ) {
       playUiSfx('move')
+      preloadStageSelectionInBackground(appState.screen.worldId, appState.screen.selectedStageIndex)
     }
   }
 
-  function handleConfirmStage() {
+  async function handleConfirmStage() {
     playUiSfx('confirm')
     const nextState = confirmSelectedStage(appState, { isStageUnlocked: isGameplayStageUnlocked })
-    void transitionToScreen(nextState.screen, () => {
-      appState = nextState
-      gameplayMusicState = initialGameplayMusicState
-    })
+    if (nextState.screen === appState.screen) return
+    await enterGameplay(nextState)
   }
 
-  function handleNextGameplayStage() {
+  async function handleNextGameplayStage() {
     if (appState.screen.type !== 'gameplay') return
 
     const nextStageId = getNextStageId(stageOrder, appState.screen.stageId)
@@ -291,19 +418,13 @@
     if (nextState.screen === previousScreen) return
 
     playUiSfx('confirm')
-    void transitionToScreen(nextState.screen, () => {
-      appState = nextState
-      gameplayMusicState = initialGameplayMusicState
-    })
+    await enterGameplay(nextState)
   }
 
-  function handleRetryGameplayStage() {
+  async function handleRetryGameplayStage() {
     playUiSfx('confirm')
     const nextState = retryGameplayStage(appState)
-    void transitionToScreen(nextState.screen, () => {
-      appState = nextState
-      gameplayMusicState = initialGameplayMusicState
-    })
+    await enterGameplay(nextState)
   }
 
   function handleStageClear(result: StageClearResult) {
@@ -410,6 +531,14 @@
     })
     stageProgressionSave = loadStageProgressionSave(localStorage)
     audio = createBrowserAudioController()
+    void preloader.preload(bootPreloadPlan, {
+      phase: 'boot',
+      onProgress: (snapshot) => {
+        loadingGate = { kind: 'boot', view: snapshot }
+      },
+    }).then(() => {
+      loadingGate = { kind: 'idle' }
+    })
     syncSettings(parseStoredSettings(localStorage.getItem(SETTINGS_STORAGE_KEY), actualFullscreen()))
     const initialMusicCommand = createMusicCommand(appState.screen, settings)
     if (initialMusicCommand) {
@@ -444,7 +573,14 @@
   style:--shell-backdrop={`url("${shellBackdrop.assetRef}")`}
 >
   <ResolutionFrame>
-    {#if appState.screen.type === 'title-intro' || appState.screen.type === 'title-menu'}
+    {#if activeLoadingView}
+      <LoadingScreen
+        progress={activeLoadingView}
+        phaseLabel={loadingPhaseLabel}
+        titleLabel={resolveLocalizedText(projectData.localize, locale, 'loading.title')}
+        warningLabel={resolveLocalizedText(projectData.localize, locale, 'loading.warning')}
+      />
+    {:else if appState.screen.type === 'title-intro' || appState.screen.type === 'title-menu'}
       <TitleScreen
         screen={appState.screen}
         productName={PRODUCT_NAME}

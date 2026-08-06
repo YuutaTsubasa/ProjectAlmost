@@ -96,6 +96,13 @@ export type GameplayStatusLocalizationKey =
   | 'status.bossVulnerable'
   | 'status.bossDefeated'
 
+export type LoadingLocalizationKey =
+  | 'loading.title'
+  | 'loading.phase.boot'
+  | 'loading.phase.gameplay'
+  | 'loading.phase.background'
+  | 'loading.warning'
+
 export type LocalizationKey =
   | WorldLocalizationKey
   | StageSelectLocalizationKey
@@ -109,6 +116,7 @@ export type LocalizationKey =
   | GameplayHudLocalizationKey
   | TouchLocalizationKey
   | GameplayStatusLocalizationKey
+  | LoadingLocalizationKey
 
 export interface LocaleRecord {
   code: LocaleCode
@@ -218,6 +226,11 @@ const worlds: WorldLocalizationReferenceGroup = {
 
 const catalog: LocalizedTextCatalog = {
   en: {
+    'loading.title': 'Loading',
+    'loading.phase.boot': 'Preparing system assets',
+    'loading.phase.gameplay': 'Preparing stage assets',
+    'loading.phase.background': 'Preparing nearby assets',
+    'loading.warning': 'Some assets could not be prepared',
     'language.en': 'English',
     'language.ja': 'Japanese',
     'language.zhHant': 'Traditional Chinese',
@@ -379,6 +392,11 @@ const catalog: LocalizedTextCatalog = {
     'status.bossDefeated': 'Boss signal defeated. The exit is open.',
   },
   ja: {
+    'loading.title': '読み込み中',
+    'loading.phase.boot': 'システムアセットを準備中',
+    'loading.phase.gameplay': 'ステージアセットを準備中',
+    'loading.phase.background': '周辺アセットを準備中',
+    'loading.warning': '一部のアセットを準備できませんでした',
     'language.en': '英語',
     'language.ja': '日本語',
     'language.zhHant': '繁体字中国語',
@@ -540,6 +558,11 @@ const catalog: LocalizedTextCatalog = {
     'status.bossDefeated': 'ボス信号を撃破。出口が開きました。',
   },
   zhHant: {
+    'loading.title': '載入中',
+    'loading.phase.boot': '正在準備系統資產',
+    'loading.phase.gameplay': '正在準備關卡資產',
+    'loading.phase.background': '正在準備周邊資產',
+    'loading.warning': '部分資產無法準備',
     'language.en': '英文',
     'language.ja': '日文',
     'language.zhHant': '繁體中文',
@@ -701,6 +724,11 @@ const catalog: LocalizedTextCatalog = {
     'status.bossDefeated': 'Boss 已擊敗，出口已開啟。',
   },
   ko: {
+    'loading.title': '로드 중',
+    'loading.phase.boot': '시스템 에셋 준비 중',
+    'loading.phase.gameplay': '스테이지 에셋 준비 중',
+    'loading.phase.background': '주변 에셋 준비 중',
+    'loading.warning': '일부 에셋을 준비하지 못했습니다',
     'language.en': '영어',
     'language.ja': '일본어',
     'language.zhHant': '번체 중국어',
