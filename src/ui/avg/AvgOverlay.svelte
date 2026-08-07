@@ -2,7 +2,7 @@
   import {
     getActiveAvgLineView,
   } from '../../domain/avg/avgPlayback'
-  import type { AvgPlaybackState, AvgSequence } from '../../domain/avg/avgTypes'
+  import type { AvgPlaybackState } from '../../domain/avg/avgTypes'
   import {
     resolveLocalizedText,
     type LocaleCode,
@@ -10,7 +10,6 @@
   } from '../../domain/data/localize/localize'
 
   type Props = {
-    sequence: AvgSequence
     playback: AvgPlaybackState
     localizeData: LocalizeData
     locale: LocaleCode
@@ -18,9 +17,10 @@
     onSkip: () => void
   }
 
-  let { sequence, playback, localizeData, locale, onAdvance, onSkip }: Props = $props()
+  let { playback, localizeData, locale, onAdvance, onSkip }: Props = $props()
 
   const activeLine = $derived(getActiveAvgLineView(playback))
+  const sequence = $derived(playback.sequence)
 
   function text(key: Parameters<typeof resolveLocalizedText>[2]): string {
     return resolveLocalizedText(localizeData, locale, key)
@@ -28,7 +28,7 @@
 </script>
 
 {#if activeLine}
-  <section class="avg-overlay" aria-label={text('avg.speaker.whitePriestess')}>
+  <section class="avg-overlay" aria-label={text(activeLine.speaker.nameKey)}>
     <div class="avg-veil" aria-hidden="true"></div>
     <button class="avg-advance" type="button" aria-label={text('common.confirm')} onclick={onAdvance}></button>
 

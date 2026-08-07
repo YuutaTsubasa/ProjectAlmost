@@ -3,7 +3,6 @@ import source from './AvgOverlay.svelte?raw'
 
 describe('AvgOverlay UI', () => {
   it('is presentation-only and receives AVG data through props', () => {
-    expect(source).toContain('sequence:')
     expect(source).toContain('playback:')
     expect(source).toContain('localizeData:')
     expect(source).toContain('locale:')
@@ -15,6 +14,14 @@ describe('AvgOverlay UI', () => {
     expect(source).not.toContain('localStorage')
     expect(source).not.toContain('appState')
     expect(source).not.toContain('window.dispatchEvent')
+  })
+
+  it('derives sequence data and accessible label from playback state', () => {
+    expect(source).not.toContain('sequence:')
+    expect(source).not.toContain('let { sequence,')
+    expect(source).toContain('const sequence = $derived(playback.sequence)')
+    expect(source).toContain('aria-label={text(activeLine.speaker.nameKey)}')
+    expect(source).not.toContain("aria-label={text('avg.speaker.whitePriestess')}")
   })
 
   it('renders the approved AVG overlay visual structure', () => {

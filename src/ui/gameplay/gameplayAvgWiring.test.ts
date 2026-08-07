@@ -5,7 +5,8 @@ describe('GameplayScreen AVG wiring', () => {
   it('creates stage intro AVG state from the domain registry', () => {
     expect(source).toContain("import AvgOverlay from '../avg/AvgOverlay.svelte'")
     expect(source).toContain("import { getStageIntroSequence } from '../../domain/avg/avgRegistry'")
-    expect(source).toContain('createAvgPlayback(stageIntroSequence)')
+    expect(source).toContain('function createStageIntroAvgPlayback(): AvgPlaybackState | null')
+    expect(source).toContain('createAvgPlayback(sequence)')
     expect(source).toContain('let avgPlayback = $state')
   })
 
@@ -14,7 +15,7 @@ describe('GameplayScreen AVG wiring', () => {
     const pauseIntentIndex = source.indexOf('handlePauseControlIntent(intent)')
     const resultIntentIndex = source.indexOf('handleResultControlIntent(intent)')
 
-    expect(source).toContain('function handleAvgControlIntent(intent: ControlIntent): boolean')
+    expect(source).toContain('function handleAvgControlIntent(intent: ControlIntent): void')
     expect(keydownAvgIndex).toBeGreaterThan(-1)
     expect(pauseIntentIndex).toBeGreaterThan(keydownAvgIndex)
     expect(resultIntentIndex).toBeGreaterThan(-1)
@@ -24,16 +25,32 @@ describe('GameplayScreen AVG wiring', () => {
     const keyboardBlockMatch = source.match(/function handleKeydown\(event: KeyboardEvent\): void \{[\s\S]*?\n  \}/)
     const keyboardBlock = keyboardBlockMatch?.[0] ?? ''
     const avgInputIndex = keyboardBlock.indexOf('if (isAvgPlaybackActive(avgPlayback)) {')
-    const pauseContextIndex = keyboardBlock.indexOf(
-      "const context = pauseState.mode === 'paused' ? 'gameplay-pause-menu' : 'gameplay-active'",
-    )
+    const pauseContextIndex = keyboardBlock.indexOf('const context = resolveGameplayControlContext()')
 
     expect(keyboardBlock).toContain(
       "if (isAvgPlaybackActive(avgPlayback)) {\n      const intent = mapKeyboardControlIntent(",
     )
+    expect(keyboardBlock).toContain("'avg',")
     expect(keyboardBlock).toContain('event.preventDefault()')
+    expect(keyboardBlock).toContain('if (intent) handleAvgControlIntent(intent)')
     expect(avgInputIndex).toBeGreaterThan(-1)
+    expect(pauseContextIndex).toBeGreaterThan(-1)
     expect(avgInputIndex).toBeLessThan(pauseContextIndex)
+  })
+
+  it('uses a dedicated AVG control context and early-return context resolver', () => {
+    const resolverMatch = source.match(/function resolveGameplayControlContext\(\): ControlContext \{[\s\S]*?\n  \}/)
+    const resolver = resolverMatch?.[0] ?? ''
+    const pollGamepadMatch = source.match(/function pollGamepad\(\) \{[\s\S]*?previousGamepadSnapshot = currentSnapshot/)
+    const pollGamepad = pollGamepadMatch?.[0] ?? ''
+
+    expect(resolver).toContain("if (isAvgPlaybackActive(avgPlayback)) return 'avg'")
+    expect(resolver).toContain("if (hudState?.result) return 'stage-select'")
+    expect(resolver).toContain("if (pauseState.mode === 'paused') return 'gameplay-pause-menu'")
+    expect(resolver).toContain("if (pauseState.mode === 'settings') return pauseSettingsControlContext()")
+    expect(pollGamepad).toContain('const context = resolveGameplayControlContext()')
+    expect(pollGamepad).not.toContain("? 'stage-select'")
+    expect(pollGamepad).not.toContain(": 'stage-select'")
   })
 
   it('requires neutral gameplay input before resuming after AVG finishes', () => {
@@ -72,6 +89,8 @@ describe('GameplayScreen AVG wiring', () => {
 
     expect(overlayIndex).toBeGreaterThan(-1)
     expect(virtualControlsIndex).toBeGreaterThan(overlayIndex)
+    expect(source).not.toContain('stageIntroSequence && avgPlayback && isAvgPlaybackActive(avgPlayback)')
+    expect(source).not.toContain('sequence={stageIntroSequence}')
     expect(source).toContain('!isAvgPlaybackActive(avgPlayback)')
     expect(source).toMatch(/virtualControlsState\.visible && isGameplayPlayable\(\) && !isAvgPlaybackActive\(avgPlayback\)/)
   })

@@ -12,6 +12,7 @@ export type ControlContext =
   | 'title-menu'
   | 'world-select'
   | 'stage-select'
+  | 'avg'
   | 'settings'
   | 'settings-delete-confirm'
   | 'gameplay-active'
@@ -38,10 +39,11 @@ const KEYBOARD_INTENT_KEYS: readonly { intent: ControlIntent; keys: readonly str
 ]
 
 const CONTEXT_INTENTS: Record<ControlContext, readonly ControlIntent[]> = {
-  'title-intro': [],
+  'title-intro': ['open'],
   'title-menu': ['move-up', 'move-down', 'confirm', 'back'],
   'world-select': ['move-up', 'move-down', 'move-left', 'move-right', 'confirm', 'back'],
   'stage-select': ['move-up', 'move-down', 'move-left', 'move-right', 'confirm', 'back'],
+  avg: ['confirm', 'back'],
   settings: ['move-up', 'move-down', 'move-left', 'move-right', 'confirm', 'back'],
   'settings-delete-confirm': ['move-left', 'move-right', 'confirm', 'back'],
   'gameplay-active': ['back'],
@@ -131,7 +133,9 @@ export function mapGamepadControlIntents(
     intents.push('move-right')
   }
 
-  return intents
+  const allowedIntents = CONTEXT_INTENTS[context]
+
+  return intents.filter((intent) => allowedIntents.includes(intent))
 }
 
 function pressedNow(

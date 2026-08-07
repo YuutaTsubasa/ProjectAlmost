@@ -112,10 +112,7 @@
   let pauseState = $state<GameplayPauseState>({ mode: 'playing' })
   let renderer: ReturnType<typeof createGameplayRenderer> | null = null
   // svelte-ignore state_referenced_locally
-  const stageIntroSequence = getStageIntroSequence(stage.id)
-  let avgPlayback = $state<AvgPlaybackState | null>(
-    stageIntroSequence ? createAvgPlayback(stageIntroSequence) : null,
-  )
+  let avgPlayback = $state<AvgPlaybackState | null>(createStageIntroAvgPlayback())
   let rendererPausedForAvg = false
   let pauseSettingsScreen = $state<SettingsScreen>({
     type: 'settings',
@@ -286,35 +283,42 @@
     return pauseSettingsScreen.deleteConfirm ? 'settings-delete-confirm' : 'settings'
   }
 
+  function createStageIntroAvgPlayback(): AvgPlaybackState | null {
+    const sequence = getStageIntroSequence(stage.id)
+    return sequence ? createAvgPlayback(sequence) : null
+  }
+
+  function resolveGameplayControlContext(): ControlContext {
+    if (isAvgPlaybackActive(avgPlayback)) return 'avg'
+    if (hudState?.result) return 'stage-select'
+    if (pauseState.mode === 'paused') return 'gameplay-pause-menu'
+    if (pauseState.mode === 'settings') return pauseSettingsControlContext()
+
+    return 'gameplay-active'
+  }
+
   function isGameplayPlayable(): boolean {
     return pauseState.mode === 'playing' && !hudState?.result && !isAvgPlaybackActive(avgPlayback)
   }
 
-  function finishAvgPlayback(nextPlayback: AvgPlaybackState): void {
-    avgPlayback = nextPlayback
-  }
-
   function advanceAvg(): void {
     if (!avgPlayback) return
-    finishAvgPlayback(advanceAvgPlayback(avgPlayback))
+    avgPlayback = advanceAvgPlayback(avgPlayback)
   }
 
   function skipAvg(): void {
     if (!avgPlayback) return
-    finishAvgPlayback(skipAvgPlayback(avgPlayback))
+    avgPlayback = skipAvgPlayback(avgPlayback)
   }
 
-  function handleAvgControlIntent(intent: ControlIntent): boolean {
-    if (!isAvgPlaybackActive(avgPlayback)) return false
+  function handleAvgControlIntent(intent: ControlIntent): void {
     if (intent === 'confirm') {
       advanceAvg()
-      return true
+      return
     }
     if (intent === 'back') {
       skipAvg()
-      return true
     }
-    return true
   }
 
   function applyVirtualControlsVisibility(source: GameplayInputSource): void {
@@ -435,7 +439,7 @@
     if (isAvgPlaybackActive(avgPlayback)) {
       const intent = mapKeyboardControlIntent(
         { key: event.key, repeat: event.repeat },
-        'stage-select',
+        'avg',
       )
       event.preventDefault()
       if (intent) handleAvgControlIntent(intent)
@@ -470,7 +474,7 @@
       return
     }
 
-    const context = pauseState.mode === 'paused' ? 'gameplay-pause-menu' : 'gameplay-active'
+    const context = resolveGameplayControlContext()
     const pauseIntent = mapKeyboardControlIntent(
       { key: event.key, repeat: event.repeat },
       context,
@@ -517,15 +521,7 @@
         applyVirtualControlsVisibility('gamepad')
       }
 
-      const context = isAvgPlaybackActive(avgPlayback)
-        ? 'stage-select'
-        : hudState?.result
-          ? 'stage-select'
-          : pauseState.mode === 'paused'
-            ? 'gameplay-pause-menu'
-            : pauseState.mode === 'settings'
-              ? pauseSettingsControlContext()
-              : 'gameplay-active'
+      const context = resolveGameplayControlContext()
       const intents = mapGamepadControlIntents(
         previousGamepadSnapshot,
         currentSnapshot,
@@ -533,7 +529,8 @@
       )
 
       for (const intent of intents) {
-        if (handleAvgControlIntent(intent)) {
+        if (isAvgPlaybackActive(avgPlayback)) {
+          handleAvgControlIntent(intent)
           continue
         }
         if (hudState?.result) {
@@ -625,9 +622,8 @@
         onAction={handleResultAction}
       />
     {/if}
-    {#if stageIntroSequence && avgPlayback && isAvgPlaybackActive(avgPlayback)}
+    {#if avgPlayback && isAvgPlaybackActive(avgPlayback)}
       <AvgOverlay
-        sequence={stageIntroSequence}
         playback={avgPlayback}
         {localizeData}
         {locale}
