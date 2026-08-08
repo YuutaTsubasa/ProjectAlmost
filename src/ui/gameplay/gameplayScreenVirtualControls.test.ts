@@ -5,7 +5,9 @@ describe('GameplayScreen virtual controls integration contract', () => {
   it('renders localized virtual controls only through gameplay screen state', () => {
     expect(gameplayScreenSource).toContain("import VirtualControls from './VirtualControls.svelte'")
     expect(gameplayScreenSource).toContain('let virtualControlsState = $state<VirtualControlsState>')
-    expect(gameplayScreenSource).toContain('{#if virtualControlsState.visible && isGameplayPlayable()}')
+    expect(gameplayScreenSource).toContain(
+      '{#if virtualControlsState.visible && isGameplayPlayable() && !isAvgPlaybackActive(avgPlayback)}',
+    )
     expect(gameplayScreenSource).toContain('<VirtualControls')
     expect(gameplayScreenSource).toContain('{localizeData}')
     expect(gameplayScreenSource).toContain('{locale}')

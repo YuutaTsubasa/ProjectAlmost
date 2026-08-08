@@ -1,4 +1,5 @@
 import { MUSIC_ASSETS, SFX_ASSETS } from '../audio/audioAssets'
+import { getStageIntroSequence } from '../avg/avgRegistry'
 import { getCharacterProfile, selectedCharacterId } from '../character/characterProfile'
 import { projectData } from '../data/projectData'
 import { bossPriestessSpriteAssets } from '../gameplay/bossBattle'
@@ -102,6 +103,11 @@ function stageSources(project: ProjectDataLike, stage: GameplayStageMap): string
   ]
 }
 
+function avgIntroSources(stage: GameplayStageMap): string[] {
+  const sequence = getStageIntroSequence(stage.id)
+  return sequence ? sequence.characters.map((character) => character.portraitAssetRef) : []
+}
+
 export function buildBootPreloadPlan(project: ProjectDataLike): PreloadAsset[] {
   const worlds = project.worlds.order.map((worldId) => {
     const world = project.worlds.items[worldId]
@@ -133,13 +139,14 @@ export function buildGameplayEntryPreloadPlan(project: ProjectDataLike, stage: G
   return combinePreloadPlans(
     buildSharedGameplayPreloadPlan(),
     buildStagePreloadPlan(project, stage),
+    toAssets(avgIntroSources(stage), 'stage'),
   )
 }
 
 export function collectRuntimeAssetSources(project: ProjectDataLike): string[] {
   const stagePlans = gameplayStageMaps.order.flatMap((stageId) => {
     const stage = gameplayStageMaps.items[stageId]
-    return stage ? buildStagePreloadPlan(project, stage).map((asset) => asset.source) : []
+    return stage ? buildGameplayEntryPreloadPlan(project, stage).map((asset) => asset.source) : []
   })
 
   return [...new Set([

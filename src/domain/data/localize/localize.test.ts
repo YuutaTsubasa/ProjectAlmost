@@ -15,6 +15,74 @@ describe('localize', () => {
     expect(resolveLocalizedText(localize, 'en', 'loading.warning')).toBe('Some assets could not be prepared')
   })
 
+  it('includes localized AVG values for every supported locale', () => {
+    const expectedByLocale = {
+      en: {
+        skip: 'Skip',
+        yuuta: 'Yuuta Tsubasa',
+        whitePriestess: 'White Priestess',
+        lines: [
+          'So, you are the one who reached the High Spire.',
+          'If you are this palace’s guardian, please stand aside.',
+          'I cannot. The palace light no longer recognizes those who return.',
+          'Then I will prove I can pass through, in my own way.',
+          'Very well. Cross my celestial rings, and show me your resolve.',
+          'I will reach the exit behind you.',
+        ],
+      },
+      ja: {
+        skip: 'スキップ',
+        yuuta: 'ユウタ・ツバサ',
+        whitePriestess: '白の祭司',
+        lines: [
+          '高き尖塔へ辿り着いたのは、あなたなのですね。',
+          'この宮殿の守護者なら、道を開けてください。',
+          'できません。宮殿の光は、帰還者を見分けられなくなりました。',
+          'ならば、自分のやり方で通れることを証明します。',
+          'よいでしょう。私の星環を越え、その決意を示してください。',
+          'あなたの背後にある出口へ、必ず辿り着きます。',
+        ],
+      },
+      zhHant: {
+        skip: '跳過',
+        yuuta: 'Yuuta Tsubasa',
+        whitePriestess: '白之祭司',
+        lines: [
+          '所以，抵達高塔的人是你。',
+          '如果你是守護這座宮殿的人，請讓開。',
+          '我不能。宮殿的光，早已不再辨認誰是歸來者。',
+          '那我就用自己的方式，證明我能通過。',
+          '很好。穿過我的星環，讓我看看你的決意。',
+          '我會抵達你身後的出口。',
+        ],
+      },
+      ko: {
+        skip: '건너뛰기',
+        yuuta: '유우타 츠바사',
+        whitePriestess: '백의 사제',
+        lines: [
+          '높은 첨탑에 도달한 자가 바로 당신이군요.',
+          '이 궁전의 수호자라면 길을 비켜 주세요.',
+          '그럴 수 없습니다. 궁전의 빛은 이제 귀환자를 구별하지 못합니다.',
+          '그렇다면 제 방식으로 통과할 수 있음을 증명하겠습니다.',
+          '좋습니다. 제 성환을 넘어 당신의 결의를 보여 주세요.',
+          '당신 뒤의 출구까지 반드시 도달하겠습니다.',
+        ],
+      },
+    } as const
+
+    for (const locale of localize.languages.map((language) => language.code)) {
+      const expected = expectedByLocale[locale]
+      expect(resolveLocalizedText(localize, locale, 'avg.skip')).toBe(expected.skip)
+      expect(resolveLocalizedText(localize, locale, 'avg.speaker.yuuta')).toBe(expected.yuuta)
+      expect(resolveLocalizedText(localize, locale, 'avg.speaker.whitePriestess')).toBe(expected.whitePriestess)
+
+      expected.lines.forEach((line, index) => {
+        expect(resolveLocalizedText(localize, locale, `avg.1-6.line${index + 1}` as LocalizationKey)).toBe(line)
+      })
+    }
+  })
+
   it('declares the supported locales in deterministic order', () => {
     expect(localize.languages.map((language) => language.code)).toEqual(['en', 'ja', 'zhHant', 'ko'])
   })

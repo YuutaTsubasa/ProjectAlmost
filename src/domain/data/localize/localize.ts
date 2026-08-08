@@ -103,6 +103,12 @@ export type LoadingLocalizationKey =
   | 'loading.phase.background'
   | 'loading.warning'
 
+export type AvgLocalizationKey =
+  | 'avg.skip'
+  | 'avg.speaker.yuuta'
+  | 'avg.speaker.whitePriestess'
+  | `avg.1-6.line${1 | 2 | 3 | 4 | 5 | 6}`
+
 export type LocalizationKey =
   | WorldLocalizationKey
   | StageSelectLocalizationKey
@@ -117,6 +123,7 @@ export type LocalizationKey =
   | TouchLocalizationKey
   | GameplayStatusLocalizationKey
   | LoadingLocalizationKey
+  | AvgLocalizationKey
 
 export interface LocaleRecord {
   code: LocaleCode
@@ -231,6 +238,15 @@ const catalog: LocalizedTextCatalog = {
     'loading.phase.gameplay': 'Preparing stage assets',
     'loading.phase.background': 'Preparing nearby assets',
     'loading.warning': 'Some assets could not be prepared',
+    'avg.skip': 'Skip',
+    'avg.speaker.yuuta': 'Yuuta Tsubasa',
+    'avg.speaker.whitePriestess': 'White Priestess',
+    'avg.1-6.line1': 'So, you are the one who reached the High Spire.',
+    'avg.1-6.line2': 'If you are this palace’s guardian, please stand aside.',
+    'avg.1-6.line3': 'I cannot. The palace light no longer recognizes those who return.',
+    'avg.1-6.line4': 'Then I will prove I can pass through, in my own way.',
+    'avg.1-6.line5': 'Very well. Cross my celestial rings, and show me your resolve.',
+    'avg.1-6.line6': 'I will reach the exit behind you.',
     'language.en': 'English',
     'language.ja': 'Japanese',
     'language.zhHant': 'Traditional Chinese',
@@ -397,6 +413,15 @@ const catalog: LocalizedTextCatalog = {
     'loading.phase.gameplay': 'ステージアセットを準備中',
     'loading.phase.background': '周辺アセットを準備中',
     'loading.warning': '一部のアセットを準備できませんでした',
+    'avg.skip': 'スキップ',
+    'avg.speaker.yuuta': 'ユウタ・ツバサ',
+    'avg.speaker.whitePriestess': '白の祭司',
+    'avg.1-6.line1': '高き尖塔へ辿り着いたのは、あなたなのですね。',
+    'avg.1-6.line2': 'この宮殿の守護者なら、道を開けてください。',
+    'avg.1-6.line3': 'できません。宮殿の光は、帰還者を見分けられなくなりました。',
+    'avg.1-6.line4': 'ならば、自分のやり方で通れることを証明します。',
+    'avg.1-6.line5': 'よいでしょう。私の星環を越え、その決意を示してください。',
+    'avg.1-6.line6': 'あなたの背後にある出口へ、必ず辿り着きます。',
     'language.en': '英語',
     'language.ja': '日本語',
     'language.zhHant': '繁体字中国語',
@@ -563,6 +588,15 @@ const catalog: LocalizedTextCatalog = {
     'loading.phase.gameplay': '正在準備關卡資產',
     'loading.phase.background': '正在準備周邊資產',
     'loading.warning': '部分資產無法準備',
+    'avg.skip': '跳過',
+    'avg.speaker.yuuta': 'Yuuta Tsubasa',
+    'avg.speaker.whitePriestess': '白之祭司',
+    'avg.1-6.line1': '所以，抵達高塔的人是你。',
+    'avg.1-6.line2': '如果你是守護這座宮殿的人，請讓開。',
+    'avg.1-6.line3': '我不能。宮殿的光，早已不再辨認誰是歸來者。',
+    'avg.1-6.line4': '那我就用自己的方式，證明我能通過。',
+    'avg.1-6.line5': '很好。穿過我的星環，讓我看看你的決意。',
+    'avg.1-6.line6': '我會抵達你身後的出口。',
     'language.en': '英文',
     'language.ja': '日文',
     'language.zhHant': '繁體中文',
@@ -729,6 +763,15 @@ const catalog: LocalizedTextCatalog = {
     'loading.phase.gameplay': '스테이지 에셋 준비 중',
     'loading.phase.background': '주변 에셋 준비 중',
     'loading.warning': '일부 에셋을 준비하지 못했습니다',
+    'avg.skip': '건너뛰기',
+    'avg.speaker.yuuta': '유우타 츠바사',
+    'avg.speaker.whitePriestess': '백의 사제',
+    'avg.1-6.line1': '높은 첨탑에 도달한 자가 바로 당신이군요.',
+    'avg.1-6.line2': '이 궁전의 수호자라면 길을 비켜 주세요.',
+    'avg.1-6.line3': '그럴 수 없습니다. 궁전의 빛은 이제 귀환자를 구별하지 못합니다.',
+    'avg.1-6.line4': '그렇다면 제 방식으로 통과할 수 있음을 증명하겠습니다.',
+    'avg.1-6.line5': '좋습니다. 제 성환을 넘어 당신의 결의를 보여 주세요.',
+    'avg.1-6.line6': '당신 뒤의 출구까지 반드시 도달하겠습니다.',
     'language.en': '영어',
     'language.ja': '일본어',
     'language.zhHant': '번체 중국어',

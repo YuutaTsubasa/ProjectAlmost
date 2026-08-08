@@ -4,6 +4,14 @@
   import { applySettingsControlIntent } from '../../application/input/settingsControls'
   import type { SettingsScreen } from '../../domain/app/appFlow'
   import {
+    advanceAvgPlayback,
+    createAvgPlayback,
+    isAvgPlaybackActive,
+    skipAvgPlayback,
+  } from '../../domain/avg/avgPlayback'
+  import { getStageIntroSequence } from '../../domain/avg/avgRegistry'
+  import type { AvgPlaybackState } from '../../domain/avg/avgTypes'
+  import {
     resolveLocalizedText,
     type LocaleCode,
     type LocalizationKey,
@@ -57,6 +65,7 @@
   import { createGameplayRenderer } from './createGameplayRenderer'
   import { getGameplayHudStageDisplay } from './gameplayHudDisplay'
   import type { GameplayMusicState } from './gameplayMusicState'
+  import AvgOverlay from '../avg/AvgOverlay.svelte'
   import SettingsPanel from '../settings/SettingsPanel.svelte'
 
   type Props = {
@@ -102,6 +111,9 @@
   let hudState = $state<GameplayHudState | null>(createInitialGameplayHudState(stage))
   let pauseState = $state<GameplayPauseState>({ mode: 'playing' })
   let renderer: ReturnType<typeof createGameplayRenderer> | null = null
+  // svelte-ignore state_referenced_locally
+  let avgPlayback = $state<AvgPlaybackState | null>(createStageIntroAvgPlayback())
+  let rendererPausedForAvg = false
   let pauseSettingsScreen = $state<SettingsScreen>({
     type: 'settings',
     selectedItemIndex: 0,
@@ -126,6 +138,25 @@
       resultVisible: Boolean(hudState?.result),
       paused: pauseState.mode !== 'playing',
     })
+  })
+
+  $effect(() => {
+    if (!renderer) return
+
+    if (isAvgPlaybackActive(avgPlayback)) {
+      if (!rendererPausedForAvg) {
+        renderer.pause()
+        rendererPausedForAvg = true
+      }
+      return
+    }
+
+    if (rendererPausedForAvg) {
+      renderer.requireGameplayInputRelease()
+      renderer.resume()
+      renderer.resetTiming()
+      rendererPausedForAvg = false
+    }
   })
 
   function handleResultAction(action: StageResultActionType): void {
@@ -252,8 +283,42 @@
     return pauseSettingsScreen.deleteConfirm ? 'settings-delete-confirm' : 'settings'
   }
 
+  function createStageIntroAvgPlayback(): AvgPlaybackState | null {
+    const sequence = getStageIntroSequence(stage.id)
+    return sequence ? createAvgPlayback(sequence) : null
+  }
+
+  function resolveGameplayControlContext(): ControlContext {
+    if (isAvgPlaybackActive(avgPlayback)) return 'avg'
+    if (hudState?.result) return 'stage-select'
+    if (pauseState.mode === 'paused') return 'gameplay-pause-menu'
+    if (pauseState.mode === 'settings') return pauseSettingsControlContext()
+
+    return 'gameplay-active'
+  }
+
   function isGameplayPlayable(): boolean {
-    return pauseState.mode === 'playing' && !hudState?.result
+    return pauseState.mode === 'playing' && !hudState?.result && !isAvgPlaybackActive(avgPlayback)
+  }
+
+  function advanceAvg(): void {
+    if (!avgPlayback) return
+    avgPlayback = advanceAvgPlayback(avgPlayback)
+  }
+
+  function skipAvg(): void {
+    if (!avgPlayback) return
+    avgPlayback = skipAvgPlayback(avgPlayback)
+  }
+
+  function handleAvgControlIntent(intent: ControlIntent): void {
+    if (intent === 'confirm') {
+      advanceAvg()
+      return
+    }
+    if (intent === 'back') {
+      skipAvg()
+    }
   }
 
   function applyVirtualControlsVisibility(source: GameplayInputSource): void {
@@ -371,6 +436,16 @@
   }
 
   function handleKeydown(event: KeyboardEvent): void {
+    if (isAvgPlaybackActive(avgPlayback)) {
+      const intent = mapKeyboardControlIntent(
+        { key: event.key, repeat: event.repeat },
+        'avg',
+      )
+      event.preventDefault()
+      if (intent) handleAvgControlIntent(intent)
+      return
+    }
+
     if (isGameplayPlayable() && isKeyboardGameplayInput(event)) {
       applyVirtualControlsVisibility('keyboard')
     }
@@ -399,15 +474,15 @@
       return
     }
 
-    const context = pauseState.mode === 'paused' ? 'gameplay-pause-menu' : 'gameplay-active'
-    const intent = mapKeyboardControlIntent(
+    const context = resolveGameplayControlContext()
+    const pauseIntent = mapKeyboardControlIntent(
       { key: event.key, repeat: event.repeat },
       context,
     )
-    if (!intent) return
+    if (!pauseIntent) return
 
     event.preventDefault()
-    handlePauseControlIntent(intent)
+    handlePauseControlIntent(pauseIntent)
   }
 
   function readGamepadSnapshot(): GamepadControlSnapshot | null {
@@ -434,6 +509,11 @@
       getInputSnapshot: getGameplayInputSnapshot,
     })
 
+    if (isAvgPlaybackActive(avgPlayback)) {
+      renderer.pause()
+      rendererPausedForAvg = true
+    }
+
     function pollGamepad() {
       const currentSnapshot = readGamepadSnapshot()
       gamepadGameplayInput = mapGamepadGameplayInputSnapshot(previousGamepadSnapshot, currentSnapshot)
@@ -441,13 +521,7 @@
         applyVirtualControlsVisibility('gamepad')
       }
 
-      const context = hudState?.result
-        ? 'stage-select'
-        : pauseState.mode === 'paused'
-          ? 'gameplay-pause-menu'
-          : pauseState.mode === 'settings'
-            ? pauseSettingsControlContext()
-            : 'gameplay-active'
+      const context = resolveGameplayControlContext()
       const intents = mapGamepadControlIntents(
         previousGamepadSnapshot,
         currentSnapshot,
@@ -455,6 +529,10 @@
       )
 
       for (const intent of intents) {
+        if (isAvgPlaybackActive(avgPlayback)) {
+          handleAvgControlIntent(intent)
+          continue
+        }
         if (hudState?.result) {
           handleResultControlIntent(intent)
         } else if (pauseState.mode === 'settings') {
@@ -544,7 +622,16 @@
         onAction={handleResultAction}
       />
     {/if}
-    {#if virtualControlsState.visible && isGameplayPlayable()}
+    {#if avgPlayback && isAvgPlaybackActive(avgPlayback)}
+      <AvgOverlay
+        playback={avgPlayback}
+        {localizeData}
+        {locale}
+        onAdvance={advanceAvg}
+        onSkip={skipAvg}
+      />
+    {/if}
+    {#if virtualControlsState.visible && isGameplayPlayable() && !isAvgPlaybackActive(avgPlayback)}
       <VirtualControls
         {localizeData}
         {locale}

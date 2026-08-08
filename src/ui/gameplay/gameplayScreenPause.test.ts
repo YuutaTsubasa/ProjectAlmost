@@ -20,36 +20,47 @@ describe('GameplayScreen pause integration contract', () => {
 
     const keyboardBlock = keyboardBlockMatch ?? ['']
     const gamepadBlock = gamepadBlockMatch ?? ['']
+    const resolverBlockMatch = gameplayScreenSource.match(
+      /function resolveGameplayControlContext\(\): ControlContext \{[\s\S]*?\n  \}/,
+    )
+    const resolverBlock = resolverBlockMatch ?? ['']
 
     const keyboardStageResultIndex = keyboardBlock[0].indexOf('if (hudState?.result) {')
     const keyboardSettingsIndex = keyboardBlock[0].indexOf("if (pauseState.mode === 'settings') {")
-    const keyboardPauseContextIndex = keyboardBlock[0].indexOf(
-      "const context = pauseState.mode === 'paused' ? 'gameplay-pause-menu' : 'gameplay-active'",
+    const keyboardPauseContextIndex = keyboardBlock[0].indexOf('const context = resolveGameplayControlContext()')
+    const gamepadContextIndex = gamepadBlock[0].indexOf('const context = resolveGameplayControlContext()')
+    const resolverAvgContextIndex = resolverBlock[0].indexOf("if (isAvgPlaybackActive(avgPlayback)) return 'avg'")
+    const resolverStageResultContextIndex = resolverBlock[0].indexOf("if (hudState?.result) return 'stage-select'")
+    const resolverPausedContextIndex = resolverBlock[0].indexOf(
+      "if (pauseState.mode === 'paused') return 'gameplay-pause-menu'",
     )
-    const gamepadStageResultContextIndex = gamepadBlock[0].indexOf("const context = hudState?.result")
-    const gamepadPausedContextIndex = gamepadBlock[0].indexOf("? 'gameplay-pause-menu'")
-    const gamepadSettingsHandlerIndex = gamepadBlock[0].indexOf(
-      "} else if (pauseState.mode === 'settings') {",
+    const resolverSettingsContextIndex = resolverBlock[0].indexOf(
+      "if (pauseState.mode === 'settings') return pauseSettingsControlContext()",
     )
 
     expect(keyboardStageResultIndex).toBeGreaterThan(-1)
     expect(keyboardStageResultIndex).toBeLessThan(keyboardSettingsIndex)
     expect(keyboardStageResultIndex).toBeLessThan(keyboardPauseContextIndex)
-    expect(gamepadStageResultContextIndex).toBeGreaterThan(-1)
-    expect(gamepadStageResultContextIndex).toBeLessThan(gamepadPausedContextIndex)
-    expect(gamepadStageResultContextIndex).toBeLessThan(gamepadSettingsHandlerIndex)
+    expect(gamepadContextIndex).toBeGreaterThan(-1)
+    expect(resolverAvgContextIndex).toBeGreaterThan(-1)
+    expect(resolverStageResultContextIndex).toBeGreaterThan(-1)
+    expect(resolverAvgContextIndex).toBeLessThan(resolverStageResultContextIndex)
+    expect(resolverStageResultContextIndex).toBeLessThan(resolverPausedContextIndex)
+    expect(resolverStageResultContextIndex).toBeLessThan(resolverSettingsContextIndex)
   })
 
   it('prioritizes stage result, pause menu, pause settings, and gameplay-active control contexts in order', () => {
-    const gamepadBlockMatch = gameplayScreenSource.match(/function pollGamepad\(\) \{[\s\S]*?\n    \}/)
+    const resolverBlockMatch = gameplayScreenSource.match(
+      /function resolveGameplayControlContext\(\): ControlContext \{[\s\S]*?\n  \}/,
+    )
 
-    expect(gamepadBlockMatch).not.toBeNull()
+    expect(resolverBlockMatch).not.toBeNull()
 
-    const gamepadBlock = gamepadBlockMatch ?? ['']
-    const stageSelectIndex = gamepadBlock[0].indexOf("? 'stage-select'")
-    const pauseMenuIndex = gamepadBlock[0].indexOf("? 'gameplay-pause-menu'")
-    const pauseSettingsContextIndex = gamepadBlock[0].indexOf('pauseSettingsControlContext()')
-    const gameplayActiveIndex = gamepadBlock[0].indexOf(": 'gameplay-active'")
+    const resolverBlock = resolverBlockMatch ?? ['']
+    const stageSelectIndex = resolverBlock[0].indexOf("if (hudState?.result) return 'stage-select'")
+    const pauseMenuIndex = resolverBlock[0].indexOf("if (pauseState.mode === 'paused') return 'gameplay-pause-menu'")
+    const pauseSettingsContextIndex = resolverBlock[0].indexOf('pauseSettingsControlContext()')
+    const gameplayActiveIndex = resolverBlock[0].indexOf("return 'gameplay-active'")
 
     expect(stageSelectIndex).toBeGreaterThan(-1)
     expect(stageSelectIndex).toBeLessThan(pauseMenuIndex)

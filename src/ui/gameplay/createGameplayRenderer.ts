@@ -189,6 +189,7 @@ export type GameplayRendererController = {
   game: Phaser.Game
   pause: () => void
   resume: () => void
+  requireGameplayInputRelease: () => void
   resetTiming: () => void
   destroy: () => void
 }
@@ -507,6 +508,10 @@ class GameplayMapScene extends Phaser.Scene {
     this.checkPlayerOutOfBounds()
     this.updatePlayerMovement()
     this.emitHudPositionPatch()
+  }
+
+  requireGameplayInputRelease(): void {
+    this.gameplayStartGateState = createInitialGameplayStartGateState()
   }
 
   private updatePresentationOnlySystems(): void {
@@ -2704,6 +2709,10 @@ export function createGameplayRenderer(input: GameplayRendererInput): GameplayRe
     },
     resume: () => {
       game.scene.resume(sceneKey)
+    },
+    requireGameplayInputRelease: () => {
+      const scene = game.scene.getScene(sceneKey) as GameplayMapScene
+      scene.requireGameplayInputRelease()
     },
     resetTiming: () => {
       game.loop.resetDelta()

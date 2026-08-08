@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { projectData } from '../data/projectData'
 import type { GameplayStageMap } from '../gameplay/gameplayMapTypes'
@@ -176,6 +177,31 @@ describe('preload manifest', () => {
     expect(sources).toContain('/assets/sprites/boss_priestess_hurt/sheet-transparent.webp')
     expect(sources).toContain('/assets/sprites/boss_priestess_death/sheet-transparent.webp')
     expect(sources).toContain('/assets/audio/world01_boss.mp3')
+  })
+
+  it('has imported AVG portrait assets under rebuild public assets', () => {
+    const avgPortraitSources = [
+      '/assets/avg/yuuta-dialogue.webp',
+      '/assets/avg/white-priestess-dialogue.webp',
+    ]
+
+    for (const source of avgPortraitSources) {
+      expect(readFileSync(`public${source}`, 'utf8').length).toBeGreaterThan(0)
+    }
+  })
+
+  it('includes AVG portraits in runtime sources and 1-6 gameplay entry preload plan', () => {
+    const stage = getGameplayStageMap('1-6')
+
+    expect(stage).toBeDefined()
+    const runtimeSources = collectRuntimeAssetSources(projectData)
+    const entrySources = buildGameplayEntryPreloadPlan(projectData, stage!).map((asset) => asset.source)
+
+    expect(runtimeSources).toContain('/assets/avg/yuuta-dialogue.webp')
+    expect(runtimeSources).toContain('/assets/avg/white-priestess-dialogue.webp')
+    expect(entrySources).toContain('/assets/avg/yuuta-dialogue.webp')
+    expect(entrySources).toContain('/assets/avg/white-priestess-dialogue.webp')
+    expect(runtimeSources.every((source) => !source.includes('__prototype__'))).toBe(true)
   })
 
   it('builds gameplay entry plans with source de-duplication before progress totals are presented', () => {

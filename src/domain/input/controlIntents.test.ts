@@ -74,6 +74,14 @@ describe('mapKeyboardControlIntent', () => {
     expect(mapKeyboardControlIntent({ key: 'Escape', repeat: false }, 'stage-select')).toBe('back')
   })
 
+  it('maps AVG controls without borrowing navigation movement', () => {
+    expect(mapKeyboardControlIntent({ key: 'Enter', repeat: false }, 'avg')).toBe('confirm')
+    expect(mapKeyboardControlIntent({ key: ' ', repeat: false }, 'avg')).toBe('confirm')
+    expect(mapKeyboardControlIntent({ key: 'Escape', repeat: false }, 'avg')).toBe('back')
+    expect(mapKeyboardControlIntent({ key: 'ArrowLeft', repeat: false }, 'avg')).toBeNull()
+    expect(mapKeyboardControlIntent({ key: 'p', repeat: false }, 'avg')).toBeNull()
+  })
+
   it('maps settings keys to row navigation, adjustment, confirm, and back intents', () => {
     expect(mapKeyboardControlIntent({ key: 'ArrowUp', repeat: false }, 'settings')).toBe('move-up')
     expect(mapKeyboardControlIntent({ key: 'w', repeat: false }, 'settings')).toBe('move-up')
@@ -232,6 +240,27 @@ describe('mapGamepadControlIntents', () => {
     }
 
     expect(mapGamepadControlIntents(previous, current, 'stage-select')).toEqual(['move-right'])
+  })
+
+  it('maps AVG gamepad controls without borrowing stage select movement', () => {
+    const previous = {
+      mapping: 'standard',
+      buttons: Array(16).fill(false),
+      axes: [0, 0],
+    }
+
+    expect(
+      mapGamepadControlIntents(previous, { ...previous, buttons: [true, false, false, false] }, 'avg'),
+    ).toEqual(['confirm'])
+    expect(
+      mapGamepadControlIntents(previous, { ...previous, buttons: [false, true, false, false] }, 'avg'),
+    ).toEqual(['back'])
+    expect(
+      mapGamepadControlIntents(previous, { ...previous, buttons: [...previous.buttons.slice(0, 15), true] }, 'avg'),
+    ).toEqual([])
+    expect(
+      mapGamepadControlIntents(previous, { ...previous, axes: [0.7, 0] }, 'avg'),
+    ).toEqual([])
   })
 
   it('does not emit axis intents at exact thresholds', () => {

@@ -735,6 +735,7 @@ function createSceneRuntime(input: {
     preload: () => void
     create: () => void
     update: (time?: number, delta?: number) => void
+    requireGameplayInputRelease: () => void
     load: {
       image: (key: string, assetRef: string) => void
       spritesheet: (key: string, assetRef: string, options: { frameWidth: number; frameHeight: number }) => void
@@ -1391,6 +1392,35 @@ describe('createGameplayRendererConfig', () => {
       time: formatGameplayHudTime(16),
     })
     expect(runtime.playerSprite.accelerationX).toBeGreaterThan(0)
+  })
+
+  it('requires a fresh neutral input after an AVG completion reset', () => {
+    const runtime = createSceneRuntime()
+    runtime.scene.create()
+    expect(runtime.playerSprite).toBeDefined()
+    if (!runtime.playerSprite) return
+
+    runtime.scene.update(0, 0)
+    runtime.playerKeys.space.isDown = true
+    runtime.scene.update(16, 16)
+
+    expect(runtime.playerSprite.velocityY).toBe(playerActorDefinition.jump.velocityY)
+
+    runtime.scene.requireGameplayInputRelease()
+    runtime.scene.update(32, 16)
+
+    expect((runtime.scene as unknown as { gameplayStartGateState: unknown }).gameplayStartGateState).toEqual({
+      status: 'waiting-unarmed',
+    })
+
+    runtime.playerKeys.space.isDown = false
+    runtime.scene.update(48, 16)
+    runtime.playerKeys.space.isDown = true
+    runtime.scene.update(64, 16)
+
+    expect((runtime.scene as unknown as { gameplayStartGateState: unknown }).gameplayStartGateState).toEqual({
+      status: 'running',
+    })
   })
 
   it('honors the first valid start input in the same update frame', () => {
