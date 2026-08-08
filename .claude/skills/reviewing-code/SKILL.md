@@ -1,12 +1,12 @@
 ---
 name: reviewing-code
-description: Use when reviewing code changes for engineering-principle conformance — before committing, before opening or updating a PR, or when asked to review a diff, branch, files, or a GitHub PR. Covers TDD, DDD, functional-core, reactive UI, and 15 code-quality principles.
+description: Use when reviewing code changes for engineering-principle conformance — before committing, before opening or updating a PR, or when asked to review a diff, branch, files, or a GitHub PR. Covers TDD, DDD, functional-core, reactive UI, and 16 code-quality principles.
 ---
 
 # Reviewing Code
 
 ## Overview
-Judge changes against this project's engineering principles and report a **structured, verified verdict** — not ad-hoc impressions. Stack: a Svelte 5 (runes) + Phaser game with a layered functional core — `src/domain` (pure), `src/application` (use cases / reactive state), `src/ui` (presentation). Every review applies the TDD / DDD / functional / reactive lenses **and** the 15 principles.
+Judge changes against this project's engineering principles and report a **structured, verified verdict** — not ad-hoc impressions. Stack: a Svelte 5 (runes) + Phaser game with a layered functional core — `src/domain` (pure), `src/application` (use cases / reactive state), `src/ui` (presentation). Every review applies the TDD / DDD / functional / reactive lenses **and** the 16 principles.
 
 ## When to use
 - Before committing, or before opening/updating a PR (self-review).
@@ -31,7 +31,7 @@ Skip generated/data catalogs (large stage-data files), `__prototype__/`, lockfil
 - **Functional core** — pure functions, immutable values, discriminated unions, explicit commands/events; side effects at the edges.
 - **Reactive** — derive, don't hand-sync. `$derived` over an `$effect` that only assigns; one source of truth.
 
-## 4. The 15 principles — flag when / exempt when
+## 4. The 16 principles — flag when / exempt when
 | # | Principle | Flag when… | Exempt when… |
 |---|-----------|-----------|--------------|
 | 1 | No redundant comments | comment restates code; commented-out dead code | explains a non-obvious WHY |
@@ -49,6 +49,7 @@ Skip generated/data catalogs (large stage-data files), `__prototype__/`, lockfil
 | 13 | Derived state / events | `$effect` that only assigns to other state; two states synced by hand | intentional edge-latch / event push |
 | 14 | async/await, non-blocking | `.then` chains; floating promise with no `void`/intent; blocking wait | fire-and-forget marked `void` with contained errors |
 | 15 | Explicit state, immutability, ownership | mutating inputs or domain values; exported mutable singleton; boolean soup vs a union | quarantined per-frame perf mutation (note it) |
+| 16 | Make invalid states unrepresentable | type permits an illegal value/combo — out-of-range primitive (`percentOff: number`), contradictory flags, `as`-cast raw input — with the invariant enforced only ad hoc at call sites | invariant genuinely inexpressible in the type system → then validate once at the boundary (parse-don't-validate) and pass a branded/narrowed type onward |
 
 ## 5. Verify, then report
 - **Verify every finding against the actual code** before reporting — no speculation. Prefer a missed nit over a false alarm.
@@ -67,4 +68,5 @@ Skip generated/data catalogs (large stage-data files), `__prototype__/`, lockfil
 - Over-flagging: a declarative rewrite in a per-frame loop, or a "magic number" inside a data catalog. Respect the exemptions column.
 - Listing principle names with no located, fixable finding (`path:line` + fix).
 - Rubber-stamping, or the opposite — demanding a change that trades correctness/perf for a principle. Flag the tradeoff instead.
-- Dropping the TDD/DDD/reactive lenses because "the 15 are the checklist." All lenses apply.
+- Dropping the TDD/DDD/reactive lenses because "the 16 are the checklist." All lenses apply.
+- Treating #16 as a duplicate of #12/#15: its distinct job is enforcing invariants at the *type boundary* (branded types, smart constructors, parse-don't-validate) so an illegal value can't be constructed — not just "use a union."
