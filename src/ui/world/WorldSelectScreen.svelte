@@ -33,6 +33,7 @@
     localizeData,
     locale = 'en',
     selectedWorldIndex,
+    selectInfo,
     onControlIntent,
     onSelectWorld,
     onConfirmWorld,
@@ -43,6 +44,7 @@
 
   const orderedWorlds = $derived(catalog.order.map((worldId) => catalog.items[worldId]))
   const selectedWorld = $derived(orderedWorlds[selectedWorldIndex] ?? orderedWorlds[0])
+  const selectedWorldInfo = $derived(selectInfo.worlds[selectedWorldIndex] ?? selectInfo.worlds[0])
 
   function text(key: LocalizationKey): string {
     return resolveLocalizedText(localizeData, locale, key)
@@ -128,10 +130,10 @@
     <div class="world-cinematic-progress">
       <div>
         <span>Progress</span>
-        <b>0<small> / {selectedWorld.stageCount}</small></b>
+        <b>{selectedWorldInfo.clearedStageCount}<small> / {selectedWorldInfo.stageCount}</small></b>
       </div>
       <div class="world-progress-track" aria-hidden="true">
-        <span style="width: 0%"></span>
+        <span style={`width: ${selectedWorldInfo.progressPercent}%`}></span>
       </div>
     </div>
 
