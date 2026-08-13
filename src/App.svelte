@@ -605,7 +605,6 @@
       />
     {:else if appState.screen.type === 'world-select'}
       <WorldSelectScreen
-        catalog={projectData.worlds}
         localizeData={projectData.localize}
         locale={locale}
         selectedWorldIndex={appState.screen.selectedWorldIndex}

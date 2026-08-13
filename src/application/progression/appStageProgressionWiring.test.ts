@@ -109,6 +109,13 @@ describe('App stage select progression UI wiring', () => {
     expect(source).toContain('selectInfo={stageSelectInfo}')
   })
 
+  it('passes World Select only its prepared select info model for world data', () => {
+    const worldSelectUsage = source.slice(source.indexOf('<WorldSelectScreen'), source.indexOf('/>', source.indexOf('<WorldSelectScreen')))
+
+    expect(worldSelectUsage).not.toContain('catalog={')
+    expect(worldSelectUsage).toContain('selectInfo={worldSelectInfo}')
+  })
+
   it('passes Stage Select only its prepared select info model', () => {
     const stageSelectUsage = source.slice(source.indexOf('<StageSelectScreen'), source.indexOf('/>', source.indexOf('<StageSelectScreen')))
 
