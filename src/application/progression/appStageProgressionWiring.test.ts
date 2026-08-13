@@ -108,6 +108,14 @@ describe('App stage select progression UI wiring', () => {
     expect(source).toContain('selectInfo={worldSelectInfo}')
     expect(source).toContain('selectInfo={stageSelectInfo}')
   })
+
+  it('passes Stage Select only its prepared select info model', () => {
+    const stageSelectUsage = source.slice(source.indexOf('<StageSelectScreen'), source.indexOf('/>', source.indexOf('<StageSelectScreen')))
+
+    expect(stageSelectUsage).not.toContain('worlds={')
+    expect(stageSelectUsage).not.toContain('stages={')
+    expect(stageSelectUsage).not.toContain('selectedWorldIndex={')
+  })
 })
 
 describe('App shell backdrop wiring', () => {

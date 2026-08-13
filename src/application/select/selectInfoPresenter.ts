@@ -3,26 +3,26 @@ import type { StageId, WorldCatalog, WorldData, WorldId } from '../../domain/dat
 import type { StageProgressionOptionState, StageRecord } from '../../domain/progression/stageProgression'
 
 export type WorldSelectInfo = {
-  world: WorldData
-  clearedStageCount: number
-  stageCount: number
-  progressPercent: number
+  readonly world: WorldData
+  readonly clearedStageCount: number
+  readonly stageCount: number
+  readonly progressPercent: number
 }
 
 export type WorldSelectInfoViewModel = {
-  worlds: readonly WorldSelectInfo[]
+  readonly worlds: readonly WorldSelectInfo[]
 }
 
 export type StageSelectStageInfo = {
-  stage: StageData
-  unlocked: boolean
-  cleared: boolean
-  record: StageRecord | undefined
+  readonly stage: StageData
+  readonly unlocked: boolean
+  readonly cleared: boolean
+  readonly record: Readonly<StageRecord> | undefined
 }
 
 export type StageSelectInfoViewModel = {
-  world: WorldData
-  stages: readonly StageSelectStageInfo[]
+  readonly world: WorldData
+  readonly stages: readonly StageSelectStageInfo[]
 }
 
 function createProgressionLookup(

@@ -37,8 +37,14 @@ describe('Stage Select localization contract', () => {
 describe('Stage Select progression UI contract', () => {
   it('receives prepared stage select info from App', () => {
     expect(stageSelectSource).toContain("import type { StageSelectInfoViewModel } from '../../application/select/selectInfoPresenter'")
-    expect(stageSelectSource).toContain('selectInfo?: StageSelectInfoViewModel')
+    expect(stageSelectSource).toContain('selectInfo: StageSelectInfoViewModel')
+    expect(stageSelectSource).toContain('const selectedWorld = $derived(selectInfo.world)')
+    expect(stageSelectSource).toContain('const stageInfos = $derived(selectInfo.stages)')
     expect(stageSelectSource).toContain('const selectedStageInfo = $derived(')
+    expect(stageSelectSource).not.toContain('fallbackStageInfos')
+    expect(stageSelectSource).not.toContain('selectedWorldIndex')
+    expect(stageSelectSource).not.toContain('worlds:')
+    expect(stageSelectSource).not.toContain('stages:')
     expect(stageSelectSource).not.toContain('stageProgressionOptions')
     expect(stageSelectSource).not.toContain('progressionByStageId')
     expect(stageSelectSource).not.toContain('function stageProgression')

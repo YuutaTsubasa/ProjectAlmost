@@ -616,20 +616,19 @@
         onBack={handleBackFromWorldSelect}
       />
     {:else if appState.screen.type === 'stage-select'}
-      <StageSelectScreen
-        worlds={projectData.worlds}
-        stages={projectData.stages}
-        localizeData={projectData.localize}
-        locale={locale}
-        selectedWorldIndex={appState.screen.selectedWorldIndex}
-        selectedStageIndex={appState.screen.selectedStageIndex}
-        {characterInfo}
-        selectInfo={stageSelectInfo}
-        onControlIntent={handleControlIntent}
-        onSelectStage={handleSelectStage}
-        onConfirmStage={handleConfirmStage}
-        onBack={handleBackFromStageSelect}
-      />
+      {#if stageSelectInfo}
+        <StageSelectScreen
+          localizeData={projectData.localize}
+          locale={locale}
+          selectedStageIndex={appState.screen.selectedStageIndex}
+          {characterInfo}
+          selectInfo={stageSelectInfo}
+          onControlIntent={handleControlIntent}
+          onSelectStage={handleSelectStage}
+          onConfirmStage={handleConfirmStage}
+          onBack={handleBackFromStageSelect}
+        />
+      {/if}
     {:else if appState.screen.type === 'gameplay' && gameplayStageMap}
       {#key getGameplayScreenKey(appState.screen)}
         <GameplayScreen

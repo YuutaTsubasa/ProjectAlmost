@@ -6,8 +6,8 @@
     type LocalizationKey,
     type LocalizeData,
   } from '../../domain/data/localize/localize'
-  import type { StageCatalog, StageData } from '../../domain/data/stages/stageTypes'
-  import type { WorldCatalog, WorldData } from '../../domain/data/worlds/worldTypes'
+  import type { StageData } from '../../domain/data/stages/stageTypes'
+  import type { WorldData } from '../../domain/data/worlds/worldTypes'
   import type { CharacterInfoViewModel } from '../../application/character/characterInfoPresenter'
   import type { StageSelectInfoViewModel } from '../../application/select/selectInfoPresenter'
   import type { StageSelectStageInfo } from '../../application/select/selectInfoPresenter'
@@ -20,14 +20,11 @@
   import ControlHints from '../controls/ControlHints.svelte'
 
   type Props = {
-    worlds: WorldCatalog
-    stages: StageCatalog
     localizeData: LocalizeData
     locale?: LocaleCode
-    selectedWorldIndex: number
     selectedStageIndex: number
     characterInfo: CharacterInfoViewModel
-    selectInfo?: StageSelectInfoViewModel
+    selectInfo: StageSelectInfoViewModel
     onControlIntent: (intent: ControlIntent) => void
     onSelectStage: (index: number) => void
     onConfirmStage: () => void
@@ -35,11 +32,8 @@
   }
 
   let {
-    worlds,
-    stages,
     localizeData,
     locale = 'en',
-    selectedWorldIndex,
     selectedStageIndex,
     characterInfo,
     selectInfo,
@@ -53,18 +47,9 @@
   let confirming = $state(false)
   let confirmResetTimer: ReturnType<typeof window.setTimeout> | undefined
 
-  const orderedWorlds = $derived(worlds.order.map((worldId) => worlds.items[worldId]))
   const stageSelectRefs = $derived(localizeData.references.stageSelect)
-  const selectedWorld = $derived((orderedWorlds[selectedWorldIndex] ?? orderedWorlds[0]) as WorldData)
-  const fallbackStageInfos = $derived(
-    selectedWorld.stageIds.map((stageId) => ({
-      stage: stages.items[stageId],
-      unlocked: false,
-      cleared: false,
-      record: undefined,
-    }) satisfies StageSelectStageInfo),
-  )
-  const stageInfos = $derived(selectInfo?.stages ?? fallbackStageInfos)
+  const selectedWorld = $derived(selectInfo.world)
+  const stageInfos = $derived(selectInfo.stages)
   const stageOptions = $derived(stageInfos.map((stageInfo) => stageInfo.stage))
   const selectedStageInfo = $derived(stageInfos[selectedStageIndex] ?? stageInfos[0])
   const selectedStage = $derived(selectedStageInfo.stage)
