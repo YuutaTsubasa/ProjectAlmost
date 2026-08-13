@@ -10,6 +10,7 @@
   import type { StageId, WorldCatalog, WorldData } from '../../domain/data/worlds/worldTypes'
   import type { StageProgressionOptionState } from '../../domain/progression/stageProgression'
   import type { CharacterInfoViewModel } from '../../application/character/characterInfoPresenter'
+  import type { StageSelectInfoViewModel } from '../../application/select/selectInfoPresenter'
   import {
     mapGamepadControlIntents,
     mapKeyboardControlIntent,
@@ -26,6 +27,7 @@
     selectedWorldIndex: number
     selectedStageIndex: number
     characterInfo: CharacterInfoViewModel
+    selectInfo?: StageSelectInfoViewModel
     stageProgressionOptions?: readonly StageProgressionOptionState<StageId>[]
     onControlIntent: (intent: ControlIntent) => void
     onSelectStage: (index: number) => void

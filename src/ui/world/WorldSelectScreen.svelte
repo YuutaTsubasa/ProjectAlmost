@@ -7,6 +7,7 @@
     type LocalizeData,
   } from '../../domain/data/localize/localize'
   import type { WorldCatalog, WorldData } from '../../domain/data/worlds/worldTypes'
+  import type { WorldSelectInfoViewModel } from '../../application/select/selectInfoPresenter'
   import {
     mapGamepadControlIntents,
     mapKeyboardControlIntent,
@@ -20,6 +21,7 @@
     localizeData: LocalizeData
     locale?: LocaleCode
     selectedWorldIndex: number
+    selectInfo: WorldSelectInfoViewModel
     onControlIntent: (intent: ControlIntent) => void
     onSelectWorld: (index: number) => void
     onConfirmWorld: () => void
