@@ -91,8 +91,8 @@ describe('App stage select progression UI wiring', () => {
     expect(source).toContain('const stageProgressionOptions = $derived(')
   })
 
-  it('passes projected stage progression options into StageSelectScreen', () => {
-    expect(source).toContain('stageProgressionOptions={stageProgressionOptions}')
+  it('does not pass progression options into StageSelectScreen', () => {
+    expect(source).not.toContain('stageProgressionOptions={stageProgressionOptions}')
   })
 
   it('derives select info view models from projected stage progression', () => {

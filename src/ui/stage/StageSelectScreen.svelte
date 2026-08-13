@@ -7,10 +7,10 @@
     type LocalizeData,
   } from '../../domain/data/localize/localize'
   import type { StageCatalog, StageData } from '../../domain/data/stages/stageTypes'
-  import type { StageId, WorldCatalog, WorldData } from '../../domain/data/worlds/worldTypes'
-  import type { StageProgressionOptionState } from '../../domain/progression/stageProgression'
+  import type { WorldCatalog, WorldData } from '../../domain/data/worlds/worldTypes'
   import type { CharacterInfoViewModel } from '../../application/character/characterInfoPresenter'
   import type { StageSelectInfoViewModel } from '../../application/select/selectInfoPresenter'
+  import type { StageSelectStageInfo } from '../../application/select/selectInfoPresenter'
   import {
     mapGamepadControlIntents,
     mapKeyboardControlIntent,
@@ -28,7 +28,6 @@
     selectedStageIndex: number
     characterInfo: CharacterInfoViewModel
     selectInfo?: StageSelectInfoViewModel
-    stageProgressionOptions?: readonly StageProgressionOptionState<StageId>[]
     onControlIntent: (intent: ControlIntent) => void
     onSelectStage: (index: number) => void
     onConfirmStage: () => void
@@ -43,7 +42,7 @@
     selectedWorldIndex,
     selectedStageIndex,
     characterInfo,
-    stageProgressionOptions: receivedStageProgressionOptions = [],
+    selectInfo,
     onControlIntent,
     onSelectStage,
     onConfirmStage,
@@ -57,12 +56,18 @@
   const orderedWorlds = $derived(worlds.order.map((worldId) => worlds.items[worldId]))
   const stageSelectRefs = $derived(localizeData.references.stageSelect)
   const selectedWorld = $derived((orderedWorlds[selectedWorldIndex] ?? orderedWorlds[0]) as WorldData)
-  const stageOptions = $derived(selectedWorld.stageIds.map((stageId) => stages.items[stageId]))
-  const selectedStage = $derived((stageOptions[selectedStageIndex] ?? stageOptions[0]) as StageData)
-  const progressionByStageId = $derived(
-    new Map(receivedStageProgressionOptions.map((option) => [option.stageId, option])),
+  const fallbackStageInfos = $derived(
+    selectedWorld.stageIds.map((stageId) => ({
+      stage: stages.items[stageId],
+      unlocked: false,
+      cleared: false,
+      record: undefined,
+    }) satisfies StageSelectStageInfo),
   )
-  const selectedStageProgression = $derived(stageProgression(selectedStage.id))
+  const stageInfos = $derived(selectInfo?.stages ?? fallbackStageInfos)
+  const stageOptions = $derived(stageInfos.map((stageInfo) => stageInfo.stage))
+  const selectedStageInfo = $derived(stageInfos[selectedStageIndex] ?? stageInfos[0])
+  const selectedStage = $derived(selectedStageInfo.stage)
 
   function text(key: LocalizationKey): string {
     return resolveLocalizedText(localizeData, locale, key)
@@ -84,17 +89,8 @@
     return stage.previewBackgroundAssetRef ?? stage.previewAssetRef
   }
 
-  function stageProgression(stageId: StageId): StageProgressionOptionState<StageId> {
-    return progressionByStageId.get(stageId) ?? {
-      stageId,
-      unlocked: false,
-      cleared: false,
-      record: undefined,
-    }
-  }
-
-  function handleConfirmStage(stageProgressionState: StageProgressionOptionState<StageId>) {
-    if (!stageProgressionState.unlocked) return
+  function handleConfirmStage(stageInfo: StageSelectStageInfo) {
+    if (!stageInfo.unlocked) return
     confirming = true
     onConfirmStage()
     if (confirmResetTimer) window.clearTimeout(confirmResetTimer)
@@ -196,7 +192,7 @@
           alt=""
           draggable="false"
         />
-        {#if !selectedStageProgression.unlocked}
+        {#if !selectedStageInfo.unlocked}
           <div class="stage-preview-lock">{text('common.locked')}</div>
         {/if}
       </div>
@@ -208,23 +204,23 @@
 
     <span class="stage-label">{text(stageSelectRefs.objective)}</span>
     <p class="stage-objective">
-      {selectedStageProgression.unlocked ? stageObjective(selectedStage) : text('common.locked')}
+      {selectedStageInfo.unlocked ? stageObjective(selectedStage) : text('common.locked')}
     </p>
 
     <span class="stage-label">{text(stageSelectRefs.collectibles)}</span>
     <div class="stage-collectible">
       <span class="coin-mark" aria-hidden="true">I</span>
-      <b>{selectedStageProgression.record?.maxCoins ?? 0} <small>/ {selectedStage.collectibleCount}</small></b>
+      <b>{selectedStageInfo.record?.maxCoins ?? 0} <small>/ {selectedStage.collectibleCount}</small></b>
     </div>
 
     <div class="stage-stats">
       <div>
         <span class="stage-label">{text(stageSelectRefs.bestTime)}</span>
-        <b>{selectedStageProgression.record?.bestTime ?? text(stageSelectRefs.recordUnavailable)}</b>
+        <b>{selectedStageInfo.record?.bestTime ?? text(stageSelectRefs.recordUnavailable)}</b>
       </div>
       <div>
         <span class="stage-label">{text(stageSelectRefs.rank)}</span>
-        <b>{selectedStageProgression.record?.bestRank ?? text(stageSelectRefs.recordUnavailable)}</b>
+        <b>{selectedStageInfo.record?.bestRank ?? text(stageSelectRefs.recordUnavailable)}</b>
       </div>
     </div>
 
@@ -244,17 +240,18 @@
     <button
       class="stage-deploy"
       type="button"
-      disabled={!selectedStageProgression.unlocked || confirming}
-      onclick={() => handleConfirmStage(selectedStageProgression)}
+      disabled={!selectedStageInfo.unlocked || confirming}
+      onclick={() => handleConfirmStage(selectedStageInfo)}
     >
-      <span>{selectedStageProgression.unlocked ? text(stageSelectRefs.deploy) : text('common.locked')}</span>
+      <span>{selectedStageInfo.unlocked ? text(stageSelectRefs.deploy) : text('common.locked')}</span>
       <b aria-hidden="true">›</b>
     </button>
   </aside>
 
   <div class="stage-map" aria-label={text(stageSelectRefs.ariaMap)}>
     <svg class="stage-paths" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-      {#each stageOptions.slice(0, -1) as stage, index}
+      {#each stageInfos.slice(0, -1) as stageInfo, index}
+        {@const stage = stageInfo.stage}
         <line
           style={`--path-index:${index}`}
           pathLength="1"
@@ -266,12 +263,13 @@
       {/each}
     </svg>
 
-    {#each stageOptions as stage, index}
+    {#each stageInfos as stageInfo, index}
+      {@const stage = stageInfo.stage}
       <button
         class:active={index === selectedStageIndex}
         class:boss={stage.isBoss}
-        class:locked={!stageProgression(stage.id).unlocked}
-        class:cleared={stageProgression(stage.id).cleared}
+        class:locked={!stageInfo.unlocked}
+        class:cleared={stageInfo.cleared}
         class="stage-node"
         style={`left:${stage.nodePosition.x}%;top:${stage.nodePosition.y}%;--node-index:${index}`}
         type="button"
@@ -279,11 +277,11 @@
         onclick={() => onSelectStage(index)}
         ondblclick={() => {
           onSelectStage(index)
-          handleConfirmStage(stageProgression(stage.id))
+          handleConfirmStage(stageInfo)
         }}
         >
         <i aria-hidden="true"></i>
-        <b>{stageProgression(stage.id).unlocked ? stage.id : '◆'}</b>
+        <b>{stageInfo.unlocked ? stage.id : '◆'}</b>
         <span><strong>{stage.id}</strong>{stageSubtitle(stage)}</span>
       </button>
     {/each}

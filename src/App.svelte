@@ -625,7 +625,6 @@
         selectedStageIndex={appState.screen.selectedStageIndex}
         {characterInfo}
         selectInfo={stageSelectInfo}
-        stageProgressionOptions={stageProgressionOptions}
         onControlIntent={handleControlIntent}
         onSelectStage={handleSelectStage}
         onConfirmStage={handleConfirmStage}
