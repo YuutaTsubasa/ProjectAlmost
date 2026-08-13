@@ -94,6 +94,20 @@ describe('App stage select progression UI wiring', () => {
   it('passes projected stage progression options into StageSelectScreen', () => {
     expect(source).toContain('stageProgressionOptions={stageProgressionOptions}')
   })
+
+  it('derives select info view models from projected stage progression', () => {
+    expect(source).toContain("import { projectStageSelectInfo, projectWorldSelectInfo } from './application/select/selectInfoPresenter'")
+    expect(source).toContain('const worldSelectInfo = $derived(')
+    expect(source).toContain('projectWorldSelectInfo(')
+    expect(source).toContain('const stageSelectInfo = $derived(')
+    expect(source).toContain('projectStageSelectInfo(')
+    expect(source).toContain('stageProgressionOptions')
+  })
+
+  it('passes select info view models into select screens', () => {
+    expect(source).toContain('selectInfo={worldSelectInfo}')
+    expect(source).toContain('selectInfo={stageSelectInfo}')
+  })
 })
 
 describe('App shell backdrop wiring', () => {

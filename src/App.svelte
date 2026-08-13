@@ -28,6 +28,7 @@
   } from './application/assets/preloadProgress'
   import { getControlIntentSfxAction } from './application/audio/audioEvents'
   import { createCharacterInfoViewModel } from './application/character/characterInfoPresenter'
+  import { projectStageSelectInfo, projectWorldSelectInfo } from './application/select/selectInfoPresenter'
   import {
     createBrowserAudioController,
     type BrowserAudioController,
@@ -120,6 +121,19 @@
       stageProgressionSave.stageRecords,
       debugUnlockAllStages,
     ),
+  )
+  const worldSelectInfo = $derived(
+    projectWorldSelectInfo(projectData.worlds, stageProgressionOptions),
+  )
+  const stageSelectInfo = $derived(
+    appState.screen.type === 'stage-select'
+      ? projectStageSelectInfo(
+          projectData.worlds,
+          projectData.stages,
+          appState.screen.worldId,
+          stageProgressionOptions,
+        )
+      : undefined,
   )
   const gameplayStageMap = $derived(
     appState.screen.type === 'gameplay' ? getGameplayStageMap(appState.screen.stageId) : undefined,
@@ -595,6 +609,7 @@
         localizeData={projectData.localize}
         locale={locale}
         selectedWorldIndex={appState.screen.selectedWorldIndex}
+        selectInfo={worldSelectInfo}
         onControlIntent={handleControlIntent}
         onSelectWorld={handleSelectWorld}
         onConfirmWorld={handleConfirmWorld}
@@ -609,6 +624,7 @@
         selectedWorldIndex={appState.screen.selectedWorldIndex}
         selectedStageIndex={appState.screen.selectedStageIndex}
         {characterInfo}
+        selectInfo={stageSelectInfo}
         stageProgressionOptions={stageProgressionOptions}
         onControlIntent={handleControlIntent}
         onSelectStage={handleSelectStage}
