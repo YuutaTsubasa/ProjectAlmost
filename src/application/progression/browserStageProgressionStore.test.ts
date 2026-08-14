@@ -228,6 +228,30 @@ describe('browser stage progression debug unlock', () => {
     expect(storage.snapshot()[STAGE_PROGRESSION_DEBUG_UNLOCK_KEY]).toBe('true')
   })
 
+  it('enables debug unlock from Netlify deploy preview query params', () => {
+    const storage = createMemoryStorage()
+
+    expect(resolveDebugUnlockAllStages({
+      storage,
+      search: '?debugUnlock=1',
+      dev: false,
+      hostname: 'deploy-preview-8--projectalmost.netlify.app',
+    })).toBe(true)
+    expect(storage.snapshot()[STAGE_PROGRESSION_DEBUG_UNLOCK_KEY]).toBe('true')
+  })
+
+  it('keeps debug unlock disabled on production deploy hostnames', () => {
+    const storage = createMemoryStorage({ [STAGE_PROGRESSION_DEBUG_UNLOCK_KEY]: 'true' })
+
+    expect(resolveDebugUnlockAllStages({
+      storage,
+      search: '?debugUnlock=1',
+      dev: false,
+      hostname: 'projectalmost.netlify.app',
+    })).toBe(false)
+    expect(storage.snapshot()[STAGE_PROGRESSION_DEBUG_UNLOCK_KEY]).toBe('true')
+  })
+
   it('delete save preserves the debug unlock flag', () => {
     const storage = createMemoryStorage({
       [STAGE_PROGRESSION_SAVE_KEY]: JSON.stringify(createEmptySave()),

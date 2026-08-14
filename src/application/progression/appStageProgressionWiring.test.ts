@@ -54,6 +54,7 @@ describe('App stage unlock projection wiring', () => {
   it('loads development debug unlock state on mount', () => {
     expect(source).toContain('resolveDebugUnlockAllStages')
     expect(source).toContain('window.location.search')
+    expect(source).toContain('window.location.hostname')
     expect(source).toContain('import.meta.env.DEV')
   })
 
