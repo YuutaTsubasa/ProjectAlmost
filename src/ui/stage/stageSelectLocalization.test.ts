@@ -88,6 +88,8 @@ describe('Stage Select progression UI contract', () => {
 
   it('renders cleared records from the progression option state', () => {
     expect(stageSelectSource).toContain('selectedStageInfo.record?.maxCoins ?? 0')
+    expect(stageSelectSource).toContain('selectedStageInfo.collectibleTargetCount')
+    expect(stageSelectSource).not.toContain('selectedStage.collectibleCount')
     expect(stageSelectSource).toContain(
       'selectedStageInfo.record?.bestTime ?? text(stageSelectRefs.recordUnavailable)',
     )

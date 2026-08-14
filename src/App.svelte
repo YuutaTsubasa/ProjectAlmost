@@ -59,7 +59,7 @@
   import { projectData } from './domain/data/projectData'
   import type { GameplaySfxAction } from './domain/audio/audioPolicy'
   import { resolveLocalizedText } from './domain/data/localize/localize'
-  import { getGameplayStageMap } from './domain/gameplay/gameplayStageMaps'
+  import { gameplayStageMaps, getGameplayStageMap } from './domain/gameplay/gameplayStageMaps'
   import type { ControlIntent } from './domain/input/controlIntents'
   import type { StageId, WorldId } from './domain/data/worlds/worldTypes'
   import {
@@ -130,6 +130,7 @@
       ? projectStageSelectInfo(
           projectData.worlds,
           projectData.stages,
+          gameplayStageMaps,
           appState.screen.worldId,
           stageProgressionOptions,
         )

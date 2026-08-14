@@ -195,7 +195,7 @@
     <span class="stage-label">{text(stageSelectRefs.collectibles)}</span>
     <div class="stage-collectible">
       <span class="coin-mark" aria-hidden="true">I</span>
-      <b>{selectedStageInfo.record?.maxCoins ?? 0} <small>/ {selectedStage.collectibleCount}</small></b>
+      <b>{selectedStageInfo.record?.maxCoins ?? 0} <small>/ {selectedStageInfo.collectibleTargetCount}</small></b>
     </div>
 
     <div class="stage-stats">

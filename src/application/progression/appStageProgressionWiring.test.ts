@@ -97,10 +97,12 @@ describe('App stage select progression UI wiring', () => {
 
   it('derives select info view models from projected stage progression', () => {
     expect(source).toContain("import { projectStageSelectInfo, projectWorldSelectInfo } from './application/select/selectInfoPresenter'")
+    expect(source).toContain("import { gameplayStageMaps, getGameplayStageMap } from './domain/gameplay/gameplayStageMaps'")
     expect(source).toContain('const worldSelectInfo = $derived(')
     expect(source).toContain('projectWorldSelectInfo(')
     expect(source).toContain('const stageSelectInfo = $derived(')
     expect(source).toContain('projectStageSelectInfo(')
+    expect(source).toContain('gameplayStageMaps')
     expect(source).toContain('stageProgressionOptions')
   })
 

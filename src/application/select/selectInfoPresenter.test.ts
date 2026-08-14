@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { stages } from '../../domain/data/stages/stageCatalog'
 import { worlds } from '../../domain/data/worlds/worldCatalog'
 import type { StageId } from '../../domain/data/worlds/worldTypes'
+import { gameplayStageMaps } from '../../domain/gameplay/gameplayStageMaps'
 import type { StageProgressionOptionState, StageRecord } from '../../domain/progression/stageProgression'
 import {
   projectStageSelectInfo,
@@ -69,7 +70,7 @@ describe('world select info presenter', () => {
 
 describe('stage select info presenter', () => {
   it('projects selected world stages with progression state and records', () => {
-    const info = projectStageSelectInfo(worlds, stages, 'world02', [
+    const info = projectStageSelectInfo(worlds, stages, gameplayStageMaps, 'world02', [
       option('2-1', { unlocked: true, cleared: true, record }),
       option('2-2', { unlocked: true }),
     ])
@@ -89,11 +90,21 @@ describe('stage select info presenter', () => {
   })
 
   it('treats missing stage progression entries as locked and recordless', () => {
-    const info = projectStageSelectInfo(worlds, stages, 'world01', [
+    const info = projectStageSelectInfo(worlds, stages, gameplayStageMaps, 'world01', [
       option('1-1', { unlocked: true }),
     ])
 
     expect(info.stages[0]).toMatchObject({ unlocked: true, cleared: false, record: undefined })
     expect(info.stages[1]).toMatchObject({ unlocked: false, cleared: false, record: undefined })
+  })
+
+  it('uses gameplay map coin targets for stage select collectible totals', () => {
+    const info = projectStageSelectInfo(worlds, stages, gameplayStageMaps, 'world01', [
+      option('1-1', { unlocked: true }),
+    ])
+
+    expect(stages.items['1-1'].collectibleCount).toBe(24)
+    expect(gameplayStageMaps.items['1-1'].coins).toHaveLength(25)
+    expect(info.stages[0].collectibleTargetCount).toBe(25)
   })
 })
