@@ -6,7 +6,8 @@
     type LocalizationKey,
     type LocalizeData,
   } from '../../domain/data/localize/localize'
-  import type { WorldCatalog, WorldData } from '../../domain/data/worlds/worldTypes'
+  import type { WorldData } from '../../domain/data/worlds/worldTypes'
+  import type { WorldSelectInfoViewModel } from '../../application/select/selectInfoPresenter'
   import {
     mapGamepadControlIntents,
     mapKeyboardControlIntent,
@@ -16,10 +17,10 @@
   import ControlHints from '../controls/ControlHints.svelte'
 
   type Props = {
-    catalog: WorldCatalog
     localizeData: LocalizeData
     locale?: LocaleCode
     selectedWorldIndex: number
+    selectInfo: WorldSelectInfoViewModel
     onControlIntent: (intent: ControlIntent) => void
     onSelectWorld: (index: number) => void
     onConfirmWorld: () => void
@@ -27,10 +28,10 @@
   }
 
   let {
-    catalog,
     localizeData,
     locale = 'en',
     selectedWorldIndex,
+    selectInfo,
     onControlIntent,
     onSelectWorld,
     onConfirmWorld,
@@ -39,8 +40,9 @@
 
   let previousGamepadSnapshot: GamepadControlSnapshot | null = null
 
-  const orderedWorlds = $derived(catalog.order.map((worldId) => catalog.items[worldId]))
-  const selectedWorld = $derived(orderedWorlds[selectedWorldIndex] ?? orderedWorlds[0])
+  const orderedWorldInfos = $derived(selectInfo.worlds)
+  const selectedWorldInfo = $derived(selectInfo.worlds[selectedWorldIndex] ?? selectInfo.worlds[0])
+  const selectedWorld = $derived(selectedWorldInfo.world)
 
   function text(key: LocalizationKey): string {
     return resolveLocalizedText(localizeData, locale, key)
@@ -126,10 +128,10 @@
     <div class="world-cinematic-progress">
       <div>
         <span>Progress</span>
-        <b>0<small> / {selectedWorld.stageCount}</small></b>
+        <b>{selectedWorldInfo.clearedStageCount}<small> / {selectedWorldInfo.stageCount}</small></b>
       </div>
       <div class="world-progress-track" aria-hidden="true">
-        <span style="width: 0%"></span>
+        <span style={`width: ${selectedWorldInfo.progressPercent}%`}></span>
       </div>
     </div>
 
@@ -140,7 +142,8 @@
   </div>
 
   <nav class="world-rail" aria-label="World Select">
-    {#each orderedWorlds as world, index}
+    {#each orderedWorldInfos as worldInfo, index}
+      {@const world = worldInfo.world}
       <button
         class:active={index === selectedWorldIndex}
         class={`world-thumb theme-${world.theme}`}

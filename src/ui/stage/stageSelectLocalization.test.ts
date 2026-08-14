@@ -16,7 +16,7 @@ describe('Stage Select localization contract', () => {
     expect(stageSelectSource).toContain('stageSelectRefs.recordUnavailable')
     expect(stageSelectSource).not.toContain('--:--.--')
 
-    expect(stageSelectSource).toContain("{stageProgression(stage.id).unlocked ? stage.id : '◆'}")
+    expect(stageSelectSource).toContain("{stageInfo.unlocked ? stage.id : '◆'}")
     expect(stageSelectSource).toContain('<span><strong>{stage.id}</strong>{stageSubtitle(stage)}</span>')
     expect(stageSelectSource).not.toContain('<b>{stage.number}</b>')
     expect(stageSelectSource).not.toContain('<span><strong>{stageTitle(stage)}</strong>{stageSubtitle(stage)}</span>')
@@ -35,23 +35,31 @@ describe('Stage Select localization contract', () => {
 })
 
 describe('Stage Select progression UI contract', () => {
-  it('receives stage progression option states from App', () => {
-    expect(stageSelectSource).toContain('stageProgressionOptions')
-    expect(stageSelectSource).toContain('progressionByStageId')
-    expect(stageSelectSource).toContain('selectedStageProgression')
-    expect(stageSelectSource).toContain('unlocked: false')
+  it('receives prepared stage select info from App', () => {
+    expect(stageSelectSource).toContain("import type { StageSelectInfoViewModel } from '../../application/select/selectInfoPresenter'")
+    expect(stageSelectSource).toContain('selectInfo: StageSelectInfoViewModel')
+    expect(stageSelectSource).toContain('const selectedWorld = $derived(selectInfo.world)')
+    expect(stageSelectSource).toContain('const stageInfos = $derived(selectInfo.stages)')
+    expect(stageSelectSource).toContain('const selectedStageInfo = $derived(')
+    expect(stageSelectSource).not.toContain('fallbackStageInfos')
+    expect(stageSelectSource).not.toContain('selectedWorldIndex')
+    expect(stageSelectSource).not.toContain('worlds:')
+    expect(stageSelectSource).not.toContain('stages:')
+    expect(stageSelectSource).not.toContain('stageProgressionOptions')
+    expect(stageSelectSource).not.toContain('progressionByStageId')
+    expect(stageSelectSource).not.toContain('function stageProgression')
   })
 
   it('renders localized locked state without hiding the selected preview', () => {
     expect(stageSelectSource).toContain("text('common.locked')")
     expect(stageSelectSource).toContain('class="stage-preview-lock"')
-    expect(stageSelectSource).toContain('{#if !selectedStageProgression.unlocked}')
+    expect(stageSelectSource).toContain('{#if !selectedStageInfo.unlocked}')
     expect(stageSelectSource).toContain('stageObjective(selectedStage)')
   })
 
   it('renders locked and cleared markers and animates every route segment', () => {
-    expect(stageSelectSource).toContain('class:locked={!stageProgression(stage.id).unlocked}')
-    expect(stageSelectSource).toContain('class:cleared={stageProgression(stage.id).cleared}')
+    expect(stageSelectSource).toContain('class:locked={!stageInfo.unlocked}')
+    expect(stageSelectSource).toContain('class:cleared={stageInfo.cleared}')
     expect(stageSelectSource).toContain('<line')
     expect(stageSelectSource).toContain('style={`--path-index:${index}`}')
     // Route lines animate uniformly regardless of unlock state, so there is no
@@ -62,29 +70,31 @@ describe('Stage Select progression UI contract', () => {
       '<button\n        class:active={index === selectedStageIndex}\n        class:boss={stage.isBoss}\n        class:locked={!stageProgression(stage.id).unlocked}\n        class:cleared={stageProgression(stage.id).cleared}\n        class:live={isLiveStage(index)}\n        class="stage-node"',
     )
     expect(stageSelectSource).toContain(
-      '<button\n        class:active={index === selectedStageIndex}\n        class:boss={stage.isBoss}\n        class:locked={!stageProgression(stage.id).unlocked}\n        class:cleared={stageProgression(stage.id).cleared}\n        class="stage-node"',
+      '<button\n        class:active={index === selectedStageIndex}\n        class:boss={stage.isBoss}\n        class:locked={!stageInfo.unlocked}\n        class:cleared={stageInfo.cleared}\n        class="stage-node"',
     )
     expect(stageSelectSource).not.toContain(
       '<!-- class:live={stageProgression(stage.id).unlocked && stageProgression(stageOptions[index + 1].id).unlocked} -->',
     )
-    expect(stageSelectSource).toContain("{stageProgression(stage.id).unlocked ? stage.id : '◆'}")
+    expect(stageSelectSource).toContain("{stageInfo.unlocked ? stage.id : '◆'}")
   })
 
   it('keeps deploy and double-click inert for locked stages', () => {
-    expect(stageSelectSource).toContain('if (!stageProgressionState.unlocked) return')
-    expect(stageSelectSource).toContain('disabled={!selectedStageProgression.unlocked || confirming}')
+    expect(stageSelectSource).toContain('if (!stageInfo.unlocked) return')
+    expect(stageSelectSource).toContain('disabled={!selectedStageInfo.unlocked || confirming}')
     expect(stageSelectSource).toContain('onSelectStage(index)')
-    expect(stageSelectSource).toContain('handleConfirmStage(selectedStageProgression)')
-    expect(stageSelectSource).toContain('handleConfirmStage(stageProgression(stage.id))')
+    expect(stageSelectSource).toContain('handleConfirmStage(selectedStageInfo)')
+    expect(stageSelectSource).toContain('handleConfirmStage(stageInfo)')
   })
 
   it('renders cleared records from the progression option state', () => {
-    expect(stageSelectSource).toContain('selectedStageProgression.record?.maxCoins ?? 0')
+    expect(stageSelectSource).toContain('selectedStageInfo.record?.maxCoins ?? 0')
+    expect(stageSelectSource).toContain('selectedStageInfo.collectibleTargetCount')
+    expect(stageSelectSource).not.toContain('selectedStage.collectibleCount')
     expect(stageSelectSource).toContain(
-      'selectedStageProgression.record?.bestTime ?? text(stageSelectRefs.recordUnavailable)',
+      'selectedStageInfo.record?.bestTime ?? text(stageSelectRefs.recordUnavailable)',
     )
     expect(stageSelectSource).toContain(
-      'selectedStageProgression.record?.bestRank ?? text(stageSelectRefs.recordUnavailable)',
+      'selectedStageInfo.record?.bestRank ?? text(stageSelectRefs.recordUnavailable)',
     )
   })
 })

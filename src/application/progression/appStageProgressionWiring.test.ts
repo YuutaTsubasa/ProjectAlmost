@@ -91,8 +91,39 @@ describe('App stage select progression UI wiring', () => {
     expect(source).toContain('const stageProgressionOptions = $derived(')
   })
 
-  it('passes projected stage progression options into StageSelectScreen', () => {
-    expect(source).toContain('stageProgressionOptions={stageProgressionOptions}')
+  it('does not pass progression options into StageSelectScreen', () => {
+    expect(source).not.toContain('stageProgressionOptions={stageProgressionOptions}')
+  })
+
+  it('derives select info view models from projected stage progression', () => {
+    expect(source).toContain("import { projectStageSelectInfo, projectWorldSelectInfo } from './application/select/selectInfoPresenter'")
+    expect(source).toContain("import { gameplayStageMaps, getGameplayStageMap } from './domain/gameplay/gameplayStageMaps'")
+    expect(source).toContain('const worldSelectInfo = $derived(')
+    expect(source).toContain('projectWorldSelectInfo(')
+    expect(source).toContain('const stageSelectInfo = $derived(')
+    expect(source).toContain('projectStageSelectInfo(')
+    expect(source).toContain('gameplayStageMaps')
+    expect(source).toContain('stageProgressionOptions')
+  })
+
+  it('passes select info view models into select screens', () => {
+    expect(source).toContain('selectInfo={worldSelectInfo}')
+    expect(source).toContain('selectInfo={stageSelectInfo}')
+  })
+
+  it('passes World Select only its prepared select info model for world data', () => {
+    const worldSelectUsage = source.slice(source.indexOf('<WorldSelectScreen'), source.indexOf('/>', source.indexOf('<WorldSelectScreen')))
+
+    expect(worldSelectUsage).not.toContain('catalog={')
+    expect(worldSelectUsage).toContain('selectInfo={worldSelectInfo}')
+  })
+
+  it('passes Stage Select only its prepared select info model', () => {
+    const stageSelectUsage = source.slice(source.indexOf('<StageSelectScreen'), source.indexOf('/>', source.indexOf('<StageSelectScreen')))
+
+    expect(stageSelectUsage).not.toContain('worlds={')
+    expect(stageSelectUsage).not.toContain('stages={')
+    expect(stageSelectUsage).not.toContain('selectedWorldIndex={')
   })
 })
 

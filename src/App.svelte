@@ -28,6 +28,7 @@
   } from './application/assets/preloadProgress'
   import { getControlIntentSfxAction } from './application/audio/audioEvents'
   import { createCharacterInfoViewModel } from './application/character/characterInfoPresenter'
+  import { projectStageSelectInfo, projectWorldSelectInfo } from './application/select/selectInfoPresenter'
   import {
     createBrowserAudioController,
     type BrowserAudioController,
@@ -58,7 +59,7 @@
   import { projectData } from './domain/data/projectData'
   import type { GameplaySfxAction } from './domain/audio/audioPolicy'
   import { resolveLocalizedText } from './domain/data/localize/localize'
-  import { getGameplayStageMap } from './domain/gameplay/gameplayStageMaps'
+  import { gameplayStageMaps, getGameplayStageMap } from './domain/gameplay/gameplayStageMaps'
   import type { ControlIntent } from './domain/input/controlIntents'
   import type { StageId, WorldId } from './domain/data/worlds/worldTypes'
   import {
@@ -120,6 +121,20 @@
       stageProgressionSave.stageRecords,
       debugUnlockAllStages,
     ),
+  )
+  const worldSelectInfo = $derived(
+    projectWorldSelectInfo(projectData.worlds, stageProgressionOptions),
+  )
+  const stageSelectInfo = $derived(
+    appState.screen.type === 'stage-select'
+      ? projectStageSelectInfo(
+          projectData.worlds,
+          projectData.stages,
+          gameplayStageMaps,
+          appState.screen.worldId,
+          stageProgressionOptions,
+        )
+      : undefined,
   )
   const gameplayStageMap = $derived(
     appState.screen.type === 'gameplay' ? getGameplayStageMap(appState.screen.stageId) : undefined,
@@ -591,30 +606,29 @@
       />
     {:else if appState.screen.type === 'world-select'}
       <WorldSelectScreen
-        catalog={projectData.worlds}
         localizeData={projectData.localize}
         locale={locale}
         selectedWorldIndex={appState.screen.selectedWorldIndex}
+        selectInfo={worldSelectInfo}
         onControlIntent={handleControlIntent}
         onSelectWorld={handleSelectWorld}
         onConfirmWorld={handleConfirmWorld}
         onBack={handleBackFromWorldSelect}
       />
     {:else if appState.screen.type === 'stage-select'}
-      <StageSelectScreen
-        worlds={projectData.worlds}
-        stages={projectData.stages}
-        localizeData={projectData.localize}
-        locale={locale}
-        selectedWorldIndex={appState.screen.selectedWorldIndex}
-        selectedStageIndex={appState.screen.selectedStageIndex}
-        {characterInfo}
-        stageProgressionOptions={stageProgressionOptions}
-        onControlIntent={handleControlIntent}
-        onSelectStage={handleSelectStage}
-        onConfirmStage={handleConfirmStage}
-        onBack={handleBackFromStageSelect}
-      />
+      {#if stageSelectInfo}
+        <StageSelectScreen
+          localizeData={projectData.localize}
+          locale={locale}
+          selectedStageIndex={appState.screen.selectedStageIndex}
+          {characterInfo}
+          selectInfo={stageSelectInfo}
+          onControlIntent={handleControlIntent}
+          onSelectStage={handleSelectStage}
+          onConfirmStage={handleConfirmStage}
+          onBack={handleBackFromStageSelect}
+        />
+      {/if}
     {:else if appState.screen.type === 'gameplay' && gameplayStageMap}
       {#key getGameplayScreenKey(appState.screen)}
         <GameplayScreen
