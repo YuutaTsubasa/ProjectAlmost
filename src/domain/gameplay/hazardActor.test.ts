@@ -35,16 +35,20 @@ describe('hazard frame selection', () => {
 
 describe('hazard placement', () => {
   it('projects wide floor spike visuals into left, middle, and mirrored right segments', () => {
-    expect(getHazardVisualSegments({
+    const segments = getHazardVisualSegments({
       x: 760,
       width: 180,
       height: 62,
       orientation: 'floor',
-    })).toEqual([
-      { x: 702, width: 64, height: 62, frame: 0, flipX: false },
-      { x: 760, width: 52, height: 62, frame: 0, flipX: false },
-      { x: 818, width: 64, height: 62, frame: 0, flipX: true },
+    })
+
+    expect(segments).toEqual([
+      { x: 702, width: 72, height: 62, frame: 0, flipX: false },
+      { x: 760, width: 68, height: 62, frame: 0, flipX: false },
+      { x: 818, width: 72, height: 62, frame: 0, flipX: true },
     ])
+    expect(getSegmentRight(segments[0])).toBeGreaterThan(getSegmentLeft(segments[1]))
+    expect(getSegmentRight(segments[1])).toBeGreaterThan(getSegmentLeft(segments[2]))
   })
 
   it('keeps non-floor spike visuals as a single oriented segment', () => {
@@ -80,3 +84,11 @@ describe('hazard placement', () => {
     expect(body.height).toBeCloseTo(34.72)
   })
 })
+
+function getSegmentLeft(segment: { x: number; width: number }): number {
+  return segment.x - segment.width / 2
+}
+
+function getSegmentRight(segment: { x: number; width: number }): number {
+  return segment.x + segment.width / 2
+}

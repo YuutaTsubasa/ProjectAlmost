@@ -25,6 +25,7 @@ export type HazardVisualSegment = {
 }
 
 const floorSpikeEndCapWidth = 64
+const floorSpikeSegmentOverlap = 8
 
 export const hazardActorDefinitions = {
   spikes: {
@@ -68,7 +69,7 @@ export function getHazardVisualSegments(input: {
   return [
     {
       x: input.x - input.width / 2 + capWidth / 2,
-      width: capWidth,
+      width: capWidth + floorSpikeSegmentOverlap,
       height: input.height,
       frame,
       flipX: false,
@@ -76,7 +77,7 @@ export function getHazardVisualSegments(input: {
     ...(middleWidth > 0
       ? [{
           x: input.x,
-          width: middleWidth,
+          width: middleWidth + floorSpikeSegmentOverlap * 2,
           height: input.height,
           frame,
           flipX: false,
@@ -84,7 +85,7 @@ export function getHazardVisualSegments(input: {
       : []),
     {
       x: input.x + input.width / 2 - capWidth / 2,
-      width: capWidth,
+      width: capWidth + floorSpikeSegmentOverlap,
       height: input.height,
       frame,
       flipX: true,
