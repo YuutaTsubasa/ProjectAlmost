@@ -49,12 +49,12 @@ describe('stages', () => {
       titleRef: 'stages.1-1.title',
       subtitleRef: 'stages.1-1.subtitle',
       objectiveRef: 'stageObjectives.reachGoal',
-      collectibleCount: 24,
       nodePosition: { x: 34, y: 82 },
       previewAssetRef: '/assets/maps/white_palace_mid_bg_loop.webp',
       previewBackgroundAssetRef: '/assets/maps/white_palace_sky.webp',
       isBoss: false,
     })
+    expect(stages.items['1-1']).not.toHaveProperty('collectibleCount')
     expect(stages.items['1-6']).toMatchObject({
       id: '1-6',
       worldId: 'world01',

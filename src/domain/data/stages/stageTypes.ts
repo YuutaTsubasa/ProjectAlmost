@@ -13,7 +13,6 @@ export interface StageData {
   titleRef: LocalizationKey
   subtitleRef: LocalizationKey
   objectiveRef: LocalizationKey
-  collectibleCount: number
   nodePosition: StageNodePosition
   previewAssetRef: string
   previewBackgroundAssetRef?: string

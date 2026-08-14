@@ -88,6 +88,7 @@ Missing progression entries are treated as locked and uncleared, matching the cu
 
 - `projectData.worlds`
 - `projectData.stages`
+- `gameplayStageMaps`
 - `stageProgressionOptions`
 
 `WorldSelectScreen.svelte` receives world select info and renders the selected world's progress count and track width. It must not render hard-coded progress values.
@@ -96,6 +97,7 @@ Missing progression entries are treated as locked and uncleared, matching the cu
 
 - selected-stage lock state
 - selected-stage record fields
+- selected-stage collectible target count derived from gameplay map coins
 - node locked and cleared classes
 - deploy button availability
 

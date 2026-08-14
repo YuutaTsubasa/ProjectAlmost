@@ -42,7 +42,7 @@ function getStageInfo(
 
   return {
     stage,
-    collectibleTargetCount: gameplayMaps.items[stage.id]?.coins.length ?? stage.collectibleCount,
+    collectibleTargetCount: gameplayMaps.items[stage.id].coins.length,
     unlocked: progression?.unlocked === true,
     cleared: progression?.cleared === true,
     record: progression?.record,

@@ -103,7 +103,7 @@ describe('stage select info presenter', () => {
       option('1-1', { unlocked: true }),
     ])
 
-    expect(stages.items['1-1'].collectibleCount).toBe(24)
+    expect(stages.items['1-1']).not.toHaveProperty('collectibleCount')
     expect(gameplayStageMaps.items['1-1'].coins).toHaveLength(25)
     expect(info.stages[0].collectibleTargetCount).toBe(25)
   })

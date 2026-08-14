@@ -5,7 +5,6 @@ import type { StageCatalog, StageData, StageNodePosition } from './stageTypes'
 
 type StageSeed = {
   positions: readonly StageNodePosition[]
-  coins: readonly [number, number, number, number, number, number]
 }
 
 const seeds: Record<WorldId, StageSeed> = {
@@ -18,7 +17,6 @@ const seeds: Record<WorldId, StageSeed> = {
       { x: 37, y: 41 },
       { x: 71, y: 26 },
     ],
-    coins: [24, 28, 30, 32, 34, 12],
   },
   world02: {
     positions: [
@@ -29,7 +27,6 @@ const seeds: Record<WorldId, StageSeed> = {
       { x: 82, y: 32 },
       { x: 91, y: 18 },
     ],
-    coins: [26, 30, 32, 34, 36, 14],
   },
   world03: {
     positions: [
@@ -40,7 +37,6 @@ const seeds: Record<WorldId, StageSeed> = {
       { x: 82, y: 28 },
       { x: 91, y: 16 },
     ],
-    coins: [26, 28, 34, 36, 38, 14],
   },
   world04: {
     positions: [
@@ -51,7 +47,6 @@ const seeds: Record<WorldId, StageSeed> = {
       { x: 83, y: 34 },
       { x: 91, y: 18 },
     ],
-    coins: [28, 30, 34, 36, 40, 16],
   },
   world05: {
     positions: [
@@ -62,7 +57,6 @@ const seeds: Record<WorldId, StageSeed> = {
       { x: 82, y: 30 },
       { x: 91, y: 16 },
     ],
-    coins: [30, 32, 36, 38, 42, 16],
   },
   world06: {
     positions: [
@@ -73,7 +67,6 @@ const seeds: Record<WorldId, StageSeed> = {
       { x: 83, y: 32 },
       { x: 91, y: 15 },
     ],
-    coins: [32, 34, 38, 40, 44, 18],
   },
 }
 
@@ -101,7 +94,6 @@ function createStage(world: WorldData, stageId: StageId): StageData {
     titleRef: `stages.${stageId}.title`,
     subtitleRef: `stages.${stageId}.subtitle`,
     objectiveRef: isBoss ? 'stageObjectives.defeatBoss' : 'stageObjectives.reachGoal',
-    collectibleCount: seed.coins[stageNumber - 1],
     nodePosition: seed.positions[stageNumber - 1],
     previewAssetRef: previewAssetRefs[world.id] ?? world.assetRefs.stageSelectBackground,
     previewBackgroundAssetRef: previewBackgroundAssetRefs[world.id],

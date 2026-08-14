@@ -15,7 +15,7 @@ Build the first rebuild Stage Select page as a static selectable UI slice that f
 
 ## Architecture
 
-Create a pure domain Stage catalog under `src/domain/data/stages/`. `StageData` describes all 36 stages and is keyed by `StageId`. Each stage has UI-ready metadata: `id`, `worldId`, `number`, `titleRef`, `subtitleRef`, `objectiveRef`, `collectibleCount`, `nodePosition`, `previewAssetRef`, and `isBoss`. `StageCatalog` exposes an `order` list plus `items` map, matching the existing world catalog style.
+Create a pure domain Stage catalog under `src/domain/data/stages/`. `StageData` describes all 36 stages and is keyed by `StageId`. Each stage has UI-ready metadata: `id`, `worldId`, `number`, `titleRef`, `subtitleRef`, `objectiveRef`, `nodePosition`, `previewAssetRef`, and `isBoss`. `StageCatalog` exposes an `order` list plus `items` map, matching the existing world catalog style. Stage collectible totals are not owned by `StageData`; Stage Select receives a projected collectible target derived from the gameplay map coins so the UI cannot drift from playable stage data.
 
 Expose the catalog through `projectData`:
 
