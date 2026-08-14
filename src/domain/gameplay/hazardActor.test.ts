@@ -3,6 +3,7 @@ import {
   getGroundedHazardCenterY,
   getHazardBodyPresentation,
   getHazardFrameIndex,
+  getHazardVisualSegments,
   hazardActorDefinitions,
 } from './hazardActor'
 
@@ -33,6 +34,30 @@ describe('hazard frame selection', () => {
 })
 
 describe('hazard placement', () => {
+  it('projects wide floor spike visuals into left, middle, and mirrored right segments', () => {
+    expect(getHazardVisualSegments({
+      x: 760,
+      width: 180,
+      height: 62,
+      orientation: 'floor',
+    })).toEqual([
+      { x: 702, width: 64, height: 62, frame: 0, flipX: false },
+      { x: 760, width: 52, height: 62, frame: 0, flipX: false },
+      { x: 818, width: 64, height: 62, frame: 0, flipX: true },
+    ])
+  })
+
+  it('keeps non-floor spike visuals as a single oriented segment', () => {
+    expect(getHazardVisualSegments({
+      x: 760,
+      width: 62,
+      height: 180,
+      orientation: 'left-wall',
+    })).toEqual([
+      { x: 760, width: 62, height: 180, frame: 3, flipX: false },
+    ])
+  })
+
   it('places floor spikes on a platform surface with prototype visual inset', () => {
     expect(getGroundedHazardCenterY({
       surfaceY: 640,

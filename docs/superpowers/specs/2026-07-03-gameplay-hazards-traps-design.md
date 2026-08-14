@@ -81,6 +81,8 @@ type HazardRect = {
   - left-wall: frame `3`
   - ceiling: frame `4`
 - Spike display size comes from stage data `width` and `height`.
+- Floor spike visuals are rendered as left, middle, and right visual segments. The right segment mirrors the floor frame so spike beds have a visual end cap instead of exposing the atlas frame's partial right-side spike.
+- Spike collision remains a single static body based on the authored hazard rectangle. Visual segmentation must not split damage handling or create multiple overlap callbacks for one hazard.
 - Spike Arcade body size is `width * 0.86` by `height * 0.56`.
 - Spike Arcade body offset is `width * 0.07` by `height * 0.36`.
 - Player overlap with a hazard passes the hazard sprite X as the damage source.
@@ -110,6 +112,7 @@ It owns:
 - Spike asset metadata.
 - Spike placement helpers.
 - Spike frame selection.
+- Spike visual segment projection.
 - Spike physics body presentation values.
 
 Public API:
@@ -136,6 +139,13 @@ export function getHazardFrameIndex(input: {
   orientation?: GameplayHazardOrientation
 }): number
 
+export function getHazardVisualSegments(input: {
+  x: number
+  width: number
+  height: number
+  orientation?: GameplayHazardOrientation
+}): readonly HazardVisualSegment[]
+
 export function getGroundedHazardCenterY(input: {
   surfaceY: number
   height: number
@@ -158,6 +168,7 @@ Rules:
 
 - `hazardActorDefinitions.spikes.sprite.assetRef` points to `/assets/props/emerald_sanctuary_spikes.webp`.
 - `getHazardFrameIndex` returns the prototype frame mapping.
+- `getHazardVisualSegments` returns one segment for non-floor hazards and left/middle/right segments for floor hazards that are wide enough to need a visible end cap.
 - `getGroundedHazardCenterY` uses the prototype visual bottom inset.
 - `getHazardBodyPresentation` returns the prototype spike body dimensions and offsets.
 - The API is deliberately small so future `lava`, `laser`, or `falling` hazards can add behavior without changing stage map consumers.
