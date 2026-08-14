@@ -13,8 +13,8 @@ describe('hazard actor definitions', () => {
       sprite: {
         key: 'emerald-sanctuary-spikes',
         assetRef: '/assets/props/emerald_sanctuary_spikes.webp',
-        frameWidth: 256,
-        frameHeight: 128,
+        frameWidth: 512,
+        frameHeight: 512,
       },
       origin: { x: 0.5, y: 0.5 },
       visualBottomInset: 14,
