@@ -22,6 +22,7 @@ export type DebugUnlockResolutionInput = {
   storage: ProgressionStorage
   search: string
   dev: boolean
+  hostname?: string
 }
 
 export type ProgressionStorage = {
@@ -128,8 +129,12 @@ export function getDebugUnlockAllStages(storage: ProgressionStorage, dev: boolea
   return dev && storage.getItem(STAGE_PROGRESSION_DEBUG_UNLOCK_KEY) === 'true'
 }
 
+function canUseDebugUnlock(input: Pick<DebugUnlockResolutionInput, 'dev' | 'hostname'>): boolean {
+  return input.dev || /^deploy-preview-\d+--projectalmost\.netlify\.app$/.test(input.hostname ?? '')
+}
+
 export function resolveDebugUnlockAllStages(input: DebugUnlockResolutionInput): boolean {
-  if (!input.dev) return false
+  if (!canUseDebugUnlock(input)) return false
 
   const queryValue = parseDebugUnlockQuery(input.search)
   if (queryValue === true) {

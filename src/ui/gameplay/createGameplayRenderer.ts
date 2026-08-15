@@ -60,6 +60,7 @@ import {
   getGroundedHazardCenterY,
   getHazardBodyPresentation,
   getHazardFrameIndex,
+  getHazardVisualSegments,
   hazardActorDefinitions,
 } from '../../domain/gameplay/hazardActor'
 import type { GameplayStageMap } from '../../domain/gameplay/gameplayMapTypes'
@@ -919,19 +920,30 @@ class GameplayMapScene extends Phaser.Scene {
   private createHazards(): void {
     this.hazards = this.stageMap.hazards.map((spawn) => {
       const definition = hazardActorDefinitions[spawn.type]
+      const y = getGroundedHazardCenterY({
+        surfaceY: spawn.surfaceY,
+        height: spawn.height,
+        type: spawn.type,
+      })
+      for (const segment of getHazardVisualSegments(spawn)) {
+        this.add
+          .image(segment.x, y, definition.sprite.key, segment.frame)
+          .setOrigin(definition.origin.x, definition.origin.y)
+          .setDisplaySize(segment.width, segment.height)
+          .setFlipX(segment.flipX)
+          .setDepth(renderDepth.hazard)
+      }
+
       const sprite = this.physics.add.staticImage(
         spawn.x,
-        getGroundedHazardCenterY({
-          surfaceY: spawn.surfaceY,
-          height: spawn.height,
-          type: spawn.type,
-        }),
+        y,
         definition.sprite.key,
         getHazardFrameIndex({ orientation: spawn.orientation }),
       )
       sprite.setOrigin(definition.origin.x, definition.origin.y)
       sprite.setDisplaySize(spawn.width, spawn.height)
       sprite.setDepth(renderDepth.hazard)
+      sprite.setVisible(false)
       sprite.refreshBody()
 
       const body = getHazardBodyPresentation({

@@ -3,6 +3,7 @@ import {
   getGroundedHazardCenterY,
   getHazardBodyPresentation,
   getHazardFrameIndex,
+  getHazardVisualSegments,
   hazardActorDefinitions,
 } from './hazardActor'
 
@@ -13,8 +14,8 @@ describe('hazard actor definitions', () => {
       sprite: {
         key: 'emerald-sanctuary-spikes',
         assetRef: '/assets/props/emerald_sanctuary_spikes.webp',
-        frameWidth: 256,
-        frameHeight: 128,
+        frameWidth: 512,
+        frameHeight: 512,
       },
       origin: { x: 0.5, y: 0.5 },
       visualBottomInset: 14,
@@ -33,6 +34,34 @@ describe('hazard frame selection', () => {
 })
 
 describe('hazard placement', () => {
+  it('projects wide floor spike visuals into left, middle, and mirrored right segments', () => {
+    const segments = getHazardVisualSegments({
+      x: 760,
+      width: 180,
+      height: 62,
+      orientation: 'floor',
+    })
+
+    expect(segments).toEqual([
+      { x: 702, width: 72, height: 62, frame: 0, flipX: false },
+      { x: 760, width: 68, height: 62, frame: 0, flipX: false },
+      { x: 818, width: 72, height: 62, frame: 0, flipX: true },
+    ])
+    expect(getSegmentRight(segments[0])).toBeGreaterThan(getSegmentLeft(segments[1]))
+    expect(getSegmentRight(segments[1])).toBeGreaterThan(getSegmentLeft(segments[2]))
+  })
+
+  it('keeps non-floor spike visuals as a single oriented segment', () => {
+    expect(getHazardVisualSegments({
+      x: 760,
+      width: 62,
+      height: 180,
+      orientation: 'left-wall',
+    })).toEqual([
+      { x: 760, width: 62, height: 180, frame: 3, flipX: false },
+    ])
+  })
+
   it('places floor spikes on a platform surface with prototype visual inset', () => {
     expect(getGroundedHazardCenterY({
       surfaceY: 640,
@@ -55,3 +84,11 @@ describe('hazard placement', () => {
     expect(body.height).toBeCloseTo(34.72)
   })
 })
+
+function getSegmentLeft(segment: { x: number; width: number }): number {
+  return segment.x - segment.width / 2
+}
+
+function getSegmentRight(segment: { x: number; width: number }): number {
+  return segment.x + segment.width / 2
+}

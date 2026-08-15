@@ -542,6 +542,7 @@
     debugUnlockAllStages = resolveDebugUnlockAllStages({
       storage: localStorage,
       search: window.location.search,
+      hostname: window.location.hostname,
       dev: import.meta.env.DEV,
     })
     stageProgressionSave = loadStageProgressionSave(localStorage)

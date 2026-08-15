@@ -11,6 +11,7 @@ import {
   getGroundedHazardCenterY,
   getHazardBodyPresentation,
   getHazardFrameIndex,
+  getHazardVisualSegments,
   hazardActorDefinitions,
 } from '../../domain/gameplay/hazardActor'
 import type { GameplayStageMap } from '../../domain/gameplay/gameplayMapTypes'
@@ -580,7 +581,7 @@ function createFakeArcadeSprite(input: { x: number; y: number; texture: string }
   return sprite
 }
 
-function createFakeImage(input: { x: number; y: number; texture: string }) {
+function createFakeImage(input: { x: number; y: number; texture: string; frame?: number }) {
   const image = {
     ...input,
     width: 56,
@@ -778,7 +779,7 @@ function createSceneRuntime(input: {
         height: number,
         key: string,
       ) => ReturnType<typeof createFakeTileSprite>
-      image: (x: number, y: number, texture: string) => ReturnType<typeof createFakeImage>
+      image: (x: number, y: number, texture: string, frame?: number) => ReturnType<typeof createFakeImage>
       ellipse: (
         x: number,
         y: number,
@@ -962,8 +963,8 @@ function createSceneRuntime(input: {
       tileSprites.push(sprite)
       return sprite
     },
-    image: (x, y, texture) => {
-      const image = createFakeImage({ x, y, texture })
+    image: (x, y, texture, frame) => {
+      const image = createFakeImage({ x, y, texture, frame })
       images.push(image)
       return image
     },
@@ -2194,11 +2195,21 @@ describe('createGameplayRendererConfig', () => {
     runtime.scene.create()
 
     const hazardSpawn = stage.hazards[0]
-    const spike = runtime.staticImageCalls.find(
+    const spikeSprites = runtime.staticImageCalls.filter(
       (sprite) => sprite.texture === hazardActorDefinitions.spikes.sprite.key,
     )
+    const spike = runtime.overlapCalls.find(
+      (overlap) =>
+        overlap.a === runtime.playerSprite
+        && spikeSprites.includes(overlap.b as (typeof spikeSprites)[number]),
+    )?.b as (typeof spikeSprites)[number] | undefined
     expect(spike).toBeDefined()
     if (!spike || !hazardSpawn) return
+
+    const visualSegments = runtime.images.filter(
+      (image) => image.texture === hazardActorDefinitions.spikes.sprite.key,
+    )
+    const expectedSegments = getHazardVisualSegments(hazardSpawn)
 
     expect(spike).toMatchObject({
       x: hazardSpawn.x,
@@ -2210,7 +2221,31 @@ describe('createGameplayRendererConfig', () => {
       frame: getHazardFrameIndex({ orientation: hazardSpawn.orientation }),
       depth: 8,
       origin: hazardActorDefinitions.spikes.origin,
+      visible: false,
     })
+    expect(visualSegments).toHaveLength(expectedSegments.length)
+    expect(visualSegments.map((segment) => ({
+      x: segment.x,
+      y: segment.y,
+      frame: segment.frame,
+      depth: segment.depth,
+      flipX: segment.flipX,
+      displaySize: segment.displaySize,
+    }))).toEqual(expectedSegments.map((segment) => ({
+      x: segment.x,
+      y: getGroundedHazardCenterY({
+        surfaceY: hazardSpawn.surfaceY,
+        height: hazardSpawn.height,
+        type: hazardSpawn.type,
+      }),
+      frame: segment.frame,
+      depth: 8,
+      flipX: segment.flipX,
+      displaySize: {
+        width: segment.width,
+        height: segment.height,
+      },
+    })))
     const body = getHazardBodyPresentation({
       width: hazardSpawn.width,
       height: hazardSpawn.height,
