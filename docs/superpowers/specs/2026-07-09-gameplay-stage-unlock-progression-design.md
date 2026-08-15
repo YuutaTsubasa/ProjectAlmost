@@ -69,18 +69,19 @@ The store owns browser-specific behavior:
 - load save with malformed-data fallback
 - write save after stage clear
 - delete save
-- parse development debug unlock query params
+- parse development and Netlify deploy-preview debug unlock query params
 
 Debug unlock behavior:
 
-- enabled only when the rebuild is running in a development environment.
+- enabled only when the rebuild is running in a development environment or on the exact Netlify deploy preview hostname `deploy-preview-<number>--projectalmost.netlify.app`.
+- lookalike production hostnames such as `deploy-preview-test.example.com` must not enable debug unlock.
 - `?debugUnlock=1` and `?debugUnlock=true` enable the persisted debug flag.
 - `?debugUnlockStages=1` and `?debugUnlockStages=true` also enable it.
 - `?debugUnlock=0`, `?debugUnlock=false`, `?debugUnlockStages=0`, and `?debugUnlockStages=false` clear it.
 - when enabled, every stage is treated as unlocked.
 - delete save removes saved clear records but does not clear the debug unlock flag.
 
-The application layer provides explicit dependencies for storage, location search, and dev mode so tests can cover behavior without real browser globals.
+The application layer provides explicit dependencies for storage, location search, hostname, and dev mode so tests can cover behavior without real browser globals.
 
 ### App State And Reactive Flow
 
@@ -266,8 +267,8 @@ Unlock Projection tests:
 - later stage is locked until the previous stage is cleared.
 - next stage lookup follows catalog order and returns none at the end.
 - option state projection marks locked, unlocked, and cleared stages.
-- debug query enables and disables the dev-only unlock key.
-- debug unlock is ignored outside dev mode.
+- debug query enables and disables the development or exact Netlify deploy-preview unlock key.
+- debug unlock is ignored outside dev mode and exact Netlify deploy-preview hostnames.
 - locked selected stage confirm leaves the app on Stage Select.
 - unlocked selected stage confirm opens gameplay.
 - next-stage action opens the next stage only when allowed.
@@ -303,6 +304,6 @@ Verification before completion:
 - Stage Select cannot deploy a locked stage by click, double-click, keyboard, or controller confirm.
 - Locked, unlocked, and cleared Stage Select visuals match the Prototype treatment.
 - Result HUD Next Stage is locked before the current stage clear is recorded and available after the clear unlocks the next stage.
-- DEV debug unlock can unlock all stages through Prototype-compatible query params.
+- Development and exact Netlify deploy-preview debug unlock can unlock all stages through Prototype-compatible query params.
 - Delete save clears stored clear records and returns progression to the fresh-save unlock state.
 - The implementation has focused tests for domain, application storage, app flow, and UI contract behavior.

@@ -252,6 +252,18 @@ describe('browser stage progression debug unlock', () => {
     expect(storage.snapshot()[STAGE_PROGRESSION_DEBUG_UNLOCK_KEY]).toBe('true')
   })
 
+  it('keeps debug unlock disabled on lookalike deploy preview hostnames', () => {
+    const storage = createMemoryStorage()
+
+    expect(resolveDebugUnlockAllStages({
+      storage,
+      search: '?debugUnlock=1',
+      dev: false,
+      hostname: 'deploy-preview-test.example.com',
+    })).toBe(false)
+    expect(storage.snapshot()[STAGE_PROGRESSION_DEBUG_UNLOCK_KEY]).toBeUndefined()
+  })
+
   it('delete save preserves the debug unlock flag', () => {
     const storage = createMemoryStorage({
       [STAGE_PROGRESSION_SAVE_KEY]: JSON.stringify(createEmptySave()),

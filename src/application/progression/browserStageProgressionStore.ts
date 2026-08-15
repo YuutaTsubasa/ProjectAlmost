@@ -130,7 +130,7 @@ export function getDebugUnlockAllStages(storage: ProgressionStorage, dev: boolea
 }
 
 function canUseDebugUnlock(input: Pick<DebugUnlockResolutionInput, 'dev' | 'hostname'>): boolean {
-  return input.dev || input.hostname?.startsWith('deploy-preview-') === true
+  return input.dev || /^deploy-preview-\d+--projectalmost\.netlify\.app$/.test(input.hostname ?? '')
 }
 
 export function resolveDebugUnlockAllStages(input: DebugUnlockResolutionInput): boolean {
