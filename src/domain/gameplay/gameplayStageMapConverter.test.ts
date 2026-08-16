@@ -254,6 +254,17 @@ describe('convertGameplayStageSource', () => {
     ])
   })
 
+  it('uses World 02 enemy identities in playable stages before the boss stage', () => {
+    for (const stageId of ['2-1', '2-2', '2-3', '2-4', '2-5'] as const) {
+      const enemyTypes = new Set(getGameplayStageMap(stageId).enemies.map((enemy) => enemy.type))
+
+      expect(enemyTypes.has('thorn-beetle')).toBe(true)
+      expect(enemyTypes.has('seed-lantern')).toBe(true)
+      expect(enemyTypes.has('armor-guard')).toBe(false)
+      expect(enemyTypes.has('azure-core')).toBe(false)
+    }
+  })
+
   it('keeps the World 02 boss placeholder as Azure Core for the later boss slice', () => {
     const stage = getGameplayStageMap('2-6')
     if (!stage) {
