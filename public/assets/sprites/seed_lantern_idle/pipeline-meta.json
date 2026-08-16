@@ -3,7 +3,11 @@
   "mode": "hover",
   "prompt": "Seed Lantern idle",
   "role": "",
-  "input": "/private/tmp/projectalmost-world02-sprites/seed_lantern_idle/raw-transparent.png",
+  "source": {
+    "kind": "generated-image",
+    "batch": "2026-08-17-world02-enemies",
+    "asset": "seed-lantern-idle"
+  },
   "threshold": 100,
   "edge_threshold": 150,
   "duration": 200,

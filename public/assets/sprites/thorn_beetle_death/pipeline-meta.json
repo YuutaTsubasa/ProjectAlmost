@@ -3,7 +3,11 @@
   "mode": "death",
   "prompt": "Thorn Beetle death",
   "role": "",
-  "input": "/Users/maplewing/.codex/generated_images/019ee82f-be6c-7c21-9856-482c8040af12/call_2sUe3k7wSNGxYbuZ4IOdhKRF.png",
+  "source": {
+    "kind": "generated-image",
+    "batch": "2026-08-17-world02-enemies",
+    "asset": "thorn-beetle-death"
+  },
   "threshold": 220,
   "edge_threshold": 260,
   "duration": 200,
