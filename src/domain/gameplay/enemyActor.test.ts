@@ -9,6 +9,7 @@ import {
   getEnemyRegenerationDecision,
   getEnemyRegenerationPresentation,
   getEnemyRespawnDelayMs,
+  getEnemySpriteAssetRefs,
   getEnemySpawnY,
   getNextEnemyPatrolDirection,
   getScoreEnemyTargetCount,
@@ -132,6 +133,11 @@ describe('enemyActorDefinitions', () => {
 })
 
 describe('getEnemySpawnY', () => {
+  it('calculates spawn Y from enemy placement definitions', () => {
+    expect(getEnemySpawnY({ type: 'thorn-beetle', surfaceY: 640 })).toBe(574)
+    expect(getEnemySpawnY({ type: 'seed-lantern', y: 420 })).toBe(420)
+  })
+
   it('lifts Armor Guards above the authored platform surface for rebuilt terrain art', () => {
     expect(
       getEnemySpawnY({
@@ -195,10 +201,26 @@ describe('getNextEnemyPatrolDirection', () => {
 })
 
 describe('shouldUpdateEnemyPatrol', () => {
+  it('updates patrol only for active patrol-capable enemies', () => {
+    expect(shouldUpdateEnemyPatrol({ type: 'thorn-beetle', defeated: false })).toBe(true)
+    expect(shouldUpdateEnemyPatrol({ type: 'seed-lantern', defeated: false })).toBe(false)
+    expect(shouldUpdateEnemyPatrol({ type: 'thorn-beetle', defeated: true })).toBe(false)
+  })
+
   it('updates active Armor Guard patrol and skips defeated enemies or Azure Cores', () => {
     expect(shouldUpdateEnemyPatrol({ type: 'armor-guard', defeated: false })).toBe(true)
     expect(shouldUpdateEnemyPatrol({ type: 'armor-guard', defeated: true })).toBe(false)
     expect(shouldUpdateEnemyPatrol({ type: 'azure-core', defeated: false })).toBe(false)
+  })
+})
+
+describe('getEnemySpriteAssetRefs', () => {
+  it('collects runtime sprite assets from enemy definitions', () => {
+    expect(getEnemySpriteAssetRefs(['thorn-beetle', 'seed-lantern'])).toEqual([
+      '/assets/sprites/seed_lantern_idle/sheet-transparent.webp',
+      '/assets/sprites/thorn_beetle_death/sheet-transparent.webp',
+      '/assets/sprites/thorn_beetle_walk/sheet-transparent.webp',
+    ])
   })
 })
 
