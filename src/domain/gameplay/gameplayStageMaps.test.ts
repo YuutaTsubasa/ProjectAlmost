@@ -88,7 +88,7 @@ describe('gameplayStageMaps', () => {
       }
     }
 
-    expect(enemyTypes).toEqual(new Set(['armor-guard', 'azure-core']))
+    expect(enemyTypes).toEqual(new Set(['armor-guard', 'azure-core', 'thorn-beetle', 'seed-lantern']))
   })
 
   it('defines ordered rank targets for the first gameplay stage', () => {
@@ -437,7 +437,7 @@ describe('gameplayStageMaps', () => {
 
     expect(thornCore).toMatchObject({
       id: 'thorn-core-a',
-      type: 'azure-core',
+      type: 'seed-lantern',
       respawnPolicy: 'regenerate',
       countsForScore: false,
     })
