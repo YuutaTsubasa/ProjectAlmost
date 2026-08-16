@@ -70,6 +70,12 @@ export type GroundedEnemyActorType = 'armor-guard' | 'thorn-beetle'
 export type AirborneEnemyActorType = 'azure-core' | 'seed-lantern'
 export type GameplayEnemySpawn = GroundedEnemySpawn | AirborneEnemySpawn
 
+export function isGroundedGameplayEnemySpawn(
+  enemy: GameplayEnemySpawn,
+): enemy is GroundedEnemySpawn {
+  return 'surfaceY' in enemy
+}
+
 export type GameplayMovingPlatformSpawn = PlatformRect & {
   id: string
   axis: 'x' | 'y'

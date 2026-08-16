@@ -5,6 +5,7 @@ import type {
 } from './gameplayMapTypes'
 import {
   toGameplayTheme,
+  isGameplayStageSourceAirborneEnemy,
   type GameplayStageConversionDiagnostic,
   type GameplayStageSource,
   type GameplayStageSourceTheme,
@@ -86,7 +87,7 @@ export function convertGameplayStageSource(
 }
 
 function convertEnemy(enemy: GameplayStageSource['enemies'][number]): GameplayEnemySpawn {
-  if (enemy.type === 'azure-core' || enemy.type === 'seed-lantern') {
+  if (isGameplayStageSourceAirborneEnemy(enemy)) {
     return {
       id: enemy.id,
       type: enemy.type,

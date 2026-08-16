@@ -63,7 +63,10 @@ import {
   getHazardVisualSegments,
   hazardActorDefinitions,
 } from '../../domain/gameplay/hazardActor'
-import type { GameplayStageMap } from '../../domain/gameplay/gameplayMapTypes'
+import {
+  isGroundedGameplayEnemySpawn,
+  type GameplayStageMap,
+} from '../../domain/gameplay/gameplayMapTypes'
 import type {
   GameplayCheckpointSpawn,
   GameplayCoinPoint,
@@ -1318,7 +1321,7 @@ class GameplayMapScene extends Phaser.Scene {
     const terrainLayer = this.terrainLayer
 
     this.enemies = this.stageMap.enemies.map((spawn) => {
-      if (spawn.type === 'armor-guard') {
+      if (isGroundedGameplayEnemySpawn(spawn)) {
         const definition = enemyActorDefinitions['armor-guard']
         const textureKey = definition.sprites.walk?.key
         if (!textureKey) {

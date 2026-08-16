@@ -216,7 +216,7 @@ describe('shouldUpdateEnemyPatrol', () => {
 
 describe('getEnemySpriteAssetRefs', () => {
   it('collects runtime sprite assets from enemy definitions', () => {
-    expect(getEnemySpriteAssetRefs(['thorn-beetle', 'seed-lantern'])).toEqual([
+    expect(getEnemySpriteAssetRefs(['thorn-beetle', 'seed-lantern', 'thorn-beetle'])).toEqual([
       '/assets/sprites/seed_lantern_idle/sheet-transparent.webp',
       '/assets/sprites/thorn_beetle_death/sheet-transparent.webp',
       '/assets/sprites/thorn_beetle_walk/sheet-transparent.webp',

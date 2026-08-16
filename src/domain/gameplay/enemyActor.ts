@@ -92,6 +92,8 @@ export type EnemySpawnYInput =
   | AzureCoreSpawnInput
   | ThornBeetleSpawnInput
   | SeedLanternSpawnInput
+
+export type AirborneEnemySpawnYInput = AzureCoreSpawnInput | SeedLanternSpawnInput
 export type EnemyRuleInput = {
   type: EnemyActorType
   respawnPolicy?: EnemyRespawnPolicy
@@ -265,19 +267,26 @@ export const enemyRegenerationPresentation = {
 } as const
 
 export function getEnemySpawnY(input: EnemySpawnYInput): number {
-  const definition = enemyActorDefinitions[input.type]
-  if (definition.placement === 'airborne') {
+  const definition: EnemyActorDefinition = enemyActorDefinitions[input.type]
+  if (isAirborneEnemySpawnYInput(input)) {
     return input.y
   }
 
-  return input.surfaceY - definition.centerAboveSurface - (definition.visualLiftY ?? 0)
+  return input.surfaceY - (definition.centerAboveSurface ?? 0) - (definition.visualLiftY ?? 0)
 }
 
 export function getEnemySpriteAssetRefs(types: readonly EnemyActorType[]): string[] {
   return [...new Set(types.flatMap((type) => {
-    const sprites = enemyActorDefinitions[type].sprites
+    const definition: EnemyActorDefinition = enemyActorDefinitions[type]
+    const sprites = definition.sprites
     return sprites ? Object.values(sprites).map((sprite) => sprite.assetRef) : []
   }))].sort()
+}
+
+export function isAirborneEnemySpawnYInput(
+  input: EnemySpawnYInput,
+): input is AirborneEnemySpawnYInput {
+  return enemyActorDefinitions[input.type].placement === 'airborne'
 }
 
 export function getNextEnemyPatrolDirection(input: {

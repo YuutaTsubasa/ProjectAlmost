@@ -256,6 +256,9 @@ describe('convertGameplayStageSource', () => {
 
   it('keeps the World 02 boss placeholder as Azure Core for the later boss slice', () => {
     const stage = getGameplayStageMap('2-6')
+    if (!stage) {
+      throw new Error('Expected World 02 stage 2-6 to exist.')
+    }
     expect(stage.enemies.find((enemy) => enemy.id === 'boss-prototype')).toMatchObject({
       id: 'boss-prototype',
       type: 'azure-core',

@@ -1,4 +1,7 @@
-import type { GameplayStageMap } from './gameplayMapTypes'
+import {
+  isGroundedGameplayEnemySpawn,
+  type GameplayStageMap,
+} from './gameplayMapTypes'
 import { getBossHudPhaseDisplay, isBossStageDefinition } from './bossBattle'
 import { getScoreEnemyTargetCount } from './enemyActor'
 import type { ClearRank } from './stageResult'
@@ -208,7 +211,7 @@ export function createInitialGameplayHudState(stage: GameplayStageMap): Gameplay
     enemyMarkers: getHudEnemyMarkers({
       enemies: stage.enemies.map((enemy) => ({
         x: enemy.x,
-        y: enemy.type === 'armor-guard' ? enemy.surfaceY : enemy.y,
+        y: isGroundedGameplayEnemySpawn(enemy) ? enemy.surfaceY : enemy.y,
         defeated: false,
       })),
       worldWidth: stage.world.width,

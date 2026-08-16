@@ -114,6 +114,12 @@ export type GameplayStageSourceEnemy =
   | GameplayStageSourceGroundedEnemy
   | GameplayStageSourceAirborneEnemy
 
+export function isGameplayStageSourceAirborneEnemy(
+  enemy: GameplayStageSourceEnemy,
+): enemy is GameplayStageSourceAirborneEnemy {
+  return 'y' in enemy
+}
+
 export type GameplayStageSourceCheckpoint = {
   id: string
   x: number
