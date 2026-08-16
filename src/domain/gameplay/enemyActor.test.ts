@@ -55,6 +55,8 @@ describe('enemyActorDefinitions', () => {
         initialDirection: -1,
         speed: 80,
       },
+      rules: { respawnPolicy: 'persistent', countsForScore: true },
+      presentation: { defeat: 'armor-guard-death', regeneration: 'armor-guard-restore' },
     })
   })
 
@@ -77,6 +79,52 @@ describe('enemyActorDefinitions', () => {
         yOffset: -14,
         angle: 10,
         durationMs: 950,
+        ease: 'Sine.easeInOut',
+      },
+      rules: { respawnPolicy: 'regenerate', countsForScore: false },
+      presentation: { defeat: 'azure-core-burst', regeneration: 'azure-core-materialize' },
+    })
+  })
+
+  it('defines the World 02 Thorn Beetle as a grounded patrol enemy', () => {
+    expect(enemyActorDefinitions['thorn-beetle']).toMatchObject({
+      type: 'thorn-beetle',
+      placement: 'grounded',
+      behavior: 'patrol',
+      gravity: true,
+      sprites: {
+        walk: {
+          key: 'thorn-beetle-walk',
+          assetRef: '/assets/sprites/thorn_beetle_walk/sheet-transparent.webp',
+        },
+        death: {
+          key: 'thorn-beetle-death',
+          assetRef: '/assets/sprites/thorn_beetle_death/sheet-transparent.webp',
+        },
+      },
+      patrol: {
+        initialDirection: -1,
+        speed: 72,
+      },
+    })
+  })
+
+  it('defines the World 02 Seed Lantern as an airborne Homing target', () => {
+    expect(enemyActorDefinitions['seed-lantern']).toMatchObject({
+      type: 'seed-lantern',
+      placement: 'airborne',
+      behavior: 'homing-target',
+      gravity: false,
+      sprites: {
+        idle: {
+          key: 'seed-lantern-idle',
+          assetRef: '/assets/sprites/seed_lantern_idle/sheet-transparent.webp',
+        },
+      },
+      floating: {
+        yOffset: -16,
+        angle: 8,
+        durationMs: 1050,
         ease: 'Sine.easeInOut',
       },
     })
@@ -186,6 +234,19 @@ describe('enemy scoring rules', () => {
   it('defaults persistent guards to scoring enemies and regenerating Azure Cores to support enemies', () => {
     expect(enemyCountsForScore({ type: 'armor-guard' })).toBe(true)
     expect(enemyCountsForScore({ type: 'azure-core' })).toBe(false)
+  })
+
+  it('uses enemy definitions for score and respawn defaults', () => {
+    expect(enemyCountsForScore({ type: 'thorn-beetle' })).toBe(true)
+    expect(enemyCountsForScore({ type: 'seed-lantern' })).toBe(false)
+    expect(getEnemyDefeatOutcome({ type: 'thorn-beetle' })).toEqual({
+      scoreDelta: 1,
+      shouldRegenerate: false,
+    })
+    expect(getEnemyDefeatOutcome({ type: 'seed-lantern' })).toEqual({
+      scoreDelta: 0,
+      shouldRegenerate: true,
+    })
   })
 
   it('allows stage metadata to override score counting', () => {
