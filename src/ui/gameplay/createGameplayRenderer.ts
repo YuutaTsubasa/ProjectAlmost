@@ -1486,7 +1486,7 @@ class GameplayMapScene extends Phaser.Scene {
   }
 
   private resetEnemyRuntime(enemy: EnemyRuntime): void {
-    const definition = enemyActorDefinitions[enemy.spawn.type]
+    const definition: EnemyActorDefinition = enemyActorDefinitions[enemy.spawn.type]
 
     enemy.defeated = false
     enemy.regenerating = false
@@ -1497,13 +1497,12 @@ class GameplayMapScene extends Phaser.Scene {
       .setAngle(0)
       .setVelocity(0, 0)
 
-    if (enemy.spawn.type === 'armor-guard') {
-      const walk = enemyActorDefinitions['armor-guard'].sprites?.walk
-      if (walk) {
-        enemy.sprite.play(walk.key, true)
-      }
+    const defaultSprite = getEnemyDefaultSpriteDefinition(enemy.spawn.type)
+    if (defaultSprite) {
+      enemy.sprite.setTexture(defaultSprite.key)
+      enemy.sprite.play(defaultSprite.key, true)
     } else {
-      const textureKey = enemyActorDefinitions['azure-core'].generatedTexture?.key
+      const textureKey = definition.generatedTexture?.key
       if (textureKey) {
         enemy.sprite.setTexture(textureKey)
       }
@@ -1965,8 +1964,9 @@ class GameplayMapScene extends Phaser.Scene {
     }
 
     const presentation = getEnemyDefeatPresentation(enemy.spawn.type)
-    if (presentation === 'armor-guard-death') {
-      const death = enemyActorDefinitions['armor-guard'].sprites?.death
+    if (presentation === 'armor-guard-death' || presentation === 'thorn-beetle-death') {
+      const definition: EnemyActorDefinition = enemyActorDefinitions[enemy.spawn.type]
+      const death = definition.sprites?.death
       if (death) {
         enemy.sprite.play(death.key, true)
       }
@@ -2027,29 +2027,39 @@ class GameplayMapScene extends Phaser.Scene {
     this.tweens.killTweensOf(enemy.sprite)
     enemy.sprite.setPosition(enemy.spawn.x, spawnY)
     enemy.regenerating = true
-    enemy.direction = enemy.spawn.type === 'armor-guard'
-      ? enemyActorDefinitions['armor-guard'].patrol.initialDirection
-      : -1
+    const definition: EnemyActorDefinition = enemyActorDefinitions[enemy.spawn.type]
+    enemy.direction = definition.patrol?.initialDirection ?? -1
 
-    if (getEnemyRegenerationPresentation(enemy.spawn.type) === 'azure-core-materialize') {
-      this.regenerateAzureCore(enemy)
+    const presentation = getEnemyRegenerationPresentation(enemy.spawn.type)
+    if (presentation === 'azure-core-materialize' || presentation === 'seed-lantern-materialize') {
+      this.regenerateAirborneSupportEnemy(enemy, presentation)
     } else {
       this.resetEnemyRuntime(enemy)
       this.emitEnemyMarkerPatch()
     }
   }
 
-  private regenerateAzureCore(enemy: EnemyRuntime): void {
-    const definition = enemyActorDefinitions['azure-core']
-    const textureKey = definition.generatedTexture?.key
-    if (textureKey) {
-      enemy.sprite.setTexture(textureKey)
+  private regenerateAirborneSupportEnemy(
+    enemy: EnemyRuntime,
+    presentation: 'azure-core-materialize' | 'seed-lantern-materialize',
+  ): void {
+    const definition: EnemyActorDefinition = enemyActorDefinitions[enemy.spawn.type]
+    const defaultSprite = getEnemyDefaultSpriteDefinition(enemy.spawn.type)
+    if (defaultSprite) {
+      enemy.sprite.setTexture(defaultSprite.key)
+      enemy.sprite.play(defaultSprite.key, true)
+    } else if (definition.generatedTexture?.key) {
+      enemy.sprite.setTexture(definition.generatedTexture.key)
     }
+
+    const materialize = presentation === 'azure-core-materialize'
+      ? enemyRegenerationPresentation.azureCore
+      : enemyRegenerationPresentation.seedLantern
 
     enemy.sprite
       .setVisible(true)
-      .setAlpha(enemyRegenerationPresentation.azureCore.startAlpha)
-      .setScale(enemyRegenerationPresentation.azureCore.startScale)
+      .setAlpha(materialize.startAlpha)
+      .setScale(materialize.startScale)
       .setAngle(0)
       .setVelocity(0, 0)
 
@@ -2058,16 +2068,14 @@ class GameplayMapScene extends Phaser.Scene {
       body.enable = false
     }
 
-    if (enemy.spawn.type === 'azure-core') {
-      this.createAzureCoreFloat(enemy.sprite, enemy.spawn.y)
-    }
+    this.createEnemyFloat(enemy.sprite, getEnemySpawnY(enemy.spawn), definition)
 
     this.tweens.add({
       targets: enemy.sprite,
-      scale: enemyRegenerationPresentation.azureCore.endScale,
-      alpha: enemyRegenerationPresentation.azureCore.endAlpha,
-      duration: enemyRegenerationPresentation.azureCore.durationMs,
-      ease: enemyRegenerationPresentation.azureCore.ease,
+      scale: materialize.endScale,
+      alpha: materialize.endAlpha,
+      duration: materialize.durationMs,
+      ease: materialize.ease,
       onComplete: () => {
         enemy.defeated = false
         enemy.regenerating = false

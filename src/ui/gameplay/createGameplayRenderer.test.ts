@@ -4247,6 +4247,76 @@ describe('createGameplayRendererConfig', () => {
     ).toHaveLength(1)
   })
 
+  it('plays Thorn Beetle death presentation without treating it as Azure Core', () => {
+    const runtime = createSceneRuntime({
+      stage: {
+        ...createEnemyFixtureStage(),
+        enemies: [
+          {
+            id: 'beetle-a',
+            type: 'thorn-beetle',
+            x: 520,
+            surfaceY: 640,
+            patrolMinX: 420,
+            patrolMaxX: 620,
+          },
+        ],
+      },
+    })
+    runtime.scene.preload()
+    runtime.scene.create()
+    startGameplay(runtime)
+
+    const beetle = runtime.enemySprites.find((sprite) => sprite.texture === 'thorn-beetle-walk')
+    expect(beetle).toBeDefined()
+    if (!beetle) return
+
+    runtime.placePlayerNear(beetle.x, beetle.y)
+    runtime.pressAttack()
+    runtime.scene.update(16, 16)
+    runtime.triggerEnemyOverlap(beetle)
+
+    expect(beetle?.playCalls.at(-1)).toEqual({ key: 'thorn-beetle-death', ignoreIfPlaying: true })
+  })
+
+  it('regenerates Seed Lantern with its own texture and materialize presentation', () => {
+    const runtime = createSceneRuntime({
+      stage: {
+        ...createEnemyFixtureStage(),
+        enemies: [
+          {
+            id: 'lantern-a',
+            type: 'seed-lantern',
+            x: 900,
+            y: 420,
+            patrolMinX: 900,
+            patrolMaxX: 900,
+            respawnDelayMs: 1,
+          },
+        ],
+      },
+    })
+    runtime.scene.preload()
+    runtime.scene.create()
+    startGameplay(runtime)
+
+    const lantern = runtime.enemySprites.find((sprite) => sprite.texture === 'seed-lantern-idle')
+    expect(lantern).toBeDefined()
+    if (!lantern) return
+
+    runtime.placePlayerNear(lantern.x, lantern.y)
+    runtime.pressAttack()
+    runtime.scene.update(16, 16)
+    runtime.triggerEnemyOverlap(lantern)
+    runtime.placePlayerNear(128, 512)
+    runtime.runDelayedCalls(2)
+
+    expect(lantern?.texture).toBe('seed-lantern-idle')
+    expect(lantern?.visible).toBe(true)
+    expect(lantern?.body.enable).toBe(false)
+    expect(runtime.tweenCalls.some((call) => call.targets === lantern && call.scale === 1)).toBe(true)
+  })
+
   it('regenerates Armor Guard enemies from their spawn after the respawn delay', () => {
     const stage = createEnemyFixtureStage()
     stage.enemies = [

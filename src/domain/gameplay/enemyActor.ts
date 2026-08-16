@@ -264,6 +264,14 @@ export const enemyRegenerationPresentation = {
     durationMs: 320,
     ease: 'Back.easeOut',
   },
+  seedLantern: {
+    startScale: 0.35,
+    endScale: 1,
+    startAlpha: 0,
+    endAlpha: 1,
+    durationMs: 320,
+    ease: 'Back.easeOut',
+  },
 } as const
 
 export function getEnemySpawnY(input: EnemySpawnYInput): number {

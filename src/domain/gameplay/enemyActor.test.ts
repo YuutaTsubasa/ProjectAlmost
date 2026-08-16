@@ -128,6 +128,10 @@ describe('enemyActorDefinitions', () => {
         durationMs: 1050,
         ease: 'Sine.easeInOut',
       },
+      presentation: {
+        defeat: 'seed-lantern-burst',
+        regeneration: 'seed-lantern-materialize',
+      },
     })
   })
 })
@@ -358,11 +362,20 @@ describe('enemy regeneration rules', () => {
         durationMs: 320,
         ease: 'Back.easeOut',
       },
+      seedLantern: {
+        startScale: 0.35,
+        endScale: 1,
+        startAlpha: 0,
+        endAlpha: 1,
+        durationMs: 320,
+        ease: 'Back.easeOut',
+      },
     })
   })
 
   it('routes each enemy type to its regeneration presentation', () => {
     expect(getEnemyRegenerationPresentation('armor-guard')).toBe('armor-guard-restore')
     expect(getEnemyRegenerationPresentation('azure-core')).toBe('azure-core-materialize')
+    expect(getEnemyRegenerationPresentation('seed-lantern')).toBe('seed-lantern-materialize')
   })
 })
