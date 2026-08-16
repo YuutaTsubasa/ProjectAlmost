@@ -88,6 +88,44 @@ describe('preload manifest', () => {
     expect(sources).not.toContain('/assets/maps/emerald_sanctuary_sky.webp')
   })
 
+  it('includes stage enemy sprite assets from the supplied gameplay stage map', () => {
+    const stage = getGameplayStageMap('1-1')
+    expect(stage).toBeDefined()
+    const customizedStage: GameplayStageMap = {
+      ...stage!,
+      enemies: [
+        {
+          id: 'beetle-a',
+          type: 'thorn-beetle',
+          x: 520,
+          surfaceY: 640,
+          patrolMinX: 420,
+          patrolMaxX: 620,
+        },
+        {
+          id: 'lantern-a',
+          type: 'seed-lantern',
+          x: 900,
+          y: 420,
+          patrolMinX: 900,
+          patrolMaxX: 900,
+        },
+      ],
+    }
+    const sources = buildGameplayEntryPreloadPlan(projectData, customizedStage).map((asset) => asset.source)
+
+    expect(sources).toContain('/assets/sprites/thorn_beetle_walk/sheet-transparent.webp')
+    expect(sources).toContain('/assets/sprites/thorn_beetle_death/sheet-transparent.webp')
+    expect(sources).toContain('/assets/sprites/seed_lantern_idle/sheet-transparent.webp')
+  })
+
+  it('keeps first-world enemy sprite assets in shared gameplay preload', () => {
+    const sources = buildSharedGameplayPreloadPlan().map((asset) => asset.source)
+
+    expect(sources).toContain('/assets/sprites/enemy_guard_walk/sheet-transparent.webp')
+    expect(sources).toContain('/assets/sprites/enemy_guard_death/sheet-transparent.webp')
+  })
+
   it('includes every world map music track in collected runtime sources', () => {
     const sources = collectRuntimeAssetSources(projectData)
 
