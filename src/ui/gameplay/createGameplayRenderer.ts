@@ -13,6 +13,7 @@ import {
   getEnemyRespawnDelayMs,
   getNextEnemyPatrolDirection,
   getScoreEnemyTargetCount,
+  isEnemyHomingTarget,
   shouldProcessEnemyDefeat,
   shouldUpdateEnemyPatrol,
   type EnemyActorDefinition,
@@ -2625,6 +2626,7 @@ class GameplayMapScene extends Phaser.Scene {
     if (!this.player) return undefined
 
     const candidates = this.enemies
+      .filter((enemy) => isEnemyHomingTarget(enemy.spawn.type))
       .filter((enemy) => isHomingTargetAvailable({
         defeated: enemy.defeated,
         active: enemy.sprite.active,

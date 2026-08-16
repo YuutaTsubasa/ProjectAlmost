@@ -3490,6 +3490,58 @@ describe('createGameplayRendererConfig', () => {
     expect(reticle?.angle).toBe(3)
   })
 
+  it('does not let patrol enemies steal Homing targeting from Homing-target enemies', () => {
+    const runtime = createSceneRuntime({
+      stage: {
+        ...createEnemyFixtureStage(),
+        enemies: [
+          {
+            id: 'near-beetle',
+            type: 'thorn-beetle',
+            x: 1_640,
+            surfaceY: 384,
+            patrolMinX: 1_600,
+            patrolMaxX: 1_680,
+          },
+          {
+            id: 'far-lantern',
+            type: 'seed-lantern',
+            x: 1_760,
+            y: 320,
+            patrolMinX: 1_760,
+            patrolMaxX: 1_760,
+          },
+        ],
+      },
+    })
+    runtime.scene.create()
+    const beetle = runtime.sprites.find((sprite) => sprite.texture === 'thorn-beetle-walk')
+    const lantern = runtime.sprites.find((sprite) => sprite.texture === 'seed-lantern-idle')
+    expect(beetle).toBeDefined()
+    expect(lantern).toBeDefined()
+    if (!beetle || !lantern || !runtime.playerSprite) return
+    startGameplay(runtime)
+
+    runtime.playerSprite.body.blocked.down = false
+    runtime.playerSprite.body.touching.down = false
+    runtime.playerSprite.x = 1_600
+    runtime.playerSprite.y = 320
+    runtime.playerSprite.setFlipX(false)
+    beetle.x = 1_640
+    beetle.y = 320
+    lantern.x = 1_760
+    lantern.y = 320
+
+    runtime.scene.update()
+
+    const reticle = runtime.images.find((image) => image.texture === homingAttackPresentation.reticleTextureKey)
+    expect(reticle).toMatchObject({
+      x: 1_760,
+      y: 320 + homingAttackPresentation.reticleYOffset,
+      visible: true,
+    })
+  })
+
   it('hides the Homing reticle while grounded or when the target is defeated', () => {
     const runtime = createSceneRuntime()
     runtime.scene.create()
@@ -3630,30 +3682,27 @@ describe('createGameplayRendererConfig', () => {
     expect(runtime.playerSprite.velocityY).toBe(-420)
   })
 
-  it('can Homing Attack Armor Guard through the existing defeat presentation', () => {
+  it('can Homing Attack Azure Core through the existing defeat presentation', () => {
     const runtime = createSceneRuntime()
     runtime.scene.create()
-    const guard = runtime.sprites.find(
-      (sprite) => sprite.texture === enemyActorDefinitions['armor-guard'].sprites?.walk?.key,
-    )
-    expect(guard).toBeDefined()
-    if (!guard || !runtime.playerSprite) return
+    const core = runtime.sprites.find((sprite) => sprite.texture === 'azure-core')
+    expect(core).toBeDefined()
+    if (!core || !runtime.playerSprite) return
     startGameplay(runtime)
 
     runtime.playerSprite.body.blocked.down = false
     runtime.playerSprite.body.touching.down = false
-    runtime.playerSprite.x = 560
-    runtime.playerSprite.y = guard.y
+    runtime.playerSprite.x = 1_600
+    runtime.playerSprite.y = 320
     runtime.playerSprite.setFlipX(false)
-    guard.x = 720
+    core.x = 1_760
+    core.y = 320
     runtime.playerKeys.j.isDown = true
     runtime.scene.update()
 
-    expect(guard.body.enable).toBe(false)
-    expect(guard.playCalls.at(-1)).toEqual({
-      key: enemyActorDefinitions['armor-guard'].sprites?.death?.key,
-      ignoreIfPlaying: true,
-    })
+    expect(core.body.enable).toBe(false)
+    expect(core.visible).toBe(true)
+    expect(runtime.tweenCalls.some((call) => call.targets === core && call.scale === 1.8)).toBe(true)
   })
 
   it('does not apply enemy contact damage during Homing Attack', () => {

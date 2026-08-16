@@ -13,6 +13,7 @@ import {
   getEnemySpawnY,
   getNextEnemyPatrolDirection,
   getScoreEnemyTargetCount,
+  isEnemyHomingTarget,
   shouldProcessEnemyDefeat,
   shouldUpdateEnemyPatrol,
 } from './enemyActor'
@@ -215,6 +216,15 @@ describe('shouldUpdateEnemyPatrol', () => {
     expect(shouldUpdateEnemyPatrol({ type: 'armor-guard', defeated: false })).toBe(true)
     expect(shouldUpdateEnemyPatrol({ type: 'armor-guard', defeated: true })).toBe(false)
     expect(shouldUpdateEnemyPatrol({ type: 'azure-core', defeated: false })).toBe(false)
+  })
+})
+
+describe('isEnemyHomingTarget', () => {
+  it('treats only Homing-target capable enemies as Homing targets', () => {
+    expect(isEnemyHomingTarget('azure-core')).toBe(true)
+    expect(isEnemyHomingTarget('seed-lantern')).toBe(true)
+    expect(isEnemyHomingTarget('armor-guard')).toBe(false)
+    expect(isEnemyHomingTarget('thorn-beetle')).toBe(false)
   })
 })
 

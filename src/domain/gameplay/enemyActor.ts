@@ -373,3 +373,7 @@ export function shouldUpdateEnemyPatrol(input: {
 }): boolean {
   return enemyActorDefinitions[input.type].behavior === 'patrol' && !input.defeated
 }
+
+export function isEnemyHomingTarget(type: EnemyActorType): boolean {
+  return enemyActorDefinitions[type].behavior === 'homing-target'
+}
