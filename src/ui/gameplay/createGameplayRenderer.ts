@@ -7,6 +7,7 @@ import {
   getEnemyDefeatOutcome,
   getEnemySpawnY,
   getEnemyDefeatPresentation,
+  getEnemyDefaultSpriteDefinition,
   getEnemyRegenerationDecision,
   getEnemyRegenerationPresentation,
   getEnemyRespawnDelayMs,
@@ -64,10 +65,7 @@ import {
   getHazardVisualSegments,
   hazardActorDefinitions,
 } from '../../domain/gameplay/hazardActor'
-import {
-  isGroundedGameplayEnemySpawn,
-  type GameplayStageMap,
-} from '../../domain/gameplay/gameplayMapTypes'
+import type { GameplayStageMap } from '../../domain/gameplay/gameplayMapTypes'
 import type {
   GameplayCheckpointSpawn,
   GameplayCoinPoint,
@@ -1319,83 +1317,66 @@ class GameplayMapScene extends Phaser.Scene {
       throw new Error(`Unable to create enemy colliders before terrain for stage ${this.stageMap.id}.`)
     }
 
-    const terrainLayer = this.terrainLayer
+    this.enemies = this.stageMap.enemies.map((spawn) => this.createEnemy(spawn))
+  }
 
-    this.enemies = this.stageMap.enemies.map((spawn) => {
-      const definition: EnemyActorDefinition = enemyActorDefinitions[spawn.type]
-      const spriteDefinition = definition.sprites?.walk ?? definition.sprites?.idle
-      const textureKey = spriteDefinition?.key ?? definition.generatedTexture?.key
-      if (!textureKey) {
-        throw new Error(`Enemy ${spawn.id} has no renderable texture.`)
+  private createEnemy(spawn: GameplayEnemySpawn): EnemyRuntime {
+    const definition: EnemyActorDefinition = enemyActorDefinitions[spawn.type]
+    const spriteDefinition = getEnemyDefaultSpriteDefinition(spawn.type)
+    const textureKey = spriteDefinition?.key ?? definition.generatedTexture?.key
+    if (!textureKey) {
+      throw new Error(`Enemy ${spawn.id} has no renderable texture.`)
+    }
+
+    const spawnY = getEnemySpawnY(spawn)
+    const sprite = this.physics.add.sprite(spawn.x, spawnY, textureKey)
+
+    sprite
+      .setOrigin(definition.origin.x, definition.origin.y)
+      .setScale(definition.scale)
+      .setCollideWorldBounds(true)
+      .setDepth(definition.depth)
+
+    sprite.body.setSize(definition.body.width, definition.body.height)
+    sprite.body.setOffset(
+      definition.body.offsetX,
+      definition.body.offsetY + (definition.visualLiftY ?? 0),
+    )
+
+    if (spriteDefinition) {
+      sprite.play(spriteDefinition.key)
+    }
+
+    if (definition.placement === 'grounded') {
+      if (!this.terrainLayer) {
+        throw new Error(`Unable to create enemy colliders before terrain for stage ${this.stageMap.id}.`)
       }
 
-      if (isGroundedGameplayEnemySpawn(spawn)) {
-        const sprite = this.physics.add.sprite(
-          spawn.x,
-          getEnemySpawnY(spawn),
-          textureKey,
-        )
-
-        sprite
-          .setOrigin(definition.origin.x, definition.origin.y)
-          .setScale(definition.scale)
-          .setCollideWorldBounds(true)
-          .setDepth(definition.depth)
-
-        sprite.body.setSize(definition.body.width, definition.body.height)
-        sprite.body.setOffset(
-          definition.body.offsetX,
-          definition.body.offsetY + (definition.visualLiftY ?? 0),
-        )
-
-        const direction = definition.patrol?.initialDirection ?? -1
-        if (spriteDefinition) {
-          sprite.play(spriteDefinition.key)
-        }
-        sprite.setVelocityX(0)
-        this.physics.add.collider(sprite, terrainLayer)
-
-        return {
-          sprite,
-          spawn,
-          direction,
-          defeated: false,
-          regenerating: false,
-        }
-      }
-
-      const sprite = this.physics.add.sprite(
-        spawn.x,
-        getEnemySpawnY(spawn),
-        textureKey,
-      )
-
-      sprite
-        .setOrigin(definition.origin.x, definition.origin.y)
-        .setScale(definition.scale)
-        .setCollideWorldBounds(true)
-        .setDepth(definition.depth)
-
-      sprite.body.setSize(definition.body.width, definition.body.height)
-      sprite.body.setOffset(definition.body.offsetX, definition.body.offsetY)
-
-      sprite.body.allowGravity = definition.gravity
-      sprite.setImmovable(true)
-      if (spriteDefinition) {
-        sprite.play(spriteDefinition.key)
-      }
-      if (spawn.id !== BOSS_PROTOTYPE_ENEMY_ID && definition.floating) {
-        this.createEnemyFloat(sprite, spawn.y, definition)
-      }
+      sprite.setVelocityX(0)
+      this.physics.add.collider(sprite, this.terrainLayer)
 
       return {
         sprite,
         spawn,
-        direction: -1,
+        direction: definition.patrol?.initialDirection ?? -1,
         defeated: false,
         regenerating: false,
       }
-    })
+    }
+
+    sprite.body.allowGravity = false
+    sprite.setImmovable(true)
+    if (definition.behavior === 'homing-target' && spawn.id !== BOSS_PROTOTYPE_ENEMY_ID) {
+      this.createEnemyFloat(sprite, spawnY, definition)
+    }
+
+    return {
+      sprite,
+      spawn,
+      direction: -1,
+      defeated: false,
+      regenerating: false,
+    }
   }
 
   private initializeBossPrototype(): void {

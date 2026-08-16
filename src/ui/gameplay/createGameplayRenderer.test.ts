@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import {
   enemyActorDefinitions,
   enemyRegenerationPresentation,
+  getEnemyDefaultSpriteDefinition,
   getScoreEnemyTargetCount,
 } from '../../domain/gameplay/enemyActor'
 import { checkpointActorDefinition, getCheckpointBottomY } from '../../domain/gameplay/checkpointActor'
@@ -2446,6 +2447,15 @@ describe('createGameplayRendererConfig', () => {
     expect(runtime.playerSprite?.collideWorldBounds).toBe(false)
     expect(runtime.colliderCalls).toContainEqual({ a: runtime.playerSprite, b: runtime.terrainLayer })
     expect(runtime.cameraFollowTarget).toBe(runtime.playerSprite)
+  })
+
+  it('selects an enemy default sprite from walk before idle capabilities', () => {
+    expect(getEnemyDefaultSpriteDefinition('thorn-beetle')).toEqual(
+      enemyActorDefinitions['thorn-beetle'].sprites?.walk,
+    )
+    expect(getEnemyDefaultSpriteDefinition('seed-lantern')).toEqual(
+      enemyActorDefinitions['seed-lantern'].sprites?.idle,
+    )
   })
 
   it('creates a Thorn Beetle from its grounded patrol definition', () => {

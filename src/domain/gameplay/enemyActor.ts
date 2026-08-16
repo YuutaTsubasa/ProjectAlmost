@@ -275,6 +275,12 @@ export function getEnemySpawnY(input: EnemySpawnYInput): number {
   return input.surfaceY - (definition.centerAboveSurface ?? 0) - (definition.visualLiftY ?? 0)
 }
 
+export function getEnemyDefaultSpriteDefinition(type: EnemyActorType): EnemySpriteDefinition | undefined {
+  const definition: EnemyActorDefinition = enemyActorDefinitions[type]
+  const sprites = definition.sprites
+  return sprites?.walk ?? sprites?.idle
+}
+
 export function getEnemySpriteAssetRefs(types: readonly EnemyActorType[]): string[] {
   return [...new Set(types.flatMap((type) => {
     const definition: EnemyActorDefinition = enemyActorDefinitions[type]
