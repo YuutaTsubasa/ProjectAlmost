@@ -2448,6 +2448,84 @@ describe('createGameplayRendererConfig', () => {
     expect(runtime.cameraFollowTarget).toBe(runtime.playerSprite)
   })
 
+  it('creates a Thorn Beetle from its grounded patrol definition', () => {
+    const definition = enemyActorDefinitions['thorn-beetle']
+    const runtime = createSceneRuntime({
+      stage: {
+        ...createEnemyFixtureStage(),
+        enemies: [{
+          id: 'test-thorn-beetle',
+          type: 'thorn-beetle',
+          x: 720,
+          surfaceY: 512,
+          patrolMinX: 608,
+          patrolMaxX: 832,
+        }],
+      },
+    })
+
+    runtime.scene.preload()
+    runtime.scene.create()
+
+    const beetle = runtime.enemySprites[0]
+    expect(beetle).toMatchObject({
+      texture: definition.sprites?.walk?.key,
+      scale: definition.scale,
+      body: expect.objectContaining({
+        size: { width: definition.body.width, height: definition.body.height },
+        offset: {
+          x: definition.body.offsetX,
+          y: definition.body.offsetY + (definition.visualLiftY ?? 0),
+        },
+        allowGravity: definition.gravity,
+      }),
+    })
+    expect(beetle?.playCalls).toContainEqual({ key: definition.sprites?.walk?.key })
+    expect(runtime.colliderCalls).toContainEqual({ a: beetle, b: runtime.terrainLayer })
+  })
+
+  it('creates a Seed Lantern from its airborne floating definition', () => {
+    const definition = enemyActorDefinitions['seed-lantern']
+    const runtime = createSceneRuntime({
+      stage: {
+        ...createEnemyFixtureStage(),
+        enemies: [{
+          id: 'test-seed-lantern',
+          type: 'seed-lantern',
+          x: 1_760,
+          y: 320,
+          patrolMinX: 1_760,
+          patrolMaxX: 1_760,
+        }],
+      },
+    })
+
+    runtime.scene.preload()
+    runtime.scene.create()
+
+    const lantern = runtime.enemySprites[0]
+    expect(lantern).toMatchObject({
+      texture: definition.sprites?.idle?.key,
+      scale: definition.scale,
+      immovable: true,
+      body: expect.objectContaining({
+        size: { width: definition.body.width, height: definition.body.height },
+        offset: { x: definition.body.offsetX, y: definition.body.offsetY },
+        allowGravity: definition.gravity,
+      }),
+    })
+    expect(lantern?.playCalls).toContainEqual({ key: definition.sprites?.idle?.key })
+    expect(runtime.tweenCalls).toContainEqual(expect.objectContaining({
+      targets: lantern,
+      y: 320 + (definition.floating?.yOffset ?? 0),
+      angle: definition.floating?.angle,
+      duration: definition.floating?.durationMs,
+      ease: definition.floating?.ease,
+      yoyo: true,
+      repeat: -1,
+    }))
+  })
+
   it('creates moving platform sprites from stage map data and registers player and enemy collision', () => {
     const stage = createEnemyFixtureStage()
     stage.movingPlatforms = [

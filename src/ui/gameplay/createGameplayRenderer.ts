@@ -14,6 +14,7 @@ import {
   getScoreEnemyTargetCount,
   shouldProcessEnemyDefeat,
   shouldUpdateEnemyPatrol,
+  type EnemyActorDefinition,
   type EnemyPatrolDirection,
 } from '../../domain/gameplay/enemyActor'
 import {
@@ -1088,19 +1089,19 @@ class GameplayMapScene extends Phaser.Scene {
   }
 
   private createEnemyAnimations(): void {
-    const guardSprites = enemyActorDefinitions['armor-guard'].sprites
-    if (!guardSprites) return
-
-    for (const sprite of Object.values(guardSprites)) {
-      this.anims.create({
-        key: sprite.key,
-        frames: this.anims.generateFrameNumbers(sprite.key, {
-          start: sprite.frameStart,
-          end: sprite.frameEnd,
-        }),
-        frameRate: sprite.frameRate,
-        repeat: sprite.repeat,
-      })
+    for (const definition of Object.values(enemyActorDefinitions)) {
+      const enemyDefinition: EnemyActorDefinition = definition
+      for (const sprite of Object.values(enemyDefinition.sprites ?? {})) {
+        this.anims.create({
+          key: sprite.key,
+          frames: this.anims.generateFrameNumbers(sprite.key, {
+            start: sprite.frameStart,
+            end: sprite.frameEnd,
+          }),
+          frameRate: sprite.frameRate,
+          repeat: sprite.repeat,
+        })
+      }
     }
   }
 
@@ -1321,13 +1322,14 @@ class GameplayMapScene extends Phaser.Scene {
     const terrainLayer = this.terrainLayer
 
     this.enemies = this.stageMap.enemies.map((spawn) => {
-      if (isGroundedGameplayEnemySpawn(spawn)) {
-        const definition = enemyActorDefinitions['armor-guard']
-        const textureKey = definition.sprites.walk?.key
-        if (!textureKey) {
-          throw new Error(`Enemy ${spawn.id} has no renderable texture.`)
-        }
+      const definition: EnemyActorDefinition = enemyActorDefinitions[spawn.type]
+      const spriteDefinition = definition.sprites?.walk ?? definition.sprites?.idle
+      const textureKey = spriteDefinition?.key ?? definition.generatedTexture?.key
+      if (!textureKey) {
+        throw new Error(`Enemy ${spawn.id} has no renderable texture.`)
+      }
 
+      if (isGroundedGameplayEnemySpawn(spawn)) {
         const sprite = this.physics.add.sprite(
           spawn.x,
           getEnemySpawnY(spawn),
@@ -1343,13 +1345,12 @@ class GameplayMapScene extends Phaser.Scene {
         sprite.body.setSize(definition.body.width, definition.body.height)
         sprite.body.setOffset(
           definition.body.offsetX,
-          definition.body.offsetY + definition.visualLiftY,
+          definition.body.offsetY + (definition.visualLiftY ?? 0),
         )
 
-        const direction = definition.patrol.initialDirection
-        const walk = definition.sprites?.walk
-        if (walk) {
-          sprite.play(walk.key)
+        const direction = definition.patrol?.initialDirection ?? -1
+        if (spriteDefinition) {
+          sprite.play(spriteDefinition.key)
         }
         sprite.setVelocityX(0)
         this.physics.add.collider(sprite, terrainLayer)
@@ -1361,12 +1362,6 @@ class GameplayMapScene extends Phaser.Scene {
           defeated: false,
           regenerating: false,
         }
-      }
-
-      const definition = enemyActorDefinitions['azure-core']
-      const textureKey = definition.generatedTexture?.key
-      if (!textureKey) {
-        throw new Error(`Enemy ${spawn.id} has no renderable texture.`)
       }
 
       const sprite = this.physics.add.sprite(
@@ -1384,10 +1379,13 @@ class GameplayMapScene extends Phaser.Scene {
       sprite.body.setSize(definition.body.width, definition.body.height)
       sprite.body.setOffset(definition.body.offsetX, definition.body.offsetY)
 
-      sprite.body.allowGravity = false
+      sprite.body.allowGravity = definition.gravity
       sprite.setImmovable(true)
-      if (spawn.id !== BOSS_PROTOTYPE_ENEMY_ID) {
-        this.createAzureCoreFloat(sprite, spawn.y)
+      if (spriteDefinition) {
+        sprite.play(spriteDefinition.key)
+      }
+      if (spawn.id !== BOSS_PROTOTYPE_ENEMY_ID && definition.floating) {
+        this.createEnemyFloat(sprite, spawn.y, definition)
       }
 
       return {
@@ -1537,7 +1535,15 @@ class GameplayMapScene extends Phaser.Scene {
   }
 
   private createAzureCoreFloat(sprite: Phaser.Physics.Arcade.Sprite, spawnY: number): void {
-    const floating = enemyActorDefinitions['azure-core'].floating
+    this.createEnemyFloat(sprite, spawnY, enemyActorDefinitions['azure-core'])
+  }
+
+  private createEnemyFloat(
+    sprite: Phaser.Physics.Arcade.Sprite,
+    spawnY: number,
+    definition: EnemyActorDefinition,
+  ): void {
+    const floating = definition.floating
     if (!floating) return
 
     this.tweens.add({
@@ -2559,13 +2565,16 @@ class GameplayMapScene extends Phaser.Scene {
         !shouldUpdateEnemyPatrol({
           type: enemy.spawn.type,
           defeated: enemy.defeated,
-        }) ||
-        enemy.spawn.type !== 'armor-guard'
+        })
       ) {
         continue
       }
 
-      const speed = enemyActorDefinitions['armor-guard'].patrol.speed
+      const definition: EnemyActorDefinition = enemyActorDefinitions[enemy.spawn.type]
+      const patrol = definition.patrol
+      if (!patrol) continue
+
+      const speed = patrol.speed
       enemy.direction = getNextEnemyPatrolDirection({
         x: enemy.sprite.x,
         patrolMinX: enemy.spawn.patrolMinX,
