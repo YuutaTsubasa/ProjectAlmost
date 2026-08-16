@@ -1,0 +1,155 @@
+{
+  "target": "asset",
+  "mode": "death",
+  "prompt": "Thorn Beetle death",
+  "role": "",
+  "input": "/Users/maplewing/.codex/generated_images/019ee82f-be6c-7c21-9856-482c8040af12/call_2sUe3k7wSNGxYbuZ4IOdhKRF.png",
+  "threshold": 220,
+  "edge_threshold": 260,
+  "duration": 200,
+  "rows": 2,
+  "cols": 2,
+  "cell_size": 128,
+  "fit_scale": 0.86,
+  "trim_border": 4,
+  "edge_clean_depth": 8,
+  "align": "feet",
+  "shared_scale": true,
+  "component_mode": "all",
+  "component_padding": 0,
+  "min_component_area": 1,
+  "edge_touch_margin": 0,
+  "frame_labels": [
+    "death-1",
+    "death-2",
+    "death-3",
+    "death-4"
+  ],
+  "frames": [
+    {
+      "grid": [
+        0,
+        0
+      ],
+      "source_box": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "component_mode": "all",
+      "component_count": 21,
+      "selected_component_area": null,
+      "selected_component_bbox": null,
+      "crop_bbox": [
+        118,
+        174,
+        506,
+        532
+      ],
+      "edge_touch": false,
+      "output_size": [
+        87,
+        80
+      ],
+      "paste_position": [
+        20,
+        40
+      ]
+    },
+    {
+      "grid": [
+        0,
+        1
+      ],
+      "source_box": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "component_mode": "all",
+      "component_count": 95,
+      "selected_component_area": null,
+      "selected_component_bbox": null,
+      "crop_bbox": [
+        39,
+        181,
+        497,
+        535
+      ],
+      "edge_touch": false,
+      "output_size": [
+        102,
+        79
+      ],
+      "paste_position": [
+        13,
+        41
+      ]
+    },
+    {
+      "grid": [
+        1,
+        0
+      ],
+      "source_box": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "component_mode": "all",
+      "component_count": 37,
+      "selected_component_area": null,
+      "selected_component_bbox": null,
+      "crop_bbox": [
+        87,
+        194,
+        551,
+        469
+      ],
+      "edge_touch": false,
+      "output_size": [
+        104,
+        61
+      ],
+      "paste_position": [
+        12,
+        59
+      ]
+    },
+    {
+      "grid": [
+        1,
+        1
+      ],
+      "source_box": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "component_mode": "all",
+      "component_count": 112,
+      "selected_component_area": null,
+      "selected_component_bbox": null,
+      "crop_bbox": [
+        33,
+        274,
+        523,
+        474
+      ],
+      "edge_touch": false,
+      "output_size": [
+        110,
+        44
+      ],
+      "paste_position": [
+        9,
+        76
+      ]
+    }
+  ],
+  "edge_touch_frames": []
+}
