@@ -86,10 +86,10 @@ export function convertGameplayStageSource(
 }
 
 function convertEnemy(enemy: GameplayStageSource['enemies'][number]): GameplayEnemySpawn {
-  if (enemy.type === 'azure-core') {
+  if (enemy.type === 'azure-core' || enemy.type === 'seed-lantern') {
     return {
       id: enemy.id,
-      type: 'azure-core',
+      type: enemy.type,
       x: enemy.x,
       y: enemy.y,
       patrolMinX: enemy.patrolMinX,
@@ -100,7 +100,7 @@ function convertEnemy(enemy: GameplayStageSource['enemies'][number]): GameplayEn
 
   return {
     id: enemy.id,
-    type: 'armor-guard',
+    type: enemy.type === 'thorn-beetle' ? 'thorn-beetle' : 'armor-guard',
     x: enemy.x,
     surfaceY: enemy.surfaceY,
     patrolMinX: enemy.patrolMinX,

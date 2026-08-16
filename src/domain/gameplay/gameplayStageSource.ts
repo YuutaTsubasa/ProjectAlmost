@@ -92,18 +92,18 @@ export type GameplayStageSourceEnemyRuntimeMetadata = {
   countsForScore?: boolean
 }
 
-export type GameplayStageSourceGuardEnemy = GameplayStageSourceEnemyRuntimeMetadata & {
+export type GameplayStageSourceGroundedEnemy = GameplayStageSourceEnemyRuntimeMetadata & {
   id: string
-  type?: 'guard'
+  type?: 'guard' | 'thorn-beetle'
   x: number
   surfaceY: number
   patrolMinX: number
   patrolMaxX: number
 }
 
-export type GameplayStageSourceAzureCoreEnemy = GameplayStageSourceEnemyRuntimeMetadata & {
+export type GameplayStageSourceAirborneEnemy = GameplayStageSourceEnemyRuntimeMetadata & {
   id: string
-  type: 'azure-core'
+  type: 'azure-core' | 'seed-lantern'
   x: number
   y: number
   patrolMinX: number
@@ -111,8 +111,8 @@ export type GameplayStageSourceAzureCoreEnemy = GameplayStageSourceEnemyRuntimeM
 }
 
 export type GameplayStageSourceEnemy =
-  | GameplayStageSourceGuardEnemy
-  | GameplayStageSourceAzureCoreEnemy
+  | GameplayStageSourceGroundedEnemy
+  | GameplayStageSourceAirborneEnemy
 
 export type GameplayStageSourceCheckpoint = {
   id: string

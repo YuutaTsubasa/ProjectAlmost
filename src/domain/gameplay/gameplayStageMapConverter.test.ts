@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { isBossStageDefinition } from './bossBattle'
 import { convertGameplayStageSource } from './gameplayStageMapConverter'
+import { getGameplayStageMap } from './gameplayStageMaps'
 import type { GameplayStageSource } from './gameplayStageSource'
 import { gameplayStageVisualProfiles } from './gameplayStageVisualProfile'
 
@@ -205,6 +206,60 @@ describe('convertGameplayStageSource', () => {
         patrolMaxX: 1760,
       },
     ])
+  })
+
+  it('converts World 02 source enemy types into placement-specific gameplay spawns', () => {
+    const result = convertGameplayStageSource({
+      ...firstGateSource,
+      theme: 'emerald-sanctuary',
+      enemies: [
+        {
+          id: 'beetle-a',
+          type: 'thorn-beetle',
+          x: 420,
+          surfaceY: 640,
+          patrolMinX: 360,
+          patrolMaxX: 520,
+        },
+        {
+          id: 'lantern-a',
+          type: 'seed-lantern',
+          x: 900,
+          y: 420,
+          patrolMinX: 900,
+          patrolMaxX: 900,
+          respawnDelayMs: 650,
+        },
+      ],
+    }, gameplayStageVisualProfiles)
+
+    expect(result.map.enemies).toEqual([
+      {
+        id: 'beetle-a',
+        type: 'thorn-beetle',
+        x: 420,
+        surfaceY: 640,
+        patrolMinX: 360,
+        patrolMaxX: 520,
+      },
+      {
+        id: 'lantern-a',
+        type: 'seed-lantern',
+        x: 900,
+        y: 420,
+        patrolMinX: 900,
+        patrolMaxX: 900,
+        respawnDelayMs: 650,
+      },
+    ])
+  })
+
+  it('keeps the World 02 boss placeholder as Azure Core for the later boss slice', () => {
+    const stage = getGameplayStageMap('2-6')
+    expect(stage.enemies.find((enemy) => enemy.id === 'boss-prototype')).toMatchObject({
+      id: 'boss-prototype',
+      type: 'azure-core',
+    })
   })
 
   it('preserves boss prototype metadata for runtime boss detection', () => {
