@@ -3707,6 +3707,30 @@ describe('createGameplayRendererConfig', () => {
     expect(runtime.tweenCalls.some((call) => call.targets === core && call.scale === 1.8)).toBe(true)
   })
 
+  it('can Homing Attack Armor Guard through its patrol enemy defeat presentation', () => {
+    const runtime = createSceneRuntime()
+    runtime.scene.create()
+    const guard = runtime.sprites.find((sprite) => sprite.texture === 'enemy-guard-walk')
+    expect(guard).toBeDefined()
+    if (!guard || !runtime.playerSprite) return
+    startGameplay(runtime)
+
+    runtime.playerSprite.body.blocked.down = false
+    runtime.playerSprite.body.touching.down = false
+    runtime.playerSprite.x = 560
+    runtime.playerSprite.y = guard.y
+    runtime.playerSprite.setFlipX(false)
+    guard.x = 720
+    runtime.playerKeys.j.isDown = true
+    runtime.scene.update()
+
+    expect(guard.body.enable).toBe(false)
+    expect(guard.playCalls.at(-1)).toEqual({
+      key: enemyActorDefinitions['armor-guard'].sprites?.death?.key,
+      ignoreIfPlaying: true,
+    })
+  })
+
   it('can Homing Attack Thorn Beetle through its patrol enemy defeat presentation', () => {
     const runtime = createSceneRuntime({
       stage: {

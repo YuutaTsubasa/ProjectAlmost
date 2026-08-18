@@ -61,7 +61,7 @@ describe('enemyActorDefinitions', () => {
         rightFlipX: true,
       },
       targeting: {
-        homing: false,
+        homing: true,
       },
       rules: { respawnPolicy: 'persistent', countsForScore: true },
       presentation: { defeat: 'armor-guard-death', regeneration: 'armor-guard-restore' },
@@ -257,7 +257,7 @@ describe('isEnemyHomingTarget', () => {
   it('uses explicit Homing target capability independent of movement behavior', () => {
     expect(isEnemyHomingTarget('azure-core')).toBe(true)
     expect(isEnemyHomingTarget('seed-lantern')).toBe(true)
-    expect(isEnemyHomingTarget('armor-guard')).toBe(false)
+    expect(isEnemyHomingTarget('armor-guard')).toBe(true)
     expect(isEnemyHomingTarget('thorn-beetle')).toBe(true)
   })
 })

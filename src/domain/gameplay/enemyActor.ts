@@ -154,7 +154,7 @@ export const enemyActorDefinitions = {
       rightFlipX: true,
     },
     targeting: {
-      homing: false,
+      homing: true,
     },
     rules: { respawnPolicy: 'persistent', countsForScore: true },
     presentation: { defeat: 'armor-guard-death', regeneration: 'armor-guard-restore' },
