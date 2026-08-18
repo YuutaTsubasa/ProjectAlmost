@@ -145,8 +145,8 @@ describe('enemyActorDefinitions', () => {
         idle: {
           key: 'seed-lantern-idle',
           assetRef: '/assets/sprites/seed_lantern_idle/sheet-transparent.webp',
-          frameStart: 1,
-          frameEnd: 1,
+          frameStart: 2,
+          frameEnd: 2,
           repeat: 0,
         },
       },
