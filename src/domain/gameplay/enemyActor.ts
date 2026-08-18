@@ -195,7 +195,7 @@ export const enemyActorDefinitions = {
     origin: { x: 0.5, y: 0.5 },
     body: { width: 46, height: 42, offsetX: 0, offsetY: 64 },
     centerAboveSurface: 30,
-    visualLiftY: 10,
+    visualLiftY: 8,
     gravity: true,
     depth: 9,
     scale: 1,
