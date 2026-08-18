@@ -194,7 +194,7 @@ export const enemyActorDefinitions = {
     behavior: 'patrol',
     origin: { x: 0.5, y: 0.5 },
     body: { width: 46, height: 42, offsetX: 0, offsetY: 0 },
-    centerAboveSurface: 46,
+    centerAboveSurface: 70,
     visualLiftY: 14,
     gravity: true,
     depth: 9,
