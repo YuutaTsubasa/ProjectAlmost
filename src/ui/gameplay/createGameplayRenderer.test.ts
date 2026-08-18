@@ -2480,13 +2480,13 @@ describe('createGameplayRendererConfig', () => {
     const beetle = runtime.enemySprites[0]
     expect(beetle).toMatchObject({
       texture: definition.sprites?.walk?.key,
-      y: 474,
+      y: 482,
       scale: definition.scale,
       body: expect.objectContaining({
         size: { width: definition.body.width, height: definition.body.height },
         offset: {
           x: definition.body.offsetX,
-          y: 72,
+          y: 64,
         },
         allowGravity: definition.gravity,
       }),
