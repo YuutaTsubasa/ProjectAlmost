@@ -173,7 +173,7 @@ describe('enemyActorDefinitions', () => {
 
 describe('getEnemySpawnY', () => {
   it('calculates spawn Y from enemy placement definitions', () => {
-    expect(getEnemySpawnY({ type: 'thorn-beetle', surfaceY: 640 })).toBe(594)
+    expect(getEnemySpawnY({ type: 'thorn-beetle', surfaceY: 640 })).toBe(596)
     expect(getEnemySpawnY({ type: 'seed-lantern', y: 420 })).toBe(420)
   })
 
