@@ -2573,7 +2573,7 @@ class GameplayMapScene extends Phaser.Scene {
       })
 
       enemy.sprite.setVelocityX(enemy.direction * speed)
-      enemy.sprite.setFlipX(enemy.direction > 0)
+      enemy.sprite.setFlipX(enemy.direction > 0 ? definition.facing.rightFlipX : !definition.facing.rightFlipX)
     }
   }
 

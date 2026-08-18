@@ -57,6 +57,9 @@ describe('enemyActorDefinitions', () => {
         initialDirection: -1,
         speed: 80,
       },
+      facing: {
+        rightFlipX: true,
+      },
       rules: { respawnPolicy: 'persistent', countsForScore: true },
       presentation: { defeat: 'armor-guard-death', regeneration: 'armor-guard-restore' },
     })
@@ -83,6 +86,9 @@ describe('enemyActorDefinitions', () => {
         durationMs: 950,
         ease: 'Sine.easeInOut',
       },
+      facing: {
+        rightFlipX: true,
+      },
       rules: { respawnPolicy: 'regenerate', countsForScore: false },
       presentation: { defeat: 'azure-core-burst', regeneration: 'azure-core-materialize' },
     })
@@ -108,6 +114,9 @@ describe('enemyActorDefinitions', () => {
         initialDirection: -1,
         speed: 72,
       },
+      facing: {
+        rightFlipX: false,
+      },
     })
   })
 
@@ -121,13 +130,20 @@ describe('enemyActorDefinitions', () => {
         idle: {
           key: 'seed-lantern-idle',
           assetRef: '/assets/sprites/seed_lantern_idle/sheet-transparent.webp',
+          frameStart: 0,
+          frameEnd: 0,
+          repeat: 0,
         },
       },
+      depth: 13,
       floating: {
         yOffset: -16,
         angle: 8,
         durationMs: 1050,
         ease: 'Sine.easeInOut',
+      },
+      facing: {
+        rightFlipX: true,
       },
       presentation: {
         defeat: 'seed-lantern-burst',
@@ -139,7 +155,7 @@ describe('enemyActorDefinitions', () => {
 
 describe('getEnemySpawnY', () => {
   it('calculates spawn Y from enemy placement definitions', () => {
-    expect(getEnemySpawnY({ type: 'thorn-beetle', surfaceY: 640 })).toBe(574)
+    expect(getEnemySpawnY({ type: 'thorn-beetle', surfaceY: 640 })).toBe(588)
     expect(getEnemySpawnY({ type: 'seed-lantern', y: 420 })).toBe(420)
   })
 

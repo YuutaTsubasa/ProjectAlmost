@@ -2480,6 +2480,7 @@ describe('createGameplayRendererConfig', () => {
     const beetle = runtime.enemySprites[0]
     expect(beetle).toMatchObject({
       texture: definition.sprites?.walk?.key,
+      y: 460,
       scale: definition.scale,
       body: expect.objectContaining({
         size: { width: definition.body.width, height: definition.body.height },
@@ -2517,6 +2518,7 @@ describe('createGameplayRendererConfig', () => {
     expect(lantern).toMatchObject({
       texture: definition.sprites?.idle?.key,
       scale: definition.scale,
+      depth: 13,
       immovable: true,
       body: expect.objectContaining({
         size: { width: definition.body.width, height: definition.body.height },
@@ -4055,6 +4057,38 @@ describe('createGameplayRendererConfig', () => {
     runtime.scene.update()
     expect(guard.velocityX).toBe(-80)
     expect(guard.flipX).toBe(false)
+  })
+
+  it('uses enemy-facing presentation when updating Thorn Beetle patrol flip', () => {
+    const runtime = createSceneRuntime({
+      stage: {
+        ...createEnemyFixtureStage(),
+        enemies: [{
+          id: 'test-thorn-beetle',
+          type: 'thorn-beetle',
+          x: 720,
+          surfaceY: 512,
+          patrolMinX: 608,
+          patrolMaxX: 832,
+        }],
+      },
+    })
+
+    runtime.scene.create()
+    startGameplay(runtime)
+    const beetle = runtime.enemySprites.find((sprite) => sprite.texture === enemyActorDefinitions['thorn-beetle'].sprites?.walk?.key)
+    expect(beetle).toBeDefined()
+    if (!beetle) return
+
+    beetle.x = 607
+    runtime.scene.update()
+    expect(beetle.velocityX).toBe(72)
+    expect(beetle.flipX).toBe(false)
+
+    beetle.x = 833
+    runtime.scene.update()
+    expect(beetle.velocityX).toBe(-72)
+    expect(beetle.flipX).toBe(true)
   })
 
   it('does not apply patrol velocity updates to Azure Core', () => {

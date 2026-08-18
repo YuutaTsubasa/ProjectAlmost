@@ -57,6 +57,9 @@ export type EnemyActorDefinition = {
     durationMs: number
     ease: string
   }
+  facing: {
+    rightFlipX: boolean
+  }
   rules: {
     respawnPolicy: EnemyRespawnPolicy
     countsForScore: boolean
@@ -144,6 +147,9 @@ export const enemyActorDefinitions = {
       initialDirection: -1,
       speed: 80,
     },
+    facing: {
+      rightFlipX: true,
+    },
     rules: { respawnPolicy: 'persistent', countsForScore: true },
     presentation: { defeat: 'armor-guard-death', regeneration: 'armor-guard-restore' },
   },
@@ -167,6 +173,9 @@ export const enemyActorDefinitions = {
       durationMs: 950,
       ease: 'Sine.easeInOut',
     },
+    facing: {
+      rightFlipX: true,
+    },
     rules: { respawnPolicy: 'regenerate', countsForScore: false },
     presentation: { defeat: 'azure-core-burst', regeneration: 'azure-core-materialize' },
   },
@@ -176,7 +185,7 @@ export const enemyActorDefinitions = {
     behavior: 'patrol',
     origin: { x: 0.5, y: 0.5 },
     body: { width: 46, height: 42, offsetX: 0, offsetY: 0 },
-    centerAboveSurface: 52,
+    centerAboveSurface: 38,
     visualLiftY: 14,
     gravity: true,
     depth: 9,
@@ -207,6 +216,9 @@ export const enemyActorDefinitions = {
       initialDirection: -1,
       speed: 72,
     },
+    facing: {
+      rightFlipX: false,
+    },
     rules: { respawnPolicy: 'persistent', countsForScore: true },
     presentation: { defeat: 'thorn-beetle-death', regeneration: 'thorn-beetle-restore' },
   },
@@ -217,7 +229,7 @@ export const enemyActorDefinitions = {
     origin: { x: 0.5, y: 0.5 },
     body: { width: 58, height: 58, offsetX: 0, offsetY: 0 },
     gravity: false,
-    depth: 9,
+    depth: 13,
     scale: 1,
     sprites: {
       idle: {
@@ -226,9 +238,9 @@ export const enemyActorDefinitions = {
         frameWidth: 128,
         frameHeight: 128,
         frameStart: 0,
-        frameEnd: 3,
+        frameEnd: 0,
         frameRate: 7,
-        repeat: -1,
+        repeat: 0,
       },
     },
     floating: {
@@ -236,6 +248,9 @@ export const enemyActorDefinitions = {
       angle: 8,
       durationMs: 1050,
       ease: 'Sine.easeInOut',
+    },
+    facing: {
+      rightFlipX: true,
     },
     rules: { respawnPolicy: 'regenerate', countsForScore: false },
     presentation: { defeat: 'seed-lantern-burst', regeneration: 'seed-lantern-materialize' },

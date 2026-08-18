@@ -76,6 +76,15 @@ The initial asset set should cover enough presentation to replace current gamepl
 
 Generated assets should match the Emerald Sanctuary palette and read clearly against the existing forest backgrounds and platform tiles. The exact sprite output will be produced during implementation after the implementation plan is approved.
 
+## Visual Follow-Up Adjustments
+
+PR review playtesting found two presentation issues in the initial generated enemy pass:
+
+- Thorn Beetle must sit on top of the authored platform surface and must face the same direction it walks. Because generated sprites may have different default facing directions, facing is part of the enemy definition instead of being inferred globally in the renderer.
+- Seed Lantern must stay readable when a coin overlaps its position. It renders above coins and uses a single idle frame with floating motion from the renderer tween, avoiding the generated sheet's uneven frame-to-frame scale changes.
+
+These adjustments remain definition-driven: the renderer consumes enemy `facing`, `depth`, sprite frame range, and floating presentation instead of adding type-specific branches.
+
 ## Testing
 
 Domain tests should be written first and should cover:
@@ -86,6 +95,7 @@ Domain tests should be written first and should cover:
 - spawn Y calculation depends on placement instead of concrete type names.
 - patrol updates depend on behavior capability instead of concrete type names.
 - defeat and regeneration presentation are resolved through enemy definitions.
+- enemy facing and visual depth are explicit enough for renderer presentation to avoid per-type branching.
 
 Converter tests should cover:
 
