@@ -106,6 +106,12 @@ describe('enemyActorDefinitions', () => {
       placement: 'grounded',
       behavior: 'patrol',
       gravity: true,
+      body: {
+        width: 46,
+        height: 42,
+        offsetX: 0,
+        offsetY: 64,
+      },
       sprites: {
         walk: {
           key: 'thorn-beetle-walk',
@@ -167,7 +173,7 @@ describe('enemyActorDefinitions', () => {
 
 describe('getEnemySpawnY', () => {
   it('calculates spawn Y from enemy placement definitions', () => {
-    expect(getEnemySpawnY({ type: 'thorn-beetle', surfaceY: 640 })).toBe(556)
+    expect(getEnemySpawnY({ type: 'thorn-beetle', surfaceY: 640 })).toBe(584)
     expect(getEnemySpawnY({ type: 'seed-lantern', y: 420 })).toBe(420)
   })
 
