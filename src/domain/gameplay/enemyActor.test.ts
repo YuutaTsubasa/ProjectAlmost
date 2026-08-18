@@ -60,6 +60,9 @@ describe('enemyActorDefinitions', () => {
       facing: {
         rightFlipX: true,
       },
+      targeting: {
+        homing: false,
+      },
       rules: { respawnPolicy: 'persistent', countsForScore: true },
       presentation: { defeat: 'armor-guard-death', regeneration: 'armor-guard-restore' },
     })
@@ -89,6 +92,9 @@ describe('enemyActorDefinitions', () => {
       facing: {
         rightFlipX: true,
       },
+      targeting: {
+        homing: true,
+      },
       rules: { respawnPolicy: 'regenerate', countsForScore: false },
       presentation: { defeat: 'azure-core-burst', regeneration: 'azure-core-materialize' },
     })
@@ -113,6 +119,9 @@ describe('enemyActorDefinitions', () => {
       patrol: {
         initialDirection: -1,
         speed: 72,
+      },
+      targeting: {
+        homing: true,
       },
       facing: {
         rightFlipX: false,
@@ -145,6 +154,9 @@ describe('enemyActorDefinitions', () => {
       facing: {
         rightFlipX: true,
       },
+      targeting: {
+        homing: true,
+      },
       presentation: {
         defeat: 'seed-lantern-burst',
         regeneration: 'seed-lantern-materialize',
@@ -155,7 +167,7 @@ describe('enemyActorDefinitions', () => {
 
 describe('getEnemySpawnY', () => {
   it('calculates spawn Y from enemy placement definitions', () => {
-    expect(getEnemySpawnY({ type: 'thorn-beetle', surfaceY: 640 })).toBe(588)
+    expect(getEnemySpawnY({ type: 'thorn-beetle', surfaceY: 640 })).toBe(580)
     expect(getEnemySpawnY({ type: 'seed-lantern', y: 420 })).toBe(420)
   })
 
@@ -236,11 +248,11 @@ describe('shouldUpdateEnemyPatrol', () => {
 })
 
 describe('isEnemyHomingTarget', () => {
-  it('treats only Homing-target capable enemies as Homing targets', () => {
+  it('uses explicit Homing target capability independent of movement behavior', () => {
     expect(isEnemyHomingTarget('azure-core')).toBe(true)
     expect(isEnemyHomingTarget('seed-lantern')).toBe(true)
     expect(isEnemyHomingTarget('armor-guard')).toBe(false)
-    expect(isEnemyHomingTarget('thorn-beetle')).toBe(false)
+    expect(isEnemyHomingTarget('thorn-beetle')).toBe(true)
   })
 })
 

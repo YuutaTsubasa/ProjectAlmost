@@ -82,8 +82,9 @@ PR review playtesting found two presentation issues in the initial generated ene
 
 - Thorn Beetle must sit on top of the authored platform surface and must face the same direction it walks. Because generated sprites may have different default facing directions, facing is part of the enemy definition instead of being inferred globally in the renderer.
 - Seed Lantern must stay readable when a coin overlaps its position. It renders above coins and uses a single idle frame with floating motion from the renderer tween, avoiding the generated sheet's uneven frame-to-frame scale changes.
+- Homing target eligibility is independent from movement behavior. Thorn Beetle is both a grounded patrol enemy and a Homing target, so the definition has an explicit `targeting.homing` capability instead of overloading `behavior`.
 
-These adjustments remain definition-driven: the renderer consumes enemy `facing`, `depth`, sprite frame range, and floating presentation instead of adding type-specific branches.
+These adjustments remain definition-driven: the renderer consumes enemy `facing`, `targeting`, `depth`, sprite frame range, and floating presentation instead of adding type-specific branches.
 
 ## Testing
 

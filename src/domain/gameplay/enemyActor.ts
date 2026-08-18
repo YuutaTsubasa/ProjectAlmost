@@ -60,6 +60,9 @@ export type EnemyActorDefinition = {
   facing: {
     rightFlipX: boolean
   }
+  targeting: {
+    homing: boolean
+  }
   rules: {
     respawnPolicy: EnemyRespawnPolicy
     countsForScore: boolean
@@ -150,6 +153,9 @@ export const enemyActorDefinitions = {
     facing: {
       rightFlipX: true,
     },
+    targeting: {
+      homing: false,
+    },
     rules: { respawnPolicy: 'persistent', countsForScore: true },
     presentation: { defeat: 'armor-guard-death', regeneration: 'armor-guard-restore' },
   },
@@ -176,6 +182,9 @@ export const enemyActorDefinitions = {
     facing: {
       rightFlipX: true,
     },
+    targeting: {
+      homing: true,
+    },
     rules: { respawnPolicy: 'regenerate', countsForScore: false },
     presentation: { defeat: 'azure-core-burst', regeneration: 'azure-core-materialize' },
   },
@@ -185,7 +194,7 @@ export const enemyActorDefinitions = {
     behavior: 'patrol',
     origin: { x: 0.5, y: 0.5 },
     body: { width: 46, height: 42, offsetX: 0, offsetY: 0 },
-    centerAboveSurface: 38,
+    centerAboveSurface: 46,
     visualLiftY: 14,
     gravity: true,
     depth: 9,
@@ -219,6 +228,9 @@ export const enemyActorDefinitions = {
     facing: {
       rightFlipX: false,
     },
+    targeting: {
+      homing: true,
+    },
     rules: { respawnPolicy: 'persistent', countsForScore: true },
     presentation: { defeat: 'thorn-beetle-death', regeneration: 'thorn-beetle-restore' },
   },
@@ -251,6 +263,9 @@ export const enemyActorDefinitions = {
     },
     facing: {
       rightFlipX: true,
+    },
+    targeting: {
+      homing: true,
     },
     rules: { respawnPolicy: 'regenerate', countsForScore: false },
     presentation: { defeat: 'seed-lantern-burst', regeneration: 'seed-lantern-materialize' },
@@ -390,5 +405,5 @@ export function shouldUpdateEnemyPatrol(input: {
 }
 
 export function isEnemyHomingTarget(type: EnemyActorType): boolean {
-  return enemyActorDefinitions[type].behavior === 'homing-target'
+  return enemyActorDefinitions[type].targeting.homing
 }

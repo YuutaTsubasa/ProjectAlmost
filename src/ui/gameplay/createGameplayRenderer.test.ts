@@ -2480,7 +2480,7 @@ describe('createGameplayRendererConfig', () => {
     const beetle = runtime.enemySprites[0]
     expect(beetle).toMatchObject({
       texture: definition.sprites?.walk?.key,
-      y: 460,
+      y: 452,
       scale: definition.scale,
       body: expect.objectContaining({
         size: { width: definition.body.width, height: definition.body.height },
@@ -3492,7 +3492,7 @@ describe('createGameplayRendererConfig', () => {
     expect(reticle?.angle).toBe(3)
   })
 
-  it('does not let patrol enemies steal Homing targeting from Homing-target enemies', () => {
+  it('selects a nearer Thorn Beetle over a farther Seed Lantern when both are Homing targets', () => {
     const runtime = createSceneRuntime({
       stage: {
         ...createEnemyFixtureStage(),
@@ -3538,7 +3538,7 @@ describe('createGameplayRendererConfig', () => {
 
     const reticle = runtime.images.find((image) => image.texture === homingAttackPresentation.reticleTextureKey)
     expect(reticle).toMatchObject({
-      x: 1_760,
+      x: 1_640,
       y: 320 + homingAttackPresentation.reticleYOffset,
       visible: true,
     })
@@ -3705,6 +3705,42 @@ describe('createGameplayRendererConfig', () => {
     expect(core.body.enable).toBe(false)
     expect(core.visible).toBe(true)
     expect(runtime.tweenCalls.some((call) => call.targets === core && call.scale === 1.8)).toBe(true)
+  })
+
+  it('can Homing Attack Thorn Beetle through its patrol enemy defeat presentation', () => {
+    const runtime = createSceneRuntime({
+      stage: {
+        ...createEnemyFixtureStage(),
+        enemies: [{
+          id: 'test-thorn-beetle',
+          type: 'thorn-beetle',
+          x: 720,
+          surfaceY: 512,
+          patrolMinX: 608,
+          patrolMaxX: 832,
+        }],
+      },
+    })
+    runtime.scene.create()
+    const beetle = runtime.sprites.find((sprite) => sprite.texture === 'thorn-beetle-walk')
+    expect(beetle).toBeDefined()
+    if (!beetle || !runtime.playerSprite) return
+    startGameplay(runtime)
+
+    runtime.playerSprite.body.blocked.down = false
+    runtime.playerSprite.body.touching.down = false
+    runtime.playerSprite.x = 560
+    runtime.playerSprite.y = beetle.y
+    runtime.playerSprite.setFlipX(false)
+    beetle.x = 720
+    runtime.playerKeys.j.isDown = true
+    runtime.scene.update()
+
+    expect(beetle.body.enable).toBe(false)
+    expect(beetle.playCalls.at(-1)).toEqual({
+      key: enemyActorDefinitions['thorn-beetle'].sprites?.death?.key,
+      ignoreIfPlaying: true,
+    })
   })
 
   it('does not apply enemy contact damage during Homing Attack', () => {
