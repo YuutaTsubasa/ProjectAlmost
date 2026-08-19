@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import {
   enemyActorDefinitions,
   enemyRegenerationPresentation,
+  getEnemyDefaultSpriteDefinition,
   getScoreEnemyTargetCount,
 } from '../../domain/gameplay/enemyActor'
 import { checkpointActorDefinition, getCheckpointBottomY } from '../../domain/gameplay/checkpointActor'
@@ -2448,6 +2449,95 @@ describe('createGameplayRendererConfig', () => {
     expect(runtime.cameraFollowTarget).toBe(runtime.playerSprite)
   })
 
+  it('selects an enemy default sprite from walk before idle capabilities', () => {
+    expect(getEnemyDefaultSpriteDefinition('thorn-beetle')).toEqual(
+      enemyActorDefinitions['thorn-beetle'].sprites?.walk,
+    )
+    expect(getEnemyDefaultSpriteDefinition('seed-lantern')).toEqual(
+      enemyActorDefinitions['seed-lantern'].sprites?.idle,
+    )
+  })
+
+  it('creates a Thorn Beetle from its grounded patrol definition', () => {
+    const definition = enemyActorDefinitions['thorn-beetle']
+    const runtime = createSceneRuntime({
+      stage: {
+        ...createEnemyFixtureStage(),
+        enemies: [{
+          id: 'test-thorn-beetle',
+          type: 'thorn-beetle',
+          x: 720,
+          surfaceY: 512,
+          patrolMinX: 608,
+          patrolMaxX: 832,
+        }],
+      },
+    })
+
+    runtime.scene.preload()
+    runtime.scene.create()
+
+    const beetle = runtime.enemySprites[0]
+    expect(beetle).toMatchObject({
+      texture: definition.sprites?.walk?.key,
+      y: 478,
+      scale: definition.scale,
+      body: expect.objectContaining({
+        size: { width: definition.body.width, height: definition.body.height },
+        offset: {
+          x: 41,
+          y: 68,
+        },
+        allowGravity: definition.gravity,
+      }),
+    })
+    expect(beetle?.playCalls).toContainEqual({ key: definition.sprites?.walk?.key })
+    expect(runtime.colliderCalls).toContainEqual({ a: beetle, b: runtime.terrainLayer })
+  })
+
+  it('creates a Seed Lantern from its airborne floating definition', () => {
+    const definition = enemyActorDefinitions['seed-lantern']
+    const runtime = createSceneRuntime({
+      stage: {
+        ...createEnemyFixtureStage(),
+        enemies: [{
+          id: 'test-seed-lantern',
+          type: 'seed-lantern',
+          x: 1_760,
+          y: 320,
+          patrolMinX: 1_760,
+          patrolMaxX: 1_760,
+        }],
+      },
+    })
+
+    runtime.scene.preload()
+    runtime.scene.create()
+
+    const lantern = runtime.enemySprites[0]
+    expect(lantern).toMatchObject({
+      texture: definition.sprites?.idle?.key,
+      scale: definition.scale,
+      depth: 13,
+      immovable: true,
+      body: expect.objectContaining({
+        size: { width: definition.body.width, height: definition.body.height },
+        offset: { x: 34, y: 35 },
+        allowGravity: definition.gravity,
+      }),
+    })
+    expect(lantern?.playCalls).toContainEqual({ key: definition.sprites?.idle?.key })
+    expect(runtime.tweenCalls).toContainEqual(expect.objectContaining({
+      targets: lantern,
+      y: 320 + (definition.floating?.yOffset ?? 0),
+      angle: definition.floating?.angle,
+      duration: definition.floating?.durationMs,
+      ease: definition.floating?.ease,
+      yoyo: true,
+      repeat: -1,
+    }))
+  })
+
   it('creates moving platform sprites from stage map data and registers player and enemy collision', () => {
     const stage = createEnemyFixtureStage()
     stage.movingPlatforms = [
@@ -3402,6 +3492,58 @@ describe('createGameplayRendererConfig', () => {
     expect(reticle?.angle).toBe(3)
   })
 
+  it('selects a nearer Thorn Beetle over a farther Seed Lantern when both are Homing targets', () => {
+    const runtime = createSceneRuntime({
+      stage: {
+        ...createEnemyFixtureStage(),
+        enemies: [
+          {
+            id: 'near-beetle',
+            type: 'thorn-beetle',
+            x: 1_640,
+            surfaceY: 384,
+            patrolMinX: 1_600,
+            patrolMaxX: 1_680,
+          },
+          {
+            id: 'far-lantern',
+            type: 'seed-lantern',
+            x: 1_760,
+            y: 320,
+            patrolMinX: 1_760,
+            patrolMaxX: 1_760,
+          },
+        ],
+      },
+    })
+    runtime.scene.create()
+    const beetle = runtime.sprites.find((sprite) => sprite.texture === 'thorn-beetle-walk')
+    const lantern = runtime.sprites.find((sprite) => sprite.texture === 'seed-lantern-idle')
+    expect(beetle).toBeDefined()
+    expect(lantern).toBeDefined()
+    if (!beetle || !lantern || !runtime.playerSprite) return
+    startGameplay(runtime)
+
+    runtime.playerSprite.body.blocked.down = false
+    runtime.playerSprite.body.touching.down = false
+    runtime.playerSprite.x = 1_600
+    runtime.playerSprite.y = 320
+    runtime.playerSprite.setFlipX(false)
+    beetle.x = 1_640
+    beetle.y = 320
+    lantern.x = 1_760
+    lantern.y = 320
+
+    runtime.scene.update()
+
+    const reticle = runtime.images.find((image) => image.texture === homingAttackPresentation.reticleTextureKey)
+    expect(reticle).toMatchObject({
+      x: 1_640,
+      y: 320 + homingAttackPresentation.reticleYOffset,
+      visible: true,
+    })
+  })
+
   it('hides the Homing reticle while grounded or when the target is defeated', () => {
     const runtime = createSceneRuntime()
     runtime.scene.create()
@@ -3542,12 +3684,33 @@ describe('createGameplayRendererConfig', () => {
     expect(runtime.playerSprite.velocityY).toBe(-420)
   })
 
-  it('can Homing Attack Armor Guard through the existing defeat presentation', () => {
+  it('can Homing Attack Azure Core through the existing defeat presentation', () => {
     const runtime = createSceneRuntime()
     runtime.scene.create()
-    const guard = runtime.sprites.find(
-      (sprite) => sprite.texture === enemyActorDefinitions['armor-guard'].sprites?.walk?.key,
-    )
+    const core = runtime.sprites.find((sprite) => sprite.texture === 'azure-core')
+    expect(core).toBeDefined()
+    if (!core || !runtime.playerSprite) return
+    startGameplay(runtime)
+
+    runtime.playerSprite.body.blocked.down = false
+    runtime.playerSprite.body.touching.down = false
+    runtime.playerSprite.x = 1_600
+    runtime.playerSprite.y = 320
+    runtime.playerSprite.setFlipX(false)
+    core.x = 1_760
+    core.y = 320
+    runtime.playerKeys.j.isDown = true
+    runtime.scene.update()
+
+    expect(core.body.enable).toBe(false)
+    expect(core.visible).toBe(true)
+    expect(runtime.tweenCalls.some((call) => call.targets === core && call.scale === 1.8)).toBe(true)
+  })
+
+  it('can Homing Attack Armor Guard through its patrol enemy defeat presentation', () => {
+    const runtime = createSceneRuntime()
+    runtime.scene.create()
+    const guard = runtime.sprites.find((sprite) => sprite.texture === 'enemy-guard-walk')
     expect(guard).toBeDefined()
     if (!guard || !runtime.playerSprite) return
     startGameplay(runtime)
@@ -3564,6 +3727,42 @@ describe('createGameplayRendererConfig', () => {
     expect(guard.body.enable).toBe(false)
     expect(guard.playCalls.at(-1)).toEqual({
       key: enemyActorDefinitions['armor-guard'].sprites?.death?.key,
+      ignoreIfPlaying: true,
+    })
+  })
+
+  it('can Homing Attack Thorn Beetle through its patrol enemy defeat presentation', () => {
+    const runtime = createSceneRuntime({
+      stage: {
+        ...createEnemyFixtureStage(),
+        enemies: [{
+          id: 'test-thorn-beetle',
+          type: 'thorn-beetle',
+          x: 720,
+          surfaceY: 512,
+          patrolMinX: 608,
+          patrolMaxX: 832,
+        }],
+      },
+    })
+    runtime.scene.create()
+    const beetle = runtime.sprites.find((sprite) => sprite.texture === 'thorn-beetle-walk')
+    expect(beetle).toBeDefined()
+    if (!beetle || !runtime.playerSprite) return
+    startGameplay(runtime)
+
+    runtime.playerSprite.body.blocked.down = false
+    runtime.playerSprite.body.touching.down = false
+    runtime.playerSprite.x = 560
+    runtime.playerSprite.y = beetle.y
+    runtime.playerSprite.setFlipX(false)
+    beetle.x = 720
+    runtime.playerKeys.j.isDown = true
+    runtime.scene.update()
+
+    expect(beetle.body.enable).toBe(false)
+    expect(beetle.playCalls.at(-1)).toEqual({
+      key: enemyActorDefinitions['thorn-beetle'].sprites?.death?.key,
       ignoreIfPlaying: true,
     })
   })
@@ -3920,6 +4119,38 @@ describe('createGameplayRendererConfig', () => {
     expect(guard.flipX).toBe(false)
   })
 
+  it('uses enemy-facing presentation when updating Thorn Beetle patrol flip', () => {
+    const runtime = createSceneRuntime({
+      stage: {
+        ...createEnemyFixtureStage(),
+        enemies: [{
+          id: 'test-thorn-beetle',
+          type: 'thorn-beetle',
+          x: 720,
+          surfaceY: 512,
+          patrolMinX: 608,
+          patrolMaxX: 832,
+        }],
+      },
+    })
+
+    runtime.scene.create()
+    startGameplay(runtime)
+    const beetle = runtime.enemySprites.find((sprite) => sprite.texture === enemyActorDefinitions['thorn-beetle'].sprites?.walk?.key)
+    expect(beetle).toBeDefined()
+    if (!beetle) return
+
+    beetle.x = 607
+    runtime.scene.update()
+    expect(beetle.velocityX).toBe(72)
+    expect(beetle.flipX).toBe(false)
+
+    beetle.x = 833
+    runtime.scene.update()
+    expect(beetle.velocityX).toBe(-72)
+    expect(beetle.flipX).toBe(true)
+  })
+
   it('does not apply patrol velocity updates to Azure Core', () => {
     const runtime = createSceneRuntime()
 
@@ -4157,6 +4388,76 @@ describe('createGameplayRendererConfig', () => {
         (call) => call.targets === core && 'scale' in call && call.scale === 1.8,
       ),
     ).toHaveLength(1)
+  })
+
+  it('plays Thorn Beetle death presentation without treating it as Azure Core', () => {
+    const runtime = createSceneRuntime({
+      stage: {
+        ...createEnemyFixtureStage(),
+        enemies: [
+          {
+            id: 'beetle-a',
+            type: 'thorn-beetle',
+            x: 520,
+            surfaceY: 640,
+            patrolMinX: 420,
+            patrolMaxX: 620,
+          },
+        ],
+      },
+    })
+    runtime.scene.preload()
+    runtime.scene.create()
+    startGameplay(runtime)
+
+    const beetle = runtime.enemySprites.find((sprite) => sprite.texture === 'thorn-beetle-walk')
+    expect(beetle).toBeDefined()
+    if (!beetle) return
+
+    runtime.placePlayerNear(beetle.x, beetle.y)
+    runtime.pressAttack()
+    runtime.scene.update(16, 16)
+    runtime.triggerEnemyOverlap(beetle)
+
+    expect(beetle?.playCalls.at(-1)).toEqual({ key: 'thorn-beetle-death', ignoreIfPlaying: true })
+  })
+
+  it('regenerates Seed Lantern with its own texture and materialize presentation', () => {
+    const runtime = createSceneRuntime({
+      stage: {
+        ...createEnemyFixtureStage(),
+        enemies: [
+          {
+            id: 'lantern-a',
+            type: 'seed-lantern',
+            x: 900,
+            y: 420,
+            patrolMinX: 900,
+            patrolMaxX: 900,
+            respawnDelayMs: 1,
+          },
+        ],
+      },
+    })
+    runtime.scene.preload()
+    runtime.scene.create()
+    startGameplay(runtime)
+
+    const lantern = runtime.enemySprites.find((sprite) => sprite.texture === 'seed-lantern-idle')
+    expect(lantern).toBeDefined()
+    if (!lantern) return
+
+    runtime.placePlayerNear(lantern.x, lantern.y)
+    runtime.pressAttack()
+    runtime.scene.update(16, 16)
+    runtime.triggerEnemyOverlap(lantern)
+    runtime.placePlayerNear(128, 512)
+    runtime.runDelayedCalls(2)
+
+    expect(lantern?.texture).toBe('seed-lantern-idle')
+    expect(lantern?.visible).toBe(true)
+    expect(lantern?.body.enable).toBe(false)
+    expect(runtime.tweenCalls.some((call) => call.targets === lantern && call.scale === 1)).toBe(true)
   })
 
   it('regenerates Armor Guard enemies from their spawn after the respawn delay', () => {

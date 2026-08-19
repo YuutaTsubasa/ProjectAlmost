@@ -9,9 +9,11 @@ import {
   getEnemyRegenerationDecision,
   getEnemyRegenerationPresentation,
   getEnemyRespawnDelayMs,
+  getEnemySpriteAssetRefs,
   getEnemySpawnY,
   getNextEnemyPatrolDirection,
   getScoreEnemyTargetCount,
+  isEnemyHomingTarget,
   shouldProcessEnemyDefeat,
   shouldUpdateEnemyPatrol,
 } from './enemyActor'
@@ -55,6 +57,14 @@ describe('enemyActorDefinitions', () => {
         initialDirection: -1,
         speed: 80,
       },
+      facing: {
+        rightFlipX: true,
+      },
+      targeting: {
+        homing: true,
+      },
+      rules: { respawnPolicy: 'persistent', countsForScore: true },
+      presentation: { defeat: 'armor-guard-death', regeneration: 'armor-guard-restore' },
     })
   })
 
@@ -79,11 +89,103 @@ describe('enemyActorDefinitions', () => {
         durationMs: 950,
         ease: 'Sine.easeInOut',
       },
+      facing: {
+        rightFlipX: true,
+      },
+      targeting: {
+        homing: true,
+      },
+      rules: { respawnPolicy: 'regenerate', countsForScore: false },
+      presentation: { defeat: 'azure-core-burst', regeneration: 'azure-core-materialize' },
     })
+  })
+
+  it('defines the World 02 Thorn Beetle as a grounded patrol enemy', () => {
+    expect(enemyActorDefinitions['thorn-beetle']).toMatchObject({
+      type: 'thorn-beetle',
+      placement: 'grounded',
+      behavior: 'patrol',
+      gravity: true,
+      body: {
+        width: 46,
+        height: 42,
+        offsetX: 41,
+        offsetY: 64,
+      },
+      sprites: {
+        walk: {
+          key: 'thorn-beetle-walk',
+          assetRef: '/assets/sprites/thorn_beetle_walk/sheet-transparent.webp',
+        },
+        death: {
+          key: 'thorn-beetle-death',
+          assetRef: '/assets/sprites/thorn_beetle_death/sheet-transparent.webp',
+        },
+      },
+      patrol: {
+        initialDirection: -1,
+        speed: 72,
+      },
+      targeting: {
+        homing: true,
+      },
+      facing: {
+        rightFlipX: false,
+      },
+    })
+  })
+
+  it('defines the World 02 Seed Lantern as an airborne Homing target', () => {
+    expect(enemyActorDefinitions['seed-lantern']).toMatchObject({
+      type: 'seed-lantern',
+      placement: 'airborne',
+      behavior: 'homing-target',
+      gravity: false,
+      sprites: {
+        idle: {
+          key: 'seed-lantern-idle',
+          assetRef: '/assets/sprites/seed_lantern_idle/sheet-transparent.webp',
+          frameStart: 2,
+          frameEnd: 2,
+          repeat: 0,
+        },
+      },
+      depth: 13,
+      floating: {
+        yOffset: -16,
+        angle: 8,
+        durationMs: 1050,
+        ease: 'Sine.easeInOut',
+      },
+      facing: {
+        rightFlipX: true,
+      },
+      targeting: {
+        homing: true,
+      },
+      presentation: {
+        defeat: 'seed-lantern-burst',
+        regeneration: 'seed-lantern-materialize',
+      },
+    })
+  })
+
+  it('aligns generated enemy bodies to measured visible sprite centers', () => {
+    const thornBody = enemyActorDefinitions['thorn-beetle'].body
+    expect(thornBody.offsetX + thornBody.width / 2).toBe(64)
+
+    const seedBody = enemyActorDefinitions['seed-lantern'].body
+    expect(seedBody.offsetX + seedBody.width / 2).toBe(63)
+    expect(seedBody.offsetY + seedBody.height / 2).toBe(64)
   })
 })
 
 describe('getEnemySpawnY', () => {
+  it('calculates spawn Y from enemy placement definitions', () => {
+    expect(getEnemySpawnY({ type: 'thorn-beetle', surfaceY: 640 })).toBe(606)
+    expect(getEnemySpawnY({ type: 'seed-lantern', y: 420 })).toBe(420)
+  })
+
   it('lifts Armor Guards above the authored platform surface for rebuilt terrain art', () => {
     expect(
       getEnemySpawnY({
@@ -147,10 +249,35 @@ describe('getNextEnemyPatrolDirection', () => {
 })
 
 describe('shouldUpdateEnemyPatrol', () => {
+  it('updates patrol only for active patrol-capable enemies', () => {
+    expect(shouldUpdateEnemyPatrol({ type: 'thorn-beetle', defeated: false })).toBe(true)
+    expect(shouldUpdateEnemyPatrol({ type: 'seed-lantern', defeated: false })).toBe(false)
+    expect(shouldUpdateEnemyPatrol({ type: 'thorn-beetle', defeated: true })).toBe(false)
+  })
+
   it('updates active Armor Guard patrol and skips defeated enemies or Azure Cores', () => {
     expect(shouldUpdateEnemyPatrol({ type: 'armor-guard', defeated: false })).toBe(true)
     expect(shouldUpdateEnemyPatrol({ type: 'armor-guard', defeated: true })).toBe(false)
     expect(shouldUpdateEnemyPatrol({ type: 'azure-core', defeated: false })).toBe(false)
+  })
+})
+
+describe('isEnemyHomingTarget', () => {
+  it('uses explicit Homing target capability independent of movement behavior', () => {
+    expect(isEnemyHomingTarget('azure-core')).toBe(true)
+    expect(isEnemyHomingTarget('seed-lantern')).toBe(true)
+    expect(isEnemyHomingTarget('armor-guard')).toBe(true)
+    expect(isEnemyHomingTarget('thorn-beetle')).toBe(true)
+  })
+})
+
+describe('getEnemySpriteAssetRefs', () => {
+  it('collects runtime sprite assets from enemy definitions', () => {
+    expect(getEnemySpriteAssetRefs(['thorn-beetle', 'seed-lantern', 'thorn-beetle'])).toEqual([
+      '/assets/sprites/seed_lantern_idle/sheet-transparent.webp',
+      '/assets/sprites/thorn_beetle_death/sheet-transparent.webp',
+      '/assets/sprites/thorn_beetle_walk/sheet-transparent.webp',
+    ])
   })
 })
 
@@ -186,6 +313,19 @@ describe('enemy scoring rules', () => {
   it('defaults persistent guards to scoring enemies and regenerating Azure Cores to support enemies', () => {
     expect(enemyCountsForScore({ type: 'armor-guard' })).toBe(true)
     expect(enemyCountsForScore({ type: 'azure-core' })).toBe(false)
+  })
+
+  it('uses enemy definitions for score and respawn defaults', () => {
+    expect(enemyCountsForScore({ type: 'thorn-beetle' })).toBe(true)
+    expect(enemyCountsForScore({ type: 'seed-lantern' })).toBe(false)
+    expect(getEnemyDefeatOutcome({ type: 'thorn-beetle' })).toEqual({
+      scoreDelta: 1,
+      shouldRegenerate: false,
+    })
+    expect(getEnemyDefeatOutcome({ type: 'seed-lantern' })).toEqual({
+      scoreDelta: 0,
+      shouldRegenerate: true,
+    })
   })
 
   it('allows stage metadata to override score counting', () => {
@@ -275,11 +415,20 @@ describe('enemy regeneration rules', () => {
         durationMs: 320,
         ease: 'Back.easeOut',
       },
+      seedLantern: {
+        startScale: 0.35,
+        endScale: 1,
+        startAlpha: 0,
+        endAlpha: 1,
+        durationMs: 320,
+        ease: 'Back.easeOut',
+      },
     })
   })
 
   it('routes each enemy type to its regeneration presentation', () => {
     expect(getEnemyRegenerationPresentation('armor-guard')).toBe('armor-guard-restore')
     expect(getEnemyRegenerationPresentation('azure-core')).toBe('azure-core-materialize')
+    expect(getEnemyRegenerationPresentation('seed-lantern')).toBe('seed-lantern-materialize')
   })
 })

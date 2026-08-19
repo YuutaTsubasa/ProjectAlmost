@@ -1,0 +1,179 @@
+{
+  "target": "asset",
+  "mode": "walk",
+  "prompt": "Thorn Beetle walk",
+  "role": "",
+  "source": {
+    "kind": "generated-image",
+    "batch": "2026-08-17-world02-enemies",
+    "asset": "thorn-beetle-walk"
+  },
+  "threshold": 220,
+  "edge_threshold": 260,
+  "duration": 200,
+  "rows": 2,
+  "cols": 2,
+  "cell_size": 128,
+  "fit_scale": 0.86,
+  "trim_border": 4,
+  "edge_clean_depth": 8,
+  "align": "feet",
+  "shared_scale": true,
+  "component_mode": "largest",
+  "component_padding": 2,
+  "min_component_area": 1000,
+  "edge_touch_margin": 0,
+  "frame_labels": [
+    "walk-1",
+    "walk-2",
+    "walk-3",
+    "walk-4"
+  ],
+  "frames": [
+    {
+      "grid": [
+        0,
+        0
+      ],
+      "source_box": [
+        0,
+        0,
+        627,
+        627
+      ],
+      "component_mode": "largest",
+      "component_count": 1,
+      "selected_component_area": 98136,
+      "selected_component_bbox": [
+        72,
+        153,
+        553,
+        520
+      ],
+      "crop_bbox": [
+        70,
+        151,
+        555,
+        522
+      ],
+      "edge_touch": false,
+      "output_size": [
+        108,
+        82
+      ],
+      "paste_position": [
+        10,
+        38
+      ]
+    },
+    {
+      "grid": [
+        0,
+        1
+      ],
+      "source_box": [
+        627,
+        0,
+        1254,
+        627
+      ],
+      "component_mode": "largest",
+      "component_count": 1,
+      "selected_component_area": 96187,
+      "selected_component_bbox": [
+        42,
+        155,
+        518,
+        519
+      ],
+      "crop_bbox": [
+        40,
+        153,
+        520,
+        521
+      ],
+      "edge_touch": false,
+      "output_size": [
+        107,
+        82
+      ],
+      "paste_position": [
+        10,
+        38
+      ]
+    },
+    {
+      "grid": [
+        1,
+        0
+      ],
+      "source_box": [
+        0,
+        627,
+        627,
+        1254
+      ],
+      "component_mode": "largest",
+      "component_count": 1,
+      "selected_component_area": 95954,
+      "selected_component_bbox": [
+        79,
+        104,
+        554,
+        471
+      ],
+      "crop_bbox": [
+        77,
+        102,
+        556,
+        473
+      ],
+      "edge_touch": false,
+      "output_size": [
+        106,
+        82
+      ],
+      "paste_position": [
+        11,
+        38
+      ]
+    },
+    {
+      "grid": [
+        1,
+        1
+      ],
+      "source_box": [
+        627,
+        627,
+        1254,
+        1254
+      ],
+      "component_mode": "largest",
+      "component_count": 1,
+      "selected_component_area": 99794,
+      "selected_component_bbox": [
+        58,
+        104,
+        547,
+        460
+      ],
+      "crop_bbox": [
+        56,
+        102,
+        549,
+        462
+      ],
+      "edge_touch": false,
+      "output_size": [
+        110,
+        80
+      ],
+      "paste_position": [
+        9,
+        40
+      ]
+    }
+  ],
+  "edge_touch_frames": []
+}

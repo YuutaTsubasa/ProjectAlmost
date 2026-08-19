@@ -39,7 +39,11 @@ describe('preload manifest', () => {
     const sources = plan.map((asset) => asset.source)
 
     expect(sources).toContain('/assets/sprites/player_idle/sheet-transparent.webp')
-    expect(sources).toContain('/assets/sprites/enemy_guard_walk/sheet-transparent.webp')
+    expect(sources).not.toContain('/assets/sprites/enemy_guard_walk/sheet-transparent.webp')
+    expect(sources).not.toContain('/assets/sprites/enemy_guard_death/sheet-transparent.webp')
+    expect(sources).not.toContain('/assets/sprites/thorn_beetle_walk/sheet-transparent.webp')
+    expect(sources).not.toContain('/assets/sprites/thorn_beetle_death/sheet-transparent.webp')
+    expect(sources).not.toContain('/assets/sprites/seed_lantern_idle/sheet-transparent.webp')
     expect(sources).toContain('/assets/props/white_palace_checkpoint.webp')
     expect(sources).toContain('/assets/hud/player-portrait.webp')
     expect(sources).toContain('/assets/results/yuuta-stage-result-standee.webp')
@@ -86,6 +90,47 @@ describe('preload manifest', () => {
     expect(sources).toContain('/assets/maps/custom-stage-layer-2.webp')
     expect(sources).toContain('/assets/tiles/custom-stage-tiles.webp')
     expect(sources).not.toContain('/assets/maps/emerald_sanctuary_sky.webp')
+  })
+
+  it('includes stage enemy sprite assets from the supplied gameplay stage map', () => {
+    const stage = getGameplayStageMap('1-1')
+    expect(stage).toBeDefined()
+    const customizedStage: GameplayStageMap = {
+      ...stage!,
+      enemies: [
+        {
+          id: 'beetle-a',
+          type: 'thorn-beetle',
+          x: 520,
+          surfaceY: 640,
+          patrolMinX: 420,
+          patrolMaxX: 620,
+        },
+        {
+          id: 'lantern-a',
+          type: 'seed-lantern',
+          x: 900,
+          y: 420,
+          patrolMinX: 900,
+          patrolMaxX: 900,
+        },
+      ],
+    }
+    const sources = buildGameplayEntryPreloadPlan(projectData, customizedStage).map((asset) => asset.source)
+
+    expect(sources).toContain('/assets/sprites/thorn_beetle_walk/sheet-transparent.webp')
+    expect(sources).toContain('/assets/sprites/thorn_beetle_death/sheet-transparent.webp')
+    expect(sources).toContain('/assets/sprites/seed_lantern_idle/sheet-transparent.webp')
+  })
+
+  it('loads first-world enemy sprite assets from stage-specific preload', () => {
+    const stage = getGameplayStageMap('1-1')
+
+    expect(stage).toBeDefined()
+    const sources = buildStagePreloadPlan(projectData, stage!).map((asset) => asset.source)
+
+    expect(sources).toContain('/assets/sprites/enemy_guard_walk/sheet-transparent.webp')
+    expect(sources).toContain('/assets/sprites/enemy_guard_death/sheet-transparent.webp')
   })
 
   it('includes every world map music track in collected runtime sources', () => {

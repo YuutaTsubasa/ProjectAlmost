@@ -5,7 +5,9 @@ import { projectData } from '../data/projectData'
 import { bossPriestessSpriteAssets } from '../gameplay/bossBattle'
 import { checkpointActorDefinition } from '../gameplay/checkpointActor'
 import type { GameplayStageMap } from '../gameplay/gameplayMapTypes'
-import { enemyActorDefinitions } from '../gameplay/enemyActor'
+import {
+  getEnemySpriteAssetRefs,
+} from '../gameplay/enemyActor'
 import { goalActorDefinition } from '../gameplay/goalActor'
 import { hazardActorDefinitions } from '../gameplay/hazardActor'
 import { playerActorDefinition } from '../gameplay/playerActor'
@@ -38,8 +40,6 @@ const BOOT_SOURCES = [
 
 const SHARED_GAMEPLAY_SOURCES = [
   ...Object.values(playerActorDefinition.sprites).map((sprite) => sprite.assetRef),
-  enemyActorDefinitions['armor-guard'].sprites.walk.assetRef,
-  enemyActorDefinitions['armor-guard'].sprites.death.assetRef,
   checkpointActorDefinition.sprite.assetRef,
   goalActorDefinition.sprite.assetRef,
   hazardActorDefinitions.spikes.sprite.assetRef,
@@ -96,6 +96,7 @@ function stageSources(project: ProjectDataLike, stage: GameplayStageMap): string
   return [
     ...stage.backgroundLayers.map((layer) => layer.assetRef),
     stage.terrain.tilesetAssetRef,
+    ...getEnemySpriteAssetRefs(stage.enemies.map((enemy) => enemy.type)),
     music,
     ...(stageData.isBoss
       ? Object.values(bossPriestessSpriteAssets).map((sprite) => sprite.assetRef)

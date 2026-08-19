@@ -2741,6 +2741,7 @@ export const gameplayStageSources = {
     "enemies": [
       {
         "id": "sanctuary-guard-a",
+        "type": "thorn-beetle",
         "x": 620,
         "surfaceY": 640,
         "patrolMinX": 360,
@@ -2748,7 +2749,7 @@ export const gameplayStageSources = {
       },
       {
         "id": "thorn-core-a",
-        "type": "azure-core",
+        "type": "seed-lantern",
         "respawnPolicy": "regenerate",
         "countsForScore": false,
         "x": 1780,
@@ -2758,6 +2759,7 @@ export const gameplayStageSources = {
       },
       {
         "id": "sanctuary-guard-b",
+        "type": "thorn-beetle",
         "x": 1420,
         "surfaceY": 640,
         "patrolMinX": 1210,
@@ -2765,7 +2767,7 @@ export const gameplayStageSources = {
       },
       {
         "id": "thorn-core-b",
-        "type": "azure-core",
+        "type": "seed-lantern",
         "respawnPolicy": "regenerate",
         "countsForScore": false,
         "x": 3650,
@@ -2775,7 +2777,7 @@ export const gameplayStageSources = {
       },
       {
         "id": "thorn-core-c",
-        "type": "azure-core",
+        "type": "seed-lantern",
         "respawnPolicy": "regenerate",
         "countsForScore": false,
         "x": 4920,
@@ -2785,6 +2787,7 @@ export const gameplayStageSources = {
       },
       {
         "id": "sanctuary-guard-c",
+        "type": "thorn-beetle",
         "x": 6800,
         "surfaceY": 640,
         "patrolMinX": 6500,
@@ -3077,6 +3080,7 @@ export const gameplayStageSources = {
     "enemies": [
       {
         "id": "ferry-guard-a",
+        "type": "thorn-beetle",
         "x": 520,
         "surfaceY": 640,
         "patrolMinX": 320,
@@ -3084,7 +3088,7 @@ export const gameplayStageSources = {
       },
       {
         "id": "ferry-core-a",
-        "type": "azure-core",
+        "type": "seed-lantern",
         "respawnPolicy": "regenerate",
         "countsForScore": false,
         "x": 2050,
@@ -3094,7 +3098,7 @@ export const gameplayStageSources = {
       },
       {
         "id": "ferry-core-b",
-        "type": "azure-core",
+        "type": "seed-lantern",
         "respawnPolicy": "regenerate",
         "countsForScore": false,
         "x": 4830,
@@ -3104,6 +3108,7 @@ export const gameplayStageSources = {
       },
       {
         "id": "ferry-guard-b",
+        "type": "thorn-beetle",
         "x": 5600,
         "surfaceY": 576,
         "patrolMinX": 5300,
@@ -3111,7 +3116,7 @@ export const gameplayStageSources = {
       },
       {
         "id": "ferry-core-c",
-        "type": "azure-core",
+        "type": "seed-lantern",
         "respawnPolicy": "regenerate",
         "countsForScore": false,
         "x": 8170,
@@ -3377,6 +3382,7 @@ export const gameplayStageSources = {
     "enemies": [
       {
         "id": "bramble-guard-a",
+        "type": "thorn-beetle",
         "x": 560,
         "surfaceY": 640,
         "patrolMinX": 340,
@@ -3384,7 +3390,7 @@ export const gameplayStageSources = {
       },
       {
         "id": "bramble-core-a",
-        "type": "azure-core",
+        "type": "seed-lantern",
         "respawnPolicy": "regenerate",
         "countsForScore": false,
         "x": 1980,
@@ -3394,7 +3400,7 @@ export const gameplayStageSources = {
       },
       {
         "id": "bramble-core-b",
-        "type": "azure-core",
+        "type": "seed-lantern",
         "respawnPolicy": "regenerate",
         "countsForScore": false,
         "x": 2400,
@@ -3404,7 +3410,7 @@ export const gameplayStageSources = {
       },
       {
         "id": "bramble-core-c",
-        "type": "azure-core",
+        "type": "seed-lantern",
         "respawnPolicy": "regenerate",
         "countsForScore": false,
         "x": 2850,
@@ -3414,6 +3420,7 @@ export const gameplayStageSources = {
       },
       {
         "id": "bramble-guard-b",
+        "type": "thorn-beetle",
         "x": 2440,
         "surfaceY": 576,
         "patrolMinX": 2320,
@@ -3421,7 +3428,7 @@ export const gameplayStageSources = {
       },
       {
         "id": "bramble-core-d",
-        "type": "azure-core",
+        "type": "seed-lantern",
         "respawnPolicy": "regenerate",
         "countsForScore": false,
         "x": 5430,
@@ -3431,7 +3438,7 @@ export const gameplayStageSources = {
       },
       {
         "id": "bramble-core-e",
-        "type": "azure-core",
+        "type": "seed-lantern",
         "respawnPolicy": "regenerate",
         "countsForScore": false,
         "x": 5940,
@@ -3441,6 +3448,7 @@ export const gameplayStageSources = {
       },
       {
         "id": "bramble-guard-c",
+        "type": "thorn-beetle",
         "x": 9020,
         "surfaceY": 640,
         "patrolMinX": 8480,
@@ -3731,6 +3739,7 @@ export const gameplayStageSources = {
     "enemies": [
       {
         "id": "canopy-guard-a",
+        "type": "thorn-beetle",
         "x": 570,
         "surfaceY": 704,
         "patrolMinX": 330,
@@ -3738,7 +3747,7 @@ export const gameplayStageSources = {
       },
       {
         "id": "canopy-core-a",
-        "type": "azure-core",
+        "type": "seed-lantern",
         "respawnPolicy": "regenerate",
         "countsForScore": false,
         "x": 1660,
@@ -3748,7 +3757,7 @@ export const gameplayStageSources = {
       },
       {
         "id": "canopy-core-b",
-        "type": "azure-core",
+        "type": "seed-lantern",
         "respawnPolicy": "regenerate",
         "countsForScore": false,
         "x": 2780,
@@ -3758,6 +3767,7 @@ export const gameplayStageSources = {
       },
       {
         "id": "canopy-guard-b",
+        "type": "thorn-beetle",
         "x": 3180,
         "surfaceY": 384,
         "patrolMinX": 2960,
@@ -3765,7 +3775,7 @@ export const gameplayStageSources = {
       },
       {
         "id": "canopy-core-c",
-        "type": "azure-core",
+        "type": "seed-lantern",
         "respawnPolicy": "regenerate",
         "countsForScore": false,
         "x": 5580,
@@ -3775,7 +3785,7 @@ export const gameplayStageSources = {
       },
       {
         "id": "canopy-core-d",
-        "type": "azure-core",
+        "type": "seed-lantern",
         "respawnPolicy": "regenerate",
         "countsForScore": false,
         "x": 8280,
@@ -3785,6 +3795,7 @@ export const gameplayStageSources = {
       },
       {
         "id": "canopy-guard-c",
+        "type": "thorn-beetle",
         "x": 9040,
         "surfaceY": 640,
         "patrolMinX": 8640,
@@ -4182,6 +4193,7 @@ export const gameplayStageSources = {
     "enemies": [
       {
         "id": "gauntlet-guard-a",
+        "type": "thorn-beetle",
         "x": 590,
         "surfaceY": 640,
         "patrolMinX": 320,
@@ -4189,7 +4201,7 @@ export const gameplayStageSources = {
       },
       {
         "id": "gauntlet-core-a",
-        "type": "azure-core",
+        "type": "seed-lantern",
         "respawnPolicy": "regenerate",
         "countsForScore": false,
         "x": 1780,
@@ -4199,7 +4211,7 @@ export const gameplayStageSources = {
       },
       {
         "id": "gauntlet-core-b",
-        "type": "azure-core",
+        "type": "seed-lantern",
         "respawnPolicy": "regenerate",
         "countsForScore": false,
         "x": 4380,
@@ -4209,6 +4221,7 @@ export const gameplayStageSources = {
       },
       {
         "id": "gauntlet-guard-b",
+        "type": "thorn-beetle",
         "x": 5380,
         "surfaceY": 640,
         "patrolMinX": 5100,
@@ -4216,7 +4229,7 @@ export const gameplayStageSources = {
       },
       {
         "id": "gauntlet-core-c",
-        "type": "azure-core",
+        "type": "seed-lantern",
         "respawnPolicy": "regenerate",
         "countsForScore": false,
         "x": 6560,
@@ -4226,7 +4239,7 @@ export const gameplayStageSources = {
       },
       {
         "id": "gauntlet-core-d",
-        "type": "azure-core",
+        "type": "seed-lantern",
         "respawnPolicy": "regenerate",
         "countsForScore": false,
         "x": 8840,
@@ -4236,6 +4249,7 @@ export const gameplayStageSources = {
       },
       {
         "id": "gauntlet-guard-c",
+        "type": "thorn-beetle",
         "x": 10480,
         "surfaceY": 576,
         "patrolMinX": 10320,
@@ -4243,7 +4257,7 @@ export const gameplayStageSources = {
       },
       {
         "id": "gauntlet-core-e",
-        "type": "azure-core",
+        "type": "seed-lantern",
         "respawnPolicy": "regenerate",
         "countsForScore": false,
         "x": 12120,
@@ -4253,7 +4267,7 @@ export const gameplayStageSources = {
       },
       {
         "id": "gauntlet-core-f",
-        "type": "azure-core",
+        "type": "seed-lantern",
         "respawnPolicy": "regenerate",
         "countsForScore": false,
         "x": 14740,
@@ -4263,6 +4277,7 @@ export const gameplayStageSources = {
       },
       {
         "id": "gauntlet-guard-d",
+        "type": "thorn-beetle",
         "x": 16400,
         "surfaceY": 640,
         "patrolMinX": 16340,

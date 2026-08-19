@@ -1,0 +1,179 @@
+{
+  "target": "asset",
+  "mode": "hover",
+  "prompt": "Seed Lantern idle",
+  "role": "",
+  "source": {
+    "kind": "generated-image",
+    "batch": "2026-08-17-world02-enemies",
+    "asset": "seed-lantern-idle"
+  },
+  "threshold": 100,
+  "edge_threshold": 150,
+  "duration": 200,
+  "rows": 2,
+  "cols": 2,
+  "cell_size": 128,
+  "fit_scale": 0.82,
+  "trim_border": 4,
+  "edge_clean_depth": 3,
+  "align": "center",
+  "shared_scale": true,
+  "component_mode": "largest",
+  "component_padding": 12,
+  "min_component_area": 200,
+  "edge_touch_margin": 0,
+  "frame_labels": [
+    "idle-1",
+    "idle-2",
+    "idle-3",
+    "idle-4"
+  ],
+  "frames": [
+    {
+      "grid": [
+        0,
+        0
+      ],
+      "source_box": [
+        0,
+        0,
+        768,
+        512
+      ],
+      "component_mode": "largest",
+      "component_count": 2,
+      "selected_component_area": 22604,
+      "selected_component_bbox": [
+        295,
+        194,
+        496,
+        447
+      ],
+      "crop_bbox": [
+        283,
+        182,
+        508,
+        459
+      ],
+      "edge_touch": false,
+      "output_size": [
+        54,
+        67
+      ],
+      "paste_position": [
+        37,
+        30
+      ]
+    },
+    {
+      "grid": [
+        0,
+        1
+      ],
+      "source_box": [
+        768,
+        0,
+        1536,
+        512
+      ],
+      "component_mode": "largest",
+      "component_count": 2,
+      "selected_component_area": 33676,
+      "selected_component_bbox": [
+        228,
+        119,
+        501,
+        377
+      ],
+      "crop_bbox": [
+        216,
+        107,
+        513,
+        389
+      ],
+      "edge_touch": false,
+      "output_size": [
+        72,
+        68
+      ],
+      "paste_position": [
+        28,
+        30
+      ]
+    },
+    {
+      "grid": [
+        1,
+        0
+      ],
+      "source_box": [
+        0,
+        512,
+        768,
+        1024
+      ],
+      "component_mode": "largest",
+      "component_count": 2,
+      "selected_component_area": 44342,
+      "selected_component_bbox": [
+        279,
+        45,
+        523,
+        451
+      ],
+      "crop_bbox": [
+        267,
+        33,
+        535,
+        463
+      ],
+      "edge_touch": false,
+      "output_size": [
+        65,
+        104
+      ],
+      "paste_position": [
+        31,
+        12
+      ]
+    },
+    {
+      "grid": [
+        1,
+        1
+      ],
+      "source_box": [
+        768,
+        512,
+        1536,
+        1024
+      ],
+      "component_mode": "largest",
+      "component_count": 1,
+      "selected_component_area": 21812,
+      "selected_component_bbox": [
+        246,
+        186,
+        451,
+        395
+      ],
+      "crop_bbox": [
+        234,
+        174,
+        463,
+        407
+      ],
+      "edge_touch": false,
+      "output_size": [
+        55,
+        56
+      ],
+      "paste_position": [
+        36,
+        36
+      ]
+    }
+  ],
+  "edge_touch_frames": []
+}

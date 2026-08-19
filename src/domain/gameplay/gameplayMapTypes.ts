@@ -66,7 +66,15 @@ export type GameplayPlayerSpawn = {
   }
 }
 
-export type GameplayEnemySpawn = ArmorGuardSpawn | AzureCoreSpawn
+export type GroundedEnemyActorType = 'armor-guard' | 'thorn-beetle'
+export type AirborneEnemyActorType = 'azure-core' | 'seed-lantern'
+export type GameplayEnemySpawn = GroundedEnemySpawn | AirborneEnemySpawn
+
+export function isGroundedGameplayEnemySpawn(
+  enemy: GameplayEnemySpawn,
+): enemy is GroundedEnemySpawn {
+  return 'surfaceY' in enemy
+}
 
 export type GameplayMovingPlatformSpawn = PlatformRect & {
   id: string
@@ -83,18 +91,18 @@ export type GameplayEnemyRuntimeMetadata = {
   countsForScore?: boolean
 }
 
-export type ArmorGuardSpawn = GameplayEnemyRuntimeMetadata & {
+export type GroundedEnemySpawn = GameplayEnemyRuntimeMetadata & {
   id: string
-  type: 'armor-guard'
+  type: GroundedEnemyActorType
   x: number
   surfaceY: number
   patrolMinX: number
   patrolMaxX: number
 }
 
-export type AzureCoreSpawn = GameplayEnemyRuntimeMetadata & {
+export type AirborneEnemySpawn = GameplayEnemyRuntimeMetadata & {
   id: string
-  type: 'azure-core'
+  type: AirborneEnemyActorType
   x: number
   y: number
   patrolMinX: number

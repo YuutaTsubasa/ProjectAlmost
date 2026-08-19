@@ -63,6 +63,9 @@ describe('gameplayStageMaps', () => {
       '/assets/sprites/player_crouch/sheet-transparent.webp',
       '/assets/sprites/enemy_guard_walk/sheet-transparent.webp',
       '/assets/sprites/enemy_guard_death/sheet-transparent.webp',
+      '/assets/sprites/thorn_beetle_walk/sheet-transparent.webp',
+      '/assets/sprites/thorn_beetle_death/sheet-transparent.webp',
+      '/assets/sprites/seed_lantern_idle/sheet-transparent.webp',
       '/assets/props/emerald_sanctuary_spikes.webp',
       '/assets/props/white_palace_checkpoint.webp',
       '/assets/props/white_palace_goal_idle.webp',
@@ -85,7 +88,7 @@ describe('gameplayStageMaps', () => {
       }
     }
 
-    expect(enemyTypes).toEqual(new Set(['armor-guard', 'azure-core']))
+    expect(enemyTypes).toEqual(new Set(['armor-guard', 'azure-core', 'thorn-beetle', 'seed-lantern']))
   })
 
   it('defines ordered rank targets for the first gameplay stage', () => {
@@ -434,7 +437,7 @@ describe('gameplayStageMaps', () => {
 
     expect(thornCore).toMatchObject({
       id: 'thorn-core-a',
-      type: 'azure-core',
+      type: 'seed-lantern',
       respawnPolicy: 'regenerate',
       countsForScore: false,
     })

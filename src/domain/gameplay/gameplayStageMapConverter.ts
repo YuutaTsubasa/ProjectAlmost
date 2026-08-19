@@ -5,6 +5,7 @@ import type {
 } from './gameplayMapTypes'
 import {
   toGameplayTheme,
+  isGameplayStageSourceAirborneEnemy,
   type GameplayStageConversionDiagnostic,
   type GameplayStageSource,
   type GameplayStageSourceTheme,
@@ -86,10 +87,10 @@ export function convertGameplayStageSource(
 }
 
 function convertEnemy(enemy: GameplayStageSource['enemies'][number]): GameplayEnemySpawn {
-  if (enemy.type === 'azure-core') {
+  if (isGameplayStageSourceAirborneEnemy(enemy)) {
     return {
       id: enemy.id,
-      type: 'azure-core',
+      type: enemy.type,
       x: enemy.x,
       y: enemy.y,
       patrolMinX: enemy.patrolMinX,
@@ -100,7 +101,7 @@ function convertEnemy(enemy: GameplayStageSource['enemies'][number]): GameplayEn
 
   return {
     id: enemy.id,
-    type: 'armor-guard',
+    type: enemy.type === 'thorn-beetle' ? 'thorn-beetle' : 'armor-guard',
     x: enemy.x,
     surfaceY: enemy.surfaceY,
     patrolMinX: enemy.patrolMinX,

@@ -7,13 +7,16 @@ import {
   getEnemyDefeatOutcome,
   getEnemySpawnY,
   getEnemyDefeatPresentation,
+  getEnemyDefaultSpriteDefinition,
   getEnemyRegenerationDecision,
   getEnemyRegenerationPresentation,
   getEnemyRespawnDelayMs,
   getNextEnemyPatrolDirection,
   getScoreEnemyTargetCount,
+  isEnemyHomingTarget,
   shouldProcessEnemyDefeat,
   shouldUpdateEnemyPatrol,
+  type EnemyActorDefinition,
   type EnemyPatrolDirection,
 } from '../../domain/gameplay/enemyActor'
 import {
@@ -1085,19 +1088,19 @@ class GameplayMapScene extends Phaser.Scene {
   }
 
   private createEnemyAnimations(): void {
-    const guardSprites = enemyActorDefinitions['armor-guard'].sprites
-    if (!guardSprites) return
-
-    for (const sprite of Object.values(guardSprites)) {
-      this.anims.create({
-        key: sprite.key,
-        frames: this.anims.generateFrameNumbers(sprite.key, {
-          start: sprite.frameStart,
-          end: sprite.frameEnd,
-        }),
-        frameRate: sprite.frameRate,
-        repeat: sprite.repeat,
-      })
+    for (const definition of Object.values(enemyActorDefinitions)) {
+      const enemyDefinition: EnemyActorDefinition = definition
+      for (const sprite of Object.values(enemyDefinition.sprites ?? {})) {
+        this.anims.create({
+          key: sprite.key,
+          frames: this.anims.generateFrameNumbers(sprite.key, {
+            start: sprite.frameStart,
+            end: sprite.frameEnd,
+          }),
+          frameRate: sprite.frameRate,
+          repeat: sprite.repeat,
+        })
+      }
     }
   }
 
@@ -1315,86 +1318,66 @@ class GameplayMapScene extends Phaser.Scene {
       throw new Error(`Unable to create enemy colliders before terrain for stage ${this.stageMap.id}.`)
     }
 
-    const terrainLayer = this.terrainLayer
+    this.enemies = this.stageMap.enemies.map((spawn) => this.createEnemy(spawn))
+  }
 
-    this.enemies = this.stageMap.enemies.map((spawn) => {
-      if (spawn.type === 'armor-guard') {
-        const definition = enemyActorDefinitions['armor-guard']
-        const textureKey = definition.sprites.walk?.key
-        if (!textureKey) {
-          throw new Error(`Enemy ${spawn.id} has no renderable texture.`)
-        }
+  private createEnemy(spawn: GameplayEnemySpawn): EnemyRuntime {
+    const definition: EnemyActorDefinition = enemyActorDefinitions[spawn.type]
+    const spriteDefinition = getEnemyDefaultSpriteDefinition(spawn.type)
+    const textureKey = spriteDefinition?.key ?? definition.generatedTexture?.key
+    if (!textureKey) {
+      throw new Error(`Enemy ${spawn.id} has no renderable texture.`)
+    }
 
-        const sprite = this.physics.add.sprite(
-          spawn.x,
-          getEnemySpawnY(spawn),
-          textureKey,
-        )
+    const spawnY = getEnemySpawnY(spawn)
+    const sprite = this.physics.add.sprite(spawn.x, spawnY, textureKey)
 
-        sprite
-          .setOrigin(definition.origin.x, definition.origin.y)
-          .setScale(definition.scale)
-          .setCollideWorldBounds(true)
-          .setDepth(definition.depth)
+    sprite
+      .setOrigin(definition.origin.x, definition.origin.y)
+      .setScale(definition.scale)
+      .setCollideWorldBounds(true)
+      .setDepth(definition.depth)
 
-        sprite.body.setSize(definition.body.width, definition.body.height)
-        sprite.body.setOffset(
-          definition.body.offsetX,
-          definition.body.offsetY + definition.visualLiftY,
-        )
+    sprite.body.setSize(definition.body.width, definition.body.height)
+    sprite.body.setOffset(
+      definition.body.offsetX,
+      definition.body.offsetY + (definition.visualLiftY ?? 0),
+    )
 
-        const direction = definition.patrol.initialDirection
-        const walk = definition.sprites?.walk
-        if (walk) {
-          sprite.play(walk.key)
-        }
-        sprite.setVelocityX(0)
-        this.physics.add.collider(sprite, terrainLayer)
+    if (spriteDefinition) {
+      sprite.play(spriteDefinition.key)
+    }
 
-        return {
-          sprite,
-          spawn,
-          direction,
-          defeated: false,
-          regenerating: false,
-        }
+    if (definition.placement === 'grounded') {
+      if (!this.terrainLayer) {
+        throw new Error(`Unable to create enemy colliders before terrain for stage ${this.stageMap.id}.`)
       }
 
-      const definition = enemyActorDefinitions['azure-core']
-      const textureKey = definition.generatedTexture?.key
-      if (!textureKey) {
-        throw new Error(`Enemy ${spawn.id} has no renderable texture.`)
-      }
-
-      const sprite = this.physics.add.sprite(
-        spawn.x,
-        getEnemySpawnY(spawn),
-        textureKey,
-      )
-
-      sprite
-        .setOrigin(definition.origin.x, definition.origin.y)
-        .setScale(definition.scale)
-        .setCollideWorldBounds(true)
-        .setDepth(definition.depth)
-
-      sprite.body.setSize(definition.body.width, definition.body.height)
-      sprite.body.setOffset(definition.body.offsetX, definition.body.offsetY)
-
-      sprite.body.allowGravity = false
-      sprite.setImmovable(true)
-      if (spawn.id !== BOSS_PROTOTYPE_ENEMY_ID) {
-        this.createAzureCoreFloat(sprite, spawn.y)
-      }
+      sprite.setVelocityX(0)
+      this.physics.add.collider(sprite, this.terrainLayer)
 
       return {
         sprite,
         spawn,
-        direction: -1,
+        direction: definition.patrol?.initialDirection ?? -1,
         defeated: false,
         regenerating: false,
       }
-    })
+    }
+
+    sprite.body.allowGravity = false
+    sprite.setImmovable(true)
+    if (definition.behavior === 'homing-target' && spawn.id !== BOSS_PROTOTYPE_ENEMY_ID) {
+      this.createEnemyFloat(sprite, spawnY, definition)
+    }
+
+    return {
+      sprite,
+      spawn,
+      direction: -1,
+      defeated: false,
+      regenerating: false,
+    }
   }
 
   private initializeBossPrototype(): void {
@@ -1504,7 +1487,7 @@ class GameplayMapScene extends Phaser.Scene {
   }
 
   private resetEnemyRuntime(enemy: EnemyRuntime): void {
-    const definition = enemyActorDefinitions[enemy.spawn.type]
+    const definition: EnemyActorDefinition = enemyActorDefinitions[enemy.spawn.type]
 
     enemy.defeated = false
     enemy.regenerating = false
@@ -1515,13 +1498,12 @@ class GameplayMapScene extends Phaser.Scene {
       .setAngle(0)
       .setVelocity(0, 0)
 
-    if (enemy.spawn.type === 'armor-guard') {
-      const walk = enemyActorDefinitions['armor-guard'].sprites?.walk
-      if (walk) {
-        enemy.sprite.play(walk.key, true)
-      }
+    const defaultSprite = getEnemyDefaultSpriteDefinition(enemy.spawn.type)
+    if (defaultSprite) {
+      enemy.sprite.setTexture(defaultSprite.key)
+      enemy.sprite.play(defaultSprite.key, true)
     } else {
-      const textureKey = enemyActorDefinitions['azure-core'].generatedTexture?.key
+      const textureKey = definition.generatedTexture?.key
       if (textureKey) {
         enemy.sprite.setTexture(textureKey)
       }
@@ -1534,7 +1516,15 @@ class GameplayMapScene extends Phaser.Scene {
   }
 
   private createAzureCoreFloat(sprite: Phaser.Physics.Arcade.Sprite, spawnY: number): void {
-    const floating = enemyActorDefinitions['azure-core'].floating
+    this.createEnemyFloat(sprite, spawnY, enemyActorDefinitions['azure-core'])
+  }
+
+  private createEnemyFloat(
+    sprite: Phaser.Physics.Arcade.Sprite,
+    spawnY: number,
+    definition: EnemyActorDefinition,
+  ): void {
+    const floating = definition.floating
     if (!floating) return
 
     this.tweens.add({
@@ -1975,8 +1965,9 @@ class GameplayMapScene extends Phaser.Scene {
     }
 
     const presentation = getEnemyDefeatPresentation(enemy.spawn.type)
-    if (presentation === 'armor-guard-death') {
-      const death = enemyActorDefinitions['armor-guard'].sprites?.death
+    if (presentation === 'armor-guard-death' || presentation === 'thorn-beetle-death') {
+      const definition: EnemyActorDefinition = enemyActorDefinitions[enemy.spawn.type]
+      const death = definition.sprites?.death
       if (death) {
         enemy.sprite.play(death.key, true)
       }
@@ -2037,29 +2028,39 @@ class GameplayMapScene extends Phaser.Scene {
     this.tweens.killTweensOf(enemy.sprite)
     enemy.sprite.setPosition(enemy.spawn.x, spawnY)
     enemy.regenerating = true
-    enemy.direction = enemy.spawn.type === 'armor-guard'
-      ? enemyActorDefinitions['armor-guard'].patrol.initialDirection
-      : -1
+    const definition: EnemyActorDefinition = enemyActorDefinitions[enemy.spawn.type]
+    enemy.direction = definition.patrol?.initialDirection ?? -1
 
-    if (getEnemyRegenerationPresentation(enemy.spawn.type) === 'azure-core-materialize') {
-      this.regenerateAzureCore(enemy)
+    const presentation = getEnemyRegenerationPresentation(enemy.spawn.type)
+    if (presentation === 'azure-core-materialize' || presentation === 'seed-lantern-materialize') {
+      this.regenerateAirborneSupportEnemy(enemy, presentation)
     } else {
       this.resetEnemyRuntime(enemy)
       this.emitEnemyMarkerPatch()
     }
   }
 
-  private regenerateAzureCore(enemy: EnemyRuntime): void {
-    const definition = enemyActorDefinitions['azure-core']
-    const textureKey = definition.generatedTexture?.key
-    if (textureKey) {
-      enemy.sprite.setTexture(textureKey)
+  private regenerateAirborneSupportEnemy(
+    enemy: EnemyRuntime,
+    presentation: 'azure-core-materialize' | 'seed-lantern-materialize',
+  ): void {
+    const definition: EnemyActorDefinition = enemyActorDefinitions[enemy.spawn.type]
+    const defaultSprite = getEnemyDefaultSpriteDefinition(enemy.spawn.type)
+    if (defaultSprite) {
+      enemy.sprite.setTexture(defaultSprite.key)
+      enemy.sprite.play(defaultSprite.key, true)
+    } else if (definition.generatedTexture?.key) {
+      enemy.sprite.setTexture(definition.generatedTexture.key)
     }
+
+    const materialize = presentation === 'azure-core-materialize'
+      ? enemyRegenerationPresentation.azureCore
+      : enemyRegenerationPresentation.seedLantern
 
     enemy.sprite
       .setVisible(true)
-      .setAlpha(enemyRegenerationPresentation.azureCore.startAlpha)
-      .setScale(enemyRegenerationPresentation.azureCore.startScale)
+      .setAlpha(materialize.startAlpha)
+      .setScale(materialize.startScale)
       .setAngle(0)
       .setVelocity(0, 0)
 
@@ -2068,16 +2069,14 @@ class GameplayMapScene extends Phaser.Scene {
       body.enable = false
     }
 
-    if (enemy.spawn.type === 'azure-core') {
-      this.createAzureCoreFloat(enemy.sprite, enemy.spawn.y)
-    }
+    this.createEnemyFloat(enemy.sprite, getEnemySpawnY(enemy.spawn), definition)
 
     this.tweens.add({
       targets: enemy.sprite,
-      scale: enemyRegenerationPresentation.azureCore.endScale,
-      alpha: enemyRegenerationPresentation.azureCore.endAlpha,
-      duration: enemyRegenerationPresentation.azureCore.durationMs,
-      ease: enemyRegenerationPresentation.azureCore.ease,
+      scale: materialize.endScale,
+      alpha: materialize.endAlpha,
+      duration: materialize.durationMs,
+      ease: materialize.ease,
       onComplete: () => {
         enemy.defeated = false
         enemy.regenerating = false
@@ -2556,13 +2555,16 @@ class GameplayMapScene extends Phaser.Scene {
         !shouldUpdateEnemyPatrol({
           type: enemy.spawn.type,
           defeated: enemy.defeated,
-        }) ||
-        enemy.spawn.type !== 'armor-guard'
+        })
       ) {
         continue
       }
 
-      const speed = enemyActorDefinitions['armor-guard'].patrol.speed
+      const definition: EnemyActorDefinition = enemyActorDefinitions[enemy.spawn.type]
+      const patrol = definition.patrol
+      if (!patrol) continue
+
+      const speed = patrol.speed
       enemy.direction = getNextEnemyPatrolDirection({
         x: enemy.sprite.x,
         patrolMinX: enemy.spawn.patrolMinX,
@@ -2571,7 +2573,7 @@ class GameplayMapScene extends Phaser.Scene {
       })
 
       enemy.sprite.setVelocityX(enemy.direction * speed)
-      enemy.sprite.setFlipX(enemy.direction > 0)
+      enemy.sprite.setFlipX(enemy.direction > 0 ? definition.facing.rightFlipX : !definition.facing.rightFlipX)
     }
   }
 
@@ -2624,6 +2626,7 @@ class GameplayMapScene extends Phaser.Scene {
     if (!this.player) return undefined
 
     const candidates = this.enemies
+      .filter((enemy) => isEnemyHomingTarget(enemy.spawn.type))
       .filter((enemy) => isHomingTargetAvailable({
         defeated: enemy.defeated,
         active: enemy.sprite.active,

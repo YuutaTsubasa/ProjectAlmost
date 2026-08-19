@@ -1,11 +1,19 @@
-export type EnemyActorType = 'armor-guard' | 'azure-core'
+export type EnemyActorType = 'armor-guard' | 'azure-core' | 'thorn-beetle' | 'seed-lantern'
 export type EnemyPlacement = 'grounded' | 'airborne'
 export type EnemyBehavior = 'patrol' | 'homing-target'
 export type EnemyPatrolDirection = -1 | 1
-export type EnemyDefeatPresentation = 'armor-guard-death' | 'azure-core-burst'
+export type EnemyDefeatPresentation =
+  | 'armor-guard-death'
+  | 'azure-core-burst'
+  | 'thorn-beetle-death'
+  | 'seed-lantern-burst'
 export type EnemyRespawnPolicy = 'persistent' | 'regenerate'
 export type EnemyRegenerationDecision = 'skip' | 'delay' | 'regenerate'
-export type EnemyRegenerationPresentation = 'armor-guard-restore' | 'azure-core-materialize'
+export type EnemyRegenerationPresentation =
+  | 'armor-guard-restore'
+  | 'azure-core-materialize'
+  | 'thorn-beetle-restore'
+  | 'seed-lantern-materialize'
 
 export type EnemySpriteDefinition = {
   key: string
@@ -32,6 +40,7 @@ export type EnemyActorDefinition = {
   sprites?: {
     walk?: EnemySpriteDefinition
     death?: EnemySpriteDefinition
+    idle?: EnemySpriteDefinition
   }
   generatedTexture?: {
     key: string
@@ -48,6 +57,20 @@ export type EnemyActorDefinition = {
     durationMs: number
     ease: string
   }
+  facing: {
+    rightFlipX: boolean
+  }
+  targeting: {
+    homing: boolean
+  }
+  rules: {
+    respawnPolicy: EnemyRespawnPolicy
+    countsForScore: boolean
+  }
+  presentation: {
+    defeat: EnemyDefeatPresentation
+    regeneration: EnemyRegenerationPresentation
+  }
 }
 
 export type ArmorGuardSpawnInput = {
@@ -60,7 +83,23 @@ export type AzureCoreSpawnInput = {
   y: number
 }
 
-export type EnemySpawnYInput = ArmorGuardSpawnInput | AzureCoreSpawnInput
+export type ThornBeetleSpawnInput = {
+  type: 'thorn-beetle'
+  surfaceY: number
+}
+
+export type SeedLanternSpawnInput = {
+  type: 'seed-lantern'
+  y: number
+}
+
+export type EnemySpawnYInput =
+  | ArmorGuardSpawnInput
+  | AzureCoreSpawnInput
+  | ThornBeetleSpawnInput
+  | SeedLanternSpawnInput
+
+export type AirborneEnemySpawnYInput = AzureCoreSpawnInput | SeedLanternSpawnInput
 export type EnemyRuleInput = {
   type: EnemyActorType
   respawnPolicy?: EnemyRespawnPolicy
@@ -111,6 +150,14 @@ export const enemyActorDefinitions = {
       initialDirection: -1,
       speed: 80,
     },
+    facing: {
+      rightFlipX: true,
+    },
+    targeting: {
+      homing: true,
+    },
+    rules: { respawnPolicy: 'persistent', countsForScore: true },
+    presentation: { defeat: 'armor-guard-death', regeneration: 'armor-guard-restore' },
   },
   'azure-core': {
     type: 'azure-core',
@@ -132,6 +179,96 @@ export const enemyActorDefinitions = {
       durationMs: 950,
       ease: 'Sine.easeInOut',
     },
+    facing: {
+      rightFlipX: true,
+    },
+    targeting: {
+      homing: true,
+    },
+    rules: { respawnPolicy: 'regenerate', countsForScore: false },
+    presentation: { defeat: 'azure-core-burst', regeneration: 'azure-core-materialize' },
+  },
+  'thorn-beetle': {
+    type: 'thorn-beetle',
+    placement: 'grounded',
+    behavior: 'patrol',
+    origin: { x: 0.5, y: 0.5 },
+    body: { width: 46, height: 42, offsetX: 41, offsetY: 64 },
+    centerAboveSurface: 30,
+    visualLiftY: 4,
+    gravity: true,
+    depth: 9,
+    scale: 1,
+    sprites: {
+      walk: {
+        key: 'thorn-beetle-walk',
+        assetRef: '/assets/sprites/thorn_beetle_walk/sheet-transparent.webp',
+        frameWidth: 128,
+        frameHeight: 128,
+        frameStart: 0,
+        frameEnd: 3,
+        frameRate: 7,
+        repeat: -1,
+      },
+      death: {
+        key: 'thorn-beetle-death',
+        assetRef: '/assets/sprites/thorn_beetle_death/sheet-transparent.webp',
+        frameWidth: 128,
+        frameHeight: 128,
+        frameStart: 0,
+        frameEnd: 3,
+        frameRate: 8,
+        repeat: 0,
+      },
+    },
+    patrol: {
+      initialDirection: -1,
+      speed: 72,
+    },
+    facing: {
+      rightFlipX: false,
+    },
+    targeting: {
+      homing: true,
+    },
+    rules: { respawnPolicy: 'persistent', countsForScore: true },
+    presentation: { defeat: 'thorn-beetle-death', regeneration: 'thorn-beetle-restore' },
+  },
+  'seed-lantern': {
+    type: 'seed-lantern',
+    placement: 'airborne',
+    behavior: 'homing-target',
+    origin: { x: 0.5, y: 0.5 },
+    body: { width: 58, height: 58, offsetX: 34, offsetY: 35 },
+    gravity: false,
+    depth: 13,
+    scale: 1,
+    sprites: {
+      idle: {
+        key: 'seed-lantern-idle',
+        assetRef: '/assets/sprites/seed_lantern_idle/sheet-transparent.webp',
+        frameWidth: 128,
+        frameHeight: 128,
+        frameStart: 2,
+        frameEnd: 2,
+        frameRate: 7,
+        repeat: 0,
+      },
+    },
+    floating: {
+      yOffset: -16,
+      angle: 8,
+      durationMs: 1050,
+      ease: 'Sine.easeInOut',
+    },
+    facing: {
+      rightFlipX: true,
+    },
+    targeting: {
+      homing: true,
+    },
+    rules: { respawnPolicy: 'regenerate', countsForScore: false },
+    presentation: { defeat: 'seed-lantern-burst', regeneration: 'seed-lantern-materialize' },
   },
 } as const satisfies Record<EnemyActorType, EnemyActorDefinition>
 
@@ -157,30 +294,43 @@ export const enemyRegenerationPresentation = {
     durationMs: 320,
     ease: 'Back.easeOut',
   },
+  seedLantern: {
+    startScale: 0.35,
+    endScale: 1,
+    startAlpha: 0,
+    endAlpha: 1,
+    durationMs: 320,
+    ease: 'Back.easeOut',
+  },
 } as const
 
-const defaultEnemyRules = {
-  'armor-guard': {
-    respawnPolicy: 'persistent',
-    countsForScore: true,
-  },
-  'azure-core': {
-    respawnPolicy: 'regenerate',
-    countsForScore: false,
-  },
-} as const satisfies Record<EnemyActorType, {
-  respawnPolicy: EnemyRespawnPolicy
-  countsForScore: boolean
-}>
-
 export function getEnemySpawnY(input: EnemySpawnYInput): number {
-  if (input.type === 'azure-core') {
+  const definition: EnemyActorDefinition = enemyActorDefinitions[input.type]
+  if (isAirborneEnemySpawnYInput(input)) {
     return input.y
   }
 
-  const definition = enemyActorDefinitions['armor-guard']
+  return input.surfaceY - (definition.centerAboveSurface ?? 0) - (definition.visualLiftY ?? 0)
+}
 
-  return input.surfaceY - definition.centerAboveSurface - definition.visualLiftY
+export function getEnemyDefaultSpriteDefinition(type: EnemyActorType): EnemySpriteDefinition | undefined {
+  const definition: EnemyActorDefinition = enemyActorDefinitions[type]
+  const sprites = definition.sprites
+  return sprites?.walk ?? sprites?.idle
+}
+
+export function getEnemySpriteAssetRefs(types: readonly EnemyActorType[]): string[] {
+  return [...new Set(types.flatMap((type) => {
+    const definition: EnemyActorDefinition = enemyActorDefinitions[type]
+    const sprites = definition.sprites
+    return sprites ? Object.values(sprites).map((sprite) => sprite.assetRef) : []
+  }))].sort()
+}
+
+export function isAirborneEnemySpawnYInput(
+  input: EnemySpawnYInput,
+): input is AirborneEnemySpawnYInput {
+  return enemyActorDefinitions[input.type].placement === 'airborne'
 }
 
 export function getNextEnemyPatrolDirection(input: {
@@ -194,17 +344,12 @@ export function getNextEnemyPatrolDirection(input: {
   return input.currentDirection
 }
 
-const enemyDefeatPresentationByType = {
-  'armor-guard': 'armor-guard-death',
-  'azure-core': 'azure-core-burst',
-} as const satisfies Record<EnemyActorType, EnemyDefeatPresentation>
-
 export function getEnemyDefeatPresentation(type: EnemyActorType): EnemyDefeatPresentation {
-  return enemyDefeatPresentationByType[type]
+  return enemyActorDefinitions[type].presentation.defeat
 }
 
 export function enemyCountsForScore(input: Pick<EnemyRuleInput, 'type' | 'countsForScore'>): boolean {
-  return input.countsForScore ?? defaultEnemyRules[input.type].countsForScore
+  return input.countsForScore ?? enemyActorDefinitions[input.type].rules.countsForScore
 }
 
 export function getScoreEnemyTargetCount(input: {
@@ -214,7 +359,7 @@ export function getScoreEnemyTargetCount(input: {
 }
 
 export function getEnemyDefeatOutcome(input: Pick<EnemyRuleInput, 'type' | 'respawnPolicy' | 'countsForScore'>): EnemyDefeatOutcome {
-  const respawnPolicy = input.respawnPolicy ?? defaultEnemyRules[input.type].respawnPolicy
+  const respawnPolicy = input.respawnPolicy ?? enemyActorDefinitions[input.type].rules.respawnPolicy
 
   return {
     scoreDelta: enemyCountsForScore(input) ? 1 : 0,
@@ -242,7 +387,7 @@ export function getEnemyRegenerationDecision(input: {
 }
 
 export function getEnemyRegenerationPresentation(type: EnemyActorType): EnemyRegenerationPresentation {
-  return type === 'azure-core' ? 'azure-core-materialize' : 'armor-guard-restore'
+  return enemyActorDefinitions[type].presentation.regeneration
 }
 
 export function shouldProcessEnemyDefeat(input: {
@@ -256,5 +401,9 @@ export function shouldUpdateEnemyPatrol(input: {
   type: EnemyActorType
   defeated: boolean
 }): boolean {
-  return input.type === 'armor-guard' && !input.defeated
+  return enemyActorDefinitions[input.type].behavior === 'patrol' && !input.defeated
+}
+
+export function isEnemyHomingTarget(type: EnemyActorType): boolean {
+  return enemyActorDefinitions[type].targeting.homing
 }
