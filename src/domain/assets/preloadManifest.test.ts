@@ -39,7 +39,11 @@ describe('preload manifest', () => {
     const sources = plan.map((asset) => asset.source)
 
     expect(sources).toContain('/assets/sprites/player_idle/sheet-transparent.webp')
-    expect(sources).toContain('/assets/sprites/enemy_guard_walk/sheet-transparent.webp')
+    expect(sources).not.toContain('/assets/sprites/enemy_guard_walk/sheet-transparent.webp')
+    expect(sources).not.toContain('/assets/sprites/enemy_guard_death/sheet-transparent.webp')
+    expect(sources).not.toContain('/assets/sprites/thorn_beetle_walk/sheet-transparent.webp')
+    expect(sources).not.toContain('/assets/sprites/thorn_beetle_death/sheet-transparent.webp')
+    expect(sources).not.toContain('/assets/sprites/seed_lantern_idle/sheet-transparent.webp')
     expect(sources).toContain('/assets/props/white_palace_checkpoint.webp')
     expect(sources).toContain('/assets/hud/player-portrait.webp')
     expect(sources).toContain('/assets/results/yuuta-stage-result-standee.webp')
@@ -119,8 +123,11 @@ describe('preload manifest', () => {
     expect(sources).toContain('/assets/sprites/seed_lantern_idle/sheet-transparent.webp')
   })
 
-  it('keeps first-world enemy sprite assets in shared gameplay preload', () => {
-    const sources = buildSharedGameplayPreloadPlan().map((asset) => asset.source)
+  it('loads first-world enemy sprite assets from stage-specific preload', () => {
+    const stage = getGameplayStageMap('1-1')
+
+    expect(stage).toBeDefined()
+    const sources = buildStagePreloadPlan(projectData, stage!).map((asset) => asset.source)
 
     expect(sources).toContain('/assets/sprites/enemy_guard_walk/sheet-transparent.webp')
     expect(sources).toContain('/assets/sprites/enemy_guard_death/sheet-transparent.webp')

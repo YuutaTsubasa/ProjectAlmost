@@ -2485,7 +2485,7 @@ describe('createGameplayRendererConfig', () => {
       body: expect.objectContaining({
         size: { width: definition.body.width, height: definition.body.height },
         offset: {
-          x: definition.body.offsetX,
+          x: 41,
           y: 68,
         },
         allowGravity: definition.gravity,
@@ -2522,7 +2522,7 @@ describe('createGameplayRendererConfig', () => {
       immovable: true,
       body: expect.objectContaining({
         size: { width: definition.body.width, height: definition.body.height },
-        offset: { x: definition.body.offsetX, y: definition.body.offsetY },
+        offset: { x: 34, y: 35 },
         allowGravity: definition.gravity,
       }),
     })

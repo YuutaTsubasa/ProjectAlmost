@@ -109,7 +109,7 @@ describe('enemyActorDefinitions', () => {
       body: {
         width: 46,
         height: 42,
-        offsetX: 0,
+        offsetX: 41,
         offsetY: 64,
       },
       sprites: {
@@ -168,6 +168,15 @@ describe('enemyActorDefinitions', () => {
         regeneration: 'seed-lantern-materialize',
       },
     })
+  })
+
+  it('aligns generated enemy bodies to measured visible sprite centers', () => {
+    const thornBody = enemyActorDefinitions['thorn-beetle'].body
+    expect(thornBody.offsetX + thornBody.width / 2).toBe(64)
+
+    const seedBody = enemyActorDefinitions['seed-lantern'].body
+    expect(seedBody.offsetX + seedBody.width / 2).toBe(63)
+    expect(seedBody.offsetY + seedBody.height / 2).toBe(64)
   })
 })
 

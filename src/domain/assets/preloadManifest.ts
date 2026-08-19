@@ -6,9 +6,7 @@ import { bossPriestessSpriteAssets } from '../gameplay/bossBattle'
 import { checkpointActorDefinition } from '../gameplay/checkpointActor'
 import type { GameplayStageMap } from '../gameplay/gameplayMapTypes'
 import {
-  enemyActorDefinitions,
   getEnemySpriteAssetRefs,
-  type EnemyActorType,
 } from '../gameplay/enemyActor'
 import { goalActorDefinition } from '../gameplay/goalActor'
 import { hazardActorDefinitions } from '../gameplay/hazardActor'
@@ -42,7 +40,6 @@ const BOOT_SOURCES = [
 
 const SHARED_GAMEPLAY_SOURCES = [
   ...Object.values(playerActorDefinition.sprites).map((sprite) => sprite.assetRef),
-  ...getEnemySpriteAssetRefs(Object.keys(enemyActorDefinitions) as EnemyActorType[]),
   checkpointActorDefinition.sprite.assetRef,
   goalActorDefinition.sprite.assetRef,
   hazardActorDefinitions.spikes.sprite.assetRef,

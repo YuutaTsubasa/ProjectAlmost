@@ -85,6 +85,8 @@ PR review playtesting found two presentation issues in the initial generated ene
 - Homing target eligibility is independent from movement behavior. Thorn Beetle is both a grounded patrol enemy and a Homing target, so the definition has an explicit `targeting.homing` capability instead of overloading `behavior`.
 - First-world Armor Guard also remains a Homing target even though its movement behavior is patrol. Adding world-specific enemies must not regress existing Homing Attack behavior for earlier enemies.
 - Thorn Beetle visual ground contact is controlled by its effective body offset, not just spawn center. `centerAboveSurface` only affects initial placement before Arcade collision resolves; the rested visual contact point follows `body.offsetY + visualLiftY`, so vertical tuning must keep renderer body-offset tests in sync.
+- Generated enemy collision bodies must be calibrated against measured non-transparent sprite bounds. Thorn Beetle's body is horizontally centered on the visible walk frames, and Seed Lantern's body is centered on the selected idle frame.
+- Enemy sprite assets are stage-specific preload assets. Shared gameplay preload keeps common player, prop, HUD, tile, SFX, and result assets, while `stageSources()` includes the enemy sprites required by each stage.
 
 These adjustments remain definition-driven: the renderer consumes enemy `facing`, `targeting`, `depth`, sprite frame range, and floating presentation instead of adding type-specific branches.
 
