@@ -45,7 +45,7 @@
 
   let previousGamepadSnapshot: GamepadControlSnapshot | null = null
   let confirming = $state(false)
-  let confirmResetTimer: ReturnType<typeof window.setTimeout> | undefined
+  let confirmResetTimer: number | undefined
 
   const stageSelectRefs = $derived(localizeData.references.stageSelect)
   const selectedWorld = $derived(selectInfo.world)

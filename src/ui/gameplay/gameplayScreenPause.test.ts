@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import gameplayScreenSource from './GameplayScreen.svelte?raw'
+import rawGameplayScreenSource from './GameplayScreen.svelte?raw'
+
+const gameplayScreenSource = rawGameplayScreenSource.replaceAll('\r\n', '\n')
 
 describe('GameplayScreen pause integration contract', () => {
   it('owns gameplay pause state and renders PauseMenu before result-only handling', () => {

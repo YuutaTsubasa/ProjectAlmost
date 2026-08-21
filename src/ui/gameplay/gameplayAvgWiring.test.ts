@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import source from './GameplayScreen.svelte?raw'
+import rawSource from './GameplayScreen.svelte?raw'
+
+const source = rawSource.replaceAll('\r\n', '\n')
 
 describe('GameplayScreen AVG wiring', () => {
   it('creates stage intro AVG state from the domain registry', () => {

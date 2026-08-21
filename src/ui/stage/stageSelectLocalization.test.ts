@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import appCss from '../../app.css?raw'
-import stageSelectSource from './StageSelectScreen.svelte?raw'
+import rawStageSelectSource from './StageSelectScreen.svelte?raw'
+
+const stageSelectSource = rawStageSelectSource.replaceAll('\r\n', '\n')
 
 describe('Stage Select localization contract', () => {
   it('keeps prototype-aligned visible text density and localized placeholders', () => {
