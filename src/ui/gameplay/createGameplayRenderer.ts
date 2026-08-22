@@ -1190,7 +1190,7 @@ class GameplayMapScene extends Phaser.Scene {
     this.playPlayerAnimation(player, 'idle')
 
     this.physics.add.collider(player, this.terrainLayer)
-    this.cameras.main.startFollow(player, true, 0.12, 0.12)
+    this.cameras.main.startFollow(player, true, 1, 1)
     this.playerJumpState = createMovableActorJumpState({
       now: this.time.now,
       grounded: true,

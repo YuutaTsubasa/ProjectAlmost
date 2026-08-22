@@ -878,6 +878,7 @@ function createSceneRuntime(input: {
   }
   let playerSprite: ReturnType<typeof createFakeArcadeSprite> | null = null
   let cameraFollowTarget: unknown = null
+  let cameraFollowOptions: { roundPixels?: boolean; lerpX?: number; lerpY?: number } | null = null
   let fadeOutCompleteCallback: (() => void) | null = null
   const internalScene = scene as typeof scene & {
     applyPlayerContactDamage: (sourceX: number) => void
@@ -941,8 +942,9 @@ function createSceneRuntime(input: {
     main: {
       scrollX: 0,
       setBounds: () => {},
-      startFollow: (target) => {
+      startFollow: (target, roundPixels, lerpX, lerpY) => {
         cameraFollowTarget = target
+        cameraFollowOptions = { roundPixels, lerpX, lerpY }
       },
       once: (event, callback) => {
         if (event === 'fadeoutcomplete') {
@@ -1164,6 +1166,9 @@ function createSceneRuntime(input: {
     },
     get cameraFollowTarget() {
       return cameraFollowTarget
+    },
+    get cameraFollowOptions() {
+      return cameraFollowOptions
     },
     getBossSprite: () => internalScene.bossPrototype?.sprite ?? null,
     placePlayerNear: (x: number, y: number) => {
@@ -2447,6 +2452,7 @@ describe('createGameplayRendererConfig', () => {
     expect(runtime.playerSprite?.collideWorldBounds).toBe(false)
     expect(runtime.colliderCalls).toContainEqual({ a: runtime.playerSprite, b: runtime.terrainLayer })
     expect(runtime.cameraFollowTarget).toBe(runtime.playerSprite)
+    expect(runtime.cameraFollowOptions).toEqual({ roundPixels: true, lerpX: 1, lerpY: 1 })
   })
 
   it('selects an enemy default sprite from walk before idle capabilities', () => {

@@ -58,7 +58,7 @@ describe('BrowserAudioController', () => {
         return 1
       },
       cancelAnimationFrame: () => {},
-      setTimeout: (() => 1) as typeof window.setTimeout,
+      setTimeout: (() => 1) as unknown as typeof window.setTimeout,
       clearTimeout: (() => {}) as typeof window.clearTimeout,
     })
 
@@ -95,7 +95,7 @@ describe('BrowserAudioController', () => {
         return 1
       },
       cancelAnimationFrame: () => {},
-      setTimeout: (() => 1) as typeof window.setTimeout,
+      setTimeout: (() => 1) as unknown as typeof window.setTimeout,
       clearTimeout: (() => {}) as typeof window.clearTimeout,
     })
 
