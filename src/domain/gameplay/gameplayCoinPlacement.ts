@@ -108,7 +108,7 @@ export function findCoinLandingConflicts(input: {
       .filter((platform) =>
         coinBounds.left >= platform.left
         && coinBounds.right <= platform.right
-        && coinBounds.bottom < platform.top)
+        && coinBounds.bottom <= platform.top)
       .sort((first, second) => first.top - second.top)[0]
 
     if (!landing) {

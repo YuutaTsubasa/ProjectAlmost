@@ -81,6 +81,15 @@ describe('gameplay coin placement', () => {
     ])
   })
 
+  it('allows a coin bottom edge to touch its landing platform', () => {
+    expect(findCoinLandingConflicts({
+      tileSize: 64,
+      coins: [{ x: 100, y: 170 }],
+      platforms: [{ col: 1, row: 3, width: 2, height: 1 }],
+      hazards: [],
+    })).toEqual([])
+  })
+
   it('gives every World 02 coin a safe static landing', () => {
     for (const stageId of ['2-1', '2-2', '2-3', '2-4', '2-5'] as const) {
       const stage = gameplayStageSources.items[stageId]
